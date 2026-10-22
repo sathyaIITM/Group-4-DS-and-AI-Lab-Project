@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 860" width="1140" height="860" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Analyst Agent for Indian Public Data with Calibrated Decision Models — core architecture</title>
+  <desc>A fixed LangGraph workflow over a curated catalogue of Indian public tables, with a two-tier decision layer (Kev for tool selection and domain behind gates; Jev for coverage, verification and all other decisions), read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge.</desc>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a6478"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c76a06"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+    <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6a3fb5"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1140" height="860" fill="#ffffff"/>
+
+  <text x="28" y="34" font-size="17" font-weight="600" fill="#151d33">Analyst Agent for Indian Public Data with Calibrated Decision Models</text>
+  <text x="28" y="55" font-size="12.5" fill="#5a6478">Core architecture. Green = fine-tuned open decision model · Orange = hosted decision model · Blue = hosted LLM generation · Purple = data and storage</text>
+
+  <!-- PIPELINE -->
+  <rect x="28" y="76" width="516" height="672" rx="12" fill="#fbfcfe" stroke="#c7cfdd" stroke-width="1.5"/>
+  <text x="44" y="98" font-size="12" font-weight="700" fill="#3b5bdb" letter-spacing="0.6">FIXED LANGGRAPH WORKFLOW</text>
+
+  <rect x="44" y="110" width="484" height="40" rx="8" fill="#eef2f9" stroke="#8f9cb5" stroke-width="1.4"/>
+  <text x="60" y="135" font-size="13" fill="#1b2440"><tspan font-weight="600">User question</tspan> — journalist, student, NGO staff (plain language, streaming UI)</text>
+
+  <rect x="44" y="168" width="484" height="44" rx="8" fill="#fff4e5" stroke="#e8710a" stroke-width="1.5"/>
+  <text x="60" y="189" font-size="13" fill="#1b2440"><tspan font-weight="600">1 · Coverage check</tspan> — can the catalogue answer this at all?</text>
+  <text x="60" y="205" font-size="11.5" fill="#6b5330">Jev, calibrated on human labels · drives O4 abstention precision</text>
+
+  <rect x="44" y="230" width="484" height="44" rx="8" fill="#e9f6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="60" y="251" font-size="13" fill="#1b2440"><tspan font-weight="600">2 · Tool selection + domain</tspan> — batched, one forward pass</text>
+  <text x="60" y="267" font-size="11.5" fill="#2f5733">Kev-0.8B, LoRA fine-tuned, temperature-scaled · behind a 5% error-budget gate</text>
+
+  <rect x="44" y="292" width="484" height="44" rx="8" fill="#f4f6fa" stroke="#3b5bdb" stroke-width="1.5"/>
+  <text x="60" y="313" font-size="13" fill="#1b2440"><tspan font-weight="600">3 · Indian-convention resolvers</tspan></text>
+  <text x="60" y="329" font-size="11.5" fill="#44506b">place → government codes · time → fiscal vs agricultural year · unit → lakh, crore, per cent</text>
+
+  <rect x="44" y="354" width="484" height="44" rx="8" fill="#f4f6fa" stroke="#3b5bdb" stroke-width="1.5"/>
+  <text x="60" y="375" font-size="13" fill="#1b2440"><tspan font-weight="600">4 · Retrieval</tspan> — general open embedding model + optional reranker</text>
+  <text x="60" y="391" font-size="11.5" fill="#44506b">verified examples · per-domain guidance cards · column descriptions</text>
+
+  <rect x="44" y="416" width="484" height="44" rx="8" fill="#e7f0ff" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="60" y="437" font-size="13" fill="#1b2440"><tspan font-weight="600">5 · Query generation + plan</tspan></text>
+  <text x="60" y="453" font-size="11.5" fill="#2a4f73">Hosted LLM, pinned version, every response cached · not trained by this project</text>
+
+  <rect x="44" y="478" width="484" height="44" rx="8" fill="#f3eefc" stroke="#6a3fb5" stroke-width="1.5"/>
+  <text x="60" y="499" font-size="13" fill="#1b2440"><tspan font-weight="600">6 · Execution</tspan> — DuckDB, read-only, 10 s timeout</text>
+  <text x="60" y="515" font-size="11.5" fill="#523080">no free-form code execution by the agent</text>
+
+  <rect x="44" y="540" width="484" height="40" rx="8" fill="#f4f6fa" stroke="#3b5bdb" stroke-width="1.5"/>
+  <text x="60" y="565" font-size="13" fill="#1b2440"><tspan font-weight="600">7 · Statistics + chart selection</tspan> — rule check against result shape (O8)</text>
+
+  <rect x="44" y="598" width="484" height="44" rx="8" fill="#fff4e5" stroke="#e8710a" stroke-width="1.5"/>
+  <text x="60" y="619" font-size="13" fill="#1b2440"><tspan font-weight="600">8 · Verification → confidence badge</tspan></text>
+  <text x="60" y="635" font-size="11.5" fill="#6b5330">Jev, calibrated · execution-agreement voting · O2 claim support, O3 ECE ≤ 0.10</text>
+
+  <rect x="44" y="660" width="484" height="40" rx="8" fill="#e7f0ff" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="60" y="685" font-size="13" fill="#1b2440"><tspan font-weight="600">9 · Narration</tspan> — hosted LLM writes the plain-language answer</text>
+
+  <rect x="44" y="712" width="484" height="26" rx="6" fill="#eef2f9" stroke="#8f9cb5" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="60" y="730" font-size="11.5" fill="#1b2440">p95 end-to-end ≤ 20 s (O5) · first streamed event ≤ 1.5 s</text>
+
+  <g stroke="#5a6478" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M286,150 L286,166"/>
+    <path d="M286,274 L286,290"/>
+    <path d="M286,336 L286,352"/>
+    <path d="M286,398 L286,414"/>
+    <path d="M286,460 L286,476"/>
+    <path d="M286,522 L286,538"/>
+    <path d="M286,580 L286,596"/>
+    <path d="M286,642 L286,658"/>
+  </g>
+  <path d="M286,212 L286,228" stroke="#2e7d32" stroke-width="1.6" fill="none" marker-end="url(#ag)"/>
+  <text x="294" y="226" font-size="10.5" fill="#2e7d32" font-weight="600">answerable</text>
+
+  <!-- DECLINE -->
+  <rect x="572" y="162" width="266" height="76" rx="10" fill="#fdecec" stroke="#c62828" stroke-width="1.5"/>
+  <text x="588" y="184" font-size="13" font-weight="600" fill="#1b2440">Decline, with the reason</text>
+  <text x="588" y="202" font-size="11.5" fill="#7d2f2f">names the missing coverage: geography</text>
+  <text x="588" y="217" font-size="11.5" fill="#7d2f2f">level, period or measure</text>
+  <text x="588" y="232" font-size="11.5" fill="#7d2f2f">→ logged as a ranked data request</text>
+  <path d="M528,190 L570,190" stroke="#c62828" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="534" y="183" font-size="10.5" fill="#c62828" font-weight="600">no</text>
+
+  <!-- DECISION LAYER -->
+  <rect x="572" y="262" width="266" height="380" rx="12" fill="#fbfcfe" stroke="#c7cfdd" stroke-width="1.5"/>
+  <text x="588" y="284" font-size="12" font-weight="700" fill="#5a6478" letter-spacing="0.6">DECISION LAYER (one client)</text>
+
+  <rect x="588" y="296" width="234" height="104" rx="9" fill="#e9f6ea" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="602" y="317" font-size="13" font-weight="600" fill="#1b2440">Kev — open, fine-tuned</text>
+  <text x="602" y="335" font-size="11.5" fill="#2f5733">Qwen3.5-0.8B + LoRA + pointer head</text>
+  <text x="602" y="351" font-size="11.5" fill="#2f5733">Core: tool selection, domain</text>
+  <text x="602" y="367" font-size="11.5" fill="#2f5733">Stretch: clarification, intent</text>
+  <text x="602" y="385" font-size="11" fill="#5c7a5f">free Colab T4 · typed probabilities</text>
+
+  <rect x="588" y="416" width="234" height="48" rx="9" fill="#f4f6fa" stroke="#8f9cb5" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="602" y="436" font-size="12.5" font-weight="600" fill="#1b2440">Gate: ≤ 5% expected error</text>
+  <text x="602" y="453" font-size="11" fill="#5a6478">within 3 pts of Jev · ECE ≤ 0.10</text>
+
+  <rect x="588" y="486" width="234" height="120" rx="9" fill="#fff4e5" stroke="#e8710a" stroke-width="1.5"/>
+  <text x="602" y="507" font-size="13" font-weight="600" fill="#1b2440">Jev — hosted decision model</text>
+  <text x="602" y="525" font-size="11.5" fill="#6b5330">coverage · verification · chart call</text>
+  <text x="602" y="541" font-size="11.5" fill="#6b5330">every decision Kev does not pass</text>
+  <text x="602" y="557" font-size="11.5" fill="#6b5330">calibrated on our human labels</text>
+  <text x="602" y="577" font-size="11" fill="#8a6b3d">backends: TypeSafe · OpenRouter</text>
+  <text x="602" y="592" font-size="11" fill="#8a6b3d">last resort: calibrated LLM judge</text>
+
+  <text x="588" y="626" font-size="11" fill="#5a6478">Provider, model id and access date recorded</text>
+  <text x="588" y="639" font-size="11" fill="#5a6478">with every result; recalibrate on any change.</text>
+
+  <path d="M705,400 L705,414" stroke="#2e7d32" stroke-width="1.6" fill="none" marker-end="url(#ag)"/>
+  <path d="M705,464 L705,484" stroke="#c76a06" stroke-width="1.6" fill="none" marker-end="url(#ao)"/>
+  <text x="713" y="479" font-size="10.5" fill="#c76a06" font-weight="600">escalate</text>
+
+  <g stroke="#c76a06" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ao)">
+    <path d="M588,520 C560,520 556,210 530,196"/>
+    <path d="M588,546 C566,560 556,614 530,618"/>
+  </g>
+  <path d="M588,340 C564,340 556,258 530,252" stroke="#2e7d32" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ag)"/>
+
+  <!-- DATA LAYER -->
+  <rect x="866" y="262" width="246" height="380" rx="12" fill="#faf7ff" stroke="#c0aee0" stroke-width="1.5"/>
+  <text x="882" y="284" font-size="12" font-weight="700" fill="#6a3fb5" letter-spacing="0.6">DATA AND STORAGE</text>
+
+  <rect x="882" y="296" width="214" height="62" rx="9" fill="#f3eefc" stroke="#6a3fb5" stroke-width="1.4"/>
+  <text x="896" y="316" font-size="12.5" font-weight="600" fill="#1b2440">Versioned Parquet</text>
+  <text x="896" y="333" font-size="11.5" fill="#523080">8–12 curated tables, five domains</text>
+  <text x="896" y="349" font-size="11" fill="#7b5aa6">list frozen in Milestone 2</text>
+
+  <rect x="882" y="372" width="214" height="62" rx="9" fill="#f3eefc" stroke="#6a3fb5" stroke-width="1.4"/>
+  <text x="896" y="392" font-size="12.5" font-weight="600" fill="#1b2440">Catalogue + guidance</text>
+  <text x="896" y="409" font-size="11.5" fill="#523080">per-domain cards, column notes,</text>
+  <text x="896" y="425" font-size="11.5" fill="#523080">comparability rules</text>
+
+  <rect x="882" y="448" width="214" height="46" rx="9" fill="#f3eefc" stroke="#6a3fb5" stroke-width="1.4"/>
+  <text x="896" y="468" font-size="12.5" font-weight="600" fill="#1b2440">Postgres + pgvector</text>
+  <text x="896" y="485" font-size="11.5" fill="#523080">retrieval index, logs, requests</text>
+
+  <rect x="882" y="508" width="214" height="46" rx="9" fill="#eef2f9" stroke="#8f9cb5" stroke-width="1.4"/>
+  <text x="896" y="528" font-size="12.5" font-weight="600" fill="#1b2440">Langfuse tracing</text>
+  <text x="896" y="545" font-size="11.5" fill="#44506b">latency, cost, LLM calls per answer</text>
+
+  <rect x="882" y="568" width="214" height="60" rx="9" fill="#eef2f9" stroke="#8f9cb5" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <text x="896" y="588" font-size="12" font-weight="600" fill="#1b2440">One Compute Engine VM</text>
+  <text x="896" y="604" font-size="11" fill="#44506b">API · UI · admin portal · proxy,</text>
+  <text x="896" y="619" font-size="11" fill="#44506b">under Docker Compose</text>
+
+  <g stroke="#6a3fb5" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ap)">
+    <path d="M882,327 C856,327 556,500 532,500"/>
+    <path d="M882,400 C856,400 556,380 532,376"/>
+  </g>
+
+  <!-- EVIDENCE PANEL -->
+  <rect x="572" y="666" width="540" height="82" rx="10" fill="#e7f0ff" stroke="#1971c2" stroke-width="1.6"/>
+  <text x="588" y="688" font-size="13.5" font-weight="600" fill="#1b2440">Answer + evidence panel</text>
+  <text x="588" y="708" font-size="11.5" fill="#2a4f73">query description · executed query · source links · data version · agreement of independent queries ·</text>
+  <text x="588" y="724" font-size="11.5" fill="#2a4f73">match with an official report · one matched chart · <tspan font-weight="600">calibrated confidence badge</tspan></text>
+  <text x="588" y="741" font-size="11" fill="#5a6478">What a non-expert needs in order to check the figure without trusting the system.</text>
+  <path d="M528,680 L570,692" stroke="#5a6478" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+  <!-- ADMIN PATH -->
+  <rect x="28" y="770" width="1084" height="68" rx="12" fill="#fbfcfe" stroke="#c7cfdd" stroke-width="1.5"/>
+  <text x="44" y="792" font-size="12" font-weight="700" fill="#5a6478" letter-spacing="0.6">ADMIN-OPERATED ONBOARDING PATH — where cross-portal discovery is handled, outside the question-answering claim</text>
+  <g font-size="11.5" fill="#1b2440">
+    <text x="48" y="821">profile the file</text>
+    <text x="178" y="821">tested cleaning steps only</text>
+    <text x="378" y="821">validate: state rows sum to All-India</text>
+    <text x="650" y="821">admin approval</text>
+    <text x="790" y="821">new catalogue version</text>
+    <text x="960" y="821">ranked data-request queue</text>
+  </g>
+  <g stroke="#5a6478" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <path d="M152,817 L172,817"/>
+    <path d="M350,817 L372,817"/>
+    <path d="M620,817 L644,817"/>
+    <path d="M740,817 L784,817"/>
+    <path d="M920,817 L954,817"/>
+  </g>
+</svg>
