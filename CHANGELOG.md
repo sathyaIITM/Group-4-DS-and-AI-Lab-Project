@@ -21,6 +21,19 @@ recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.
   and `models/` subfolders, named test stubs, README sections for features,
   dataset, models, results, demo and team members.
 
+### Changed
+
+- Milestone 1 report revised (27 October 2026) in response to TA feedback:
+  - Refined the problem statement, research questions and project scope.
+  - Strengthened the literature review; clarified research gaps and the proposed contribution.
+  - Clarified the system architecture, decision-model roles and baseline comparisons.
+  - Defined end-to-end correctness, confidence calibration, evaluation metrics and abstention criteria.
+  - Added a failure taxonomy distinguishing data limitations from system errors.
+  - Expanded the evaluation plan, dataset requirements, feasibility checks, risks and Milestone 2 deliverables.
+  - Verified by 
+    - Shivanshu Gupta (22f3002985), 27 October 2026.
+    - Sathya Prakash (21f1006001), 27 October 2026.
+
 ### Notes
 
 - No model, agent or tool code is implemented yet. Milestone 2 (29 October
