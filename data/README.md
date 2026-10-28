@@ -16,3 +16,9 @@ by question template and table, and leakage checks are run before use.
 
 The 8–12 core tables are not yet chosen. Profiling the candidates and freezing
 the list is the first Milestone 2 deliverable.
+
+## Raw Files Details
+| Filename | Title | Source | Download Link | 
+| --- | --- | --- | --- |
+| `data\raw\datafile1.csv` | National Family Health Survey-5 (NFHS-5) - India Districts Factsheet Data (Provisional) | data.gov.in | https://www.data.gov.in/catalog/national-family-health-survey-5-nfhs-5-india-districts-factsheet-data-provisional
+| `data\raw\datafile2.csv` | Current daily price of various commodities from various markets (Mandi) | data.gov.in | https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi | 
