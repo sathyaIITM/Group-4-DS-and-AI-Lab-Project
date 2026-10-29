@@ -3,6 +3,8 @@
 | Document | Status |
 | --- | --- |
 | [Milestone1_Report.md](Milestone1_Report.md) | Current. Milestone 1: problem definition and literature review, condensed submission version, revised 2026-10-22 |
+| [Milestone2_Report.md](Milestone2_Report.md) | Current. Milestone 2: dataset identification and data preparation, 29 October 2026 |
+| [labelling_guide_v1.md](labelling_guide_v1.md) | Current. Labelling rules for the routing decisions (tool selection and domain) |
 | [Architecture_Diagram.svg](Architecture_Diagram.svg) | Current. Figure 1 of the Milestone 1 report |
 | [Milestone_1_TA_Presentation.pptx](Milestone_1_TA_Presentation.pptx) | Current. TA review deck for Milestone 1, aligned to the report above |
 

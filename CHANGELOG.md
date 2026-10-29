@@ -21,8 +21,17 @@ recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.
   and `models/` subfolders, named test stubs, README sections for features,
   dataset, models, results, demo and team members.
 
+- Milestone 2 (29 October 2026): report `docs/Milestone2_Report.md` with document change
+  log, contribution log and sign-off; five cleaned tables (IMD rainfall, PLFS, NFHS-5,
+  Mandi, NCRB); EDA (`scripts/eda_tables.py`, `docs/figures/milestone2/`); data manifest
+  with SHA-256 (`data/MANIFEST.md`); routing splits v1 tracked under `data/splits/kev/`;
+  text-to-SQL reference pairs split by template into dev (63) and test (37).
+
 ### Changed
 
+- Preprocessing script runs from any directory; NFHS-5 cells exported as negative numbers
+  are read as low-sample estimates; Mandi rows with implausible prices are flagged.
+- Reference queries `Q012` and `Q019` corrected to match the prepared NFHS-5 labels.
 - Milestone 1 report revised (27 October 2026) in response to TA feedback:
   - Refined the problem statement, research questions and project scope.
   - Strengthened the literature review; clarified research gaps and the proposed contribution.
