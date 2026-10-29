@@ -299,6 +299,7 @@ outputs/logs/*
 *.tar
 *.7z
 !data/sample/**/*.csv
+!data/ground_truths/*.csv
 !data/sample/**/*.tsv
 !data/sample/**/*.xlsx
 
