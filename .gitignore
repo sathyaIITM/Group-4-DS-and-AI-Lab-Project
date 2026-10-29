@@ -239,6 +239,11 @@ data/splits/*
 !data/processed/.gitkeep
 !data/splits/.gitkeep
 !data/sample/
+# Milestone 2 hand-off: the versioned routing splits (about 6.4 MB) are tracked
+# so training can start from a clone; checksums are in data/MANIFEST.md.
+!data/splits/kev/
+data/splits/kev/*
+!data/splits/kev/*.v1.jsonl
 
 # Model checkpoints, adapters and calibration artefacts
 models/*

@@ -8,11 +8,13 @@ import numpy as np
 import pandas as pd
 
 
-RAW_DIR = Path("data/raw")
-OUTPUT_DIR = Path("data/processed")
+# Paths resolve from the repository root, so the script runs from any directory.
+ROOT_DIR = Path(__file__).resolve().parents[1]
+RAW_DIR = ROOT_DIR / "data" / "raw"
+OUTPUT_DIR = ROOT_DIR / "data" / "processed"
 
-NFHS_INPUT = "../data/raw/datafile1.csv"
-MANDI_INPUT = "../data/raw/datafile2.csv"
+NFHS_INPUT = RAW_DIR / "datafile1.csv"
+MANDI_INPUT = RAW_DIR / "datafile2.csv"
 
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -36,10 +38,14 @@ def parse_nfhs_value(series: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series
     raw = series.astype("string").str.strip()
 
     suppressed = raw.eq("*")
-    low_sample = raw.str.match(r"^\(.*\)$", na=False)
+    # The factsheet marks estimates based on 25-49 unweighted cases as "(29.5)".
+    # The data.gov.in API export renders the same cells as "-29.5"; no NFHS-5
+    # indicator can be negative, so a leading minus is read as that marker.
+    low_sample = raw.str.match(r"^\(.*\)$", na=False) | raw.str.match(r"^-\d", na=False)
 
     numeric_text = (
         raw.str.replace(r"^\((.*)\)$", r"\1", regex=True)
+        .str.replace(r"^-(?=\d)", "", regex=True)
         .str.replace(",", "", regex=False)
         .str.replace("*", "", regex=False)
         .str.strip()
@@ -203,7 +209,7 @@ nfhs_long = nfhs_long[
 ].sort_values(["state_name", "district_name", "indicator_id"])
 
 nfhs_long.to_parquet(
-    "../data/processed/nfhs5_district_indicators.parquet",
+    OUTPUT_DIR / "nfhs5_district_indicators.parquet",
     index=False,
 )
 
@@ -229,7 +235,7 @@ nfhs_quality = pd.DataFrame(
         ],
     }
 )
-nfhs_quality.to_csv("../data/processed/nfhs5_quality_report.csv", index=False)
+nfhs_quality.to_csv(OUTPUT_DIR / "nfhs5_quality_report.csv", index=False)
 
 
 # -------------------------------------------------------------------
@@ -305,16 +311,25 @@ mandi["is_price_order_valid"] = (
 
 mandi["is_arrival_date_valid"] = mandi["arrival_date"].notna()
 
+# Likely data-entry errors: a maximum more than ten times the modal price, or a
+# price below one rupee per quintal. Rows are kept and flagged, not dropped.
+mandi["is_price_plausible"] = (
+    mandi["max_price_inr_per_quintal"].le(10 * mandi["modal_price_inr_per_quintal"])
+    & mandi["min_price_inr_per_quintal"].ge(1)
+)
+
 mandi["quality_flag"] = np.select(
     [
         ~mandi["is_arrival_date_valid"],
         ~mandi["is_price_non_negative"],
         ~mandi["is_price_order_valid"],
+        ~mandi["is_price_plausible"],
     ],
     [
         "invalid_arrival_date",
         "negative_or_missing_price",
         "invalid_price_order",
+        "implausible_price",
     ],
     default="reported",
 )
@@ -355,6 +370,7 @@ mandi = mandi[
         "is_arrival_date_valid",
         "is_price_non_negative",
         "is_price_order_valid",
+        "is_price_plausible",
         "quality_flag",
         "arrival_date_raw",
     ]
@@ -369,7 +385,7 @@ mandi = mandi[
 )
 
 mandi.to_parquet(
-    "../data/processed/mandi_daily_prices.parquet",
+    OUTPUT_DIR / "mandi_daily_prices.parquet",
     index=False,
 )
 
@@ -385,6 +401,7 @@ mandi_quality = pd.DataFrame(
             "invalid_arrival_dates",
             "negative_or_missing_prices",
             "invalid_price_order_rows",
+            "implausible_price_rows",
         ],
         "value": [
             len(pd.read_csv(MANDI_INPUT, dtype="string")),
@@ -396,21 +413,22 @@ mandi_quality = pd.DataFrame(
             int((mandi["quality_flag"] == "invalid_arrival_date").sum()),
             int((mandi["quality_flag"] == "negative_or_missing_price").sum()),
             int((mandi["quality_flag"] == "invalid_price_order").sum()),
+            int((mandi["quality_flag"] == "implausible_price").sum()),
         ],
     }
 )
-mandi_quality.to_csv("../data/processed/mandi_quality.csv", index=False)
+mandi_quality.to_csv(OUTPUT_DIR / "mandi_quality_report.csv", index=False)
 
 
 # -------------------------------------------------------------------
 # 3. NCRB annual crime statistics (India-level data)
 # -------------------------------------------------------------------
 
-NCRB_INPUT = "../data/raw/datafile3.csv"
+NCRB_INPUT = RAW_DIR / "datafile3.csv"
 
-NCRB_OUTPUT = "../data/processed/ncrb_annual_crime_statistics.parquet"
-NCRB_CSV_OUTPUT = "../data/processed/ncrb_annual_crime_statistics.csv"
-NCRB_QUALITY_OUTPUT = "../data/processed/ncrb_quality_report.csv"
+NCRB_OUTPUT = OUTPUT_DIR / "ncrb_annual_crime_statistics.parquet"
+NCRB_CSV_OUTPUT = OUTPUT_DIR / "ncrb_annual_crime_statistics.csv"
+NCRB_QUALITY_OUTPUT = OUTPUT_DIR / "ncrb_quality_report.csv"
 
 
 def preprocess_ncrb(input_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
