@@ -14,9 +14,12 @@ The original CSV files remain unchanged. Processed outputs are written to `data/
 
 | Input file | Dataset | Main geography | Time coverage |
 |---|---|---|---|
-| `datafile.csv` | NFHS-5 India District Factsheet Data | District | 2019-2021 |
-| `datafile2.csv` | Daily Mandi commodity prices | Market and district | Daily observations |
-| `NCRB_CII_2024_Table_1.1.ii.csv` | NCRB CII 2024 Table 1.1(ii), annual crime statistics | National (India) | 2022-2024, as supplied in the CSV |
+| `data/raw/datafile1.csv` | NFHS-5 India District Factsheet Data | District | 2019-2021 |
+| `data/raw/datafile2.csv` | Daily Mandi commodity prices | Market and district | Daily observations |
+| `data/raw/datafile3.csv` | NCRB CII 2024 Table 1.1(ii), annual crime statistics | National (India) | 2022-2024, as supplied in the CSV |
+
+Run from any directory: `python scripts/preprocess_data.py`. The NFHS-5 and Mandi
+files are downloaded by `python scripts/download_raw.py`.
 
 ## Output files
 
@@ -164,7 +167,7 @@ Rows with quality problems are retained for auditability. They should be exclude
 
 ### 1. Source and geographic level
 
-The input file is `NCRB_CII_2024_Table_1.1.ii.csv`, corresponding to NCRB CII 2024 Table 1.1(ii).
+The input file is `data/raw/datafile3.csv` (published as `NCRB_CII_2024_Table_1.1.ii.csv`), corresponding to NCRB CII 2024 Table 1.1(ii).
 
 The supplied file contains annual observations for India. The processed rows are labelled:
 

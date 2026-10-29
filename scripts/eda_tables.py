@@ -167,9 +167,17 @@ if "nfhs5_district_indicators" in frames:
     ][:8]
     if len(picks) >= 3:
         corr = wide[picks].corr()
-        short = [
-            p.split("(")[0][:28] if not p.lower().startswith("women") else p[:34] for p in picks
-        ]
+        labels = {
+            "electricity": "Electricity",
+            "improved sanitation": "Improved sanitation",
+            "clean fuel": "Clean cooking fuel",
+            "women (age 15-49) who are literate": "Women literate",
+            "with 10 or more years": "Women 10+ yrs schooling",
+            "stunted": "Child stunting",
+            "anaemic (<12.0": "Women anaemic (non-pregnant)",
+            "institutional births": "Institutional births",
+        }
+        short = [next(v for k, v in labels.items() if k in p) for p in picks]
         fig, ax = plt.subplots(figsize=(8, 6.5))
         im = ax.imshow(corr.values, cmap="RdBu_r", vmin=-1, vmax=1)
         ax.set_xticks(range(len(picks)), short, rotation=60, ha="right", fontsize=7)

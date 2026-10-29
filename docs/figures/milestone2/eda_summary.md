@@ -10,7 +10,7 @@ Produced by `scripts/eda_tables.py`.
 | `plfs_state_ur_usual_status` | 38 | 6 | 4 | 0 | 0 |
 | `nfhs5_district_indicators` | 73,528 | 20 | 4,132 | 0 | 0 |
 | `mandi_daily_prices` | 16,393 | 22 | 0 | 0 | 0 |
-| `ncrb_annual_crime_statistics` | not built | | | | |
+| `ncrb_annual_crime_statistics` | 3 | 22 | 0 | 0 | 0 |
 
 ## Numeric columns (count, mean, std, min, median, max, IQR outliers)
 
@@ -64,12 +64,27 @@ Produced by `scripts/eda_tables.py`.
 | max_price_inr_per_quintal | 16,393 | 7907.44 | 234385.43 | 0.01 | 4500.00 | 30002800.00 | 1,144 |
 | modal_price_inr_per_quintal | 16,393 | 5604.45 | 5938.46 | 0.01 | 4000.00 | 125000.00 | 1,035 |
 
+### `ncrb_annual_crime_statistics`
+
+| Column | Count | Mean | Std | Min | Median | Max | IQR outliers |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| year | 3 | 2023.00 | 1.00 | 2022.00 | 2023.00 | 2024.00 | 0 |
+| population_lakhs | 3 | 13923.30 | 125.80 | 13797.50 | 13923.30 | 14049.10 | 0 |
+| ipc_bns_crime_count | 3 | 3623029.67 | 121595.68 | 3544608.00 | 3561379.00 | 3763102.00 | 0 |
+| sll_crime_count | 3 | 2361097.67 | 108814.90 | 2263567.00 | 2341259.00 | 2478467.00 | 0 |
+| total_crime_count | 3 | 5984127.33 | 225022.22 | 5824946.00 | 5885867.00 | 6241569.00 | 0 |
+| ipc_bns_crime_rate | 3 | 260.23 | 9.19 | 252.30 | 258.10 | 270.30 | 0 |
+| sll_crime_rate | 3 | 169.57 | 7.41 | 164.10 | 166.60 | 178.00 | 0 |
+| total_crime_rate | 3 | 429.80 | 16.11 | 418.90 | 422.20 | 448.30 | 0 |
+| ipc_bns_percentage | 3 | 60.54 | 0.49 | 60.22 | 60.29 | 61.10 | 0 |
+
 ## Missing values per column (non-zero only)
 
 - `imd_subdivision_monthly_rainfall`: jan 4 (0.1%), feb 3 (0.1%), mar 6 (0.1%), apr 4 (0.1%), may 3 (0.1%), jun 5 (0.1%), jul 7 (0.2%), aug 4 (0.1%), sep 6 (0.1%), oct 7 (0.2%), nov 11 (0.3%), dec 10 (0.2%), annual 26 (0.6%), jf 6 (0.1%), mam 9 (0.2%), jjas 10 (0.2%), ond 13 (0.3%)
 - `plfs_state_ur_usual_status`: fy_2017_18 1 (2.6%), fy_2018_19 1 (2.6%), fy_2020_21 1 (2.6%), fy_2021_22 1 (2.6%)
 - `nfhs5_district_indicators`: value 4,132 (5.6%)
 - `mandi_daily_prices`: none
+- `ncrb_annual_crime_statistics`: none
 
 ## NFHS-5 quality flags
 
