@@ -19,7 +19,7 @@ T1 Data and Tools (Shaoni Samanta, 21f1003157), T2 Agent (Shivanshu Gupta,
 | 2026-10-29 | Shivanshu Gupta | T2 | Milestone 1 report revised after the TA review and its change log written (27 Oct); NFHS-5, Mandi and NCRB sources selected and documented; preprocessing pipeline for the three tables with quality reports and documentation; 100 text-to-SQL reference pairs over the three tables; initial EDA notebook | commits `b5d9a3d`, `2cfa44f`, `94c974d`, `4a8139a`, `a2e2fd8`, `1994377`; `scripts/preprocess_data.py`, `scripts/README.md`, `data/ground_truths/` |
 | 2026-10-29 | Sathya Prakash | T3 / T1 | Milestone 2 integration: branches merged into `docs/milestone-2`; NFHS-5 and Mandi re-downloaded through the data.gov.in API; preprocessing script made runnable from the repository root; NFHS-5 negative-value (low-sample marker) defect corrected; Mandi implausible-price flag; EDA script and figures; data manifest with SHA-256; routing splits v1 tracked; two reference queries corrected and the reference pairs split by template (dev 63, test 37); Milestone 2 report and presentation | [docs/Milestone2_Report.md](docs/Milestone2_Report.md), `scripts/eda_tables.py`, `scripts/build_manifest.py`, `scripts/split_ground_truth.py`, `data/MANIFEST.md` |
 | 2026-10-29 | Shaoni Samanta | T1 | PENDING-SHAONI | |
-| 2026-10-29 | Ashmit Ghose | T4 | PENDING-ASHMIT | |
+| 2026-10-29 | Ashmit Ghose | T4 | Reproduced the Milestone 2 data preparation from a clean clone of `docs/milestone-2`: preprocessing, EDA, reference-pair split and manifest re-run; SHA-256 of raw, processed and split files matched `data/MANIFEST.md`; routing-split leakage checks 0 on all counts; 33 tests passed. | |
 
 ## How to fill this in
 
