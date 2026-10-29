@@ -14,6 +14,7 @@ OUTPUT_DIR = Path("data/processed")
 NFHS_INPUT = "../data/raw/datafile1.csv"
 MANDI_INPUT = "../data/raw/datafile2.csv"
 
+
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -399,3 +400,281 @@ mandi_quality = pd.DataFrame(
     }
 )
 mandi_quality.to_csv("../data/processed/mandi_quality.csv", index=False)
+
+
+# -------------------------------------------------------------------
+# 3. NCRB annual crime statistics (India-level data)
+# -------------------------------------------------------------------
+
+NCRB_INPUT = "../data/raw/datafile3.csv"
+
+NCRB_OUTPUT = "../data/processed/ncrb_annual_crime_statistics.parquet"
+NCRB_CSV_OUTPUT = "../data/processed/ncrb_annual_crime_statistics.csv"
+NCRB_QUALITY_OUTPUT = "../data/processed/ncrb_quality_report.csv"
+
+
+def preprocess_ncrb(input_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Clean and validate NCRB annual crime statistics."""
+
+    ncrb = pd.read_csv(
+        input_path,
+        dtype="string",
+        keep_default_na=False,
+    )
+
+    input_rows = len(ncrb)
+
+    # Clean column names and string values.
+    ncrb.columns = [
+        str(clean_text(column)).strip()
+        for column in ncrb.columns
+    ]
+
+    ncrb = ncrb.apply(
+        lambda column: column.map(clean_text)
+    )
+
+    # Expected columns in the supplied NCRB CSV.
+    column_mapping = {
+        "Year": "year",
+        "Mid-Year Projected Population (in Lakhs)": (
+            "population_lakhs"
+        ),
+        "Crime Incidence - IPC/BNS": "ipc_bns_crime_count",
+        "Crime Incidence - SLL": "sll_crime_count",
+        "Crime Incidence - Total": "total_crime_count",
+        "Crime Rate - IPC/BNS": "ipc_bns_crime_rate",
+        "Crime Rate - SLL": "sll_crime_rate",
+        "Crime Rate - Total": "total_crime_rate",
+        "Percentage of IPC/BNS Crimes to Total Cognizable Crimes": (
+            "ipc_bns_percentage"
+        ),
+    }
+
+    missing_columns = [
+        column
+        for column in column_mapping
+        if column not in ncrb.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            "NCRB CSV is missing required columns: "
+            f"{missing_columns}"
+        )
+
+    ncrb = ncrb.rename(columns=column_mapping)
+
+    # Convert numeric fields.
+    numeric_columns = [
+        "year",
+        "population_lakhs",
+        "ipc_bns_crime_count",
+        "sll_crime_count",
+        "total_crime_count",
+        "ipc_bns_crime_rate",
+        "sll_crime_rate",
+        "total_crime_rate",
+        "ipc_bns_percentage",
+    ]
+
+    for column in numeric_columns:
+        ncrb[column] = pd.to_numeric(
+            ncrb[column]
+            .astype("string")
+            .str.replace(",", "", regex=False),
+            errors="coerce",
+        )
+
+    # Preserve year as a nullable integer.
+    ncrb["year"] = ncrb["year"].astype("Int64")
+
+    # Standardized metadata.
+    ncrb["source_name"] = (
+        "National Crime Records Bureau (NCRB)"
+    )
+    ncrb["source_table"] = "CII 2024 Table 1.1(ii)"
+    ncrb["geography_level"] = "national"
+    ncrb["country"] = "India"
+
+    # ---------------------------------------------------------------
+    # Data-quality checks
+    # ---------------------------------------------------------------
+
+    count_columns = [
+        "ipc_bns_crime_count",
+        "sll_crime_count",
+        "total_crime_count",
+    ]
+
+    rate_columns = [
+        "ipc_bns_crime_rate",
+        "sll_crime_rate",
+        "total_crime_rate",
+    ]
+
+    # Check missing or unparseable measurements.
+    ncrb["has_missing_values"] = ncrb[
+        numeric_columns
+    ].isna().any(axis=1)
+
+    # Counts, population, rates, and percentages should be non-negative.
+    nonnegative_columns = [
+        "population_lakhs",
+        *count_columns,
+        *rate_columns,
+        "ipc_bns_percentage",
+    ]
+
+    ncrb["has_negative_values"] = (
+        ncrb[nonnegative_columns]
+        .lt(0)
+        .any(axis=1)
+    )
+
+    # Check whether the crime counts add up.
+    expected_total = (
+        ncrb["ipc_bns_crime_count"]
+        + ncrb["sll_crime_count"]
+    )
+
+    ncrb["incidence_total_valid"] = (
+        expected_total.eq(ncrb["total_crime_count"])
+        & expected_total.notna()
+    )
+
+    # Check reported IPC/BNS percentage against its implied value.
+    # Small differences are allowed because published values are rounded.
+    implied_percentage = (
+        ncrb["ipc_bns_crime_count"]
+        / ncrb["total_crime_count"].replace(0, np.nan)
+        * 100
+    )
+
+    ncrb["ipc_bns_percentage_valid"] = (
+        np.isclose(
+            ncrb["ipc_bns_percentage"],
+            implied_percentage,
+            atol=0.15,
+            rtol=0,
+            equal_nan=False,
+        )
+        & ncrb["ipc_bns_percentage"].notna()
+        & implied_percentage.notna()
+    )
+
+    # Check that crime rates are consistent with counts and population.
+    # Population is expressed in lakhs, so count / population_lakhs
+    # gives the rate per 100,000 people.
+    for count_column, rate_column in [
+        ("ipc_bns_crime_count", "ipc_bns_crime_rate"),
+        ("sll_crime_count", "sll_crime_rate"),
+        ("total_crime_count", "total_crime_rate"),
+    ]:
+        expected_rate = (
+            ncrb[count_column]
+            / ncrb["population_lakhs"].replace(0, np.nan)
+        )
+
+        ncrb[f"{rate_column}_valid"] = (
+            np.isclose(
+                ncrb[rate_column],
+                expected_rate,
+                atol=0.15,
+                rtol=0,
+                equal_nan=False,
+            )
+            & ncrb[rate_column].notna()
+            & expected_rate.notna()
+        )
+
+    # Check for duplicate years.
+    ncrb["is_duplicate_year"] = ncrb.duplicated(
+        subset=["year"],
+        keep=False,
+    )
+
+    # Combined row-level quality status.
+    validation_columns = [
+        "incidence_total_valid",
+        "ipc_bns_percentage_valid",
+        "ipc_bns_crime_rate_valid",
+        "sll_crime_rate_valid",
+        "total_crime_rate_valid",
+    ]
+
+    ncrb["quality_flag"] = np.select(
+        [
+            ncrb["has_missing_values"],
+            ncrb["has_negative_values"],
+            ncrb["is_duplicate_year"],
+            ~ncrb[validation_columns].all(axis=1),
+        ],
+        [
+            "missing_or_unparseable",
+            "negative_values",
+            "duplicate_year",
+            "validation_failed",
+        ],
+        default="passed",
+    )
+
+    # Sort the annual observations.
+    ncrb = ncrb.sort_values("year").reset_index(drop=True)
+
+    # Quality report.
+    quality_report = pd.DataFrame({
+        "metric": [
+            "input_rows",
+            "output_rows",
+            "unique_years",
+            "missing_or_unparseable_rows",
+            "negative_value_rows",
+            "duplicate_year_rows",
+            "invalid_incidence_totals",
+            "invalid_ipc_bns_percentages",
+            "invalid_ipc_bns_crime_rates",
+            "invalid_sll_crime_rates",
+            "invalid_total_crime_rates",
+            "rows_passing_all_checks",
+        ],
+        "value": [
+            input_rows,
+            len(ncrb),
+            ncrb["year"].nunique(),
+            int(ncrb["has_missing_values"].sum()),
+            int(ncrb["has_negative_values"].sum()),
+            int(ncrb["is_duplicate_year"].sum()),
+            int((~ncrb["incidence_total_valid"]).sum()),
+            int((~ncrb["ipc_bns_percentage_valid"]).sum()),
+            int((~ncrb["ipc_bns_crime_rate_valid"]).sum()),
+            int((~ncrb["sll_crime_rate_valid"]).sum()),
+            int((~ncrb["total_crime_rate_valid"]).sum()),
+            int((ncrb["quality_flag"] == "passed").sum()),
+        ],
+    })
+
+    return ncrb, quality_report
+
+
+# Run preprocessing.
+ncrb_clean, ncrb_quality = preprocess_ncrb(NCRB_INPUT)
+
+# Save outputs.
+ncrb_clean.to_csv(NCRB_CSV_OUTPUT, index=False)
+ncrb_quality.to_csv(NCRB_QUALITY_OUTPUT, index=False)
+
+# Parquet requires a supported engine such as pyarrow.
+try:
+    ncrb_clean.to_parquet(NCRB_OUTPUT, index=False)
+except ImportError:
+    print(
+        "Parquet engine unavailable. "
+        "The cleaned CSV and quality report were still saved. "
+        "Install pyarrow with: pip install pyarrow"
+    )
+
+print("NCRB preprocessing completed.")
+print(f"Cleaned CSV: {NCRB_CSV_OUTPUT}")
+print(f"Quality report: {NCRB_QUALITY_OUTPUT}")
+print(ncrb_quality.to_string(index=False))

@@ -2,10 +2,11 @@
 
 ## Purpose
 
-This project preprocesses two public Indian datasets for use in a curated analytical-data catalogue:
+This project preprocesses three public Indian datasets for use in a curated analytical-data catalogue:
 
 1. National Family Health Survey-5 district-level health indicators.
 2. Daily Mandi commodity prices from Indian markets.
+3. National Crime Records Bureau (NCRB) annual crime statistics for India.
 
 The original CSV files remain unchanged. Processed outputs are written to `data/processed/`.
 
@@ -15,6 +16,7 @@ The original CSV files remain unchanged. Processed outputs are written to `data/
 |---|---|---|---|
 | `datafile.csv` | NFHS-5 India District Factsheet Data | District | 2019-2021 |
 | `datafile2.csv` | Daily Mandi commodity prices | Market and district | Daily observations |
+| `NCRB_CII_2024_Table_1.1.ii.csv` | NCRB CII 2024 Table 1.1(ii), annual crime statistics | National (India) | 2022-2024, as supplied in the CSV |
 
 ## Output files
 
@@ -24,6 +26,9 @@ The original CSV files remain unchanged. Processed outputs are written to `data/
 | `data/processed/nfhs5_quality_report.csv` | NFHS row counts and data-quality summary |
 | `data/processed/mandi_daily_prices.parquet` | Cleaned daily commodity-market price observations |
 | `data/processed/mandi_quality_report.csv` | Mandi row counts and validation summary |
+| `data/processed/ncrb_annual_crime_statistics.csv` | Cleaned NCRB annual crime statistics in CSV format |
+| `data/processed/ncrb_annual_crime_statistics.parquet` | Cleaned NCRB annual crime statistics in Parquet format, if a Parquet engine is installed |
+| `data/processed/ncrb_quality_report.csv` | NCRB row counts and validation summary |
 
 ## NFHS-5 preprocessing
 
@@ -155,6 +160,100 @@ invalid_price_order
 
 Rows with quality problems are retained for auditability. They should be excluded or handled explicitly when answering questions.
 
+## NCRB annual crime-statistics preprocessing
+
+### 1. Source and geographic level
+
+The input file is `NCRB_CII_2024_Table_1.1.ii.csv`, corresponding to NCRB CII 2024 Table 1.1(ii).
+
+The supplied file contains annual observations for India. The processed rows are labelled:
+
+```text
+source_name = National Crime Records Bureau (NCRB)
+source_table = CII 2024 Table 1.1(ii)
+geography_level = national
+country = India
+```
+
+The data should not be treated as state-, district-, or police-station-level data.
+
+### 2. Column standardization
+
+The original column names are mapped to consistent snake-case names:
+
+| Source column | Processed column |
+|---|---|
+| `Year` | `year` |
+| `Mid-Year Projected Population (in Lakhs)` | `population_lakhs` |
+| `Crime Incidence - IPC/BNS` | `ipc_bns_crime_count` |
+| `Crime Incidence - SLL` | `sll_crime_count` |
+| `Crime Incidence - Total` | `total_crime_count` |
+| `Crime Rate - IPC/BNS` | `ipc_bns_crime_rate` |
+| `Crime Rate - SLL` | `sll_crime_rate` |
+| `Crime Rate - Total` | `total_crime_rate` |
+| `Percentage of IPC/BNS Crimes to Total Cognizable Crimes` | `ipc_bns_percentage` |
+
+The preprocessing raises an error if any expected source column is absent. This prevents silently processing a structurally different file.
+
+### 3. Numeric conversion
+
+The year, population, crime incidence, crime rates, and percentage fields are converted from text to numeric values. Commas are removed before conversion.
+
+The `year` field is stored as a nullable integer. Values that cannot be parsed become missing rather than being silently replaced with zero.
+
+`population_lakhs` remains expressed in lakhs of people. The source crime-rate fields are retained as reported.
+
+### 4. Validation checks
+
+The pipeline creates the following validation fields:
+
+| Field | Meaning |
+|---|---|
+| `has_missing_values` | At least one expected numeric field is missing or could not be parsed |
+| `has_negative_values` | At least one population, count, rate, or percentage field is negative |
+| `incidence_total_valid` | IPC/BNS incidence plus SLL incidence equals total incidence |
+| `ipc_bns_percentage_valid` | Reported IPC/BNS percentage is within 0.15 percentage points of the percentage implied by the counts |
+| `ipc_bns_crime_rate_valid` | Reported IPC/BNS crime rate is within 0.15 of count divided by population in lakhs |
+| `sll_crime_rate_valid` | Reported SLL crime rate is within 0.15 of count divided by population in lakhs |
+| `total_crime_rate_valid` | Reported total crime rate is within 0.15 of count divided by population in lakhs |
+| `is_duplicate_year` | The year appears more than once in the input |
+
+The rate check uses the following relationship when population is expressed in lakhs:
+
+```text
+crime rate = crime count / population_lakhs
+```
+
+This corresponds to a rate per 100,000 people. The tolerance is intended to allow for rounding in published values. Confirm the source table's exact rate definition and rounding convention before relying on these checks as definitive.
+
+The percentage check compares the reported percentage with:
+
+```text
+IPC/BNS crime incidence / total crime incidence * 100
+```
+
+This check assumes that the numerator and denominator in the source percentage use those same incidence definitions. Verify that assumption against the source table notes before interpreting a failed check.
+
+### 5. Overall quality flag
+
+The `quality_flag` field summarizes row-level checks using the following values:
+
+| `quality_flag` | Meaning |
+|---|---|
+| `passed` | No missing values, negative values, duplicate year, or failed validation checks were detected |
+| `missing_or_unparseable` | At least one expected numeric field is missing or unparseable |
+| `negative_values` | At least one checked numeric value is negative |
+| `duplicate_year` | The year occurs more than once |
+| `validation_failed` | At least one incidence, percentage, or crime-rate validation failed |
+
+The pipeline retains records with quality problems so that they can be audited. The flag is a screening aid, not a guarantee that a row is correct. Review the individual validation fields and the source documentation before using a flagged observation.
+
+### 6. Quality report
+
+`ncrb_quality_report.csv` summarizes input and output row counts, unique years, missing values, negative values, duplicate years, failed incidence/percentage/rate checks, and rows passing all checks.
+
+The cleaned CSV is written even when a Parquet engine is unavailable. To write the Parquet output, install a compatible engine such as `pyarrow`.
+
 ## Recommended query rules
 
 - Do not treat suppressed NFHS values as zero.
@@ -163,6 +262,10 @@ Rows with quality problems are retained for auditability. They should be exclude
 - Use Mandi prices only when `quality_flag = reported`.
 - Do not average Mandi market prices across markets unless the aggregation method and weighting basis are explicitly defined.
 - Preserve the original source names alongside standardized names in evidence panels.
+- Use NCRB statistics only at the national level represented by the source data; do not infer state- or district-level crime patterns from national totals.
+- Check the NCRB row's `quality_flag` and individual validation fields before using it. Explain failed checks and do not silently treat missing or invalid values as zero.
+- Preserve the distinction between IPC/BNS incidence, SLL incidence, total incidence, crime rates, and percentages. Do not combine counts and rates in the same aggregation.
+- When comparing years, confirm that the source definitions and reporting framework are comparable across the selected years. The source's IPC/BNS label should be preserved as reported.
 
 ## Data-quality principle
 

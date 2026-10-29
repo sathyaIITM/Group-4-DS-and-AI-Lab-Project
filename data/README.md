@@ -22,3 +22,4 @@ the list is the first Milestone 2 deliverable.
 | --- | --- | --- | --- |
 | `data\raw\datafile1.csv` | National Family Health Survey-5 (NFHS-5) - India Districts Factsheet Data (Provisional) | data.gov.in | https://www.data.gov.in/catalog/national-family-health-survey-5-nfhs-5-india-districts-factsheet-data-provisional
 | `data\raw\datafile2.csv` | Current daily price of various commodities from various markets (Mandi) | data.gov.in | https://www.data.gov.in/catalog/current-daily-price-various-commodities-various-markets-mandi | 
+| `data\raw\datafile3.csv` | Year-wise Details of Crimes under Indian Penal Code (IPC)/Bharatiya Nyay Sanhita (BNS) and Special and Local Laws (SLL) from 2022 to 2024 | data.gov.in | https://www.data.gov.in/catalog/crime-india-cii-2024?state |
