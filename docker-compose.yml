@@ -40,6 +40,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-analyst}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-analyst}
       DATA_DIR: /data/processed
+      STREAM_EVENT_DELAY_S: ${STREAM_EVENT_DELAY_S:-0.1}
       # Decision-model and hosted-LLM backends. Values come from .env; never commit them.
       KEV_BASE_URL: ${KEV_BASE_URL:-}
       KEV_API_KEY: ${KEV_API_KEY:-}

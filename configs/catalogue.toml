@@ -1,0 +1,214 @@
+# Catalogue for the Kev data generator (draft, 2026-10-23).
+#
+# Only tables with status = "real" are shown in generated states. The two real tables are the
+# week-1 tables (data/sample/README.md). Placeholder entries reserve one slot per planned
+# domain; they hold no metadata and are not used until T1 freezes the Milestone 2 catalogue.
+# Facts below were read from the Parquet files in data/processed on 2026-10-23.
+
+version = "0.1-draft"
+
+[[table]]
+name = "plfs_state_ur_usual_status"
+status = "real"
+domain = "labour"
+topic = "unemployment"
+line = "plfs_state_ur_usual_status: PLFS unemployment rate (%), usual status (ps+ss), persons aged 15+, by State/UT plus an All India row, survey years 2017-18 to 2021-22 (July-June)"
+publisher = "Rajya Sabha answer table citing MoSPI (PLFS)"
+resource_id = "d038e512-231e-4adb-bbb7-a3f95102d18a"
+licence = "Government Open Data License - India"
+retrieved = "2026-10-23"
+national_row = true
+periods = ["2017-18", "2018-19", "2019-20", "2020-21", "2021-22"]
+out_of_range_periods = ["2011-12", "2022-23", "2023-24", "2024-25"]
+places = [
+  "Andhra Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana",
+  "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
+  "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+  "Tamil Nadu", "Telangana", "Tripura", "Uttarakhand", "Uttar Pradesh", "West Bengal",
+  "Jammu and Kashmir", "Puducherry", "Chandigarh", "Ladakh",
+]
+# Breakdowns the table lacks. Geographic or time breakdowns are declined (R9); named population
+# groups are clarified, offering the persons 15+ figure (R12, decision H5).
+absent_breakdowns = ["by district", "for each month"]
+lacking_groups = ["for women", "for men", "in rural areas", "in urban areas", "among graduates", "for youth aged 15-29", "for people aged 15-24"]
+lacking_definitions = ["by current weekly status", "by current daily status"]
+describe_questions = [
+  "What unit is the unemployment rate reported in?",
+  "Which survey years does the unemployment table cover?",
+  "Does the unemployment table split rural and urban areas?",
+  "What does usual status (ps+ss) mean in the unemployment table?",
+  "Is the All India row in the unemployment table an average of the states?",
+  "Which age group does the unemployment rate refer to?",
+  "Why are some values missing in the unemployment table?",
+  "Are the years in the unemployment table calendar years or survey years?",
+  "Does the unemployment data come from a household survey?",
+  "Is the unemployment table broken down by gender?",
+]
+describe_templates = [
+  "Does the unemployment table have figures for {place}?",
+  "Which years of unemployment data are there for {place}?",
+  "Is {place} listed as a separate row in the unemployment table?",
+]
+
+[[table]]
+name = "imd_subdivision_monthly_rainfall"
+status = "real"
+domain = "rainfall"
+topic = "rainfall"
+line = "imd_subdivision_monthly_rainfall: IMD rainfall (mm) by month, season (jf, mam, jjas, ond) and year for 36 meteorological sub-divisions (not states or districts), calendar years 1901-2017; no all-India row"
+publisher = "India Meteorological Department, Ministry of Earth Sciences"
+resource_id = "8e0bd482-4aba-4d99-9cb9-ff124f6f1c2f"
+licence = "Government Open Data License - India"
+retrieved = "2026-10-23"
+national_row = false
+period_range = [1901, 2017]
+out_of_range_periods = ["2018", "2019", "2020", "2021", "2022", "2023", "2024"]
+# User-facing names of sub-divisions that map to exactly one row. The source spells two of
+# them differently ("Matathwada", "Rayalseema"); users type the common spelling.
+places = [
+  "Arunachal Pradesh", "Bihar", "Chhattisgarh", "Coastal Andhra Pradesh", "Coastal Karnataka",
+  "East Madhya Pradesh", "East Rajasthan", "East Uttar Pradesh", "Gangetic West Bengal",
+  "Gujarat Region", "Himachal Pradesh", "Jammu & Kashmir", "Jharkhand", "Kerala",
+  "Konkan & Goa", "Madhya Maharashtra", "Marathwada", "North Interior Karnataka", "Orissa",
+  "Punjab", "Rayalaseema", "Saurashtra & Kutch", "South Interior Karnataka", "Tamil Nadu",
+  "Telangana", "Uttarakhand", "Vidarbha", "West Madhya Pradesh", "West Rajasthan",
+  "West Uttar Pradesh",
+]
+# Renamings and places inside a composite sub-division (guide D6, decision H7).
+place_aliases = { "Odisha" = "Orissa", "Delhi" = "Haryana Delhi & Chandigarh", "Haryana" = "Haryana Delhi & Chandigarh", "Goa" = "Konkan & Goa", "Assam" = "Assam & Meghalaya", "Meghalaya" = "Assam & Meghalaya", "Sikkim" = "Sub Himalayan West Bengal & Sikkim", "Manipur" = "Naga Mani Mizo Tripura", "Mizoram" = "Naga Mani Mizo Tripura" }
+# States split into several sub-divisions: list each, never aggregate (guide R11, decision H6).
+multi_places = { "Karnataka" = 3, "Maharashtra" = 4, "Rajasthan" = 2, "Uttar Pradesh" = 2, "Madhya Pradesh" = 2, "West Bengal" = 2, "Gujarat" = 2, "Andhra Pradesh" = 2 }
+absent_breakdowns = ["Pune district", "Wayanad district", "Jaisalmer district", "Cuttack district", "Patna district", "Nagpur city"]
+describe_questions = [
+  "What unit is rainfall measured in?",
+  "Which years does the rainfall table cover?",
+  "What is a meteorological sub-division?",
+  "Does the rainfall table have district-level data?",
+  "Are the rainfall values area-weighted averages or station readings?",
+  "Why is there no All India row in the rainfall table?",
+  "Is Odisha listed as Orissa in the rainfall data?",
+  "How many sub-divisions does the rainfall table have?",
+]
+describe_templates = [
+  "What does the {season} column mean in the rainfall table?",
+  "Which years of rainfall data are there for {place}?",
+  "Which sub-division does {state} fall under in the rainfall table?",
+  "Is {place} a separate sub-division in the rainfall table?",
+]
+
+[[table]]
+name = "TBD-agriculture"
+status = "placeholder"
+domain = "agriculture"
+
+[[table]]
+name = "TBD-prices-economy"
+status = "placeholder"
+domain = "prices_economy"
+
+[[table]]
+name = "TBD-health"
+status = "placeholder"
+domain = "health"
+
+# Measures absent from every real table: quantitative questions on them are declined (R7);
+# searches for them are searches (R2). Domain `other` marks topics outside the five domains.
+[[uncovered]]
+phrase = "labour force participation rate"
+domain = "labour"
+topic = "labour force participation"
+
+[[uncovered]]
+phrase = "average daily wage of casual workers"
+domain = "labour"
+topic = "wages"
+
+[[uncovered]]
+phrase = "number of MGNREGA person-days"
+domain = "labour"
+topic = "MGNREGA employment"
+
+[[uncovered]]
+phrase = "rice production"
+domain = "agriculture"
+topic = "crop production"
+
+[[uncovered]]
+phrase = "wheat yield per hectare"
+domain = "agriculture"
+topic = "crop yields"
+
+[[uncovered]]
+phrase = "minimum support price for paddy"
+domain = "agriculture"
+topic = "minimum support prices"
+
+[[uncovered]]
+phrase = "area under cotton"
+domain = "agriculture"
+topic = "cropped area"
+
+[[uncovered]]
+phrase = "fertiliser consumption"
+domain = "agriculture"
+topic = "fertiliser use"
+
+[[uncovered]]
+phrase = "CPI inflation"
+domain = "prices_economy"
+topic = "inflation"
+
+[[uncovered]]
+phrase = "GDP growth rate"
+domain = "prices_economy"
+topic = "GDP"
+
+[[uncovered]]
+phrase = "per capita income"
+domain = "prices_economy"
+topic = "state income"
+
+[[uncovered]]
+phrase = "retail price of onions"
+domain = "prices_economy"
+topic = "food prices"
+
+[[uncovered]]
+phrase = "infant mortality rate"
+domain = "health"
+topic = "infant mortality"
+
+[[uncovered]]
+phrase = "share of stunted children under five"
+domain = "health"
+topic = "child nutrition"
+
+[[uncovered]]
+phrase = "share of institutional births"
+domain = "health"
+topic = "institutional deliveries"
+
+[[uncovered]]
+phrase = "number of hospital beds"
+domain = "health"
+topic = "hospital capacity"
+
+[[uncovered]]
+phrase = "literacy rate"
+domain = "other"
+topic = "literacy"
+
+[[uncovered]]
+phrase = "number of registered vehicles"
+domain = "other"
+topic = "vehicle registrations"
+
+[[uncovered]]
+phrase = "school enrolment ratio"
+domain = "other"
+topic = "school enrolment"
+
+[[uncovered]]
+phrase = "number of reported road accidents"
+domain = "other"
+topic = "road accidents"
