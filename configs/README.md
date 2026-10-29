@@ -8,7 +8,7 @@ Expected files, added as the corresponding component lands:
 
 | File | Purpose |
 | --- | --- |
-| `catalogue.yaml` | The frozen table list, with source, version and licence per table |
+| `catalogue.toml` | The table list, with source, version and licence per table, plus the metadata the Kev data generator samples from (draft; frozen in Milestone 2). TOML because the standard library reads it. |
 | `model.yaml` | Hosted LLM and decision-model identifiers (Kev, Jev), by operating mode |
 | `train.yaml` | Kev fine-tuning runs: base checkpoint, LoRA rank, epochs, learning rate, data file |
 | `inference.yaml` | Decision-layer backend chain, confidence bands and per-decision gate margins |

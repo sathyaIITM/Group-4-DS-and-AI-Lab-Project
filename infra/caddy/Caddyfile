@@ -1,16 +1,16 @@
-# Edge proxy. SITE_ADDRESS=localhost serves plain HTTP for local work; a real
-# host name makes Caddy obtain a certificate automatically.
+# Edge proxy. SITE_ADDRESS=localhost serves HTTPS with Caddy's internal
+# certificate (plain HTTP is redirected; use curl -k). Set SITE_ADDRESS to
+# http://localhost for plain HTTP, or to a real host name to obtain a
+# certificate automatically.
 {$SITE_ADDRESS} {
 	encode zstd gzip
 
-	# Server-sent events: no buffering, no response timeout.
-	@sse path /api/stream*
-	reverse_proxy @sse api:8000 {
-		flush_interval -1
-	}
-
+	# Server-sent events pass through this route. flush_interval -1 sends each
+	# event as it is written and never buffers the response.
 	handle_path /api/* {
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
 	}
 
 	handle_path /admin/* {

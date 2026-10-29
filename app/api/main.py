@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections.abc import AsyncIterator
 from typing import Literal
 
@@ -19,6 +20,9 @@ from sse_starlette.sse import EventSourceResponse
 from analyst import __version__
 
 app = FastAPI(title="India analyst agent", version=__version__)
+
+# Pause between placeholder events; raised in the week-1 check so that buffering is visible.
+EVENT_DELAY_S = float(os.environ.get("STREAM_EVENT_DELAY_S", "0.1"))
 
 EventName = Literal["plan", "tool", "sql", "result", "answer", "confidence", "done"]
 
@@ -58,7 +62,7 @@ async def _placeholder_events(question: str) -> AsyncIterator[dict[str, str]]:
     ]
     for event in events:
         yield {"event": event.name, "data": json.dumps(event.payload)}
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(EVENT_DELAY_S)
 
 
 @app.post("/stream")
