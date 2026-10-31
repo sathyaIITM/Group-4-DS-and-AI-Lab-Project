@@ -218,3 +218,110 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# Project rules (working agreement: large data and model files stay out of git;
+# commit samples and download scripts only)
+# ---------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Data: raw downloads, cleaned tables and splits are reproducible from scripts.
+# data/sample is tracked on purpose.
+data/raw/*
+data/processed/*
+data/splits/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/splits/.gitkeep
+!data/sample/
+# Milestone 2 hand-off: the versioned routing splits (about 6.4 MB) are tracked
+# so training can start from a clone; checksums are in data/MANIFEST.md.
+!data/splits/kev/
+data/splits/kev/*
+!data/splits/kev/*.v1.jsonl
+
+# Model checkpoints, adapters and calibration artefacts
+models/*
+!models/checkpoints/
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+
+# Experiment outputs, run logs, figures and reports
+outputs/*
+!outputs/predictions/
+!outputs/reports/
+!outputs/figures/
+!outputs/logs/
+outputs/predictions/*
+outputs/reports/*
+outputs/figures/*
+outputs/logs/*
+!outputs/predictions/.gitkeep
+!outputs/reports/.gitkeep
+!outputs/figures/.gitkeep
+!outputs/logs/.gitkeep
+
+# README.md stays tracked everywhere, including inside otherwise-ignored
+# directories above (must come after those rules, not before).
+!**/README.md
+
+# Data and model file types, wherever they appear
+*.parquet
+*.duckdb
+*.duckdb.wal
+*.feather
+*.arrow
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.bin
+*.ckpt
+*.safetensors
+*.gguf
+*.onnx
+*.npy
+*.npz
+*.joblib
+*.pkl
+# Tabular dumps: allow small tracked samples under data/sample
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.zip
+*.gz
+*.tar
+*.7z
+!data/sample/**/*.csv
+!data/ground_truths/*.csv
+!data/sample/**/*.tsv
+!data/sample/**/*.xlsx
+
+# Secrets and local configuration (.env is already ignored above)
+.env.*
+!.env.example
+*.pem
+*.key
+!infra/caddy/Caddyfile
+secrets/
+service-account*.json
+credentials*.json
+
+# Local tool state
+.langfuse/
+.ruff_cache/
+
+# Coding-assistant local state (never part of the academic submission)
+.claude/
+.cursor/
+.aider*
+.windsurf/
+
+# Superseded drafts kept locally for reference only, not part of the submission
+docs/archive/
