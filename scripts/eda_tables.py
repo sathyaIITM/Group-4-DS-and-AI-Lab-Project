@@ -71,6 +71,8 @@ lines += [
     "| Table | Rows | Columns | Missing cells | Exact duplicate rows | Duplicate keys |",
     "| --- | --- | --- | --- | --- | --- |",
 ]
+# rule_ids is empty wherever no rule touched a value; that is by design, not missing data.
+NOT_DATA = ["rule_ids"]
 for table, key in TABLES.items():
     path = PROCESSED_DIR / f"{table}.parquet"
     if not path.exists():
@@ -79,7 +81,7 @@ for table, key in TABLES.items():
     frame = pd.read_parquet(path)
     frames[table] = frame
     lines.append(
-        f"| `{table}` | {len(frame):,} | {frame.shape[1]} | {int(frame.isna().sum().sum()):,} "
+        f"| `{table}` | {len(frame):,} | {frame.shape[1]} | {int(frame.drop(columns=NOT_DATA, errors='ignore').isna().sum().sum()):,} "
         f"| {int(frame.duplicated().sum()):,} | {int(frame.duplicated(subset=key).sum()):,} |"
     )
 
@@ -104,7 +106,7 @@ for table, frame in frames.items():
 
 lines += ["## Missing values per column (non-zero only)", ""]
 for table, frame in frames.items():
-    missing = frame.isna().sum()
+    missing = frame.drop(columns=NOT_DATA, errors="ignore").isna().sum()
     missing = missing[missing > 0]
     if missing.empty:
         lines.append(f"- `{table}`: none")

@@ -1,0 +1,11 @@
+{
+  "indicators": {
+    "rainfall_mm": {
+      "mad": 64.2,
+      "median": 65.2,
+      "p05": 0.0,
+      "p95": 1137.8
+    }
+  },
+  "observations": 71196
+}

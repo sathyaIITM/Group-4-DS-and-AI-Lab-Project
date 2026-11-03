@@ -1,0 +1,11 @@
+{
+  "indicators": {
+    "ur_usual_ps_ss": {
+      "mad": 2.05,
+      "median": 5.45,
+      "p05": 2.0,
+      "p95": 13.649999999999999
+    }
+  },
+  "observations": 190
+}

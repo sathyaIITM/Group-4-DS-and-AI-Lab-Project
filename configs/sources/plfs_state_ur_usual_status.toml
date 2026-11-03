@@ -1,0 +1,58 @@
+# PLFS unemployment rate by State/UT. Survey years run July-June.
+
+[dataset]
+id = "plfs_state_ur_usual_status"
+domain = "labour"
+title = "PLFS unemployment rate (%), usual status (ps+ss), persons aged 15+, by State/UT"
+source_name = "Rajya Sabha answer citing MoSPI (PLFS)"
+source_table = "State-wise unemployment rate (usual status), 2017-18 to 2021-22"
+publisher = "Ministry of Statistics and Programme Implementation (via Rajya Sabha answer on data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "d038e512-231e-4adb-bbb7-a3f95102d18a"
+raw_file = "plfs_state_ur_usual_status_2017_22.csv"
+config_version = "1.0.0"
+retrieved = "2026-10-23"
+caveats = [
+  "Survey years run July-June; a January-December figure cannot be derived from them.",
+  "The All India row is a published figure, not the sum or average of the States.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["sl__no_"]
+
+[columns]
+states_uts = "geo_state"
+
+[values]
+mode = "periods"
+pattern = '^_(\d{4})_(\d{2})$'
+
+[values.indicator]
+id = "ur_usual_ps_ss"
+label = "Unemployment rate, usual status (ps+ss), persons aged 15+"
+unit = "percent"
+
+[period]
+type = "survey_year"
+start_month = 7            # July-June. Stated, never inferred from a label such as 2017-18
+
+[geo]
+level = "state"
+vintage = "plfs_2017_22"
+state_reference = "states"
+total_members = ["All India"]
+
+[[checks]]
+name = "percent_range"
+kind = "range"
+min = 0
+max = 100
+flag = "out_of_range"
+
+[view]
+mode = "pivot_period"
+table = "plfs_state_ur_usual_status"
+column_prefix = "fy"
+columns = { state_ut = "geo_name_source" }

@@ -21,7 +21,7 @@ From the repository root, with `DATA_GOV_IN_API_KEY` set:
 
 ```bash
 python scripts/download_raw.py       # NFHS-5 and Mandi into data/raw
-python scripts/preprocess_data.py    # NFHS-5, Mandi and NCRB into data/processed
+python scripts/run_pipeline.py       # all five tables into data/processed (see scripts/README.md)
 python scripts/build_manifest.py     # compare hashes with MANIFEST.md
 ```
 

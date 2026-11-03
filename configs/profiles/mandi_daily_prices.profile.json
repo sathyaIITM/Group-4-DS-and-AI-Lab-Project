@@ -1,0 +1,23 @@
+{
+  "indicators": {
+    "max_price_inr_per_quintal": {
+      "mad": 2000.0,
+      "median": 4500.0,
+      "p05": 1400.0,
+      "p95": 16000.0
+    },
+    "min_price_inr_per_quintal": {
+      "mad": 1775.0,
+      "median": 3800.0,
+      "p05": 1000.0,
+      "p95": 13000.0
+    },
+    "modal_price_inr_per_quintal": {
+      "mad": 1750.0,
+      "median": 4000.0,
+      "p05": 1200.0,
+      "p95": 14800.0
+    }
+  },
+  "observations": 49179
+}
