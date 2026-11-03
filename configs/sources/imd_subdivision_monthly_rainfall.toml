@@ -1,0 +1,73 @@
+# IMD monthly rainfall by meteorological sub-division (not States). Calendar years.
+
+[dataset]
+id = "imd_subdivision_monthly_rainfall"
+domain = "rainfall"
+title = "IMD rainfall (mm) by month, season and year for 36 meteorological sub-divisions"
+source_name = "India Meteorological Department"
+source_table = "Sub-divisional monthly rainfall, 1901-2017"
+publisher = "India Meteorological Department, Ministry of Earth Sciences (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "8e0bd482-4aba-4d99-9cb9-ff124f6f1c2f"
+raw_file = "imd_subdivision_monthly_rainfall.csv"
+config_version = "1.0.0"
+retrieved = "2026-10-23"
+caveats = [
+  "Sub-divisions are not States or districts; a State may hold several and none is aggregated.",
+  "Seasons (jf, mam, jjas, ond) and the annual total are published values, stored as their own periods.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+
+[columns]
+subdivision = "geo_subdivision"
+year = "period_year"
+
+[values]
+mode = "periods"
+
+[values.indicator]
+id = "rainfall_mm"
+label = "Rainfall"
+unit = "mm"
+
+[values.period_columns]
+jan = { type = "month", start_month = 1, end_month = 1 }
+feb = { type = "month", start_month = 2, end_month = 2 }
+mar = { type = "month", start_month = 3, end_month = 3 }
+apr = { type = "month", start_month = 4, end_month = 4 }
+may = { type = "month", start_month = 5, end_month = 5 }
+jun = { type = "month", start_month = 6, end_month = 6 }
+jul = { type = "month", start_month = 7, end_month = 7 }
+aug = { type = "month", start_month = 8, end_month = 8 }
+sep = { type = "month", start_month = 9, end_month = 9 }
+oct = { type = "month", start_month = 10, end_month = 10 }
+nov = { type = "month", start_month = 11, end_month = 11 }
+dec = { type = "month", start_month = 12, end_month = 12 }
+annual = { type = "calendar_year", start_month = 1, end_month = 12 }
+jf = { type = "season", start_month = 1, end_month = 2 }
+mam = { type = "season", start_month = 3, end_month = 5 }
+jjas = { type = "season", start_month = 6, end_month = 9 }
+ond = { type = "season", start_month = 10, end_month = 12 }
+
+[period]
+type = "calendar_year"
+
+[geo]
+level = "subdivision"
+vintage = "imd_36_subdivisions"
+subdivision_reference = "imd_subdivisions"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[view]
+mode = "pivot_period"
+table = "imd_subdivision_monthly_rainfall"
+columns = { subdivision = "geo_name_source", year = "period_start:year" }
+int_columns = ["year"]

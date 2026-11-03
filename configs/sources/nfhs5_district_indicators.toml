@@ -1,0 +1,106 @@
+# NFHS-5 district factsheets: 104 indicators as columns, one survey round.
+
+[dataset]
+id = "nfhs5_district_indicators"
+domain = "health"
+title = "NFHS-5 district factsheet indicators, 2019-2021"
+source_name = "National Family Health Survey-5"
+source_table = "India Districts Factsheet Data"
+publisher = "IIPS and Ministry of Health and Family Welfare (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "cf80173e-fece-439d-a0b1-6e9cb510593d"
+raw_file = "datafile1.csv"
+config_version = "1.0.0"
+retrieved = "2026-10-29"
+caveats = [
+  "District estimates have wide sampling error; low-sample estimates are flagged, suppressed ones are empty.",
+  "Eight district names occur in more than one State; the (State, district) pair identifies a district.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "*" = "suppressed" }
+strip_chars = ["*"]
+
+[[read.flag_patterns]]
+name = "parentheses"
+pattern = '^\((.*)\)$'
+flag = "low_sample_estimate"
+
+[columns]
+"District Names" = "geo_district"
+"State/UT" = "geo_state"
+"Number of Households surveyed" = "attr:sample_households:int"
+"Number of Women age 15-49 years interviewed" = "attr:sample_women_15_49:int"
+"Number of Men age 15-54 years interviewed" = "attr:sample_men_15_54:int"
+
+[values]
+mode = "indicators"
+remaining = true
+id_prefix = "nfhs5"
+default_unit = "unknown"
+unit_rules = [
+  { contains = "%", unit = "percent" },
+  { contains = "per 1,000", unit = "per_1000_males" },
+  { contains = "(rs.", unit = "INR" },
+  { contains = "rs.)", unit = "INR" },
+  { contains = "number of", unit = "count" },
+]
+
+[period]
+type = "survey_round"
+label = "2019-2021"          # year-granular bounds: the source states 2019-2021
+start = "2019-01-01"
+end = "2021-12-31"
+
+[geo]
+level = "district"
+vintage = "nfhs5_2019_21"
+state_reference = "states"
+
+[[rules]]
+id = "nfhs5_minus_as_low_sample"
+
+[[checks]]
+name = "value_range"
+kind = "range"
+min = 0
+flag = "out_of_range"
+units = { percent = [0, 100] }
+
+[view]
+mode = "rows"
+table = "nfhs5_district_indicators"
+sort = ["state_name", "district_name", "indicator_id"]
+int_columns = ["sample_households", "sample_women_15_49", "sample_men_15_54"]
+
+[view.constants]
+source_name = "National Family Health Survey-5"
+source_table = "India Districts Factsheet Data"
+survey_round = "NFHS-5"
+survey_period = "2019-2021"
+geography_level = "district"
+
+[view.columns]
+state_name_source = "geo_state_source"
+state_name = "geo_state"
+district_name_source = "geo_district_source"
+district_name = "geo_district"
+indicator_id = "indicator_id"
+indicator_label = "indicator_label_source"
+value = "value"
+unit = "unit"
+sample_households = "sample_households"
+sample_women_15_49 = "sample_women_15_49"
+sample_men_15_54 = "sample_men_15_54"
+value_raw = "value_raw"
+
+[[view.derived]]
+name = "is_suppressed"
+from = "flag_equals"
+flags = ["suppressed"]
+
+[[view.derived]]
+name = "is_low_sample_estimate"
+from = "flag_equals"
+flags = ["low_sample_estimate"]

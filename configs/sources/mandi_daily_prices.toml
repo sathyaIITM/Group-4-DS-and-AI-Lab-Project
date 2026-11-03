@@ -1,0 +1,129 @@
+# AGMARKNET daily mandi prices: a rolling single-day snapshot, already one row per record.
+
+[dataset]
+id = "mandi_daily_prices"
+domain = "prices_economy"
+title = "Mandi daily minimum, maximum and modal commodity prices (INR per quintal)"
+source_name = "Current daily price of various commodities from various markets (Mandi)"
+source_table = "AGMARKNET daily market prices"
+publisher = "Directorate of Marketing and Inspection (AGMARKNET, via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
+raw_file = "datafile2.csv"
+config_version = "1.0.0"
+retrieved = "2026-10-29"
+caveats = [
+  "Only markets that uploaded on the day appear; the feed is a rolling single-day snapshot.",
+  "A minimum equal to the maximum means the market reported one price for the day.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source" }
+dedupe_exact = true
+
+[columns]
+State = "geo_state"
+District = "geo_district"
+Market = "geo_market"
+Commodity = "category:commodity_name"
+Variety = "category:variety"
+Grade = "category:grade"
+Arrival_Date = "period_date"
+
+[values]
+mode = "indicators"
+
+[values.columns."Min Price"]
+id = "min_price_inr_per_quintal"
+label = "Minimum price"
+unit = "INR_per_quintal"
+
+[values.columns."Max Price"]
+id = "max_price_inr_per_quintal"
+label = "Maximum price"
+unit = "INR_per_quintal"
+
+[values.columns."Modal Price"]
+id = "modal_price_inr_per_quintal"
+label = "Modal price"
+unit = "INR_per_quintal"
+
+[period]
+type = "date"
+date_format = "%d/%m/%Y"
+
+[geo]
+level = "market"
+vintage = "agmarknet_snapshot"
+state_reference = "states"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "price_order"
+kind = "order"
+indicators = ["min_price_inr_per_quintal", "modal_price_inr_per_quintal", "max_price_inr_per_quintal"]
+flag = "inconsistent"
+
+# Likely data-entry errors: a maximum above ten times the modal price, or a minimum below INR 1.
+[[checks]]
+name = "price_max_ratio"
+kind = "bound_multiple"
+left = "max_price_inr_per_quintal"
+right = "modal_price_inr_per_quintal"
+factor = 10
+flag = "implausible"
+
+[[checks]]
+name = "price_floor"
+kind = "range"
+indicators = ["min_price_inr_per_quintal"]
+min = 1
+flag = "implausible"
+
+[view]
+mode = "pivot_indicator"
+table = "mandi_daily_prices"
+sort = ["arrival_date", "state_name", "district_name", "market_name", "commodity_name"]
+
+[view.constants]
+source_name = "Current daily price of various commodities from various markets (Mandi)"
+source_table = "AGMARKNET daily market prices"
+geography_level = "market"
+price_unit = "INR_per_quintal"
+
+[view.columns]
+state_name_source = "geo_state_source"
+state_name = "geo_state"
+district_name_source = "geo_district_source"
+district_name = "geo_district"
+market_name = "geo_name"
+commodity_name = "commodity_name"
+variety = "variety"
+grade = "grade"
+arrival_date = "period_start"
+arrival_date_raw = "period_source"
+
+[[view.derived]]
+name = "is_arrival_date_valid"
+from = "period_valid"
+
+[[view.derived]]
+name = "is_price_non_negative"
+from = "check_passed"
+checks = ["non_negative"]
+
+[[view.derived]]
+name = "is_price_order_valid"
+from = "check_passed"
+checks = ["price_order"]
+
+[[view.derived]]
+name = "is_price_plausible"
+from = "check_passed"
+checks = ["price_max_ratio", "price_floor"]

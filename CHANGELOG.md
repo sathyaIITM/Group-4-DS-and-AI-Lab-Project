@@ -27,8 +27,29 @@ recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.
   with SHA-256 (`data/MANIFEST.md`); routing splits v1 tracked under `data/splits/kev/`;
   text-to-SQL reference pairs split by template into dev (63) and test (37).
 
+- Reusable data preparation (3 November 2026, Milestone 2 resubmission): one pipeline driven by
+  a config per table (`configs/sources/`) in place of per-table scripts; shared observation
+  tables (`obs_<dataset>`) with a quality flag, original text and rule ids on every value for
+  all five datasets; review list and suggested fixes instead of silent corrections; approved
+  header snapshots and drift checks; generated `catalogue.json` and `dim_period`; lineage log
+  and manifest with raw checksum, config version and code commit; fault-injection and
+  rebuild-equality tests (`tests/`). Specification in `docs/data_contract_v1.md`.
+- Handling of changes in public data (3 November 2026, contract 1.1): year windows that change
+  over time (`period.conventions`, `period.exceptions`, `period.verified_through`), overlap and
+  gap checks on periods, a `quarter` period type, comparison of each release with the live one
+  of the same dataset with accepted changes recorded in the lineage, place names matched
+  ignoring case and spacing, sub-division aliases, single-year period headers, a warning for
+  checks that name a missing column, and `scripts/robustness_sweep.py`.
+
 ### Changed
 
+- Data preparation (3 November 2026): IMD and PLFS now carry `quality_flag` and `rule_ids`;
+  place names the old alias list left unstandardised (`Maharastra`, `Jammu & Kashmir`,
+  `Dadra and Nagar Haveli & Daman and Diu`, `Chattisgarh`, `Andaman and Nicobar`) are now
+  standardised in `state_name`, source spellings kept; quality flags use one shared
+  vocabulary (`missing_or_unparseable` is `unparsed`, `invalid_price_order` is `inconsistent`,
+  `passed` is `reported`). Reference queries `Q025` and `Q059` use the new flag names; all
+  90 executable reference queries return the same results as before.
 - Preprocessing script runs from any directory; NFHS-5 cells exported as negative numbers
   are read as low-sample estimates; Mandi rows with implausible prices are flagged.
 - Reference queries `Q012` and `Q019` corrected to match the prepared NFHS-5 labels.

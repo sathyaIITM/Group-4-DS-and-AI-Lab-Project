@@ -6,11 +6,11 @@ Produced by `scripts/eda_tables.py`.
 
 | Table | Rows | Columns | Missing cells | Exact duplicate rows | Duplicate keys |
 | --- | --- | --- | --- | --- | --- |
-| `imd_subdivision_monthly_rainfall` | 4,188 | 19 | 134 | 0 | 0 |
-| `plfs_state_ur_usual_status` | 38 | 6 | 4 | 0 | 0 |
-| `nfhs5_district_indicators` | 73,528 | 20 | 4,132 | 0 | 0 |
-| `mandi_daily_prices` | 16,393 | 22 | 0 | 0 | 0 |
-| `ncrb_annual_crime_statistics` | 3 | 22 | 0 | 0 | 0 |
+| `imd_subdivision_monthly_rainfall` | 4,188 | 21 | 134 | 0 | 0 |
+| `plfs_state_ur_usual_status` | 38 | 8 | 4 | 0 | 0 |
+| `nfhs5_district_indicators` | 73,528 | 21 | 4,132 | 0 | 0 |
+| `mandi_daily_prices` | 16,393 | 23 | 0 | 0 | 0 |
+| `ncrb_annual_crime_statistics` | 3 | 23 | 0 | 0 | 0 |
 
 ## Numeric columns (count, mean, std, min, median, max, IQR outliers)
 

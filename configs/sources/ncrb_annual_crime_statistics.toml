@@ -1,0 +1,183 @@
+# NCRB Crime in India 2024, Table 1.1(ii): a short national series with arithmetic that must agree.
+
+[dataset]
+id = "ncrb_annual_crime_statistics"
+domain = "other"
+title = "NCRB national crime incidence and rates, 2022-2024"
+source_name = "National Crime Records Bureau (NCRB)"
+source_table = "CII 2024 Table 1.1(ii)"
+publisher = "National Crime Records Bureau (via data.gov.in catalogue download)"
+source_tier = "B"
+adapter = "manual_download"
+raw_file = "datafile3.csv"
+config_version = "1.0.0"
+retrieved = "2026-10-29"
+caveats = [
+  "Counts registered cases; a change over time can reflect registration as well as crime.",
+  "National totals only; no State or district breakdown.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source" }
+
+[columns]
+Year = "period_year"
+
+[values]
+mode = "indicators"
+
+[values.columns."Mid-Year Projected Population (in Lakhs)"]
+id = "population_lakhs"
+label = "Mid-year projected population"
+unit = "lakh"
+
+[values.columns."Crime Incidence - IPC/BNS"]
+id = "ipc_bns_crime_count"
+label = "Crime incidence, IPC/BNS"
+unit = "count"
+
+[values.columns."Crime Incidence - SLL"]
+id = "sll_crime_count"
+label = "Crime incidence, SLL"
+unit = "count"
+
+[values.columns."Crime Incidence - Total"]
+id = "total_crime_count"
+label = "Crime incidence, total"
+unit = "count"
+
+[values.columns."Crime Rate - IPC/BNS"]
+id = "ipc_bns_crime_rate"
+label = "Crime rate, IPC/BNS"
+unit = "per_100000_population"
+
+[values.columns."Crime Rate - SLL"]
+id = "sll_crime_rate"
+label = "Crime rate, SLL"
+unit = "per_100000_population"
+
+[values.columns."Crime Rate - Total"]
+id = "total_crime_rate"
+label = "Crime rate, total"
+unit = "per_100000_population"
+
+[values.columns."Percentage of IPC/BNS Crimes to Total Cognizable Crimes"]
+id = "ipc_bns_percentage"
+label = "Share of IPC/BNS crimes in total cognizable crimes"
+unit = "percent"
+
+[period]
+type = "calendar_year"
+
+[geo]
+level = "national"
+vintage = "india"
+national_name = "India"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "incidence_total"
+kind = "sum"
+total = "total_crime_count"
+parts = ["ipc_bns_crime_count", "sll_crime_count"]
+flag = "inconsistent"
+
+# Published rounding allows a difference of 0.15.
+[[checks]]
+name = "ipc_bns_percentage"
+kind = "ratio"
+numerator = "ipc_bns_crime_count"
+denominator = "total_crime_count"
+target = "ipc_bns_percentage"
+scale = 100
+atol = 0.15
+flag = "inconsistent"
+
+[[checks]]
+name = "ipc_bns_crime_rate"
+kind = "ratio"
+numerator = "ipc_bns_crime_count"
+denominator = "population_lakhs"
+target = "ipc_bns_crime_rate"
+atol = 0.15
+flag = "inconsistent"
+
+[[checks]]
+name = "sll_crime_rate"
+kind = "ratio"
+numerator = "sll_crime_count"
+denominator = "population_lakhs"
+target = "sll_crime_rate"
+atol = 0.15
+flag = "inconsistent"
+
+[[checks]]
+name = "total_crime_rate"
+kind = "ratio"
+numerator = "total_crime_count"
+denominator = "population_lakhs"
+target = "total_crime_rate"
+atol = 0.15
+flag = "inconsistent"
+
+[[checks]]
+name = "unique_year"
+kind = "unique_key"
+columns = ["period_label", "indicator_id"]
+
+[view]
+mode = "pivot_indicator"
+table = "ncrb_annual_crime_statistics"
+columns = { year = "period_start:year" }
+int_columns = ["year", "ipc_bns_crime_count", "sll_crime_count", "total_crime_count"]
+
+[view.constants]
+source_name = "National Crime Records Bureau (NCRB)"
+source_table = "CII 2024 Table 1.1(ii)"
+geography_level = "national"
+country = "India"
+
+[[view.derived]]
+name = "has_missing_values"
+from = "flag_in"
+flags = ["missing_in_source", "unparsed"]
+
+[[view.derived]]
+name = "has_negative_values"
+from = "check_failed"
+checks = ["non_negative"]
+
+[[view.derived]]
+name = "incidence_total_valid"
+from = "check_passed"
+checks = ["incidence_total"]
+
+[[view.derived]]
+name = "ipc_bns_percentage_valid"
+from = "check_passed"
+checks = ["ipc_bns_percentage"]
+
+[[view.derived]]
+name = "ipc_bns_crime_rate_valid"
+from = "check_passed"
+checks = ["ipc_bns_crime_rate"]
+
+[[view.derived]]
+name = "sll_crime_rate_valid"
+from = "check_passed"
+checks = ["sll_crime_rate"]
+
+[[view.derived]]
+name = "total_crime_rate_valid"
+from = "check_passed"
+checks = ["total_crime_rate"]
+
+[[view.derived]]
+name = "is_duplicate_year"
+from = "check_failed"
+checks = ["unique_year"]
