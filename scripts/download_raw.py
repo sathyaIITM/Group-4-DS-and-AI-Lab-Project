@@ -9,7 +9,7 @@ The Mandi resource is a rolling daily snapshot, so a new download differs from
 the Milestone 2 version recorded in data/MANIFEST.md. The NCRB table
 (data/raw/datafile3.csv) is not available through the API; download it from
 https://www.data.gov.in/catalog/crime-india-cii-2024 (Table 1.1(ii)). The source
-of each T1 table is recorded in docs/candidate_tables.md.
+of each T1 table is recorded in docs/specs/candidate_tables.md.
 
     python scripts/download_raw.py
     python scripts/download_raw.py cpi_all_india.csv msp_crops.csv
@@ -35,7 +35,7 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (india-analyst-agent data fetch)"}
 RESOURCES = {
     "datafile1.csv": "cf80173e-fece-439d-a0b1-6e9cb510593d",  # NFHS-5 district factsheets
     "datafile2.csv": "9ef84268-d588-465a-a308-a864a43d0070",  # Mandi daily prices
-    # T1 tables (docs/candidate_tables.md)
+    # T1 tables (docs/specs/candidate_tables.md)
     "crop_production_district.csv": "35be999b-0208-4354-b557-f6ca9a5355de",  # T1-1
     "cpi_all_india.csv": "2a6edbfb-b416-48db-9183-645be023f757",  # T1-2
     "cpi_state.csv": "09a191c9-3b2a-44ac-8d25-02475f83e723",  # T1-3

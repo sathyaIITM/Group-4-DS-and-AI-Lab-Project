@@ -2,12 +2,18 @@
 
 | Document | Status |
 | --- | --- |
-| [Milestone1_Report.md](Milestone1_Report.md) | Current. Milestone 1: problem definition and literature review, condensed submission version, revised 2026-10-22 |
-| [Milestone2_Report.md](Milestone2_Report.md) | Current. Milestone 2: dataset identification and data preparation, 29 October 2026 |
-| [agent_graph.md](agent_graph.md) | Version 0.3, 2026-11-05. LangGraph agent specification: nodes, edges, state, limits, outcome causes, query-intent extraction, internal tools, guardrails and offline procedures (input to Milestone 3) |
-| [labelling_guide_v1.md](labelling_guide_v1.md) | Current. Labelling rules for the routing decisions (tool selection and domain) |
-| [Architecture_Diagram.svg](Architecture_Diagram.svg) | Current. Figure 1 of the Milestone 1 report |
-| [Milestone_1_TA_Presentation.pptx](Milestone_1_TA_Presentation.pptx) | Current. TA review deck for Milestone 1, aligned to the report above |
+| [Milestone1_Report.md](milestones/Milestone1_Report.md) | Current. Milestone 1: problem definition and literature review, condensed submission version, revised 2026-10-22 |
+| [Milestone2_Report.md](milestones/Milestone2_Report.md) | Current. Milestone 2: dataset identification and data preparation, 29 October 2026 |
+| [agent_graph.md](specs/agent_graph.md) | Version 0.3, 2026-11-05. LangGraph agent specification: nodes, edges, state, limits, outcome causes, query-intent extraction, internal tools, guardrails and offline procedures (input to Milestone 3) |
+| [labelling_guide_v1.md](specs/labelling_guide_v1.md) | Current. Labelling rules for the routing decisions (tool selection and domain) |
+| [Architecture_Diagram.svg](milestones/figures/Architecture_Diagram.svg) | Current. Figure 1 of the Milestone 1 report |
+| [Milestone_1_TA_Presentation.pptx](milestones/Milestone_1_TA_Presentation.pptx) | Current. TA review deck for Milestone 1, aligned to the report above |
+| [Milestone1_TA_Presentation_revised.pptx](milestones/Milestone1_TA_Presentation_revised.pptx), [Milestone1_Report_revised.pdf](milestones/Milestone1_Report_revised.pdf) | Milestone 1 deck and report as revised after the TA review |
+| [Milestone2_TA_Presentation.pptx](milestones/Milestone2_TA_Presentation.pptx) | Milestone 2 deck, version 1.1, 3 November 2026 |
+| [Milestone3_Report.md](milestones/Milestone3_Report.md) | Current. Milestone 3: model architecture and end-to-end pipeline design, version 1.1, 5 November 2026 |
+| [Milestone3_TA_Presentation.pptx](milestones/Milestone3_TA_Presentation.pptx) | Milestone 3 deck, 5 November 2026 |
+| [milestones/figures/](milestones/figures/) | Figures of the milestone reports |
+| [candidate_tables.md](specs/candidate_tables.md) | Source record of the T1 candidate tables, 5 November 2026 |
 
 Earlier drafts and the pre-2026-10-22 team review note are kept on the
 author's machine for reference, not in this repository.

@@ -1,7 +1,7 @@
 """Generate rule-labelled Kev records for tool selection and domain.
 
 Implements the programmatic core of the Kev data curation plan (Section 6.1): slots are sampled
-from the catalogue, both labels are computed by the rules of docs/labelling_guide_v1.md, and the
+from the catalogue, both labels are computed by the rules of docs/specs/labelling_guide_v1.md, and the
 rule ids are stored in `_meta`. A family is one base question plus its minimal-pair variants; all
 records of a family share a `group_id` and therefore a split. Categories that wait for a guide
 decision (Section 7 of the guide) are not generated.

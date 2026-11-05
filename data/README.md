@@ -49,4 +49,4 @@ Milestone 2 version of 29 October 2026.
 | `data/raw/msp_crops.csv` | Commodity-wise minimum support prices (MSP), 2013-14 to 2024-25 (T2-3) | data.gov.in resource `82e89d31-2208-4be0-babd-2286a4d9110b`; https://www.data.gov.in/resource/commodity-wise-details-minimum-support-prices-msp-kharif-rabi-and-others-crops-2013-14 |
 
 The source record of each T1 table (units, periods, place spellings, quirks) is in
-[docs/candidate_tables.md](../docs/candidate_tables.md).
+[docs/specs/candidate_tables.md](../docs/specs/candidate_tables.md).

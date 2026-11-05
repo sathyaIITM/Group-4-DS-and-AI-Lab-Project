@@ -10,7 +10,7 @@ A trustworthy natural-language interface to a curated set of Indian public
 statistics. The agent shows its evidence, reports a calibrated confidence, and
 declines when the catalogue cannot support an answer.
 
-- **Milestone 1 report:** [docs/Milestone1_Report.md](docs/Milestone1_Report.md)
+- **Milestone 1 report:** [docs/milestones/Milestone1_Report.md](docs/milestones/Milestone1_Report.md)
 - **Contributing, branches and working agreements:** [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Worklog (individual contributions, updated weekly):** [WORKLOG.md](WORKLOG.md)
 
@@ -31,7 +31,7 @@ Cross-portal dataset discovery is out of scope for the question-answering
 claim: the agent works over an admin-curated catalogue of 8–12 tables, and new
 tables enter through a separate, admin-approved onboarding path. The full
 problem statement, stakeholder analysis, scope table and literature review are
-in the [Milestone 1 report](docs/Milestone1_Report.md).
+in the [Milestone 1 report](docs/milestones/Milestone1_Report.md).
 
 ## Features
 
@@ -68,7 +68,7 @@ the execution layer, not the research contribution.
 The retraining and recalibration procedure is human-approved; an admin
 approves each run. The project makes no self-improvement claim.
 
-![Core architecture of the agent: a fixed LangGraph workflow with a two-tier decision layer, read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge](docs/Architecture_Diagram.svg)
+![Core architecture of the agent: a fixed LangGraph workflow with a two-tier decision layer, read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge](docs/milestones/figures/Architecture_Diagram.svg)
 
 *Figure 1. Core architecture, reproduced from the Milestone 1 report. The
 admin-operated onboarding path (foot of the diagram) is outside the
@@ -94,7 +94,7 @@ rainfall, prices/economy and health, drawn from data.gov.in, MoSPI/PLFS/CPI/WPI
 (IIPS). Specific tables are not named yet: candidates are profiled and the
 list is frozen in Milestone 2 (29 October 2026). See
 [data/README.md](data/README.md) for the directory layout and tracking rules,
-and section 10 of the [Milestone 1 report](docs/Milestone1_Report.md) for
+and section 10 of the [Milestone 1 report](docs/milestones/Milestone1_Report.md) for
 sourcing, licensing and the full data plan.
 
 | Material | Planned size |
@@ -117,7 +117,7 @@ carries small tracked extracts only.
 
 No model is fine-tuned to write SQL; query generation is bought from a hosted
 LLM rather than trained. See section 5.1 and section 8 of the
-[Milestone 1 report](docs/Milestone1_Report.md) for the reasoning.
+[Milestone 1 report](docs/milestones/Milestone1_Report.md) for the reasoning.
 
 ## Objectives
 
@@ -169,7 +169,7 @@ agent, model or tool code is implemented. The v0 baseline is measured starting
 Milestone 3 (5 November 2026), and each subsequent milestone report adds the
 version-ladder results (execution accuracy, claim support, ECE, abstention
 precision, latency, cost) defined in section 9 of the
-[Milestone 1 report](docs/Milestone1_Report.md).
+[Milestone 1 report](docs/milestones/Milestone1_Report.md).
 
 ## Demo screenshots
 
@@ -234,7 +234,7 @@ contributions are logged in [WORKLOG.md](WORKLOG.md).
 ## References
 
 36 references, verified against source, are listed in section 12 of the
-[Milestone 1 report](docs/Milestone1_Report.md): decision models and routing,
+[Milestone 1 report](docs/milestones/Milestone1_Report.md): decision models and routing,
 calibration, verification and abstention, grounded data analysis and
 query-generation benchmarks, prompt optimisation, and the commercial and
 public tools reviewed in section 5.

@@ -238,7 +238,7 @@ The specific 8–12 tables are deliberately not named at this milestone. Candida
 
 ## 11. Implementation and Resource Plan
 
-![Core architecture of the agent: a fixed LangGraph workflow with a two-tier decision layer, read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge](Architecture_Diagram.svg)
+![Core architecture of the agent: a fixed LangGraph workflow with a two-tier decision layer, read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge](figures/Architecture_Diagram.svg)
 
 *Figure 1. Core architecture. Cross-portal discovery sits in the admin-operated onboarding path at the foot of the diagram, outside the question-answering claim.*
 

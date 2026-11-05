@@ -3,7 +3,7 @@
 This repository holds one DS & AI Lab course project (Generative AI track): an
 analyst agent for Indian public data with calibrated decision models. The plan
 of record is
-[docs/Milestone1_Report.md](docs/Milestone1_Report.md). Course requirements are
+[docs/milestones/Milestone1_Report.md](docs/milestones/Milestone1_Report.md). Course requirements are
 set by the
 [milestone schedule](https://bsc-iitm.github.io/dsai-lab-project/milestones.html)
 and the

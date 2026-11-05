@@ -476,7 +476,7 @@ def main() -> None:
     c = sub.add_parser("critic-batches")
     c.add_argument("--candidates", type=Path, default=Path("data/splits/kev_candidates"))
     c.add_argument("--template", type=Path, required=True)
-    c.add_argument("--guide", type=Path, default=Path("docs/labelling_guide_v1.md"))
+    c.add_argument("--guide", type=Path, default=Path("docs/specs/labelling_guide_v1.md"))
     c.add_argument("--out", type=Path, required=True)
     c.add_argument("--returns", type=Path, help="skip items that already have a verdict here")
     c.add_argument("--max-chars", type=int, default=PACK_CHARS)

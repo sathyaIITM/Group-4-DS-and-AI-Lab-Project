@@ -348,7 +348,7 @@ Routing rules in `resolve_routing_decision`:
    `prices_economy`; minimum support prices and crop production are `agriculture`. These two
    rules are added to the labelling guide before its freeze.
 
-Labels follow `docs/labelling_guide_v1.md`, including its precedence (Section 2.2) and
+Labels follow `docs/specs/labelling_guide_v1.md`, including its precedence (Section 2.2) and
 defaults (Section 4).
 
 ### Phase B: non-query branches

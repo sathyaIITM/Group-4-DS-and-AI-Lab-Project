@@ -2,7 +2,7 @@
 
 Entries follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions track the evaluation ladder: `v0` baseline through `v6` retraining and
-recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.md).
+recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milestones/Milestone1_Report.md).
 
 ## [Unreleased]
 
@@ -21,9 +21,9 @@ recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.
   and `models/` subfolders, named test stubs, README sections for features,
   dataset, models, results, demo and team members.
 
-- Milestone 2 (29 October 2026): report `docs/Milestone2_Report.md` with document change
+- Milestone 2 (29 October 2026): report `docs/milestones/Milestone2_Report.md` with document change
   log, contribution log and sign-off; five cleaned tables (IMD rainfall, PLFS, NFHS-5,
-  Mandi, NCRB); EDA (`scripts/eda_tables.py`, `docs/figures/milestone2/`); data manifest
+  Mandi, NCRB); EDA (`scripts/eda_tables.py`, `docs/milestones/figures/milestone2/`); data manifest
   with SHA-256 (`data/MANIFEST.md`); routing splits v1 tracked under `data/splits/kev/`;
   text-to-SQL reference pairs split by template into dev (63) and test (37).
 
@@ -33,16 +33,34 @@ recalibration, as defined in [docs/Milestone1_Report.md](docs/Milestone1_Report.
   all five datasets; review list and suggested fixes instead of silent corrections; approved
   header snapshots and drift checks; generated `catalogue.json` and `dim_period`; lineage log
   and manifest with raw checksum, config version and code commit; fault-injection and
-  rebuild-equality tests (`tests/`). Specification in `docs/data_contract_v1.md`.
+  rebuild-equality tests (`tests/`). Specification in `docs/specs/data_contract_v1.md`.
 - Handling of changes in public data (3 November 2026, contract 1.1): year windows that change
   over time (`period.conventions`, `period.exceptions`, `period.verified_through`), overlap and
   gap checks on periods, a `quarter` period type, comparison of each release with the live one
   of the same dataset with accepted changes recorded in the lineage, place names matched
   ignoring case and spacing, sub-division aliases, single-year period headers, a warning for
   checks that name a missing column, and `scripts/robustness_sweep.py`.
+- Candidate tables (5 November 2026, T1): source record `docs/specs/candidate_tables.md` for the ten
+  T1 tables and the four `data_discovery` files (resource ids, publishers, periods, units, place
+  spellings, quirks, decisions); `scripts/download_raw.py` covers the ten tables and accepts file
+  names to download only those; raw-file list in `data/README.md`.
+- Agent design, base version (T2 and T4): `docs/Langgraph diagram.md`, the node graph from which
+  `docs/specs/agent_graph.md` version 0.1 was derived.
+- Milestone 3 (5 November 2026): report `docs/milestones/Milestone3_Report.md` and slides
+  `docs/milestones/Milestone3_TA_Presentation.pptx`; agent graph specification
+  `docs/specs/agent_graph.md` (version 0.3); phase 1 of the Kev adoption, the domain decision:
+  `src/analyst/decisions/phase1.py`, `scripts/build_domain_phase1.py`,
+  `src/analyst/evaluation/domain_eval.py` (temperature fit, paired bootstrap),
+  `scripts/domain_phase1_eval.sh`, choice-question support in `system_one.py`; an end-to-end
+  slice over the five tables, `src/analyst/pipelines/end_to_end_slice.py`; tests
+  `tests/test_domain_phase.py` and `tests/test_end_to_end_slice.py`.
+- Jev zero-shot reference on the domain decision (5 November 2026): accuracy 0.929 on the 338
+  dev-synthetic items (`outputs/reports/domain_jev_score.json`, not tracked).
 
 ### Changed
 
+- `.gitignore` (5 November 2026): exception for `configs/reference/*.csv`, which the data
+  pipeline and 55 tests need and which were not tracked.
 - Data preparation (3 November 2026): IMD and PLFS now carry `quality_flag` and `rule_ids`;
   place names the old alias list left unstandardised (`Maharastra`, `Jammu & Kashmir`,
   `Dadra and Nagar Haveli & Daman and Diu`, `Chattisgarh`, `Andaman and Nicobar`) are now

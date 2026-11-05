@@ -1,6 +1,6 @@
 """Kev decision questions (tool selection and domain) and the labelled-record contract.
 
-The question text and option descriptions follow docs/labelling_guide_v1.md. Kev binds these
+The question text and option descriptions follow docs/specs/labelling_guide_v1.md. Kev binds these
 exact strings during fine-tuning, so training records and serving requests must both be built
 from the constants below.
 """

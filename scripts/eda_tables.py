@@ -2,7 +2,7 @@
 
 Reads the processed Parquet tables, the routing splits and the text-to-SQL
 ground truth, then writes figures and a Markdown summary to
-docs/figures/milestone2/. Run from any directory:
+docs/milestones/figures/milestone2/. Run from any directory:
 
     python scripts/eda_tables.py
 """
@@ -24,7 +24,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 SPLITS_DIR = ROOT_DIR / "data" / "splits" / "kev"
 GROUND_TRUTH = ROOT_DIR / "data" / "ground_truths" / "text_to_sql_ground_truth_100.csv"
-OUT_DIR = ROOT_DIR / "docs" / "figures" / "milestone2"
+OUT_DIR = ROOT_DIR / "docs" / "milestones" / "figures" / "milestone2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TABLES = {
