@@ -9,7 +9,7 @@ code: `configs/sources/<dataset>.toml`. The output follows the data contract
 From the repository root:
 
 ```bash
-python scripts/download_raw.py            # NFHS-5 and Mandi into data/raw (needs DATA_GOV_IN_API_KEY)
+python scripts/download_raw.py            # API resources into data/raw (needs DATA_GOV_IN_API_KEY)
 python scripts/run_pipeline.py            # every table in configs/sources
 python scripts/run_pipeline.py --dataset mandi_daily_prices
 python scripts/run_pipeline.py --verify   # recompute catalogue facts from the files
