@@ -300,6 +300,7 @@ outputs/logs/*
 *.7z
 !data/sample/**/*.csv
 !data/ground_truths/*.csv
+!configs/reference/*.csv
 !data/sample/**/*.tsv
 !data/sample/**/*.xlsx
 

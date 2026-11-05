@@ -1,6 +1,6 @@
 """The pipeline engine: one raw file plus one configuration gives one observation table.
 
-Steps (see docs/data_contract_v1.md): clean, check columns, parse values, run declared
+Steps (see docs/specs/data_contract_v1.md): clean, check columns, parse values, run declared
 checks, resolve periods and places, reshape to one row per value, validate. Anything
 unexpected becomes a review item with a suggested configuration change; the engine
 never corrects a value on an assumption.

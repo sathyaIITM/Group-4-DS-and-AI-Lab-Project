@@ -2,14 +2,14 @@
 
 One engine prepares every table. A table-specific choice lives in its config file, not in
 code: `configs/sources/<dataset>.toml`. The output follows the data contract
-(`docs/data_contract_v1.md`).
+(`docs/specs/data_contract_v1.md`).
 
 ## Run it
 
 From the repository root:
 
 ```bash
-python scripts/download_raw.py            # NFHS-5 and Mandi into data/raw (needs DATA_GOV_IN_API_KEY)
+python scripts/download_raw.py            # API resources into data/raw (needs DATA_GOV_IN_API_KEY)
 python scripts/run_pipeline.py            # every table in configs/sources
 python scripts/run_pipeline.py --dataset mandi_daily_prices
 python scripts/run_pipeline.py --verify   # recompute catalogue facts from the files
@@ -97,7 +97,7 @@ every other test runs on a clean clone.
 | Script | Purpose |
 | --- | --- |
 | `download_raw.py` | Download the raw files from the data.gov.in API |
-| `eda_tables.py` | Exploratory analysis and figures into `docs/figures/milestone2/` |
+| `eda_tables.py` | Exploratory analysis and figures into `docs/milestones/figures/milestone2/` |
 | `split_ground_truth.py` | Split the reference pairs into dev and test by template |
 | `build_manifest.py` | Write `data/MANIFEST.md` |
 | `robustness_sweep.py` | Apply 13 kinds of change to each real raw file and report how the pipeline reacted (needs the raw files and a release) |

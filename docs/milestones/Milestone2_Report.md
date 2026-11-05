@@ -90,7 +90,7 @@ The plan names 8-12 core tables. The five prepared tables are the catalogue for 
 | `mandi_daily_prices` | 16,393 | 23 | market x commodity x variety x grade x day | 29 states, 1,725 markets, 261 commodities; 29 Oct 2026 |
 | `ncrb_annual_crime_statistics` | 3 | 23 | year | India, 2022-2024 (9 measures plus source and validation columns) |
 
-These are the agent tables. Each is derived by configuration from an observation table (`obs_<dataset>`, one row per value): IMD 71,196 values, PLFS 190, NFHS-5 73,528, Mandi 49,179, NCRB 24 (`docs/data_contract_v1.md`). Column counts include `quality_flag` and `rule_ids`, which version 1.0 had for NFHS-5, Mandi and NCRB only.
+These are the agent tables. Each is derived by configuration from an observation table (`obs_<dataset>`, one row per value): IMD 71,196 values, PLFS 190, NFHS-5 73,528, Mandi 49,179, NCRB 24 (`docs/specs/data_contract_v1.md`). Column counts include `quality_flag` and `rule_ids`, which version 1.0 had for NFHS-5, Mandi and NCRB only.
 
 The tables are queried, not modelled, so there is no target variable. The measured quantities are `value` (NFHS-5), the three prices (Mandi), rainfall (IMD), the unemployment rate (PLFS) and crime counts and rates (NCRB).
 
@@ -159,7 +159,7 @@ Sample `Q001`: "Show the electricity percentage for every district, highest firs
 
 ## 5. Exploratory Data Analysis
 
-Produced by `scripts/eda_tables.py`; full output in `docs/figures/milestone2/eda_summary.md`.
+Produced by `scripts/eda_tables.py`; full output in `docs/milestones/figures/milestone2/eda_summary.md`.
 
 ### 5.1 Summary statistics, missing values and duplicates
 
@@ -246,11 +246,11 @@ Normalisation, encoding and feature selection do not apply: the tables are queri
 
 **A source defect found and corrected.** The NFHS-5 factsheet marks estimates from 25-49 cases with parentheses, `(29.5)`; the API export renders them as negative numbers. 4,884 cells were negative, including vaccination coverage of `-100` and delivery costs of `-10,557` rupees. No NFHS-5 indicator can be negative, so the leading minus is read as the low-sample marker; afterwards no value is negative and no percentage exceeds 100. Without this, a query for the lowest coverage would return a corrupted value as valid. The correction is the registered rule `nfhs5_minus_as_low_sample`; detecting negatives in a non-negative column is generic.
 
-**Routing splits.** Labels follow labelling guide v1 (16 tool and 8 domain rules with fixed precedence; `docs/labelling_guide_v1.md`). Tokenisation happens at training time. Minimal pairs (one detail changed, label changed) are generated together and kept in one group.
+**Routing splits.** Labels follow labelling guide v1 (16 tool and 8 domain rules with fixed precedence; `docs/specs/labelling_guide_v1.md`). Tokenisation happens at training time. Minimal pairs (one detail changed, label changed) are generated together and kept in one group.
 
 ## 6A. Reusable data preparation
 
-One engine prepares every table. A table-specific decision is a line of configuration (`configs/sources/<dataset>.toml`); the only defect-specific code is one named, tested rule in a registry. Every output follows one data contract (`docs/data_contract_v1.md`); usage is in `scripts/README.md`.
+One engine prepares every table. A table-specific decision is a line of configuration (`configs/sources/<dataset>.toml`); the only defect-specific code is one named, tested rule in a registry. Every output follows one data contract (`docs/specs/data_contract_v1.md`); usage is in `scripts/README.md`.
 
 ### 6A.1 Scope
 
@@ -437,11 +437,11 @@ Test results are reported per dataset with 95% Wilson intervals, never as one he
 | Pipeline (engine, operations, source rules, validation, periods, release comparison, agent tables, profiles, publication) | `src/analyst/data/` |
 | Table configurations, reference lists, approved profiles | `configs/sources/`, `configs/reference/`, `configs/profiles/` |
 | Pipeline command and guide | `scripts/run_pipeline.py`; `scripts/README.md` |
-| Data contract | `docs/data_contract_v1.md` |
-| EDA and figures | `scripts/eda_tables.py`; `docs/figures/milestone2/` |
+| Data contract | `docs/specs/data_contract_v1.md` |
+| EDA and figures | `scripts/eda_tables.py`; `docs/milestones/figures/milestone2/` |
 | Data manifest | `scripts/build_manifest.py`; `data/MANIFEST.md` |
 | Routing generator and leakage checks | `src/analyst/data/kev_generate.py`, `kev_checks.py`; `src/analyst/decisions/kev_questions.py` |
-| Labelling guide | `docs/labelling_guide_v1.md` |
+| Labelling guide | `docs/specs/labelling_guide_v1.md` |
 | Routing splits; reference pairs and split | `data/splits/kev/`; `data/ground_truths/`, `scripts/split_ground_truth.py` |
 | Read-only SQL runner and evaluation harness | `src/analyst/tools/sql_runner.py`, `src/analyst/evaluation/` |
 | Data dictionary | Section 3.2; `data/sample/README.md` |
