@@ -162,14 +162,28 @@ docker compose up --build
 See [infra/README.md](infra/README.md) for deployment, for serving Kev, and for
 the budget estimate.
 
+The RAG proof of concept (needs the processed tables, Docker and a Gemini key
+in `.env`; full steps in Appendix A of the Milestone 3 report):
+
+```bash
+python -m pip install -e ".[dev,retrieval]"
+scripts/rag_poc_db.sh
+set -a; . ./.env; set +a
+python -m analyst.pipelines.rag_poc --only rp-01
+```
+
 ## Results
 
-None yet. Milestone 1 is problem definition and literature review only; no
-agent, model or tool code is implemented. The v0 baseline is measured starting
-Milestone 3 (5 November 2026), and each subsequent milestone report adds the
-version-ladder results (execution accuracy, claim support, ECE, abstention
-precision, latency, cost) defined in section 9 of the
-[Milestone 1 report](docs/milestones/Milestone1_Report.md).
+Development results, not yet on a held-out test set (details and caveats in
+[Milestone 3 report](docs/milestones/Milestone3_Report.md), version 1.2):
+
+| Result | Figure | Evidence |
+| --- | --- | --- |
+| End-to-end proof of concept (retrieval, Gemini, guarded SQL, release check), 12 questions | 10 and 11 of 12 handled correctly in two runs; median 15.4 s and 17.6 s | `outputs/predictions/rag_poc_flash_lite.jsonl`, `outputs/predictions/rag_poc_flash_lite_run2.jsonl` (report Section 8.5) |
+| Kev-0.8B domain decision, rule-generated labels, 338 items | 0.828 zero-shot, 0.879 after a 250-record fine-tune; ECE 0.040 after calibration | `outputs/reports/domain_*_score.json` (report Section 7.5) |
+
+The v0 baseline and the version ladder (execution accuracy, claim support,
+ECE, abstention precision, latency, cost) start in Milestone 4.
 
 ## Demo screenshots
 
