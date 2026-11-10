@@ -1,0 +1,30 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:   0%|          | 1/320 [00:01<06:02,  1.14s/it]Loading weights: 100%|██████████| 320/320 [00:01<00:00, 279.96it/s]
+INFO:     Started server process [35518]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8009 (Press CTRL+C to quit)
+serving ~/Desktop/india-data-analyst-agent/Group-4-DS-and-AI-Lab-Project/models/checkpoints/domain_train250 (~/Desktop/india-data-analyst-agent/Group-4-DS-and-AI-Lab-Project/models/checkpoints/domain_train250) on mps via torch (float32) 127.0.0.1:8009; states over 65,536 tokens refused (422)
+INFO:     127.0.0.1:59304 - "GET /v1/models HTTP/1.1" 200 OK
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59305 - "POST /v1/systemone HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [35518]
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/multiprocessing/resource_tracker.py:479: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/loky-35518-4et0czcv'}
+  warnings.warn(

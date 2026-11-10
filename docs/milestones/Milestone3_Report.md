@@ -1,7 +1,7 @@
 # Milestone 3: Model Architecture and End-to-End Pipeline Design
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 5 November 2026. Version 1.0 (draft for review).
+Course: DS & AI Lab, GenAI track, Group 4. Date: 5 November 2026; revised 10 November 2026. Version 1.2.
 
 **Scope of the evidence.** Every statement in this report is tagged by what supports it:
 
@@ -10,6 +10,7 @@ Course: DS & AI Lab, GenAI track, Group 4. Date: 5 November 2026. Version 1.0 (d
 | **Built** | Code exists in the repository and is covered by tests |
 | **Measured** | A run was performed and its output is reported here, with the command or file that produced it |
 | **Designed** | Specified in `docs/specs/agent_graph.md` (version 0.3) and not yet implemented |
+| **Proof of concept** | Built and run end to end on a small question set; not the full design of the specification |
 | **Estimate** | A planning figure, not a measurement |
 | **Self-reported** | A figure published by a vendor or project, not reproduced by the team |
 
@@ -19,6 +20,21 @@ Course: DS & AI Lab, GenAI track, Group 4. Date: 5 November 2026. Version 1.0 (d
 | --- | --- | --- | --- |
 | 1.0 | 5 Nov 2026 | First version for Milestone 3 | Draft for team review |
 | 1.1 | 5 Nov 2026 | Jev reference on the domain decision added (Section 5.4); contributions of T1, T2 and T4 recorded; status of the base version of the graph, the Gemini connection and the candidate tables recorded (Sections 1.4, 8.4, 14, 16); slide deck added to Section 15 | Draft for team review |
+| 1.2 | 10 Nov 2026 | Response to the Milestone 3 review: end-to-end proof of concept with retrieval and a hosted LLM (Section 8.5); retrieval-augmented generation explained (Section 9); end-to-end success rate as the primary measure (Section 7.4); status table separates working, component-only and designed parts (Section 1.4); Kev and Laya position stated as provisional (Section 5.4); next steps reordered (Section 16.2); every cited result file committed and reproduction commands completed (Section 15, Appendix A) | Prepared by T3; sign-off of the other members pending |
+
+## Response to the Milestone 3 review
+
+The review of version 1.1 raised five points and asked for the retrieval-augmented generation (RAG) pipeline to be explained. The table states what version 1.2 changes and what remains open.
+
+| Review point | Response in version 1.2 | Status | Section |
+| --- | --- | --- | --- |
+| Demonstrate the complete pipeline, with SQL written by the LLM, a coverage decision, result checks and a release decision | A proof-of-concept LangGraph graph runs 12 questions from question to released or withheld answer. Gemini writes the intent, the SQL and the narration; code checks coverage, executes read-only, checks the result and checks every number in the narration before release. The reviewer's example question is case rp-01. The 14-case run of version 1.1 is retitled as a component slice | Done for 12 questions | 8.4, 8.5 |
+| Test Kev on questions labelled independently by people, with attention to weak labels | Not done. All Kev figures remain on rule-generated labels and are marked as engineering checks. The human-labelled dev set, with per-label results for `other`, `multiple` and `unspecified`, is the first decision-model item of Milestone 4 | Open | 7.5, 16.2 |
+| Compare Kev and Laya under comparable conditions | The choice of Kev is stated as provisional and the comparison as inconclusive until Laya is fine-tuned and evaluated on the same splits | Open | 5.4 |
+| Build the system rather than expand the design | The specification is frozen at version 0.3. Section 9 explains the existing retrieval design and reports the part that is built; no design element is added. The next steps start with a basic working pipeline | Done | 9, 16.2 |
+| Measure whether the complete system gives reliable answers | End-to-end success rate is defined as the primary measure. First measurement: 10 of 12 on the proof-of-concept set. The set of about 100 questions with independently established outcomes, and the v0 baseline on it, are Milestone 4 items | Partly done | 7.4, 8.5 |
+| Explain the RAG pipeline | Section 9: role of retrieval, knowledge base, flow, worked example, analysis cards, design against built part, measured retrieval quality | Done | 9 |
+| Repository evidence and reproducibility (course instruction) | Every result file cited in this report is committed under `outputs/`; Appendix A gives the commands from a clean clone | Done | 15, Appendix A |
 
 ## 0. Requirement map
 
@@ -29,7 +45,9 @@ The Milestone 3 page of the course (https://bsc-iitm.github.io/dsai-lab-project/
 | Dataset organisation and preprocessing: directory structure; raw, processed, train, validation and test splits; preprocessing before training | 6.1, 6.2 |
 | Model architecture: components, interaction, data-flow diagram, how processed data matches the model input (shapes, token lengths, embeddings) | 2, 4, 6.3, 8 |
 | Architecture justification: suitability, strengths, limitations, comparison with other approaches | 5, 13 |
-| End-to-end pipeline: a small-scale run on a subset through the complete workflow, with example outputs | 8.4 |
+| End-to-end pipeline: a small-scale run on a subset through the complete workflow, with example outputs | 8.4 (component slice), 8.5 (end-to-end run) |
+| Retrieval and knowledge components (outline item 9), including the RAG pipeline | 9 |
+| Reproducibility: code, configuration, dependencies, commands and evidence in the repository | 15, Appendix A |
 | Loss functions and evaluation metrics | 7.3, 7.4 |
 | Report outline items 1 to 16 | Sections 1 to 16 follow the outline in order |
 
@@ -49,7 +67,7 @@ The research framing is **calibrated decision models, verification, abstention a
 2. Specify the workflow from user input to final output, including every failure path.
 3. Select a model for each module and justify the selection against alternatives, including Laya.
 4. Define the training strategy, loss functions and evaluation metrics.
-5. Show that part of the pipeline runs: the domain decision model is trained, calibrated, served and evaluated on a subset (Section 7.5), and a small end-to-end run is reported in Section 8.4.
+5. Show that part of the pipeline runs: the domain decision model is trained, calibrated, served and evaluated on a subset (Section 7.5); a component slice is reported in Section 8.4; and an end-to-end run with retrieval and a hosted LLM is reported in Section 8.5 (added in version 1.2).
 
 ### 1.3 Relationship between the architecture and the project goals
 
@@ -68,20 +86,25 @@ The thesis of the design is that **reliability comes from a chain of checks that
 
 ### 1.4 Status at the time of writing
 
-| Component | Status |
-| --- | --- |
-| Five cleaned tables, catalogue, data contract, configuration-driven pipeline | **Built** (Milestone 2, version 1.1) |
-| Read-only SQL validation and execution (`sql_runner.py`) | **Built** |
-| Kev question definitions, routing splits, System One client | **Built** |
-| Domain-only (phase 1) data, evaluation and calibration modules | **Built** (this milestone) |
-| Kev-0.8B domain fine-tune on the local machine | **Measured** (Section 7.5) |
-| Kev-0.8B and Jev zero-shot, tool selection, 200 examples | **Measured** (Milestone 2, week-1 check) |
-| Jev zero-shot, domain decision, same 338 dev items | **Measured** (Section 5.4) |
-| Agent graph specification | **Designed** (`docs/specs/agent_graph.md`, version 0.3, developed from a base design by T2 and T4 through two review rounds) |
-| Base version of the agent graph with scripted nodes | **In progress**: held locally by T2 and T4, not yet in the repository; first item of Milestone 4 (Section 16.2) |
-| Hosted LLM (Gemini on Vertex AI): project and access, client, v0 baseline | **In progress**, not yet in the repository; no hosted-model figure is reported (Section 8.4) |
-| Candidate tables for the catalogue extension (T1) | **In progress**: eight of ten raw files downloaded and recorded in `docs/specs/candidate_tables.md` (branch `docs/t1-candidate-tables`, not yet merged); crop production not yet downloaded and the Census 2011 resource not yet located; preparation and catalogue freeze planned for 12 November |
-| Retrieval, internal tools, verification, calibration model | **Designed** |
+Status on 10 November 2026. **Working end to end** means the component ran inside the proof-of-concept graph of Section 8.5 on real questions; **working as a component** means it ran on its own; **designed only** means it exists as specification.
+
+| Component | Status | Evidence in the repository |
+| --- | --- | --- |
+| Five cleaned tables, catalogue, data contract, configuration-driven pipeline | Working end to end (Milestone 2, version 1.1) | `scripts/run_pipeline.py`, `data/MANIFEST.md` |
+| Read-only SQL validation and execution | Working end to end | `src/analyst/tools/sql_runner.py`; tests |
+| RAG retrieval: BM25 and `bge-small-en-v1.5` embeddings in Postgres with pgvector, fused by reciprocal rank | Working end to end (proof of concept) | `src/analyst/retrieval/`; Section 9 |
+| Guidance cards (8 table conventions, 5 analysis procedures) and 8 verified question and SQL examples | Working end to end; cards are a draft awaiting T1 review | `configs/rag/guidance_cards.v0.json`, `data/sample/rag_verified_examples.v0.jsonl` |
+| Hosted LLM client for intent, SQL and narration (Gemini through the Google AI Studio OpenAI-compatible endpoint, free tier) | Working end to end (proof of concept); Vertex AI not yet used | `src/analyst/inference/llm.py` |
+| Proof-of-concept LangGraph graph: retrieval, intent, coverage, SQL, guarded execution with one repair, result checks, narration, number check, release | Working end to end on 12 questions; 10 handled correctly | `src/analyst/pipelines/rag_poc.py`, `outputs/predictions/rag_poc_flash_lite.jsonl`; Section 8.5 |
+| Kev-0.8B domain fine-tune, calibration and serving | Working as a component; rule-generated labels only | Section 7.5; `outputs/reports/domain_*_score.json` |
+| Kev-0.8B and Jev zero-shot tool selection, 200 examples; Jev zero-shot domain decision | Measured (component) | `outputs/week1/`, `outputs/reports/domain_jev_score.json` |
+| Kev inside the end-to-end path | Not connected: the proof-of-concept graph has no routing node | — |
+| v0 baseline (hosted LLM without retrieval) on a fixed question set | Not run; `src/analyst/evaluation/v0_eval.py` exists | — |
+| Full agent graph of specification 0.3 (36 nodes, ten outcomes, limits, memory, streaming) | Designed only; a base version is held locally by T2 and T4 | `docs/specs/agent_graph.md` |
+| Internal tools (calculation, period, place, unit), statistical checks, plan resolution | Designed only | `docs/specs/agent_graph.md` |
+| Claim verification by Jev, calibrated confidence badge | Designed only | Sections 3, 4 |
+| API, UI and admin | Scaffold only | `app/` |
+| Candidate tables for the catalogue extension (T1) | In progress: source record merged into this branch; eight of ten raw files downloaded on 5 November; catalogue freeze planned for 12 November | `docs/specs/candidate_tables.md` |
 
 ---
 
@@ -97,7 +120,7 @@ flowchart LR
     C --> AD[admin]
     API --> DM[Decision layer: Kev, Jev]
     API --> LLM[Hosted LLM: Gemini on Vertex AI]
-    API --> RET[Retrieval: catalogue, guidance cards, verified examples]
+    API --> RET[RAG retrieval: tables, indicators, guidance cards, verified examples]
     API --> DB[(DuckDB over versioned Parquet, read-only)]
     RET --> PG[(Postgres with pgvector)]
     API --> PG
@@ -118,12 +141,12 @@ The services run under Docker Compose on one Compute Engine VM (`ui`, `api` with
 | --- | --- | --- | --- | --- |
 | Data preparation (`src/analyst/data/`, `scripts/`) | Turn a raw table into a validated observation table, an agent table and a catalogue entry | Raw file, `configs/sources/<id>.toml` | `obs_<id>.parquet`, `<id>.parquet`, `catalogue.json`, review list | **Built** |
 | Catalogue and reference tables | Source of truth for coverage, places, periods, units | `catalogue.json`, `configs/reference/`, `dim_period` | Lookups | **Built** (files); lookup functions **Designed** |
-| Retrieval | Rank tables, indicators, guidance cards and verified examples | Question, domain label | Ranked entries | **Designed** |
+| RAG retrieval (`src/analyst/retrieval/`) | Rank tables, indicators, guidance cards and verified examples | Question, domain label | Ranked entries | **Proof of concept** (Section 9); re-ranker designed |
 | Decision layer (`src/analyst/decisions/`) | Domain, tool, coverage and verification decisions with calibrated probabilities | State and typed questions | Label, probabilities | **Built** (client, questions); backends per Section 4 |
-| Hosted LLM | Read the question into a typed intent restricted to retrieved catalogue values; write SQL, narration and clarifying questions | Question, retrieved entries, plan, schemas, evidence | Structured output validated against Pydantic schemas | **Designed** |
+| Hosted LLM (`src/analyst/inference/llm.py`) | Read the question into a typed intent restricted to retrieved catalogue values; write SQL, narration and clarifying questions | Question, retrieved entries, plan, schemas, evidence | Structured output validated against Pydantic schemas | **Proof of concept** (JSON output checked in code; Pydantic schemas designed) |
 | SQL tools (`src/analyst/tools/sql_runner.py`) | Validate and execute read-only SQL | SQL text | Rows, timing | **Built** |
 | Internal tools (calculation, period, place, unit, chart, checks) | Typed functions that compute and check every figure | Plan, rows | Derived values, check report | **Designed** |
-| Agent graph (`src/analyst/agents/`) | Fixed LangGraph graph with state, limits and outcome causes | User message | Streamed events, outcome | **Designed** |
+| Agent graph (`src/analyst/agents/`) | Fixed LangGraph graph with state, limits and outcome causes | User message | Streamed events, outcome | **Designed**; a ten-node proof-of-concept graph is built (`src/analyst/pipelines/rag_poc.py`) |
 | API and UI (`app/`) | SSE streaming, evidence panel, charts, feedback | Events | Pages | Scaffold only |
 | Admin | Review queue, example approval, data-request log | Postgres | Decisions | Scaffold only |
 | Offline procedures | Feedback review, retraining, recalibration, drift, onboarding | Traces, labels | New configuration after approval | **Designed** |
@@ -147,7 +170,8 @@ The services run under Docker Compose on one Compute Engine VM (`ui`, `api` with
 
 | Service | Use | Notes |
 | --- | --- | --- |
-| Vertex AI (Gemini) | SQL, narration, clarifying questions | Billed to the Google Cloud trial credit; model version pinned in `configs/model.yaml`; two tiers compared in experiment E2 |
+| Vertex AI (Gemini) | SQL, narration, clarifying questions | Billed to the Google Cloud trial credit; model version pinned in `configs/model.yaml`; two tiers compared in experiment E2. Not yet set up |
+| Google AI Studio (Gemini, free tier) | Intent, SQL and narration in the proof of concept (Section 8.5) | OpenAI-compatible endpoint; limit of 20 requests per model per day observed on 10 November 2026; used until the Vertex AI project exists |
 | TypeSafe AI (Jev) and OpenRouter as a second backend | Tool, coverage and verification decisions | Access held; terms on using outputs as training labels unconfirmed |
 | Kev endpoint | Domain decision; later tool selection | Local on a local machine; GPU endpoint for demonstrations |
 | Langfuse Cloud (free plan; optional) | Traces | Buffered if unavailable |
@@ -432,7 +456,7 @@ Read with care. The labels are rule-generated, so the figures are engineering ch
 
 **Jev reference (Measured, 5 November).** Jev answered the same 638 requests through the hosted API. It leads the fine-tuned Kev checkpoint by 5 points of accuracy (0.929 against 0.879), more than the 3-point gate margin, and is strongest on `other` (F1 1.00) and `multiple` (0.72), the labels on which Kev is weak; `unspecified` remains weak for both (Jev 0.30). Its raw probabilities are already well calibrated (ECE 0.054), and the temperature fitted on the calibration split (3.21) raised dev ECE to 0.074, so a single temperature does not help Jev here. On these rule-generated labels the gate would keep the domain decision on Jev; the gate is decided on human labels after the full Kev training run, and the result is reported either way.
 
-**Position.** Kev is the main decision model because the project's research question depends on a model that can be fine-tuned, calibrated and gated on the project's own decisions, and the Kev checkpoint, trainer and temperature fit form one documented path. Zero-shot, Kev-0.8B already exceeds Laya on the domain decision by 24 points of accuracy (0.828 against 0.589), and one short fine-tune adds a further 5 points. Laya remains the natural alternative when latency and CPU-only serving matter more than accuracy and context length; both use the same protocol, so it runs behind the same client. A Laya fine-tune on the same training split, compared with Kev on human-labelled data, is the remaining experiment (Section 16).
+**Position (revised in version 1.2).** Kev is chosen **provisionally** for the initial implementation, because the research question needs a model that can be fine-tuned, calibrated and gated on the project's own decisions, and the Kev checkpoint, trainer and temperature fit form one documented path. The comparison with Laya is **not conclusive**. The figures above compare a fine-tuned Kev with a zero-shot Laya whose option text was written for Kev, on rule-generated labels. A fair comparison needs both models fine-tuned on the same training split, with option text adapted to each, evaluated on the same human-labelled dev set with the same calibration procedure, and reported with accuracy, ECE and latency side by side. Until that comparison exists, Laya's latency advantage (about five times faster on the local machine) remains a reason to revisit the choice.
 
 ### 5.5 Computational considerations
 
@@ -549,6 +573,8 @@ The rank is fixed by the checkpoint when `--init_from` is used, so a rank sweep 
 
 | Target | Metric |
 | --- | --- |
+| **Complete system (primary)** | **End-to-end success rate** on a set with independently established expected outcomes; median and p95 time; LLM calls, tokens and cost per question |
+| Retrieval | Recall at 4 and mean reciprocal rank of the expected table; the same for indicators |
 | Decision models | Accuracy with a bootstrap interval; macro-F1 and per-label F1; Brier score; negative log-likelihood; ECE with equal-width bins (10 in the routing and domain modules); AUROC; share answered at a 5% error budget; latency; cost per 1,000 decisions |
 | SQL (O1) | Execution accuracy: result of the generated query equals the result of the reference query (rounded; order ignored unless the reference sorts) |
 | Claim support (O2) | Share of material claims supported by the evidence bundle, human-labelled |
@@ -558,9 +584,13 @@ The rank is fixed by the checkpoint when `--init_from` is used, so a rank sweep 
 | Cost (O6) | LLM and decision-model calls and cost per answered question |
 | Charts (O8) | Share of charts rated appropriate by a person |
 
+**Primary end-to-end measure (added in version 1.2).** Each question in an evaluation set carries an expected outcome established before the run: an answer (with the expected value and place), a clarifying question, or a decline. A question counts as handled correctly when the system takes the expected action and, for an answer, releases a response whose figures and places match the expected result and whose numbers pass the check of Section 3. A wrong released answer, a wrong decline, an unnecessary clarification and an error each count as a failure. The rate is reported with time, LLM calls and tokens per question, and is tracked from v0 to v6; a later version counts as an improvement only if the rate rises without an unacceptable rise in time or cost. Execution accuracy, claim support, ECE and abstention precision are diagnostics beneath it. The first measurement is in Section 8.5; the planned set has about 100 questions, of which at least 20 should be declined or clarified.
+
 Protocol. Decision models are evaluated on human labels only; scores on the rule-generated dev-synthetic split are engineering checks. The temperature is fitted on the calibration split and applied unchanged to dev. Differences between models are reported as a paired bootstrap difference with a 95% interval. The frozen test set is evaluated once, with the final configuration. The gate for moving a decision to Kev is accuracy within a margin of Jev fixed in advance (for example 3 points) and ECE of at most 0.10 after calibration; a decision that fails stays on Jev, and the result is reported either way.
 
 ### 7.5 Phase 1 dry run: domain decision on a local machine (Measured)
+
+> **Scope of these figures.** Every accuracy figure in this section is measured against rule-generated labels. It shows that training, calibration and serving work; it does not show that Kev makes the right decision on real user questions. That test needs the human-labelled dev set (Section 16.2), with attention to the weak labels `other`, `multiple` and `unspecified`.
 
 **Purpose.** To take one decision through the whole path once, on free hardware, and to learn the practical points of training, calibration and serving before the real runs. The result is a pipeline check. It is not a result on human labels.
 
@@ -641,7 +671,9 @@ The paired difference in accuracy (fine-tuned minus zero-shot, same items) is **
 | Narration | Text and extracted claims | Numbers matched to the evidence bundle in code |
 | Verification and confidence | Judgments, score, calibrated probability | Answer shown above the threshold; badge level |
 
-### 8.4 Small-scale end-to-end run (Measured)
+### 8.4 Component slice with replayed reference SQL (Measured)
+
+Version 1.1 called this run an end-to-end run. It is a component slice: the components run in the order of the graph, but the SQL is replayed from reference queries, every case is answerable, and no coverage, verification or release decision is made. The end-to-end run is in Section 8.5.
 
 **What ran.** `python -m analyst.pipelines.end_to_end_slice` runs 14 answerable cases (4 IMD, 3 PLFS, 3 NFHS-5, 2 Mandi, 2 NCRB) through the stages below, against the fine-tuned checkpoint of Section 7.5 served locally. Output: `outputs/predictions/end_to_end_slice.jsonl`.
 
@@ -652,7 +684,7 @@ The paired difference in accuracy (fine-tuned minus zero-shot, same items) is **
 5. Run the checks that need no plan: executed, non-empty, not truncated, quality flags counted, and a match against the stored reference answer where one exists.
 6. Assemble the evidence (source, publisher, licence, retrieval date, dataset version, SHA-256 of the raw file, caveats, query, rows) and a templated answer in which every figure is a cell of the result.
 
-**The query is a stand-in.** No hosted LLM is connected yet, so the query of each case is replayed from its reference SQL, and every record carries `sql_source: reference SQL replayed (stand-in for the hosted LLM)`. The run therefore does not measure query generation or execution accuracy.
+**The query is a stand-in.** No hosted LLM was connected when this run was made (5 November), so the query of each case is replayed from its reference SQL, and every record carries `sql_source: reference SQL replayed (stand-in for the hosted LLM)`. The run therefore does not measure query generation or execution accuracy.
 
 | Case | Table | Domain label (probability) | Rank of the expected table | Rows | Outcome |
 | --- | --- | --- | --- | --- | --- |
@@ -696,38 +728,179 @@ The catalogue lines in this run (`dataset_id: title`, about 110 characters) are 
 
 **What the run does not cover.** Query generation by a language model; intent extraction; coverage and ambiguity decisions; derived values and statistical checks; narration, claim verification and the confidence badge; any decline, abstention or clarification (all 14 cases are answerable and were chosen as such); and the LangGraph graph itself. These are specified (Sections 3 and 4) and built in the order of Section 16.
 
-**In progress, not yet in the repository.** Two work items specified on 5 November are held locally by T2 and T4 and are not part of this submission: (1) a runnable base version of the LangGraph graph with scripted nodes and one test per outcome path, and (2) the Google Cloud project with Vertex AI access, the Gemini client and the shared metrics module. The consequences are stated without qualification:
+**Status of the items that were in progress at version 1.1.** (1) The base version of the LangGraph graph with scripted nodes is still held locally by T2 and T4 and is not in the repository. (2) A hosted-model connection now exists: Section 8.5 uses Gemini through the Google AI Studio endpoint. The Google Cloud project with Vertex AI, the v0 baseline (hosted model without retrieval) and the two-tier comparison (E2) are not done, so no version-to-version comparison is reported yet. (3) The calibration-error function remains in `routing_eval.py`; the shared metrics module is not yet separate.
 
-- No LangGraph graph runs. The slice above calls the components directly, in the order of the graph, and does not exercise state, routing between nodes, retries or the ten outcomes.
-- No hosted-model call has been made. The v0 baseline (hosted model writes the query and makes every decision) has not been run, so this report gives no execution accuracy, claim support, latency or cost for the hosted model, and no comparison of the two Gemini tiers.
-- The shared metrics module is not yet separate; the calibration-error function used in Section 7.5 remains in `routing_eval.py`.
+### 8.5 End-to-end run with retrieval and a hosted LLM (Measured, proof of concept)
 
-Both items open Milestone 4. The decision-model track (Sections 7 and 16.3, items 1 and 4) does not depend on either and proceeds in parallel.
+**What ran.** `python -m analyst.pipelines.rag_poc` runs each question through a ten-node LangGraph graph (Section 9.3 shows the flow): hybrid retrieval of the top four tables; retrieval of indicators, guidance cards and verified examples; intent extraction by the LLM (answer, clarify or decline, with dataset, indicators, periods and places restricted to retrieved values); a coverage check in code; SQL written by the LLM over `obs_<dataset>`; the read-only guard and DuckDB, with one repair attempt; result checks in code; narration by the LLM from the result rows only; and a number check that releases the narration only when every number in it is found in the result or in the question and definitions. The model was `gemini-3.5-flash-lite` at temperature 0, through the free tier of Google AI Studio. Kev, Jev verification and the confidence badge are not in this graph. In terms of the version ladder the configuration is closest to v2 (catalogue entries, cards and verified examples) without the re-ranker; it is not the v0 baseline.
+
+**Question set.** Twelve questions with outcomes fixed before the run (`data/sample/rag_poc_questions.v0.jsonl`): seven to be answered, four to be declined and one to be clarified. Expected values come from queries written by the team and checked against the tables; four questions are reused from the week-1 v0 set and two from the reference-pair dev set, whose outcome labels were set by T2. The set was used while the pipeline was debugged, so the result is a development figure, not a held-out test.
+
+| Case | Question | Expected | Outcome | First table retrieved | LLM calls | Time (s) | Correct |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| rp-01 | Which state had the highest unemployment rate in 2019-20? | answer | answered | PLFS | 3 | 15.7 | yes |
+| rp-02 | What was Kerala's unemployment rate in 2019-20? | answer | answered | PLFS | 3 | 16.3 | yes |
+| rp-03 | How much rain did Kerala get during the 2017 southwest monsoon, in millimetres? | answer | answered | IMD | 3 | 21.3 | yes |
+| rp-04 | What was Odisha's average monsoon rainfall between 1971 and 2000? | answer | answered | IMD | 3 | 15.0 | **no** |
+| rp-05 | By what percentage did India's overall unemployment rate fall between 2017-18 and 2021-22? | answer | answered | PLFS | 3 | 19.7 | yes |
+| rp-06 | Which district in Bihar has the highest share of women aged 15-49 who are literate? | answer | answered | NFHS-5 | 3 | 16.7 | yes |
+| rp-07 | Which market reported the highest modal price for onion in Maharashtra? | answer | answered | Mandi | 3 | 19.4 | yes |
+| rp-08 | What was the unemployment rate in Kerala in 2022-23? | decline | decline | PLFS | 1 | 5.0 | yes |
+| rp-09 | What was the female unemployment rate in Bihar in 2019-20? | decline | decline | PLFS | 1 | 3.5 | yes |
+| rp-10 | Which state has the highest total crime incidence in 2024? | decline | decline | NCRB | 1 | 6.6 | yes |
+| rp-11 | What was Tamil Nadu's GDP growth in 2022-23? | decline | decline | PLFS | 1 | 4.0 | yes |
+| rp-12 | Give me the exact number of households with electricity in every district. | clarify | decline | NFHS-5 | 1 | 8.4 | **no** |
+
+**Results.** End-to-end success 10 of 12: six of seven answers correct and released, four of four declines correct, and the clarification case declined. Median time per question 15.4 s (answers 16.7 s, declines 5.0 s; maximum 21.3 s). In total 26 LLM calls and 54,272 tokens, of which 50,906 were prompt tokens; cost USD 0 on the free tier. Median time by node: table retrieval 0.04 s, context retrieval 0.07 s, intent 6.7 s, SQL 5.7 s, execution 0.01 s, narration 5.6 s. The three LLM calls account for almost all of the time, so objective O5 (p95 at most 20 s) depends on the model tier, not on retrieval or execution.
+
+**Trace of the reviewer's example (rp-01).** Retrieval ranked the PLFS table first and attached its three convention cards, including the rule that the All-India row has `geo_level = 'national'` and must be excluded from a State ranking, together with the ranking procedure card and three verified examples. The intent was `{action: answer, dataset_id: plfs_state_ur_usual_status, indicator_ids: [ur_usual_ps_ss], analysis_type: ranking, periods: [2019-20], places: []}`; the coverage check confirmed the dataset, indicator and period. The LLM wrote:
+
+```sql
+SELECT geo_name, period_label, value, unit FROM obs_plfs_state_ur_usual_status
+WHERE indicator_id = 'ur_usual_ps_ss' AND geo_level = 'state' AND period_label = '2019-20'
+  AND value IS NOT NULL ORDER BY value DESC LIMIT 1
+```
+
+The guard passed it, DuckDB returned `Nagaland | 2019-20 | 25.7 | percent` in 0.03 s, and the result check confirmed that the All-India row was excluded. The released answer: "Nagaland had the highest unemployment rate of 25.7 percent in 2019-20. This measure reflects the usual status unemployment rate (principal plus subsidiary status) for persons aged 15 and above. PLFS reports by survey year, July to June, and Union Territories are included in the ranking." Every number in it was found in the result or the definitions.
+
+**Failures.**
+
+- **rp-04: a wrong answer was released.** The question asks for an average. The LLM labelled the analysis `aggregate` but wrote SQL that returned the 30 yearly values instead of their average; the narration, which receives at most 25 rows, described the range for 1971 to 1995. Every number in the narration appears in the result, so the number check passed. The case shows that a supported narration is not necessarily a correct answer. Two checks would have stopped it: an `aggregate` intent must return one row per group, and the narration must not receive a truncated result. Both belong to the result checks of the specification and are not yet built.
+- **rp-12: declined instead of clarified.** The table holds percentages, not household counts. The LLM cited the NFHS card ("percentages cannot be converted into numbers of households") and declined. A decline is defensible; the labelling guide needs a rule for requests that a narrower question could answer.
+
+**Other observations.** All four declines came from the LLM's intent; the coverage check in code was never the deciding step in this run (it is covered by a unit test). Narration quality needs work: rp-05 reads "fell by -31.67%", rp-06 repeats the internal field name `period_label`, and rp-07 prints the unit code `INR_per_quintal`. On the first attempt with `gemini-3.5-flash` the daily free-tier limit (20 requests per model) was reached after five questions; that partial run also exposed a retrieval defect, fixed before the full run (Section 9.6).
+
+**Not covered by this run.** Kev routing, verification by Jev and the confidence badge, internal calculation tools, statistical checks, conversation memory, streaming and the user interface; and a comparison with the v0 baseline, which has not been run.
+
+**Reproduce.** Appendix A. Output: `outputs/predictions/rag_poc_flash_lite.jsonl`, one record per question with the retrieved entries and scores, intent, coverage decision, every SQL attempt, rows, checks, narration, number check, LLM calls with tokens and time, and node timings.
 
 ---
 
-## 9. Retrieval and Knowledge Components
+## 9. Retrieval-Augmented Generation (RAG) Pipeline
 
-**Status: Designed.** Retrieval is not yet built. With five tables the router state holds the whole catalogue, which is why the run of Section 8.4 needed no retrieval; the retrieval step becomes necessary at about six or seven tables, depending on the length of the catalogue lines (Section 14).
+**Status.** A proof of concept is built and ran end to end in Section 8.5. The re-ranker, the admin approval path for examples and the domain boost from Kev are designed and not built. Section 9.6 lists the differences between the specification and the built part.
 
-| Element | Specification |
+### 9.1 Role of retrieval in this system
+
+In a document RAG system, passages that contain the answer are retrieved and the language model writes the answer from them [37]. That design does not suit this project, because the facts are numbers in tables, and a number copied from retrieved text cannot be traced to a cell of a versioned table. Here retrieval supplies **where to look and how to query**, and the figures come only from the executed query.
+
+| | Document RAG | RAG in this project |
+| --- | --- | --- |
+| What is retrieved | Passages that contain the answer | Metadata: tables, indicators, conventions, analysis procedures, solved examples |
+| What the LLM generates from it | The answer text | A typed intent and one SQL query; DuckDB produces the figures |
+| What grounds the answer | The retrieved text | A cell of a versioned Parquet table, shown in the evidence |
+
+Generation is therefore grounded at two points. The **query** is grounded in retrieved metadata: the intent may name only retrieved datasets and indicators, and code rejects anything else. The **narration** is grounded in the executed result: it receives the result rows and the definitions only, and code checks every number in it before release. External knowledge of this kind, attached to a question, is the same idea as the "evidence" supplied with each question in the BIRD benchmark [34].
+
+### 9.2 Knowledge base
+
+| Unit | Count (proof of concept) | Built from | Purpose |
+| --- | --- | --- | --- |
+| Table entry | 5 | `catalogue.json` and the observation tables: title, domain, publisher, geography, period types and ranges, indicator labels, caveats | Choose the table; show coverage to the intent step |
+| Indicator entry | 117 (104 for NFHS-5) | Distinct `indicator_id`, label and unit of each observation table | Choose the measure |
+| Convention card | 8 | Written by the team and checked against the data (for example, Odisha appears as `Orissa` in IMD; the PLFS All-India row has `geo_level = 'national'`) | Carry the domain conventions that cause wrong queries |
+| Analysis procedure card | 5 | Written by the team: ranking, change between periods, trend, aggregation of rates, single-value lookup | State how to compute and present each kind of answer |
+| Verified question and SQL example | 8 | Written by the team over `obs_<dataset>` and executed through the guard | Few-shot patterns for the query step |
+
+Entries are short structured records, so no chunking is needed. Entries are rebuilt from released files at each catalogue release (`build_entries()` in `src/analyst/retrieval/knowledge.py`). Cards and examples enter the store only after review; user messages never enter it. The cards are version 0.1, a draft that T1 reviews against official methodology before the catalogue freeze.
+
+### 9.3 Indexing and query-time flow
+
+```mermaid
+flowchart TB
+    subgraph OFF[Offline, at each catalogue release]
+        CAT[catalogue.json and obs tables] --> KB[Knowledge entries]
+        CARDS[Reviewed cards] --> KB
+        EX[Approved examples] --> KB
+        KB --> EMB[bge-small-en-v1.5 embeddings]
+        EMB --> PGV[(Postgres with pgvector)]
+        KB --> BM[BM25 index]
+    end
+    subgraph RUN[Per question]
+        Q[Question] --> T[Top 4 tables: BM25 and vector ranks fused by RRF]
+        T --> CTX[Indicators per table, the tables' convention cards, 2 procedure cards, 3 examples]
+        CTX --> INT[LLM: typed intent restricted to retrieved values]
+        INT --> COV{Coverage check in code}
+        COV -->|covered| SQL[LLM: SQL over obs table]
+        COV -->|not covered or ambiguous| OUT1[Decline or clarifying question]
+        SQL --> G[Read-only guard and DuckDB, one repair]
+        G --> CHK[Result checks]
+        CHK --> NAR[LLM: narration from result rows]
+        NAR --> VER{Every number in the result?}
+        VER -->|yes| REL[Release answer with evidence]
+        VER -->|no| TPL[Withhold narration; release the result rows]
+    end
+    PGV --> T
+    BM --> T
+```
+
+**Ranking.** Each query is ranked twice: by BM25 over the entry text, and by cosine distance between the query embedding and the stored embeddings in pgvector (the query carries the instruction prefix recommended for the BGE models). The two rankings are fused by reciprocal rank fusion (k = 60), which needs no score scaling between them. A domain label, when present, adds a small bonus to entries of that domain and never removes an entry. If Postgres is unreachable, vectors are compared in memory and the trace records it.
+
+**Context assembly.** Tables are retrieved first. Indicators are then taken per table: all of them for a table with at most ten, and the ten best matches for a larger table. Convention cards travel with their table (top two tables); analysis procedure cards and examples are retrieved by similarity.
+
+### 9.4 Worked example
+
+For "Which state had the highest unemployment rate in 2019-20?" (case rp-01 in `outputs/predictions/rag_poc_flash_lite.jsonl`):
+
+| Step | Content |
 | --- | --- |
-| Units retrieved | One entry per table; one per indicator (104 for NFHS-5); guidance cards (domain conventions such as survey years, sub-divisions versus States, suppressed values); verified question and SQL examples (100 reference pairs to start). Sources are tables, so no document chunking is needed |
-| Embedding model | A small open model run on CPU in the API container; candidate BAAI `bge-small-en-v1.5`, chosen on the dev set by recall at 5 and pinned by revision. Catalogue embeddings are computed at each catalogue release |
-| Vector store | Postgres with pgvector |
-| Similarity | A hybrid score: BM25 lexical score plus cosine similarity of embeddings |
-| Pipeline | Question → hybrid ranking of tables (top four, with scores) before routing → after routing, retrieval of indicators, cards and examples for the plan, with the domain label as a ranking boost |
-| Re-ranking | Version v1 adds a re-ranker over the retrieved entries; its gain is measured against recall at 5 (experiment E7) |
-| RAG workflow | Retrieved entries and examples go into the intent and query prompts; enumerated fields of the intent are restricted to the retrieved values; the narration prompt receives the evidence bundle only |
-| Fallback | If Postgres is unavailable, retrieval reads `catalogue.json` and skips verified examples; the trace records it |
+| Tables | PLFS first, then NFHS-5, NCRB, IMD |
+| Indicators | `ur_usual_ps_ss` (PLFS), the IMD and NCRB indicators, ten NFHS-5 indicators |
+| Convention cards | PLFS survey year (July to June); PLFS measure (usual status, persons 15 and above, no sex or area split); PLFS geography (States and UTs at `geo_level = 'state'`, the All-India row at `'national'`); NFHS-5 round |
+| Procedure cards | Ranking; aggregation of rates |
+| Examples | Lowest three States in 2017-18 (ranking pattern); India's rate in 2020-21; Bihar's rate in 2018-19 |
+| Effect on the output | SQL filtered `geo_level = 'state'`; the answer stated the measure definition and that Union Territories are included in the ranking |
 
-Verified examples enter the store only after an administrator approves them; user messages never enter it directly.
+### 9.5 Analysis procedure cards
+
+The procedure cards tell the query and narration steps which aggregate to compute, which measure to report and which chart suits the result. Three rules govern them.
+
+1. **A rule that can be checked is enforced in code; the card carries advice.** In the proof of concept the chart type is chosen in code from the intent's analysis type and the row count (`CHART_RULES` in `rag_poc.py`), and the exclusion of the All-India row from a ranking is a result check. The ranking card asks for `RANK()` so that ties are kept, but the SQL for rp-01 used `LIMIT 1`; the advice was not followed, and only a check on ties would catch a tie.
+2. **Cards are reviewed, versioned and admitted by an administrator.** A wrong card repeats the same error in every answer that retrieves it, so drafted cards are checked against the published methodology before use.
+3. **The set stays small.** About two cards per table and one per analysis type; a longer prompt is not assumed to help.
+
+Whether the cards raise end-to-end success is not yet measured. The comparison of the versions without and with cards (v0 against v1, Section 9.7) is the test.
+
+### 9.6 Specification and built part
+
+| Element | Specification 0.3 | Built in the proof of concept |
+| --- | --- | --- |
+| Units retrieved | Tables, indicators, cards, examples | Same; 143 entries |
+| Embedding model | Small open model on CPU; candidate `bge-small-en-v1.5`, chosen by recall at 5 | `BAAI/bge-small-en-v1.5` on CPU (384 dimensions); not yet compared with an alternative |
+| Store | Postgres with pgvector | `pgvector/pgvector:pg16`, the image of the Compose stack, run by `scripts/rag_poc_db.sh` |
+| Fusion | BM25 plus cosine similarity | BM25 and pgvector cosine ranks fused by reciprocal rank |
+| Top tables before routing | 4 | 4 |
+| Domain boost | Kev label boosts ranking | Implemented; unused, because Kev is not in this graph |
+| Re-ranker (E7) | Version v1 | Not built |
+| Verified examples | Approved by an administrator | 8 written and executed by the team; approval path not built |
+| Fallback | Catalogue file and BM25 if Postgres is down | In-memory vectors if Postgres is down |
+
+**Defects found while building.** (1) A shared top 12 over all indicators let the 104 NFHS-5 indicators crowd out the single IMD indicator; the first live run declined the Kerala monsoon question (rp-03) because the intent received no rainfall indicator. Indicators are now taken per table, and a regression test covers the case. (2) Similarity search over all cards missed the PLFS card on the All-India row for rp-01; convention cards now travel with their table.
+
+### 9.7 Evaluation of retrieval
+
+**Measured on the 12 proof-of-concept questions** (11 have an expected table; rp-11 asks about a measure not in the catalogue): recall at 4 of the expected table 11 of 11, and mean reciprocal rank 1.0, with the expected table first in every case. Median time 0.04 s for table retrieval and 0.07 s for context retrieval. The set is small and was seen during development, so these figures show that the mechanism works, not how well it generalises.
+
+**Planned.** Recall at 4 and mean reciprocal rank for tables and indicators on the full evaluation set, including the new catalogue tables (E7). The contribution of retrieval to the complete system is measured as the change in end-to-end success, time and tokens between v0 (no retrieval), v1 (catalogue entries and cards) and v2 (v1 plus verified examples) on the same set.
+
+### 9.8 Utility observed in the run
+
+The run shows retrieval doing four jobs; each observation is from a trace in `outputs/predictions/rag_poc_flash_lite.jsonl` and is not yet a measured effect.
+
+| Job | Observation |
+| --- | --- |
+| Map the user's words to the table's values | rp-04: "Odisha" became the place value `Orissa` in the intent, as the IMD card states |
+| Support declines with a reason | rp-09: "the PLFS table only provides the total unemployment rate ... and does not have a split by sex"; rp-10: "national totals only" |
+| Carry definitions into the answer | rp-01, rp-02: the answer states usual status, persons aged 15 and above, and the July-to-June survey year |
+| Supply query patterns | rp-07: the SQL used the `RANK()` pattern of the Mandi example and the `commodity_name` filter |
+
+Retrieval also has a cost: 2,496 to 2,963 prompt tokens per intent call, most of them cards and indicator lists. That cost, and the latency of the intent call (median 6.7 s), are part of the v0 to v2 comparison.
 
 ---
 
 ## 10. Prompt Engineering
 
-**Status.** One prompt exists (the v0 query prompt); the others are specified here and are written and tested before the first hosted-model runs in Milestone 4. Drafts of the intent and narration prompts are in Appendix B.
+**Status.** Two sets of prompts exist: the v0 query prompt, and the intent, SQL and narration prompts of the proof of concept (`src/analyst/pipelines/rag_poc.py`), which ran in Section 8.5. The proof-of-concept prompts are shorter than the drafts in Appendix B and are not yet optimised; the remaining prompts specified here are written and tested in Milestone 4.
 
 **The v0 query prompt** (`src/analyst/evaluation/v0_eval.py`, **Built**):
 
@@ -804,6 +977,9 @@ Calls per answered question (estimate): one routing call per backend, at most on
 | No SQL fine-tuning | SFT or RL on a small coder model | The research question is reliability; hosted models improve without effort | Dependence on a provider and on cloud credit |
 | Kev as the main decision model | Jev only; Laya; Kev-4B | Fine-tunable, calibrated on own data, runs on own hardware (Section 5) | Weak zero-shot on tool selection (0.42 against 0.815) until fine-tuned |
 | Domain first, tool selection later | Both decisions at once | Learn training, serving and calibration on an easier decision; the joint retrain starts from the same checkpoint | The tool-selection claim waits for phase 2 |
+| Retrieval supplies metadata; figures come only from executed SQL | Retrieved passages as the source of answers | A figure in an answer must trace to a cell of a versioned table | Retrieval quality limits query quality, not answer grounding |
+| Table conventions travel with their table; analysis procedures retrieved by similarity | Every card retrieved by similarity | During development, similarity search missed the PLFS card on the All-India row for the reviewer's question (Section 9.6) | More prompt text for tables with many cards |
+| Rules that can be checked are enforced in code; cards carry advice only | All analysis rules as prompt text | A prompt rule can be ignored; a check cannot (Section 8.5, rp-04) | More checks to write |
 | Domain ranks retrieval | Domain filters retrieval | A wrong label cannot hide the right table (observed in Section 8.4) | A slightly larger candidate set |
 | Derived values in code | Let SQL or the narrator compute | Reproducible, checkable | More code to maintain |
 | Agent queries `obs_<d>` | Wide agent tables | One schema with period bounds and a quality flag per value | The reference pairs are rewritten once |
@@ -836,7 +1012,11 @@ Calls per answered question (estimate): one routing call per backend, at most on
 | English only | No multilingual checkpoint in scope | Stated scope; Laya multilingual or a translation step are future options |
 | Confidence intervals understate uncertainty | Records in a group are not independent | Cluster-aware intervals when human labels exist |
 | Bias in coverage | Five tables over-represent health, labour and rainfall; no agriculture or inflation yet | Tier-1 tables in the catalogue extension; coverage stated to the user |
-| Schedule: base version of the graph and hosted-model access not in the repository at Milestone 3 | Section 8.4; the v0 baseline, every later version and the cost and latency objectives (O5, O6) depend on them | They are the first items of Milestone 4; the Kev training track runs in parallel and does not wait for them; no hosted-model figure is reported until a run exists |
+| Schedule: full graph and Vertex AI access not in the repository | The base version of the graph is held locally by T2 and T4; the v0 baseline has not been run | The proof-of-concept graph (Section 8.5) is the starting point; the v0 baseline on a fixed set is the first item of Milestone 4 |
+| A wrong answer passes the number check | Case rp-04, Section 8.5 | Result checks tied to the intent (row count for an aggregate, no truncated input to narration); Jev claim support from v5; end-to-end success counts a wrong released answer as a failure |
+| Free-tier limits of the hosted model | 20 requests per model per day; overload responses (HTTP 503) on 10 November 2026 | Vertex AI on the course credit for evaluation runs (to be approved by the team before spending); a run stops when the daily limit is reached |
+| Evaluation questions reused during development | The 12 proof-of-concept questions were seen while debugging | Report them as development figures; write a separate set with outcomes fixed in advance for Milestone 4 |
+| Guidance cards encode a wrong convention | Cards are drafted by the team and not yet reviewed | Review by T1 against official methodology; versioned cards; admission by an administrator only |
 | Catalogue freeze depends on table preparation in progress | Eight of ten raw files downloaded; crop production not downloaded; Census 2011 resource not located (T1 record) | Freeze planned for 12 November; the routing data are regenerated once, after the freeze; a table that misses the freeze is excluded and stated as not covered |
 
 ---
@@ -850,15 +1030,23 @@ Calls per answered question (estimate): one routing call per backend, at most on
 | Phase-1 data builder and conversion | `src/analyst/decisions/phase1.py`, `scripts/build_domain_phase1.py` |
 | Choice-question support in the System One client | `src/analyst/decisions/system_one.py` |
 | Domain evaluation, temperature fit, paired bootstrap | `src/analyst/evaluation/domain_eval.py`, `scripts/domain_phase1_eval.sh` |
-| End-to-end slice | `src/analyst/pipelines/end_to_end_slice.py`, `outputs/predictions/end_to_end_slice.jsonl` |
+| Component slice (Section 8.4) | `src/analyst/pipelines/end_to_end_slice.py`, `outputs/predictions/end_to_end_slice.jsonl`, `outputs/logs/serve_end_to_end_slice.log` |
+| RAG retrieval (Section 9) | `src/analyst/retrieval/knowledge.py`, `src/analyst/retrieval/hybrid.py`, `scripts/rag_poc_db.sh` |
+| Guidance and analysis cards; verified examples | `configs/rag/guidance_cards.v0.json`, `data/sample/rag_verified_examples.v0.jsonl` |
+| Hosted LLM client | `src/analyst/inference/llm.py` |
+| End-to-end proof of concept (Section 8.5): graph, question set, output | `src/analyst/pipelines/rag_poc.py`, `data/sample/rag_poc_questions.v0.jsonl`, `outputs/predictions/rag_poc_flash_lite.jsonl` |
+| Week-1 routing outputs (Kev and Jev zero-shot, tool selection) | `outputs/week1/routing_kev.jsonl`, `outputs/week1/routing_jev.jsonl` |
 | Predictions and scores | `outputs/predictions/domain_*.jsonl`, `outputs/reports/domain_*_score.json` |
-| Training logs and checkpoints (not tracked) | `outputs/logs/domain_*.log`, `models/checkpoints/domain_overfit32`, `models/checkpoints/domain_train250` |
-| Tests | `tests/test_domain_phase.py`, `tests/test_end_to_end_slice.py`; full suite 138 passed, 2 skipped |
+| Training and serving logs | `outputs/logs/domain_overfit32.log`, `outputs/logs/domain_train250.log`, `outputs/logs/serve_zeroshot.log`, `outputs/logs/serve_train250.log` |
+| Checkpoints (not tracked: model files stay out of git) | `models/checkpoints/domain_overfit32`, `models/checkpoints/domain_train250`; rebuilt by the command in Section 7.5 (about 8 minutes on the local machine) |
+| Tests | `tests/test_domain_phase.py`, `tests/test_end_to_end_slice.py`, `tests/test_rag_poc.py`; full suite 145 passed, 2 skipped on 10 November 2026 |
 | Reference tables now tracked | `configs/reference/*.csv` |
 | Configuration | `configs/catalogue.toml`, `configs/sources/*.toml`, `configs/profiles/`; `configs/model.yaml`, `configs/train.yaml`, `configs/inference.yaml`, `configs/evaluation.yaml` are specified and written in Milestone 4 |
 | Prompt templates | v0 query prompt (code); drafts in Appendix B |
 | Repository structure | `README.md` and Section 6.1 |
-| Presentation for the weekly TA meeting | `docs/milestones/Milestone3_TA_Presentation.pptx` |
+| Presentation for the weekly TA meeting | `docs/milestones/Milestone3_TA_Presentation.pptx` (version 1.1; not yet updated for version 1.2) |
+
+Every predictions, scores and log file named in this report is committed. The `outputs/` folder is ignored by default to keep bulk outputs out of git, so these files were added explicitly; `outputs/README.md` lists them.
 
 ---
 
@@ -866,18 +1054,22 @@ Calls per answered question (estimate): one routing call per backend, at most on
 
 ### 16.1 Summary
 
-The agent is a fixed graph: decision models make the control decisions, and a hosted model (Gemini on Vertex AI) writes text only. Reliability comes from a chain of checks that fails closed (Section 3.1). Kev-0.8B is adopted in phases, the domain decision first; Jev handles tool selection, coverage and verification; Laya is a comparator; the domain only ranks retrieval.
+The agent is a fixed graph: decision models make the control decisions, and a hosted model (Gemini on Vertex AI) writes text only. Reliability comes from a chain of checks that fails closed (Section 3.1). Kev-0.8B is adopted in phases, the domain decision first; Jev handles tool selection, coverage and verification; Laya is a comparator; the domain only ranks retrieval. In version 1.2 a proof-of-concept graph with retrieval and a hosted LLM handled 10 of 12 questions end to end, and the case it got wrong shows which result checks come next.
 
 ### 16.2 Readiness and next steps
 
-| Area | Ready | Next (Milestone 4) |
-| --- | --- | --- |
-| Data | Five tables, catalogue, data contract, pipeline; T1 source record and eight raw files | Prepare the candidate tables and freeze the catalogue (12 November, plan) |
-| Routing data | Splits v1; phase-1 domain data | Regenerate on the frozen catalogue (`explain_result`, narrowed `other`, varied catalogue); human labels with an agreement check |
-| Decision models | Training, calibration, serving and evaluation path (dry run) | Full training on a T4 with the sweeps and ablations of Section 7.2; dev-human evaluation and cascade band; Laya fine-tune on the same split |
-| Agent | Specification 0.3; SQL guard | Push the base version of the graph (in progress), then the nodes, retrieval (E7), internal tools and checks |
-| Hosted model | Interface specified | Google Cloud project and Gemini access (in progress); v0 baseline; two-tier comparison (E2) |
-| Operations | Guardrail scope decided | Guardrails of specification Section 11 in the Compose stack |
+The order follows the review: a basic working pipeline first, measured end to end, then the decision models on human labels. The specification stays frozen at version 0.3 until the basic pipeline runs.
+
+| Priority | Area | Ready | Next (Milestone 4) |
+| --- | --- | --- | --- |
+| 1 | Evaluation set | 12-question proof-of-concept set | About 100 questions with outcomes fixed in advance by a team member who did not write the pipeline (at least 20 to decline or clarify), across all catalogue tables; the 12 questions stay a development set |
+| 2 | Baseline | v0 harness (`v0_eval.py`); proof-of-concept graph | v0 (hosted LLM, no retrieval) and the proof-of-concept configuration on the same set: end-to-end success, time, calls, tokens |
+| 3 | Agent | Proof-of-concept graph; SQL guard; specification 0.3 | Result checks tied to the intent (rp-04); human-readable units in narration; merge the base version of the graph from T2 and T4 and move the proof-of-concept nodes into it |
+| 4 | Decision models | Training, calibration, serving and evaluation path (dry run) | Human-labelled dev set (150 to 200 items, two labellers, agreement score); Kev zero-shot, Kev fine-tuned and Jev on it, per label, with `other`, `multiple` and `unspecified` first; then Kev in the graph as the domain ranker |
+| 5 | Kev and Laya | Zero-shot Laya; fine-tuned Kev on rule labels | Laya fine-tuned on the same split, both evaluated on the human-labelled set with the same calibration |
+| 6 | Data and retrieval | Five tables; draft cards; 8 examples | Catalogue freeze (12 November, plan); cards reviewed by T1; examples rewritten for the new tables; retrieval recall at 4 on the full set (E7) |
+| 7 | Hosted model | AI Studio free tier | Vertex AI project on the course credit (team approval before spending); two-tier comparison (E2) |
+| 8 | Operations | Guardrail scope decided | Guardrails of specification Section 11 in the Compose stack |
 
 **Open items.** TA confirmation that fine-tuning and calibrating decision models meets the Milestone 4 training requirement; terms of use of Jev outputs as training labels; choice of Gemini tiers; final title.
 
@@ -885,18 +1077,64 @@ The agent is a fixed graph: decision models make the control decisions, and a ho
 
 ## Appendix A. Reproducing the measured results
 
+All commands run from the repository root on branch `docs/milestone-3`. Requirements: Python 3.12 or 3.13, Docker (for Postgres with pgvector), and, for the Kev runs, a clone of the Kev repository with its own environment (Section 7.5). Raw data, processed Parquet files and model checkpoints are not in git; the commands below rebuild them.
+
+**A.1 Environment and keys.**
+
 ```bash
-python -m pip install -e ".[dev,eval]"
+python -m pip install -e ".[dev,eval,retrieval]"   # langgraph, duckdb, sqlglot, psycopg, pgvector, sentence-transformers
+cp .env.example .env
+# fill in: DATA_GOV_IN_API_KEY (download), POSTGRES_PASSWORD (pgvector store),
+# LLM_API_KEY (Google AI Studio key), LLM_MODEL=gemini-3.5-flash-lite,
+# LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+```
+
+**A.2 Data (Milestone 2 pipeline).**
+
+```bash
+python scripts/download_raw.py           # raw files from data.gov.in into data/raw
+python scripts/run_pipeline.py           # obs_<id>.parquet, <id>.parquet, catalogue.json in data/processed
+python scripts/run_pipeline.py --verify  # catalogue facts recomputed from the files
+python scripts/build_manifest.py         # compare row counts and SHA-256 with data/MANIFEST.md
+```
+
+**A.3 Domain decision (Section 7.5).**
+
+```bash
 python scripts/build_domain_phase1.py
-# training and serving use a Kev clone (Python 3.12 or 3.13): see Section 7.5
+# training: the kev.train command of Section 7.5, run in the Kev clone (about 8 minutes on the local machine)
 scripts/domain_phase1_eval.sh zeroshot jaredpalmer/kev-0.8b
 scripts/domain_phase1_eval.sh train250 models/checkpoints/domain_train250
-python -m analyst.evaluation.domain_eval score --calibration outputs/predictions/domain_train250_calibration.jsonl --dev outputs/predictions/domain_train250_dev_synthetic.jsonl
-python -m analyst.pipelines.end_to_end_slice --out outputs/predictions/end_to_end_slice.jsonl
-pytest -q
+python -m analyst.evaluation.domain_eval score \
+  --calibration outputs/predictions/domain_train250_calibration.jsonl \
+  --dev outputs/predictions/domain_train250_dev_synthetic.jsonl
 ```
 
 The Laya comparison used the `laya` package (version 0.4.23) in a separate environment, served on localhost, and the same `domain_eval run` command with `--model laya`.
+
+**A.4 Component slice (Section 8.4).** Needs the fine-tuned Kev checkpoint served on port 8009.
+
+```bash
+python -m analyst.pipelines.end_to_end_slice --out outputs/predictions/end_to_end_slice.jsonl
+```
+
+**A.5 RAG proof of concept (Sections 8.5 and 9).**
+
+```bash
+scripts/rag_poc_db.sh                    # pgvector container on 127.0.0.1:5433, credentials from .env
+set -a; . ./.env; set +a
+python -m analyst.pipelines.rag_poc --out outputs/predictions/rag_poc_flash_lite.jsonl
+python -m analyst.pipelines.rag_poc --only rp-01   # one question
+pytest tests/test_rag_poc.py             # graph paths with a scripted LLM; no network or key needed
+```
+
+The first run downloads `BAAI/bge-small-en-v1.5` (about 130 MB) and builds the index in about 50 s; later runs take about 9 s. The 12 questions need 26 LLM requests, more than the free-tier limit of 20 requests per model per day, so the run stops with a message when the limit is reached; rerun with `--only` for the remaining cases the next day. Results can differ slightly between runs even at temperature 0, because the hosted model is not deterministic.
+
+**A.6 Tests.**
+
+```bash
+pytest -q                                # 145 passed, 2 skipped on 10 November 2026
+```
 
 ## Appendix B. Draft prompt templates (Designed, untested)
 
@@ -954,11 +1192,11 @@ Numbered as in the Milestone 1 report, where each link was opened and checked. I
 
 ## Contribution log
 
-All four members approved version 1.1 on 5 November 2026. `WORKLOG.md` holds the weekly record of individual contributions.
+All four members approved version 1.1 on 5 November 2026. Version 1.2 (10 November 2026) was prepared by T3 in response to the review; sign-off by the other members is pending. `WORKLOG.md` holds the weekly record of individual contributions.
 
 | Member | Track | Contribution to Milestone 3 | Sign-off |
 | --- | --- | --- | --- |
-| Sathya Prakash | T3 Model | Architecture, agent graph specification versions 0.1 to 0.3 (from the base design of T2 and T4), phase-1 domain training, calibration and evaluation, Kev and Laya comparison, end-to-end slice, this report | Approved, 5 Nov 2026 |
+| Sathya Prakash | T3 Model | Architecture, agent graph specification versions 0.1 to 0.3 (from the base design of T2 and T4), phase-1 domain training, calibration and evaluation, Kev and Laya comparison, end-to-end slice, this report. Version 1.2: RAG proof of concept (retrieval, hosted LLM client, LangGraph graph, cards, examples, 12-question set and run), response to the review | Approved 1.1, 5 Nov 2026; 1.2 prepared 10 Nov 2026 |
 | Shaoni Samanta | T1 Data and Tools | Source record of the ten candidate tables and the four `data_discovery` files (`docs/specs/candidate_tables.md`); eight of ten raw files downloaded and checked against expected row counts; download script extended to the ten tables | Approved, 5 Nov 2026 |
 | Shivanshu Gupta | T2 Agent | Base version of the LangGraph agent design, with T4, from which specification version 0.1 was derived | Approved, 5 Nov 2026 |
 | Ashmit Ghose | T4 Ops and Evaluation | Base version of the LangGraph agent design, with T2, from which specification version 0.1 was derived | Approved, 5 Nov 2026 |

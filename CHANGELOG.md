@@ -55,7 +55,18 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
   slice over the five tables, `src/analyst/pipelines/end_to_end_slice.py`; tests
   `tests/test_domain_phase.py` and `tests/test_end_to_end_slice.py`.
 - Jev zero-shot reference on the domain decision (5 November 2026): accuracy 0.929 on the 338
-  dev-synthetic items (`outputs/reports/domain_jev_score.json`, not tracked).
+  dev-synthetic items (`outputs/reports/domain_jev_score.json`).
+- RAG proof of concept (10 November 2026, response to the Milestone 3 review): knowledge entries
+  and hybrid retrieval (`src/analyst/retrieval/knowledge.py`, `hybrid.py`: BM25 and
+  `bge-small-en-v1.5` in Postgres with pgvector, reciprocal rank fusion); hosted LLM client over an
+  OpenAI-compatible endpoint (`src/analyst/inference/llm.py`); ten-node LangGraph graph with a
+  coverage check, guarded SQL with one repair, result checks and a number check before release
+  (`src/analyst/pipelines/rag_poc.py`); guidance and analysis cards
+  (`configs/rag/guidance_cards.v0.json`); verified examples and a 12-question set
+  (`data/sample/rag_*.v0.jsonl`); `scripts/rag_poc_db.sh`; `tests/test_rag_poc.py`.
+- Milestone 3 report version 1.2 (10 November 2026): response to the review, end-to-end run
+  (Section 8.5), RAG pipeline (Section 9), end-to-end success rate (Section 7.4), reproduction
+  steps (Appendix A). Every output file cited in the report is now committed under `outputs/`.
 
 ### Changed
 
