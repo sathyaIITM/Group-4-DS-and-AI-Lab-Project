@@ -1,0 +1,97 @@
+{
+  "version": "0.1",
+  "status": "Draft for team review. Facts checked against data/processed (obs tables) on 2026-11-10; domain wording to be reviewed by T1 before the catalogue freeze.",
+  "cards": [
+    {
+      "id": "plfs_survey_year",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS survey years run July to June",
+      "body": "PLFS reports by survey year, July to June. The period label '2019-20' means July 2019 to June 2020. The table holds the labels 2017-18, 2018-19, 2019-20, 2020-21 and 2021-22 (period_type 'survey_year'). A question that names a single calendar year such as '2019' is ambiguous between 2018-19 and 2019-20 and needs a clarifying question. A survey year outside the five labels is not covered: decline and state the coverage; never substitute the nearest year."
+    },
+    {
+      "id": "plfs_measure",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS measure: usual status (ps+ss), persons aged 15 and above",
+      "body": "The only indicator is ur_usual_ps_ss: unemployment rate in per cent, usual status (principal plus subsidiary status), persons aged 15 and above, rural and urban combined. The table has no split by sex, by rural or urban area, or by age group, and no current weekly status (CWS) figure. Questions about female, male, urban, rural, youth or weekly-status unemployment are not covered by this table."
+    },
+    {
+      "id": "plfs_geography",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS rows: States and UTs, plus one All-India row",
+      "body": "Rows with geo_level 'state' cover both States and Union Territories. The All-India figure is the row with geo_level 'national' and is_total_row = true (geo_name 'India'). When ranking or comparing States, filter geo_level = 'state' so the All-India row is excluded, and say in the answer that Union Territories are included in the ranking. For the national rate use the All-India row."
+    },
+    {
+      "id": "imd_subdivisions",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "IMD rainfall is by meteorological sub-division, not by State",
+      "body": "The 36 IMD meteorological sub-divisions are not States. Names follow IMD: Odisha appears as 'Orissa'; Karnataka is split into 'Coastal Karnataka', 'North Interior Karnataka' and 'South Interior Karnataka'; Uttar Pradesh into 'East Uttar Pradesh' and 'West Uttar Pradesh'. Use the IMD name in SQL and give the State name in the answer. When a State maps to several sub-divisions, report each sub-division; do not average or add them unless asked, and say which sub-divisions were used."
+    },
+    {
+      "id": "imd_periods",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "IMD period labels: months, seasons and years, 1901 to 2017",
+      "body": "Coverage is 1901 to 2017. Period labels: month 'YYYY-MM' (period_type 'month'); season 'YYYY-JF', 'YYYY-MAM', 'YYYY-JJAS', 'YYYY-OND' (period_type 'season'); year 'YYYY' (period_type 'calendar_year'). The south-west monsoon is JJAS (June to September); the north-east or post-monsoon season is OND (October to December). Seasonal and annual totals are published values: select them directly rather than summing months. Values are millimetres."
+    },
+    {
+      "id": "nfhs_round",
+      "dataset_id": "nfhs5_district_indicators",
+      "kind": "convention",
+      "title": "NFHS-5 district indicators: one survey round, percentages",
+      "body": "NFHS-5 district values come from one survey round, 2019-2021 (period_label '2019-2021'). The table holds no earlier round, so trends or comparisons with NFHS-4 are not covered. Most indicators are percentages of a defined population; they are not counts and cannot be converted into numbers of households or people. quality_flag 'suppressed' means the source gives no value; 'low_sample_estimate' marks a value the source bases on a small sample: report it with that caveat. Match an indicator through indicator_id, and use geo_state and geo_name for State and district."
+    },
+    {
+      "id": "mandi_snapshot",
+      "dataset_id": "mandi_daily_prices",
+      "kind": "convention",
+      "title": "Mandi prices: one-day Agmarknet snapshot, INR per quintal",
+      "body": "The table is a single-day snapshot (2026-10-29) of minimum, maximum and modal prices in INR per quintal, by market, commodity, variety and grade. It has no time series, so price trends are not covered. Modal price is the most common transaction price in a market. The table has no arrival quantities, so an average across markets is unweighted and must be called a simple average of market modal prices."
+    },
+    {
+      "id": "ncrb_national",
+      "dataset_id": "ncrb_annual_crime_statistics",
+      "kind": "convention",
+      "title": "NCRB table: national figures only, 2022 to 2024",
+      "body": "The NCRB table holds national (All-India) figures for 2022, 2023 and 2024: crime counts (total, IPC/BNS, SLL), crime rates per 100,000 population, the IPC/BNS share and mid-year population in lakh. It has no State or district rows, so State or district questions are not covered by this table."
+    },
+    {
+      "id": "sop_ranking",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: ranking places (highest, lowest, top N)",
+      "body": "Filter to one indicator, one period and one geographic level; exclude total rows. Order by value and keep ties with RANK() rather than LIMIT when ties are possible. Return geo_name, period_label, value and unit. Chart: horizontal bar chart sorted by value when more than three places are returned; no chart for a single place. Narration names the place, the value with its unit, the period and the population or measure definition."
+    },
+    {
+      "id": "sop_change",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: change between two periods",
+      "body": "Select both periods explicitly and compute the change in SQL. For rates and percentages report the absolute change in percentage points; report a relative (per cent) change only when the question asks for it, and then name it as such. Never substitute a nearest period for a missing one. Chart: none for one place; a slope or grouped bar chart for several places."
+    },
+    {
+      "id": "sop_trend",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: trend over time",
+      "body": "Return one row per period in period order, with period_label, value and unit. Do not fill gaps. Chart: line chart with periods on the x-axis. Narration states the first and last values and the direction; it does not claim a cause."
+    },
+    {
+      "id": "sop_aggregate",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: aggregating rates and percentages",
+      "body": "Rates and percentages cannot be added, and their simple average across places is not the overall rate. Use a published total row (for example the All-India row) for an overall figure. When the user asks for an average across places, compute the simple average and call it a simple average of the place values. Counts may be summed only across non-overlapping places and the same period."
+    },
+    {
+      "id": "sop_lookup",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: single value lookup",
+      "body": "Filter to one place, one period and one indicator and return geo_name, period_label, value, unit and quality_flag. Chart: none; show the figure as a single statistic. Narration gives the value with unit, period and definition, and any quality caveat."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{"id": "rp-01", "question": "Which state had the highest unemployment rate in 2019-20?", "expected_action": "answer", "expected_values": [25.7], "expected_entities": ["Nagaland"], "source": "TA example (Milestone 3 review); expected value from obs_plfs_state_ur_usual_status"}
+{"id": "rp-02", "question": "What was Kerala's unemployment rate in 2019-20?", "expected_action": "answer", "expected_values": [10.0], "expected_entities": ["Kerala"], "source": "v0-07"}
+{"id": "rp-03", "question": "How much rain did Kerala get during the 2017 southwest monsoon, in millimetres?", "expected_action": "answer", "expected_values": [1856.5], "expected_entities": ["Kerala"], "source": "v0-01"}
+{"id": "rp-04", "question": "What was Odisha's average monsoon rainfall between 1971 and 2000?", "expected_action": "answer", "expected_values": [1098.84], "expected_entities": [], "source": "v0-03"}
+{"id": "rp-05", "question": "By what percentage did India's overall unemployment rate fall between 2017-18 and 2021-22?", "expected_action": "answer", "expected_values": [-31.67], "expected_entities": [], "source": "v0-10; a fall reported as 31.67 is also accepted"}
+{"id": "rp-06", "question": "Which district in Bihar has the highest share of women aged 15-49 who are literate?", "expected_action": "answer", "expected_values": [76.5], "expected_entities": ["Rohtas"], "source": "Expected value from obs_nfhs5_district_indicators"}
+{"id": "rp-07", "question": "Which market reported the highest modal price for onion in Maharashtra?", "expected_action": "answer", "expected_values": [5650.0], "expected_entities": ["Kamthi"], "source": "Expected value from obs_mandi_daily_prices"}
+{"id": "rp-08", "question": "What was the unemployment rate in Kerala in 2022-23?", "expected_action": "decline", "source": "v0-19: period outside coverage (2017-18 to 2021-22)"}
+{"id": "rp-09", "question": "What was the female unemployment rate in Bihar in 2019-20?", "expected_action": "decline", "source": "v0-20: no split by sex"}
+{"id": "rp-10", "question": "Which state has the highest total crime incidence in 2024?", "expected_action": "decline", "source": "Q096 (dev set): NCRB table is national only"}
+{"id": "rp-11", "question": "What was Tamil Nadu's GDP growth in 2022-23?", "expected_action": "decline", "source": "Not in the catalogue"}
+{"id": "rp-12", "question": "Give me the exact number of households with electricity in every district.", "expected_action": "clarify", "source": "Q097 (dev set): the table reports percentages, not counts"}
