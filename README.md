@@ -179,7 +179,7 @@ Development results, not yet on a held-out test set (details and caveats in
 
 | Result | Figure | Evidence |
 | --- | --- | --- |
-| End-to-end proof of concept (retrieval, Gemini, guarded SQL, release check), 12 questions | 10 of 12 handled correctly; median 15.4 s | `outputs/predictions/rag_poc_flash_lite.jsonl` (report Section 8.5) |
+| End-to-end proof of concept (retrieval, Gemini, guarded SQL, release check), 12 questions | 10 and 11 of 12 handled correctly in two runs; median 15.4 s and 17.6 s | `outputs/predictions/rag_poc_flash_lite.jsonl`, `outputs/predictions/rag_poc_flash_lite_run2.jsonl` (report Section 8.5) |
 | Kev-0.8B domain decision, rule-generated labels, 338 items | 0.828 zero-shot, 0.879 after a 250-record fine-tune; ECE 0.040 after calibration | `outputs/reports/domain_*_score.json` (report Section 7.5) |
 
 The v0 baseline and the version ladder (execution accuracy, claim support,

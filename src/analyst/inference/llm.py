@@ -28,6 +28,7 @@ class LlmCall:
     seconds: float
     prompt_tokens: int
     completion_tokens: int
+    served_model: str = ""
 
 
 @dataclass
@@ -84,6 +85,7 @@ class LlmClient:
             round(time.perf_counter() - start, 3),
             int(usage.get("prompt_tokens", 0)),
             int(usage.get("completion_tokens", 0)),
+            str(payload.get("model", "")),
         )
         return parse_json(content, purpose), call
 

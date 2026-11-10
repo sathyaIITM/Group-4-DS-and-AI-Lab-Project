@@ -11,6 +11,7 @@ Files committed as Milestone 3 evidence (commands in Appendix A of
 | File | Report section |
 | --- | --- |
 | `predictions/rag_poc_flash_lite.jsonl` | 8.5, 9: end-to-end run, one record per question |
+| `predictions/rag_poc_flash_lite_run2.jsonl` | 8.5: repeat of the same run, for stability |
 | `predictions/end_to_end_slice.jsonl` | 8.4: component slice |
 | `predictions/domain_{zeroshot,train250,laya_zeroshot,jev}_{calibration,dev_synthetic}.jsonl` | 5.4, 7.5: domain predictions |
 | `reports/domain_{zeroshot,train250,laya_zeroshot,jev}_score.json` | 5.4, 7.5: scores and fitted temperatures |

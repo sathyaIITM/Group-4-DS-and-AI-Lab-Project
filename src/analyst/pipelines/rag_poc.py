@@ -27,8 +27,12 @@ confidence badge, conversation memory, and the Compose stack.
 
 import argparse
 import json
+import platform
 import re
+import shutil
+import subprocess
 import time
+from importlib import metadata
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -36,7 +40,13 @@ import duckdb
 from langgraph.graph import END, StateGraph
 
 from analyst.inference.llm import LlmClient, LlmError
-from analyst.retrieval.hybrid import Hit, HybridIndex, database_url_from_env
+from analyst.retrieval.hybrid import (
+    EMBED_MODEL,
+    EMBED_REVISION,
+    Hit,
+    HybridIndex,
+    database_url_from_env,
+)
 from analyst.retrieval.knowledge import ROOT, build_entries, obs_path
 from analyst.tools.sql_runner import MAX_ROWS, ReadOnlyDatabase, SqlRejectedError, SqlTimeoutError
 
@@ -490,6 +500,53 @@ def score(case: dict[str, Any], state: State) -> dict[str, Any]:
     }
 
 
+def run_metadata(backend: str, llm: LlmClient) -> dict[str, Any]:
+    """What a later reader needs to reproduce a run: code, packages, models, data versions."""
+    git = shutil.which("git") or "git"
+    try:
+        commit = subprocess.run(  # noqa: S603 - fixed git arguments
+            [git, "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT, check=True
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(  # noqa: S603 - fixed git arguments
+                [git, "status", "--porcelain", "--", "src", "configs", "data/sample"],
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+                check=True,
+            ).stdout.strip()
+        )
+    except (OSError, subprocess.CalledProcessError):
+        commit, dirty = "unknown", True
+    packages = {}
+    for name in (
+        "langgraph",
+        "duckdb",
+        "sqlglot",
+        "sentence-transformers",
+        "torch",
+        "psycopg",
+        "pgvector",
+        "httpx",
+        "numpy",
+    ):
+        try:
+            packages[name] = metadata.version(name)
+        except metadata.PackageNotFoundError:
+            packages[name] = "not installed"
+    return {
+        "git_commit": commit,
+        "uncommitted_changes": dirty,
+        "python": platform.python_version(),
+        "packages": packages,
+        "embedding_model": EMBED_MODEL,
+        "embedding_revision": EMBED_REVISION,
+        "retrieval_backend": backend,
+        "llm_model": llm.model,
+        "llm_base_url": llm.base_url,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--questions", type=Path, default=QUESTIONS)
@@ -504,6 +561,7 @@ def main() -> None:
         f"index: {len(index.entries)} entries, backend {backend}, {time.perf_counter() - t0:.1f} s"
     )
     pipeline = RagPipeline(index, LlmClient.from_env())
+    run_meta = run_metadata(backend, pipeline.llm)
 
     cases = [json.loads(line) for line in args.questions.read_text().splitlines() if line.strip()]
     if args.only:
@@ -518,6 +576,7 @@ def main() -> None:
             record = {
                 "case_id": case["id"],
                 "model": pipeline.llm.model,
+                "run": run_meta,
                 "retrieval_backend": backend,
                 **verdict,
                 "expected_action": case["expected_action"],

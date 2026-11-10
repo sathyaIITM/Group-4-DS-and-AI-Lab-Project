@@ -19,6 +19,8 @@ import numpy as np
 from analyst.retrieval.knowledge import Entry
 
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+# Pinned Hugging Face revision, so every run embeds with the same weights.
+EMBED_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 EMBED_DIM = 384
 # BGE's recommended instruction for short queries against passages.
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
@@ -99,7 +101,7 @@ class HybridIndex:
         if self._embedder is None:
             from sentence_transformers import SentenceTransformer  # heavy import, load lazily
 
-            self._embedder = SentenceTransformer(EMBED_MODEL, device="cpu")
+            self._embedder = SentenceTransformer(EMBED_MODEL, revision=EMBED_REVISION, device="cpu")
         return self._embedder
 
     def embed(self, texts: Sequence[str], query: bool = False) -> np.ndarray:

@@ -67,6 +67,12 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
 - Milestone 3 report version 1.2 (10 November 2026): response to the review, end-to-end run
   (Section 8.5), RAG pipeline (Section 9), end-to-end success rate (Section 7.4), reproduction
   steps (Appendix A). Every output file cited in the report is now committed under `outputs/`.
+- Reproducibility of the RAG proof of concept (10 November 2026): embedding model pinned by
+  revision, pgvector image pinned by digest, run metadata (git commit, package versions, model
+  names, served model version) in every output record, `requirements.lock.txt` with the exact
+  environment; repeat run `outputs/predictions/rag_poc_flash_lite_run2.jsonl` (11 of 12; retrieval
+  identical, SQL differed in 6 of 12). Milestone 3 report and slides: file references are links,
+  open items moved to Milestone 4, version 1.2 sign-off recorded.
 
 ### Changed
 
