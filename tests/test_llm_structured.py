@@ -193,3 +193,27 @@ def test_cost_counts_thinking_tokens_as_output() -> None:
     assert client._cost(126, billed_output_tokens(reply)) == pytest.approx(
         (126 * 0.1 + 508 * 0.4) / 1e6
     )
+
+
+def test_output_cap_adds_the_thinking_allowance() -> None:
+    client, transport = scripted_client(GOOD)
+    client.max_output_tokens = {"sql": 512, "sql_repair": 512}
+    client.thinking = {"sql": "minimal", "sql_repair": "low"}
+    client.thinking_on_regenerate = {"sql": "medium"}
+    client.thinking_allowance = {"minimal": 0, "low": 1024, "medium": 2048}
+    assert client.output_cap("sql", client.thinking_level("sql")) == 512
+    assert client.output_cap("sql", client.thinking_level("sql", regenerate=True)) == 2560
+    assert client.output_cap("narrate", "low") is None
+    client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
+    assert transport.requests[0].max_tokens == 1536
+
+
+def test_every_configured_level_has_an_allowance() -> None:
+    import yaml
+
+    from analyst.inference.llm import MODEL_CONFIG, THINKING_ORDER
+
+    config = yaml.safe_load(MODEL_CONFIG.read_text())["hosted_llm"]
+    assert set(config["thinking"]["allowance"]) == set(THINKING_ORDER)
+    assert config["thinking"]["allowance"]["minimal"] == 0
+    assert set(config["tiers"]) <= set(config["price_per_mtok"])

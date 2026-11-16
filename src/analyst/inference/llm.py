@@ -239,6 +239,7 @@ class LlmClient:
     max_output_tokens: dict[str, int] = field(default_factory=dict)  # per purpose
     thinking: dict[str, str] = field(default_factory=dict)  # reasoning_effort per purpose
     thinking_on_regenerate: dict[str, str] = field(default_factory=dict)
+    thinking_allowance: dict[str, int] = field(default_factory=dict)  # extra cap per level
     supported_levels: dict[str, list[str]] = field(default_factory=dict)  # per model id
     registry: PromptRegistry | None = None
     transport: Transport | None = None
@@ -270,6 +271,7 @@ class LlmClient:
             "max_output_tokens": dict(config.get("max_output_tokens") or {}),
             "thinking": dict(thinking.get("per_purpose") or {}),
             "thinking_on_regenerate": dict(thinking.get("on_regenerate") or {}),
+            "thinking_allowance": {k: int(v) for k, v in (thinking.get("allowance") or {}).items()},
             "supported_levels": {
                 k: list(v) for k, v in (thinking.get("supported_levels") or {}).items()
             },
@@ -359,6 +361,14 @@ class LlmClient:
             if level in accepted:
                 return level
         raise LlmError(f"{self.model} accepts none of the levels at or above {wanted!r}")
+
+    def output_cap(self, purpose: str, effort: str | None) -> int | None:
+        """The purpose's cap for the visible reply plus the thinking allowance of the level;
+        thinking tokens count against the cap. None when the purpose has no cap."""
+        base = self.max_output_tokens.get(purpose)
+        if base is None:
+            return None
+        return base + (self.thinking_allowance.get(effort, 0) if effort else 0)
 
     def _cost(self, tokens_in: int, tokens_out: int) -> float | None:
         price_in, price_out = self.price_per_mtok.get("input"), self.price_per_mtok.get("output")
@@ -451,7 +461,7 @@ class LlmClient:
                     user,
                     self.model,
                     self.temperature,
-                    self.max_output_tokens.get(purpose),
+                    self.output_cap(purpose, effort),
                     effort,
                 )
             )

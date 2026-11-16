@@ -8,8 +8,10 @@ hosted_llm:
   # and has the most capacity. Requests may be processed in any region (public data only).
   location: global
   temperature: 0
-  # Output-token cap per call purpose (cost guard, T4 document Section 12; initial values).
-  # A reply cut at the cap fails validation and is retried once like any malformed reply.
+  # Output-token cap per call purpose for the visible reply (cost guard; initial values). The
+  # thinking allowance of the call's level (thinking.allowance) is added on top, because
+  # thinking tokens count against the cap (checked 2026-11-17: at medium, 490 of 512 tokens went
+  # to thinking and the reply was cut). A reply cut at the cap fails validation and is retried.
   max_output_tokens:
     intent: 512
     sql: 512
@@ -29,25 +31,40 @@ hosted_llm:
       clarify: minimal
     on_regenerate:              # a query regenerated after a failed result check
       sql: medium
+    # Tokens added to the purpose's output cap for each level (option (a), 2026-11-17). On a
+    # small SQL task, medium used 308-490 thinking tokens and low 0-302; these leave headroom
+    # for longer prompts. Worst case for one medium call on Flash-Lite: 2,560 output tokens,
+    # about USD 0.0064.
+    allowance:
+      minimal: 0
+      low: 1024
+      medium: 2048
+      high: 4096
     # Levels each model accepts; a requested level is moved up to the nearest accepted one.
-    # A model not listed gets the requested level unchanged. Check with scripts/check_vertex.py.
+    # A model not listed gets the requested level unchanged. Sources: model pages (3.7, 3.8
+    # Flash reject minimal) and scripts/check_vertex.py on 2026-11-17 (accepted: Flash-Lite
+    # minimal and medium; 3.5 Flash and 3.8 Flash low and medium). Untested levels are kept as
+    # documented and will be confirmed when first used.
     supported_levels:
       gemini-3.5-flash-lite: [minimal, low, medium, high]
+      gemini-3.5-flash: [low, medium, high]
       gemini-3.8-flash: [low, medium, high]
       gemini-3.7-flash: [low, medium, high]
-  # Default tier for development and all runs: 3.5 Flash-Lite (GA). The comparison tier for E2
-  # (3.5 Flash or 3.8 Flash) is to be decided; the version string returned by the API is logged
-  # per call.
+  # Default tier for development and all runs: 3.5 Flash-Lite (GA). Comparison tier for E2:
+  # 3.8 Flash (GA), the cheaper of the two Flash models checked on 2026-11-17 (at low it used no
+  # thinking tokens; 3.5 Flash used about 300). The API returns only the base id, which is
+  # logged per call.
   tiers:
     small: gemini-3.5-flash-lite
-    large: gemini-3.5-flash     # to be decided: gemini-3.5-flash or gemini-3.8-flash
+    large: gemini-3.8-flash
   default_tier: small
   # USD per million tokens, global endpoint, Standard pay-as-you-go. Source: Vertex AI
   # generative AI pricing page (cloud.google.com/vertex-ai/generative-ai/pricing), read through
   # a search excerpt on 2026-11-16; confirm in the console's pricing view.
   price_per_mtok:
     small: {input: 0.30, output: 2.50, checked: 2026-11-16}
-    large: {input: null, output: null, checked: null}
+    # Introductory price until 2026-12-31; from 2027-01-01 USD 1.50 / 7.50.
+    large: {input: 0.75, output: 3.75, checked: 2026-11-17}
   ai_studio_base_url: https://generativelanguage.googleapis.com/v1beta/openai
 
 kev:
