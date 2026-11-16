@@ -100,7 +100,7 @@ least 0.8). Code: [`src/analyst/evaluation/dev_human.py`](../../src/analyst/eval
 | Output validation | Each reply is validated against its Pydantic contract and a rule check (for example, identifiers must be among those retrieved; SQL must be one SELECT on the plan's table; every number in a narration must point to a result cell or a derived value). One retry on a parse, validation or transient error; none on a non-transient provider error |
 | Call budget | At most 8 hosted-LLM calls per question, counted before each call |
 | Thinking | Set per call purpose as `reasoning_effort`: route, SQL (first attempt), narration and clarification `minimal`; intent and SQL repair `low`; SQL regenerated after a failed result check `medium` |
-| Output cap | Per purpose for the visible reply (route 300, intent 512, SQL 512, SQL repair 512, narration 400, clarification 150 tokens), plus an allowance per thinking level (minimal 0, low 1,024, medium 2,048, high 4,096), because thinking tokens count against the cap |
+| Output cap | Per purpose for the visible reply (route 300, intent 512, SQL 1,024, SQL repair 1,024, narration 400, clarification 150 tokens; SQL raised from 512 after a 30-period query was cut off in the smoke test), plus an allowance per thinking level (minimal 0, low 1,024, medium 2,048, high 4,096), because thinking tokens count against the cap |
 | Cost record | Input tokens and output tokens including thinking tokens, priced from `configs/model.yaml` (`gemini-3.5-flash-lite`: USD 0.30 input and 2.50 output per million tokens on the global endpoint, read on 16 November 2026) |
 
 Choice of the endpoint (16 November 2026). Pay-as-you-go access to the 3.5 models is offered
@@ -127,6 +127,20 @@ Two consequences were applied before any agent run. Thinking tokens are reported
 result file predates this correction and under-states the cost of its medium call). Thinking
 tokens also count against the output cap, so a thinking allowance is added to the cap per
 level. Six calls, one per row; total cost about USD 0.013 (estimate from token counts).
+
+**Measured (17 November 2026): prompt smoke tests against the live model.** These check the
+prompts and the client, not the agent; the plans for SQL were written by hand in place of the
+resolver.
+
+| Test | Result | Change made because of it |
+| --- | --- | --- |
+| Intent extraction, 12 questions of the Milestone 3 set | First run stopped after 6 questions; after the fixes 11 of 12, then 12 of 12, every reply valid on the first call | Schema-enforced replies (`response_format: json_schema`); list fields repaired before validation; indicators retrieved per table; category values taken from the data; rule that a coarser place (a State on a market table) is a filter |
+| SQL generation, 7 hand-built plans executed on DuckDB | 6 of 7 reached the expected figure; one repair fixed a misspelt column; rp-04 (30 monsoon seasons) was cut at the 512-token cap | Consecutive periods filtered as one range; SQL cap 1,024 tokens. Re-run of rp-04: 1098.84 over 30 rows (7 of 7) |
+
+Commands: `python scripts/smoke_intent.py --yes`, `python scripts/smoke_sql.py --yes`. Outputs:
+[`outputs/reports/`](../../outputs/reports/), files `smoke_intent_2026-11-17b.json`,
+`smoke_sql_2026-11-17.json` and `smoke_sql_2026-11-17_rp04.json`. All checks to date used
+about USD 0.07 of the cloud credit (estimate from token counts).
 
 ### A3. Tools and reliability checks
 
