@@ -1,0 +1,25 @@
+{
+  "run_at": "2026-11-16T21:08:03+00:00",
+  "model": "google/gemini-3.5-flash-lite",
+  "ok": 1,
+  "questions": 1,
+  "total_cost_usd_est": 0.0011199,
+  "rows": [
+    {
+      "id": "rp-04",
+      "expected": 1098.84,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_imd_subdivision_monthly_rainfall WHERE geo_code = 'subdivision:orissa' AND period_type = 'season' AND period_start >= '1971-06-01' AND period_end <= '2000-09-30' AND period_label LIKE '%-JJAS' AND indicator_id = 'rainfall_mm'",
+      "ok": true,
+      "observed": 1098.84,
+      "rows": 30,
+      "row_count": 30,
+      "parse_errors": [],
+      "calls": 1,
+      "latency_ms": 2464,
+      "tokens_in": 2558,
+      "tokens_out": 141,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.00112
+    }
+  ]
+}

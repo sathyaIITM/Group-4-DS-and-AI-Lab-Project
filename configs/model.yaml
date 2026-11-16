@@ -18,8 +18,8 @@ hosted_llm:
   # to thinking and the reply was cut). A reply cut at the cap fails validation and is retried.
   max_output_tokens:
     intent: 512
-    sql: 512
-    sql_repair: 512
+    sql: 1024                 # raised from 512 on 2026-11-17: a 30-period query was cut off
+    sql_repair: 1024
     narrate: 400
     clarify: 150
     route: 300

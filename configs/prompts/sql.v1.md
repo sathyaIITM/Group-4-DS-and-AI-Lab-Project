@@ -14,7 +14,11 @@ Rules:
 1. One read-only SELECT statement over the single table named in the plan (`obs_<dataset>`).
    No other table, no table functions, no DDL or DML, no semicolon.
 2. Filter periods with `period_start` and `period_end` from the plan, not with
-   `period_label`.
+   `period_label`. When the plan lists several consecutive periods of the same type (for
+   example 30 monsoon seasons, 1971 to 2000), filter them as one range:
+   `period_type = '<type>' AND period_start >= '<first start>' AND period_end <= '<last end>'`,
+   plus a condition that keeps only that kind of period where the type alone is not enough
+   (for example `period_label LIKE '%-JJAS'`). Never list each period separately.
 3. Filter `indicator_id` and the category columns with the plan's values only.
 4. Exclude rows with `is_total_row = true` when the plan sets `exclude_total_rows`; for a
    ranking across places, always exclude them.
