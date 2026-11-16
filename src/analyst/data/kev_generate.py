@@ -1,10 +1,10 @@
 """Generate rule-labelled Kev records for tool selection and domain.
 
 Implements the programmatic core of the Kev data curation plan (Section 6.1): slots are sampled
-from the catalogue, both labels are computed by the rules of docs/specs/labelling_guide_v1.md, and the
-rule ids are stored in `_meta`. A family is one base question plus its minimal-pair variants; all
-records of a family share a `group_id` and therefore a split. Categories that wait for a guide
-decision (Section 7 of the guide) are not generated.
+from the catalogue, both labels are computed by the rules of docs/specs/labelling_guide_v1.md,
+and the rule ids are stored in `_meta`. A family is one base question plus its minimal-pair
+variants; all records of a family share a `group_id` and therefore a split. Categories that wait
+for a guide decision (Section 7 of the guide) are not generated.
 
 Usage (from the repository root):
     python -m analyst.data.kev_generate --families 1000 --seed 13 --out-dir data/splits/kev
@@ -226,6 +226,22 @@ FOLLOWUP_PLACE = [
 ]
 FOLLOWUP_PERIOD = ["What was it in {period2}?", "And in {period2}?"]
 FOLLOWUP_PLOT = ["Plot the same for {place2}.", "Chart this for {place2} too."]
+
+EXPLAIN_TEMPLATES = [
+    "Where does this number come from?",
+    "How was this figure calculated?",
+    "Which survey or source is this from?",
+    "What definition does this figure use?",
+    "Show me the query you ran.",
+    "What assumptions did you make here?",
+    "Are there any caveats on these figures?",
+    "Which period does this figure refer to exactly?",
+    "Is this an official figure?",
+    "Why should I trust this number?",
+]
+# Without a result there is nothing to explain: the message names no table or topic, so the
+# agent searches the catalogue (agent_graph.md Section 6, routing rule 3; guide R17).
+EXPLAIN_WITHOUT_RESULT = {0, 1, 2, 4}
 
 SEARCH_TEMPLATES = [
     "Which datasets cover {topic}?",
@@ -923,6 +939,45 @@ class Families:
             )
         ]
 
+    def explain(self) -> list[Draft]:
+        """R17: a question about the current result's provenance, method or caveats."""
+        rng = self.rng
+        table, domain, slots, _, prior = self._result()
+        index = rng.randrange(len(EXPLAIN_TEMPLATES))
+        message = EXPLAIN_TEMPLATES[index]
+        tid = f"explain.{index}"
+        slots = {**slots, "message": message}
+        drafts = [
+            Draft(
+                message,
+                "explain_result",
+                domain,
+                "R17",
+                "M4",
+                tid,
+                slots,
+                needs=table,
+                has_result=True,
+                prior_turn=f"The user asked for {prior}",
+                previous_tool=rng.choice(["run_sql", "make_chart"]),
+            )
+        ]
+        if index in EXPLAIN_WITHOUT_RESULT and rng.random() < 0.3:
+            # Minimal pair on `has_result`: the same message with no result to explain.
+            drafts.append(
+                Draft(
+                    message,
+                    "search_catalog",
+                    "unspecified",
+                    "R17",
+                    "M8",
+                    tid,
+                    slots,
+                    tags=["explain_without_result"],
+                )
+            )
+        return drafts
+
     def describe(self) -> list[Draft]:
         rng = self.rng
         t: CatalogueTable = rng.choice([self.plfs, self.imd])
@@ -1064,6 +1119,7 @@ def family_weights(families: Families) -> dict[str, tuple[Callable[[], list[Draf
         "clarify": (families.clarify, 0.15),
         "chart": (families.chart, 0.17),
         "followup": (families.followup, 0.04),
+        "explain": (families.explain, 0.06),
         "describe": (families.describe, 0.17),
         "absent_table": (families.absent_table, 0.04),
         "no_measure": (families.no_measure, 0.08),

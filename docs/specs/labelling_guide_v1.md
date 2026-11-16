@@ -1,9 +1,11 @@
 # Labelling guide for the Kev decisions: tool selection and domain
 
-Version 1.0-draft.5 (2026-10-24). Status: **draft for team review; not frozen.** The guide is
-frozen as v1.0 after the team review, the two-person agreement check on 50 borderline items
-and the decisions listed in Section 7. Until then every label produced against it is
-provisional.
+Version 1.0 (2026-11-17). Status: **frozen for Milestone 4.** The decisions of Section 7 and
+the rules of Section 2.4 are confirmed. The planned two-person agreement check on 50 borderline
+items was not run separately: the `dev_human` set takes its place, since each of its 200 items
+is labelled by hand by two members against this version and Cohen's kappa is reported per
+decision. A rule found unclear there is clarified in version 1.1, and the affected stratum is
+labelled again.
 
 This guide is the single source of truth for every label, whether written by a person, a rule
 or a model. A recurring error is fixed by adding a rule, an example or a tie-break here, never
@@ -18,12 +20,14 @@ One record carries two choice questions over the same state. The text below is f
 
 | Question id | Type | Options |
 | --- | --- | --- |
-| `tool` | choice | `run_sql`, `make_chart`, `describe_table`, `search_catalog`, `ask_clarification`, `decline_not_covered` |
+| `tool` | choice | `run_sql`, `make_chart`, `describe_table`, `search_catalog`, `ask_clarification`, `decline_not_covered`, `explain_result` |
 | `domain` | choice | `labour`, `agriculture`, `rainfall`, `prices_economy`, `health`, `other`, `multiple`, `unspecified` |
 
 The state is an object with three fields:
 
-- `catalogue`: one line per table shown to the agent (name, measure, unit, grain, period);
+- `catalogue`: one line per table shown to the agent (name, measure, unit, grain, period); in
+  the agent these are the top-4 catalogue candidates retrieved for the message, built the same
+  way for training and serving;
 - `context`: whether a result table exists and, if so, the previous request and tool;
 - `user_message`: the message to route.
 
@@ -52,12 +56,13 @@ Apply the rules in the order of Section 2.2; the first rule that applies decides
 | R12 | The user names a definition or a population group the shown table lacks (current weekly status; women, rural, youth aged 15-29). The clarifying question offers the table's own definition or group (H5). | `ask_clarification` |
 | R13 | A result table exists and the follow-up needs rows the result does not hold: another place, period or measure, a different grouping or time grain (decades, seasonal totals), a benchmark or overlay series, or a computed comparison. Includes "plot the same for X" and "extend that chart to 2014". | `run_sql` |
 | R14 | An explicit period whose boundaries differ from the table's year and cannot be rebuilt from its grain: January-December or April-March (FY) on the July-June PLFS table (H11b). Where the table has monthly columns (IMD rainfall), an agricultural year, fiscal year or Jan-Dec request is `run_sql` summing the months, and the answer states them (C8). | `ask_clarification` |
-| R15 | A question about a table that is not shown ("What columns does the NFHS table have?"): topic within the five domains, search; otherwise decline (H9). | `search_catalog` or `decline_not_covered` |
+| R15 | A question about a table that is not shown ("What columns does the NFHS table have?"): topic within the five domains, search; topic outside the five domains, decline (H9). "Not shown" refers to the top-4 candidates in the state. This rule never declines a data request whose topic is covered by a shown table: a shown NCRB table is handled by the ordinary rules even though its domain is `other`. | `search_catalog` or `decline_not_covered` |
 | R16 | A joint analysis (comparison, correlation, overlay, one combined view) across shown tables whose periods do not overlap (rainfall ends 2017; PLFS starts July 2017) (H4). Asking for "the years both cover" does not change this, and a clarifying question cannot cure it (C9). | `decline_not_covered` |
+| R17 | A result table exists and the user asks about that result itself: where its figures come from (source, table, query), how they were computed, or which definition, period, assumption, default or caveat applies. No new figure, place, period or measure is requested; a follow-up that needs new rows is R13. Without a result there is nothing to explain: a message that names no table or topic is `search_catalog` (domain `unspecified`, M8), and one that names a shown table is R3 (H1). | `explain_result` |
 
 ### 2.2 Precedence
 
-R1, then R2, then R15, then R3, then R13 (a result exists and the follow-up needs new rows),
+R1, then R2, then R15, then R17 (a result exists and the message asks only about it), then R3, then R13 (a result exists and the follow-up needs new rows),
 then R4, then the quantitative rules: absent data (R7, R8, R9, R16) before missing details
 (R10, R12, R14), and those before `run_sql` (R5, R6, R11). Where a message holds several
 intents, Section 2.4 (C1-C3) applies first. Reason: when the data
@@ -76,9 +81,10 @@ is absent, a clarifying question cannot lead to an answer.
 | R11 | "How much rain did Karnataka get in 2015?" -> `run_sql`, listing three sub-divisions | "Average rainfall of Karnataka in 2015" -> still `run_sql`; the answer explains that no state figure exists | The router does not decide aggregation; the planner and verifier must never average sub-divisions. |
 | R12 | "Youth unemployment in Bihar in 2019-20?" | "Unemployment in Bihar in 2019-20?" -> R6 `run_sql` (persons 15+, usual status, stated) | A named definition or group the table lacks is clarified, not silently replaced. |
 | R13 | Result for Kerala present: "And for Tamil Nadu?" | Result present: "Plot this." -> R4 `make_chart` | A follow-up that needs new rows is a new query. |
+| R17 | Result present: "Where does this number come from?" | No result: same message -> R2 `search_catalog`, domain `unspecified`. Result present: "And what was it in 2020-21?" -> R13 `run_sql` | Questions about the stored result are answered from its evidence; anything that needs new rows is a query. |
 | R4 | Result present: "Add labels for the highest and lowest years." | Result present: "Group the bars by decade." -> R13 `run_sql` | Annotations computable from the rows in the result stay with the chart; regrouping needs a query. |
 
-### 2.4 Additional rules (proposed 2026-10-24 from the red-team and hard-case questions; awaiting confirmation)
+### 2.4 Additional rules (proposed 2026-10-24 from the red-team and hard-case questions; confirmed 2026-11-17)
 
 | Id | Situation | Rule |
 | --- | --- | --- |
@@ -102,21 +108,34 @@ is absent, a clarifying question cannot lead to an answer.
 | M1 | A request about a measure: the domain of that measure, whether or not it is covered. | measure's domain |
 | M2 | A search: the domain of the topic searched for. | topic's domain |
 | M3 | A description: the domain of the table described. | table's domain |
-| M4 | A chart or follow-up on an existing result: the domain of the result's measure. | result's domain |
+| M4 | A chart, explanation (R17) or follow-up on an existing result: the domain of the result's measure. | result's domain |
 | M5 | A message that is not a data request. | `other` |
 | M6 | A measure or topic outside the five domains (education, crime, transport, elections). | `other` |
 | M7 | Measures from two or more domains asked for on equal terms. `_meta.domains` lists each domain; the agent keeps both in its state and retrieves for both (H3). | `multiple` |
 | M8 | A data request whose measure cannot be named from the message or the context ("Top 5 please", "Do the same for Odisha." with no earlier result). The same message after a result takes the result's domain (M4) (H2). | `unspecified` |
 
 Domain scope: `labour` covers employment, unemployment, labour force, wages and work;
-`agriculture` covers crops, production, yield, area, minimum support prices and farm inputs;
+`agriculture` covers crops, crop production, yield, area, minimum support prices (MSP) and farm
+inputs;
 `rainfall` covers rainfall, the monsoon and other weather measurements; `prices_economy`
-covers consumer and wholesale prices, inflation, GDP and GSDP (including sector-wise), income,
+covers consumer and wholesale prices, market and retail commodity prices (including Mandi
+arrival prices, even for farm produce), inflation, GDP and GSDP (including sector-wise), income,
 interest rates, industrial output and enterprise surveys; `health` covers health, nutrition,
 mortality, births, health services and health-specific spending (out-of-pocket childbirth cost).
 `other` includes education, crime, transport and road accidents (including road fatalities),
 elections, and water resources such as groundwater and reservoirs (not weather, so not
 `rainfall`).
+
+Two boundary rules (agent_graph.md v0.3, decision 12, 2026-11-05):
+
+- **Prices of farm produce.** A market, wholesale or retail price of a commodity (Mandi modal,
+  minimum or maximum price; onion retail price) is `prices_economy`. A minimum support price
+  (MSP) and crop production, area or yield are `agriculture`. "Onion price in Lasalgaon mandi"
+  is `prices_economy`; "MSP of paddy in 2023-24" is `agriculture`; "Compare the MSP of wheat
+  with its mandi price" is `multiple` (M7).
+- **`other` is a domain, not a decline.** `other` with a covered table (the NCRB crime tables)
+  follows the ordinary tool rules: "How many murders were recorded in Bihar in 2022?" with the
+  NCRB table shown is R6 `run_sql`, domain `other`.
 
 Tie-break (from the curation plan): when a question touches two domains, the label is the
 domain of the measure being asked for. "Crop yield in years of poor rainfall" is
@@ -177,7 +196,7 @@ to `decline_not_covered` ("Search for datasets about wages.") stay `search_catal
 4. If no rule decides the item, or two rules apply with no tie-break, label it `undecided` with
    a one-line note. Undecided items become guide questions, not guesses.
 
-## 7. Open questions for the team (blocks the v1.0 freeze)
+## 7. Decisions on the open questions (all decided; recorded for the v1.0 freeze)
 
 The generator does not produce items in a pending category. Decisions dated 2026-10-23 were
 made by T3 (acting for T1 on model-tuning data).
@@ -192,7 +211,7 @@ made by T3 (acting for T1 on model-tuning data).
 | H6 | A state split into several sub-divisions (Karnataka) | **Decided:** `run_sql` listing each sub-division; never aggregated (R11) | generator family `imd.*`, variant `multi_place` |
 | H7 | A name mapped to a composite sub-division | **Decided:** `run_sql`, stating the mapping (D6) | rb-098 |
 | H8 | Rainfall measure default: annual total; "monsoon" means `jjas` | **Decided:** as proposed (D5) | generator family `imd.*` |
-| H9 | A question about a table not in the shown catalogue ("What columns does the NFHS table have?") | **Decided:** topic within the five domains, `search_catalog` (the search finds nothing and the agent says so and logs a data request); outside the five domains, `decline_not_covered`. R2 is unchanged: an explicit "which data exists" request is always a search | none yet |
+| H9 | A question about a table not in the shown catalogue ("What columns does the NFHS table have?") | **Decided:** topic within the five domains, `search_catalog` (the search finds nothing and the agent says so and logs a data request); outside the five domains *and* not shown, `decline_not_covered` (amended 2026-11-05: a shown `other` table follows the ordinary rules). R2 is unchanged: an explicit "which data exists" request is always a search | none yet |
 | H10 | An evaluative word with a measure given | **Decided:** `run_sql` (D8); answer quality depends on the LLM's plan | rb-034 |
 | H11 | A bare calendar year for a July-June survey table ("unemployment in 2019") | **Decided:** `run_sql` with 2019-20, stated in the answer (D7) | none yet |
 | H11b | An explicit January-December request on a July-June table | **Decided:** `ask_clarification` offering 2018-19 or 2019-20 (R14); a calendar-year figure cannot be computed from survey years | none yet |
@@ -202,6 +221,8 @@ made by T3 (acting for T1 on model-tuning data).
 | Version | Date | Change |
 | --- | --- | --- |
 | 1.0-draft | 2026-10-23 | First draft from the six tool definitions in `src/analyst/decisions/routing.py`, the curation plan (Sections 4.1-4.3) and the 16 flagged week-1 items. |
+| 1.0 | 2026-11-17 | Frozen for Milestone 4: Section 2.4 (C1-C12) confirmed; Section 7 complete. The separate 50-item agreement check is replaced by the two-labeller `dev_human` set and its kappa per decision. `GUIDE_VERSION` set to `1.0`. |
+| 1.0-draft.6 | 2026-11-12 | Decisions of 2026-11-05 applied: seventh tool option `explain_result` (R17, precedence after R15, example row, M4 extended); Mandi and other market prices are `prices_economy`, MSP and crop production are `agriculture`; `other` with a shown table follows the ordinary rules (R15, H9); the state's catalogue is the top-4 candidates. `GUIDE_VERSION` in `kev_questions.py` set to `1.0-draft.6`. Domain option text unchanged, so the v1 domain splits remain valid. |
 | 1.0-draft.5 | 2026-10-24 | Proposed amendments from the red-team step and the questions raised by the hard-case step: R4/R13 boundary and precedence, R9 grain, R14 and R16 scope, Section 2.4 (C1-C12), domain scope (hydrology, road accidents, GSDP, health spending), M8 clarified, stale R3 example corrected. Awaiting confirmation. |
 | 1.0-draft.4 | 2026-10-23 | H2 decided: `unspecified` domain (M8). All open questions settled; the guide awaits the 50-item agreement check before the v1.0 freeze. |
 | 1.0-draft.3 | 2026-10-23 | H3, H5, H6 and H11b decided; `multiple` domain (M7) added; R9, R11 and R12 revised; R14-R16 added; precedence updated; H2 tool decided, domain label pending. |

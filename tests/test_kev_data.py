@@ -105,6 +105,11 @@ def test_rule_labels_follow_the_guide(records: list[KevRecord]) -> None:
             assert (r.tool, r.domain) == ("decline_not_covered", "other")
         if rule == "R2":
             assert r.tool == "search_catalog"
+        if r.tool == "explain_result":
+            assert r.meta.has_result and rule == "R17"
+            assert r.domain in {"labour", "rainfall"}  # M4: the domain of the result
+        if "explain_without_result" in tags:
+            assert (r.tool, r.domain, r.meta.has_result) == ("search_catalog", "unspecified", False)
 
 
 def test_out_of_range_periods_are_outside_the_table() -> None:
