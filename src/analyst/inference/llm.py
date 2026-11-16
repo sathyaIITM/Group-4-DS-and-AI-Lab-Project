@@ -88,6 +88,11 @@ class LlmCallRecord(BaseModel):
     tokens_out: int
     latency_ms: int
     cost_usd_est: float | None
+    # Additions to the Section 9 columns (thinking control): the level sent, the thinking tokens
+    # reported (billed as output) and why generation stopped ("length" means cut at the cap).
+    thinking_level: str | None = None
+    reasoning_tokens: int | None = None
+    finish_reason: str | None = None
     retry_of: int | None = None
     earlier_attempts: list["LlmCallRecord"] = Field(default_factory=list)
 
@@ -98,6 +103,19 @@ class CallCounter(Protocol):
     llm_calls: int
 
 
+THINKING_ORDER = ("minimal", "low", "medium", "high")
+
+
+@dataclass
+class ChatRequest:
+    system: str
+    user: str
+    model: str
+    temperature: float
+    max_tokens: int | None = None
+    reasoning_effort: str | None = None  # maps to thinking_level on Gemini 3 models
+
+
 @dataclass
 class ChatReply:
     content: str
@@ -105,18 +123,55 @@ class ChatReply:
     tokens_out: int
     served_model: str
     latency_ms: int
+    reasoning_tokens: int | None = None  # when the provider reports them separately
+    finish_reason: str | None = None
 
 
-Transport = Callable[[str, str, str, float, int | None], ChatReply]
-"""(system, user, model, temperature, max_output_tokens) -> reply; raises `LlmError` on a
-non-transient failure and `TransientError` on one worth retrying."""
+Transport = Callable[[ChatRequest], ChatReply]
+"""Request -> reply; raises `LlmError` on a non-transient failure and `TransientError` on one
+worth retrying."""
+
+
+def request_body(request: ChatRequest) -> dict[str, Any]:
+    """The OpenAI-compatible body. Thinking is set only through `reasoning_effort`, never also
+    through `thinking_config` or the deprecated `thinking_budget`."""
+    body: dict[str, Any] = {
+        "model": request.model,
+        "temperature": request.temperature,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": request.system},
+            {"role": "user", "content": request.user},
+        ],
+    }
+    if request.max_tokens:
+        body["max_tokens"] = request.max_tokens
+    if request.reasoning_effort:
+        body["reasoning_effort"] = request.reasoning_effort
+    return body
+
+
+def parse_reply(payload: dict[str, Any], model: str, latency_ms: int) -> ChatReply:
+    usage = payload.get("usage") or {}
+    details = usage.get("completion_tokens_details") or {}
+    choice = payload["choices"][0]
+    reasoning = details.get("reasoning_tokens")
+    return ChatReply(
+        content=choice["message"].get("content") or "",
+        tokens_in=int(usage.get("prompt_tokens", 0)),
+        tokens_out=int(usage.get("completion_tokens", 0)),
+        served_model=str(payload.get("model", model)),
+        latency_ms=latency_ms,
+        reasoning_tokens=int(reasoning) if reasoning is not None else None,
+        finish_reason=choice.get("finish_reason"),
+    )
 
 
 class TransientError(LlmError):
     """A timeout, a network error or a retryable HTTP status."""
 
 
-def _gcloud_token() -> str:
+def gcloud_token() -> str:
     try:
         result = subprocess.run(
             ["gcloud", "auth", "application-default", "print-access-token"],  # noqa: S607
@@ -143,16 +198,8 @@ def vertex_base_url(project: str, location: str) -> str:
 def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 60.0) -> Transport:
     """An OpenAI-compatible chat-completions transport with JSON output."""
 
-    def send(
-        system: str, user: str, model: str, temperature: float, max_tokens: int | None
-    ) -> ChatReply:
-        body = {
-            "model": model,
-            "temperature": temperature,
-            **({"max_tokens": max_tokens} if max_tokens else {}),
-            "response_format": {"type": "json_object"},
-            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-        }
+    def send(request: ChatRequest) -> ChatReply:
+        body = request_body(request)
         started = time.perf_counter()
         try:
             response = httpx.post(
@@ -167,15 +214,8 @@ def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 6
             raise TransientError(f"HTTP {response.status_code}")
         if response.status_code != 200:
             raise LlmError(f"HTTP {response.status_code}: {response.text[:300]}")
-        payload = response.json()
-        usage = payload.get("usage") or {}
-        return ChatReply(
-            content=payload["choices"][0]["message"]["content"] or "",
-            tokens_in=int(usage.get("prompt_tokens", 0)),
-            tokens_out=int(usage.get("completion_tokens", 0)),
-            served_model=str(payload.get("model", model)),
-            latency_ms=int((time.perf_counter() - started) * 1000),
-        )
+        latency = int((time.perf_counter() - started) * 1000)
+        return parse_reply(response.json(), request.model, latency)
 
     return send
 
@@ -191,6 +231,9 @@ class LlmClient:
     max_llm_calls: int = 8
     price_per_mtok: dict[str, float | None] = field(default_factory=dict)
     max_output_tokens: dict[str, int] = field(default_factory=dict)  # per purpose
+    thinking: dict[str, str] = field(default_factory=dict)  # reasoning_effort per purpose
+    thinking_on_regenerate: dict[str, str] = field(default_factory=dict)
+    supported_levels: dict[str, list[str]] = field(default_factory=dict)  # per model id
     registry: PromptRegistry | None = None
     transport: Transport | None = None
     backoff_s: float = 1.0
@@ -212,12 +255,18 @@ class LlmClient:
         tier = tier or config["default_tier"]
         model = os.environ.get("LLM_MODEL") or config["tiers"][tier]
         prices = config.get("price_per_mtok", {}).get(tier, {}) or {}
+        thinking = config.get("thinking") or {}
         common = {
             "provider": config["provider"],
             "temperature": float(config.get("temperature", 0)),
             "max_llm_calls": max_llm_calls,
             "price_per_mtok": {k: prices.get(k) for k in ("input", "output")},
             "max_output_tokens": dict(config.get("max_output_tokens") or {}),
+            "thinking": dict(thinking.get("per_purpose") or {}),
+            "thinking_on_regenerate": dict(thinking.get("on_regenerate") or {}),
+            "supported_levels": {
+                k: list(v) for k, v in (thinking.get("supported_levels") or {}).items()
+            },
         }
         if config["provider"] == "vertex":
             project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -227,7 +276,7 @@ class LlmClient:
                 raise LlmError(msg)
             model_id = model if model.startswith("google/") else f"google/{model}"
             base = vertex_base_url(project, location)
-            return cls("", model_id, base, transport=http_transport(base, _gcloud_token), **common)
+            return cls("", model_id, base, transport=http_transport(base, gcloud_token), **common)
         key = os.environ.get("LLM_API_KEY")
         if not key:
             raise LlmError("set LLM_API_KEY for the ai_studio provider")
@@ -287,6 +336,24 @@ class LlmClient:
             self.transport = http_transport(self.base_url, lambda: key, self.timeout_s)
         return self.transport
 
+    def thinking_level(self, purpose: str, regenerate: bool = False) -> str | None:
+        """The `reasoning_effort` for a call: the purpose's level (or its regeneration level),
+        moved up to the nearest level the model accepts. None sends no setting (model default)."""
+        wanted = (regenerate and self.thinking_on_regenerate.get(purpose)) or self.thinking.get(
+            purpose
+        )
+        if not wanted:
+            return None
+        if wanted not in THINKING_ORDER:
+            raise LlmError(f"unknown thinking level {wanted!r} for {purpose}")
+        accepted = self.supported_levels.get(self.model.removeprefix("google/"))
+        if not accepted:
+            return wanted
+        for level in THINKING_ORDER[THINKING_ORDER.index(wanted) :]:
+            if level in accepted:
+                return level
+        raise LlmError(f"{self.model} accepts none of the levels at or above {wanted!r}")
+
     def _cost(self, tokens_in: int, tokens_out: int) -> float | None:
         price_in, price_out = self.price_per_mtok.get("input"), self.price_per_mtok.get("output")
         if price_in is None or price_out is None:
@@ -304,6 +371,7 @@ class LlmClient:
         validate: Callable[[SchemaT], None] | None = None,
         node: str | None = None,
         max_attempts: int = 2,
+        regenerate: bool = False,
     ) -> tuple[SchemaT, LlmCallRecord]:
         """Render, call, parse and validate; one retry. `validate` raises `ValueError` for a
         reply that parses but breaks a rule (for example an id that was not retrieved); that
@@ -311,17 +379,21 @@ class LlmClient:
 
         `counters.llm_calls` is incremented before each call, and a call is refused with
         `BudgetExhaustedError` when it would exceed `max_llm_calls`. On final failure,
-        `LlmError.records` holds every attempt, for the run log."""
+        `LlmError.records` holds every attempt, for the run log.
+
+        The thinking level comes from `configs/model.yaml` for the purpose; `regenerate=True`
+        uses the purpose's regeneration level (a query regenerated after a failed check)."""
         registry = self.registry or PromptRegistry()
         prompt: Prompt = registry.get(prompt_id)
         rendered = prompt.render(variables)
+        effort = self.thinking_level(purpose, regenerate)
         attempts: list[LlmCallRecord] = []
         for attempt in range(max_attempts):
             if counters.llm_calls >= self.max_llm_calls:
                 raise BudgetExhaustedError(f"{purpose}: LLM-call budget spent", attempts)
             counters.llm_calls += 1
             record, fatal = self._attempt(
-                prompt, rendered.system, rendered.user, purpose, variables, node
+                prompt, rendered.system, rendered.user, purpose, variables, node, effort
             )
             record.retry_of = attempt - 1 if attempt else None
             if fatal:  # a non-transient provider error is not worth a second call
@@ -350,6 +422,7 @@ class LlmClient:
         purpose: str,
         variables: dict[str, Any],
         node: str | None,
+        effort: str | None = None,
     ) -> tuple[LlmCallRecord, bool]:
         """One call; returns the record and whether the failure (if any) is non-transient."""
         base = {
@@ -363,10 +436,18 @@ class LlmClient:
             "temperature": self.temperature,
             "variables": json.loads(json.dumps(variables, default=str)),
             "rendered_prompt": f"## System\n{system}\n## User\n{user}",
+            "thinking_level": effort,
         }
         try:
             reply = self._transport()(
-                system, user, self.model, self.temperature, self.max_output_tokens.get(purpose)
+                ChatRequest(
+                    system,
+                    user,
+                    self.model,
+                    self.temperature,
+                    self.max_output_tokens.get(purpose),
+                    effort,
+                )
             )
         except LlmError as error:  # recorded; retried only when transient
             failed = LlmCallRecord(
@@ -391,6 +472,8 @@ class LlmClient:
             tokens_out=reply.tokens_out,
             latency_ms=reply.latency_ms,
             cost_usd_est=self._cost(reply.tokens_in, reply.tokens_out),
+            reasoning_tokens=reply.reasoning_tokens,
+            finish_reason=reply.finish_reason,
         ), False
 
 

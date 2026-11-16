@@ -3,7 +3,10 @@
 
 hosted_llm:
   provider: vertex             # vertex | ai_studio
-  location: null               # Vertex region; set when the GCP project is ready (T4 task G)
+  # Global endpoint (decided 2026-11-16): the 3.5 models are offered pay-as-you-go only on
+  # global, us and eu (not asia-south1); global is about 10% cheaper per token than the others
+  # and has the most capacity. Requests may be processed in any region (public data only).
+  location: global
   temperature: 0
   # Output-token cap per call purpose (cost guard, T4 document Section 12; initial values).
   # A reply cut at the cap fails validation and is retried once like any malformed reply.
@@ -14,15 +17,36 @@ hosted_llm:
     narrate: 400
     clarify: 150
     route: 300
-  # Two tiers are compared on e2e_dev (E2). Identifiers to be confirmed on the Vertex AI model
-  # page before the first run; the version string returned by the API is logged per call.
+  # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
+  # on Gemini 3). Starting values, to be tuned on e2e_dev. Thinking tokens are billed as output.
+  thinking:
+    per_purpose:
+      route: minimal
+      intent: low
+      sql: minimal
+      sql_repair: low
+      narrate: minimal
+      clarify: minimal
+    on_regenerate:              # a query regenerated after a failed result check
+      sql: medium
+    # Levels each model accepts; a requested level is moved up to the nearest accepted one.
+    # A model not listed gets the requested level unchanged. Check with scripts/check_vertex.py.
+    supported_levels:
+      gemini-3.5-flash-lite: [minimal, low, medium, high]
+      gemini-3.8-flash: [low, medium, high]
+      gemini-3.7-flash: [low, medium, high]
+  # Default tier for development and all runs: 3.5 Flash-Lite (GA). The comparison tier for E2
+  # (3.5 Flash or 3.8 Flash) is to be decided; the version string returned by the API is logged
+  # per call.
   tiers:
     small: gemini-3.5-flash-lite
-    large: gemini-3.5-flash
+    large: gemini-3.5-flash     # to be decided: gemini-3.5-flash or gemini-3.8-flash
   default_tier: small
-  # USD per million tokens; null until copied from the Vertex AI pricing page with its date.
+  # USD per million tokens, global endpoint, Standard pay-as-you-go. Source: Vertex AI
+  # generative AI pricing page (cloud.google.com/vertex-ai/generative-ai/pricing), read through
+  # a search excerpt on 2026-11-16; confirm in the console's pricing view.
   price_per_mtok:
-    small: {input: null, output: null, checked: null}
+    small: {input: 0.30, output: 2.50, checked: 2026-11-16}
     large: {input: null, output: null, checked: null}
   ai_studio_base_url: https://generativelanguage.googleapis.com/v1beta/openai
 

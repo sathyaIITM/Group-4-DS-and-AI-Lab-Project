@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from analyst.inference.llm import ChatReply, LlmClient, LlmError
+from analyst.inference.llm import ChatReply, ChatRequest, LlmClient, LlmError
 
 
 @dataclass
@@ -16,20 +16,20 @@ class ScriptedTransport:
 
     replies: list[Any]
     calls: list[tuple[str, str]] = field(default_factory=list)
-    max_tokens: list[int | None] = field(default_factory=list)
+    requests: list[ChatRequest] = field(default_factory=list)
 
-    def __call__(
-        self, system: str, user: str, model: str, temperature: float, max_tokens: int | None
-    ) -> ChatReply:
-        self.calls.append((system, user))
-        self.max_tokens.append(max_tokens)
+    def __call__(self, request: ChatRequest) -> ChatReply:
+        self.calls.append((request.system, request.user))
+        self.requests.append(request)
         if not self.replies:
             raise LlmError("script exhausted")
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
         content = reply if isinstance(reply, str) else json.dumps(reply)
-        return ChatReply(content, tokens_in=100, tokens_out=20, served_model=model, latency_ms=5)
+        return ChatReply(
+            content, tokens_in=100, tokens_out=20, served_model=request.model, latency_ms=5
+        )
 
 
 @dataclass

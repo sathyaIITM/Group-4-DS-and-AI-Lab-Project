@@ -1,5 +1,7 @@
 """Tests for LlmClient.structured (design document Section 7)."""
 
+import json
+
 import pytest
 
 from analyst.contracts.sql import SqlDraft
@@ -81,7 +83,7 @@ def test_output_token_cap_is_sent_per_purpose() -> None:
     client, transport = scripted_client(GOOD, GOOD)
     client.max_output_tokens = {"sql_repair": 512}
     client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
-    assert transport.max_tokens == [512]
+    assert [r.max_tokens for r in transport.requests] == [512]
 
 
 def test_configured_caps_cover_every_prompt() -> None:
@@ -93,3 +95,88 @@ def test_configured_caps_cover_every_prompt() -> None:
     caps = yaml.safe_load(MODEL_CONFIG.read_text())["hosted_llm"]["max_output_tokens"]
     assert {p.purpose for p in PromptRegistry()} <= set(caps)
     assert all(isinstance(v, int) and v > 0 for v in caps.values())
+
+
+# ---------------------------------------------------------------------------- thinking
+
+
+def test_thinking_level_is_sent_and_recorded() -> None:
+    client, transport = scripted_client(GOOD)
+    client.thinking = {"sql_repair": "low"}
+    _, record = client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
+    assert transport.requests[0].reasoning_effort == "low"
+    assert record.thinking_level == "low"
+
+
+def test_no_configured_level_sends_none() -> None:
+    client, transport = scripted_client(GOOD)
+    client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
+    assert transport.requests[0].reasoning_effort is None
+
+
+def test_regeneration_uses_the_higher_level() -> None:
+    client, _ = scripted_client()
+    client.thinking = {"sql": "minimal"}
+    client.thinking_on_regenerate = {"sql": "medium"}
+    assert client.thinking_level("sql") == "minimal"
+    assert client.thinking_level("sql", regenerate=True) == "medium"
+    assert client.thinking_level("narrate", regenerate=True) is None
+
+
+def test_level_moves_up_to_the_nearest_accepted() -> None:
+    client, _ = scripted_client()
+    client.model = "google/gemini-3.8-flash"
+    client.thinking = {"route": "minimal", "sql": "high"}
+    client.supported_levels = {"gemini-3.8-flash": ["low", "medium", "high"]}
+    assert client.thinking_level("route") == "low"
+    assert client.thinking_level("sql") == "high"
+    client.supported_levels = {"gemini-3.8-flash": ["low"]}
+    with pytest.raises(LlmError):
+        client.thinking_level("sql")
+
+
+def test_unknown_level_is_rejected() -> None:
+    client, _ = scripted_client()
+    client.thinking = {"sql": "max"}
+    with pytest.raises(LlmError, match="unknown thinking level"):
+        client.thinking_level("sql")
+
+
+def test_configured_thinking_covers_every_prompt_and_is_valid() -> None:
+    import yaml
+
+    from analyst.inference.llm import MODEL_CONFIG, THINKING_ORDER
+    from analyst.inference.prompts import PromptRegistry
+
+    thinking = yaml.safe_load(MODEL_CONFIG.read_text())["hosted_llm"]["thinking"]
+    levels = {**thinking["per_purpose"], **thinking["on_regenerate"]}
+    assert {p.purpose for p in PromptRegistry()} <= set(thinking["per_purpose"])
+    assert set(levels.values()) <= set(THINKING_ORDER)
+    for accepted in thinking["supported_levels"].values():
+        assert set(accepted) <= set(THINKING_ORDER)
+
+
+def test_request_body_sets_thinking_one_way_only() -> None:
+    from analyst.inference.llm import ChatRequest, request_body
+
+    body = request_body(ChatRequest("s", "u", "google/m", 0.0, 512, "low"))
+    assert body["reasoning_effort"] == "low" and body["max_tokens"] == 512
+    assert "thinking_config" not in json.dumps(body) and "thinking_budget" not in json.dumps(body)
+    assert "reasoning_effort" not in request_body(ChatRequest("s", "u", "m", 0.0))
+
+
+def test_reply_reports_thinking_tokens_and_finish_reason() -> None:
+    from analyst.inference.llm import parse_reply
+
+    payload = {
+        "model": "google/gemini-3.5-flash-lite-001",
+        "choices": [{"message": {"content": "{}"}, "finish_reason": "length"}],
+        "usage": {
+            "prompt_tokens": 50,
+            "completion_tokens": 512,
+            "completion_tokens_details": {"reasoning_tokens": 480},
+        },
+    }
+    reply = parse_reply(payload, "m", 10)
+    assert (reply.reasoning_tokens, reply.finish_reason) == (480, "length")
+    assert parse_reply({"choices": [{"message": {"content": ""}}]}, "m", 1).reasoning_tokens is None

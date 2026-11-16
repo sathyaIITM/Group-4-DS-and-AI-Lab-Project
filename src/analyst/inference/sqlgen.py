@@ -43,7 +43,10 @@ def generate_sql(
     hints: list[str] | None,
     llm: LlmClient,
     counters: CallCounter,
+    regenerate: bool = False,
 ) -> tuple[SqlDraft, LlmCallRecord]:
+    """`regenerate=True` after a failed result check: the thinking level for regeneration
+    (`configs/model.yaml`, `thinking.on_regenerate.sql`) is used."""
     context = {
         "guidance": list(retrieved.get("cards", [])),
         "verified_examples": list(retrieved.get("examples", [])),
@@ -62,6 +65,7 @@ def generate_sql(
         counters=counters,
         validate=lambda d: check_draft(d, plan.obs_table),
         node="generate_sql_with_hosted_llm",
+        regenerate=regenerate,
     )
     return draft.model_copy(update={"sql": draft.sql.strip().rstrip(";")}), record
 

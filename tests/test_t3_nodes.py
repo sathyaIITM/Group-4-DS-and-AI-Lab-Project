@@ -263,3 +263,15 @@ def test_clarification_rejects_invented_numbers() -> None:
         "unemployment in 2019 (Jan-Dec)", "period", ["2018-19", "2019-20"], llm, Counters()
     )
     assert text == "Which survey year: 2018-19 or 2019-20?"
+
+
+def test_regenerated_sql_uses_the_regeneration_level() -> None:
+    good = {"sql": f"SELECT value FROM obs_{PLFS}", "statement": "s"}
+    llm, transport = scripted_client(good, good)
+    llm.thinking = {"sql": "minimal"}
+    llm.thinking_on_regenerate = {"sql": "medium"}
+    sqlgen.generate_sql(_plan(), "s", RETRIEVED, None, None, llm, Counters())
+    sqlgen.generate_sql(
+        _plan(), "s", RETRIEVED, "SELECT 1", ["fix"], llm, Counters(), regenerate=True
+    )
+    assert [r.reasoning_effort for r in transport.requests] == ["minimal", "medium"]
