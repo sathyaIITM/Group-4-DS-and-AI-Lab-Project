@@ -8,6 +8,10 @@ hosted_llm:
   # and has the most capacity. Requests may be processed in any region (public data only).
   location: global
   temperature: 0
+  # Reply format: json_schema (the contract's JSON Schema is sent and the model must follow it)
+  # or json_object (any JSON, validated by code only). json_schema since 2026-11-17: confirmed
+  # on Vertex AI with the QueryIntent contract; replies are still validated by code.
+  response_format: json_schema
   # Output-token cap per call purpose for the visible reply (cost guard; initial values). The
   # thinking allowance of the call's level (thinking.allowance) is added on top, because
   # thinking tokens count against the cap (checked 2026-11-17: at medium, 490 of 512 tokens went

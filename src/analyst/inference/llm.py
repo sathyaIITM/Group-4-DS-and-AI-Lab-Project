@@ -114,6 +114,7 @@ class ChatRequest:
     temperature: float
     max_tokens: int | None = None
     reasoning_effort: str | None = None  # maps to thinking_level on Gemini 3 models
+    response_schema: dict[str, Any] | None = None  # JSON Schema the reply must follow
 
 
 @dataclass
@@ -148,7 +149,45 @@ def request_body(request: ChatRequest) -> dict[str, Any]:
         body["max_tokens"] = request.max_tokens
     if request.reasoning_effort:
         body["reasoning_effort"] = request.reasoning_effort
+    if request.response_schema is not None:
+        body["response_format"] = {
+            "type": "json_schema",
+            "json_schema": {"name": "reply", "schema": request.response_schema},
+        }
     return body
+
+
+def inline_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """A Pydantic JSON Schema with every `$ref` replaced by its definition and `$defs` and
+    `title` removed, the self-contained form providers accept most widely."""
+    defs = schema.get("$defs", {})
+
+    def walk(node: Any) -> Any:
+        if isinstance(node, dict):
+            if "$ref" in node:
+                return walk(defs[node["$ref"].split("/")[-1]])
+            return {k: walk(v) for k, v in node.items() if k not in {"$defs", "title"}}
+        if isinstance(node, list):
+            return [walk(v) for v in node]
+        return node
+
+    result: dict[str, Any] = walk(schema)
+    return result
+
+
+def coerce_lists(data: dict[str, Any], schema: type[BaseModel]) -> dict[str, Any]:
+    """Repair the two shape slips models make in list fields before validation: `null` becomes
+    `[]`, and a single object becomes a one-item list. Nothing else is changed."""
+    fixed = dict(data)
+    for name, info in schema.model_fields.items():
+        origin = getattr(info.annotation, "__origin__", None)
+        if origin is not list or name not in fixed:
+            continue
+        if fixed[name] is None:
+            fixed[name] = []
+        elif isinstance(fixed[name], dict):
+            fixed[name] = [fixed[name]]
+    return fixed
 
 
 def billed_output_tokens(reply: ChatReply) -> int:
@@ -237,6 +276,7 @@ class LlmClient:
     max_llm_calls: int = 8
     price_per_mtok: dict[str, float | None] = field(default_factory=dict)
     max_output_tokens: dict[str, int] = field(default_factory=dict)  # per purpose
+    schema_output: bool = False  # send the reply's JSON Schema (response_format json_schema)
     thinking: dict[str, str] = field(default_factory=dict)  # reasoning_effort per purpose
     thinking_on_regenerate: dict[str, str] = field(default_factory=dict)
     thinking_allowance: dict[str, int] = field(default_factory=dict)  # extra cap per level
@@ -274,6 +314,7 @@ class LlmClient:
             "max_llm_calls": max_llm_calls,
             "price_per_mtok": {k: prices.get(k) for k in ("input", "output")},
             "max_output_tokens": dict(config.get("max_output_tokens") or {}),
+            "schema_output": config.get("response_format") == "json_schema",
             "thinking": dict(thinking.get("per_purpose") or {}),
             "thinking_on_regenerate": dict(thinking.get("on_regenerate") or {}),
             "thinking_allowance": {k: int(v) for k, v in (thinking.get("allowance") or {}).items()},
@@ -414,14 +455,15 @@ class LlmClient:
                 raise BudgetExhaustedError(f"{purpose}: LLM-call budget spent", attempts)
             counters.llm_calls += 1
             record, fatal = self._attempt(
-                prompt, rendered.system, rendered.user, purpose, variables, node, effort
+                prompt, rendered.system, rendered.user, purpose, variables, node, effort, schema
             )
             record.retry_of = attempt - 1 if attempt else None
             if fatal:  # a non-transient provider error is not worth a second call
                 raise LlmError(f"{purpose}: {record.parse_error}", [*attempts, record])
             if record.parsed_ok:
                 try:
-                    parsed = schema.model_validate(parse_json(record.response_text, purpose))
+                    raw = coerce_lists(parse_json(record.response_text, purpose), schema)
+                    parsed = schema.model_validate(raw)
                     if validate is not None:
                         validate(parsed)
                 except (LlmError, ValidationError, ValueError) as error:
@@ -444,6 +486,7 @@ class LlmClient:
         variables: dict[str, Any],
         node: str | None,
         effort: str | None = None,
+        schema: type[BaseModel] | None = None,
     ) -> tuple[LlmCallRecord, bool]:
         """One call; returns the record and whether the failure (if any) is non-transient."""
         base = {
@@ -468,6 +511,9 @@ class LlmClient:
                     self.temperature,
                     self.output_cap(purpose, effort),
                     effort,
+                    inline_schema(schema.model_json_schema())
+                    if self.schema_output and schema is not None
+                    else None,
                 )
             )
         except LlmError as error:  # recorded; retried only when transient

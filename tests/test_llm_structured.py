@@ -227,3 +227,64 @@ def test_from_config_ignores_llm_model_in_the_environment(monkeypatch: pytest.Mo
     client = LlmClient.from_config()
     assert client.model == "google/gemini-3.5-flash-lite"
     assert LlmClient.from_config(tier="large").model == "google/gemini-3.8-flash"
+
+
+# ---------------------------------------------------------------------------- reply shape
+
+
+def test_null_and_single_object_list_fields_are_repaired() -> None:
+    from analyst.contracts.intent import QueryIntent
+    from analyst.inference.llm import coerce_lists
+
+    raw = {"derivations": None, "indicator_ids": {"x": 1}, "categories": None, "reason": None}
+    fixed = coerce_lists(raw, QueryIntent)
+    assert fixed["derivations"] == []
+    assert fixed["indicator_ids"] == [{"x": 1}]  # wrapped; validation still judges the content
+    assert fixed["categories"] is None  # not a list field: left for validation to reject
+
+
+def test_intent_with_null_derivations_is_accepted() -> None:
+    from analyst.contracts.intent import QueryIntent
+
+    reply = {
+        "action": "answer",
+        "dataset_id": "d",
+        "indicator_ids": ["i"],
+        "place_mentions": [],
+        "all_places_level": None,
+        "period_mentions": [],
+        "categories": {},
+        "operation": "lookup",
+        "order": None,
+        "limit": None,
+        "derivations": None,
+        "changed_slots": None,
+        "reason": None,
+    }
+    client, _ = scripted_client(reply)
+    intent, record = client.structured(
+        "intent",
+        "intent",
+        {"question": "q", "context": {}, "prior_plan": None},
+        QueryIntent,
+        counters=Counters(),
+    )
+    assert intent.derivations == [] and intent.changed_slots == []
+    assert record.earlier_attempts == []
+
+
+def test_schema_output_sends_an_inlined_schema() -> None:
+    from analyst.contracts.intent import QueryIntent
+    from analyst.inference.llm import ChatRequest, inline_schema, request_body
+
+    schema = inline_schema(QueryIntent.model_json_schema())
+    text = json.dumps(schema)
+    assert "$ref" not in text and "$defs" not in text
+    assert schema["properties"]["derivations"]["type"] == "array"
+    body = request_body(ChatRequest("s", "u", "m", 0.0, response_schema=schema))
+    assert body["response_format"]["type"] == "json_schema"
+    assert body["response_format"]["json_schema"]["schema"] == schema
+    client, transport = scripted_client(GOOD)
+    client.schema_output = True
+    client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
+    assert transport.requests[0].response_schema is not None

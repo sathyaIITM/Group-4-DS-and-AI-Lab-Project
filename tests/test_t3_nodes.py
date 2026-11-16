@@ -275,3 +275,11 @@ def test_regenerated_sql_uses_the_regeneration_level() -> None:
         _plan(), "s", RETRIEVED, "SELECT 1", ["fix"], llm, Counters(), regenerate=True
     )
     assert [r.reasoning_effort for r in transport.requests] == ["minimal", "medium"]
+
+
+def test_intent_check_ignores_codelists_that_are_not_value_lists() -> None:
+    retrieved = RETRIEVED | {"categories": {PLFS: {"sector": 3}}}  # a count, not a list
+    llm, _ = scripted_client(INTENT | {"categories": {"sector": ["rural"]}}, INTENT)
+    result, record = intent.extract_intent("q", retrieved, None, llm, Counters())
+    assert result.categories == {}
+    assert "not listed" in (record.earlier_attempts[0].parse_error or "")

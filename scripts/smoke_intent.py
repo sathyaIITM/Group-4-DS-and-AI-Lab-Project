@@ -20,6 +20,7 @@ one retry); account, project, model and the worst-case cost are printed first.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -30,6 +31,8 @@ ROOT = Path(__file__).resolve().parents[1]
 GOLD = ROOT / "data" / "sample" / "rag_poc_retrieval_gold.v0.jsonl"
 CATALOGUE = ROOT / "data" / "processed" / "catalogue.json"
 MAX_CALLS = 30
+INDICATORS_PER_TABLE = 6
+CATEGORY_VALUES_SHOWN = 30
 INPUT_TOKENS_GUESS = 2500  # per call, for the worst-case estimate
 
 
@@ -55,18 +58,44 @@ def retrieved_for(index: Any, question: str, tables: dict[str, dict[str, Any]]) 
         entry["coverage_end"] = tables[dataset_id].get("coverage_end")
         entry["period_types"] = tables[dataset_id].get("period_types")
         entries.append(entry)
-    indicators = [
-        h.entry.payload for h in index.search(question, "indicator", 12, dataset_ids=set(ids))
-    ]
+    indicators = []
+    for dataset_id in ids:  # per table, so a table with many indicators cannot crowd out others
+        hits = index.search(question, "indicator", INDICATORS_PER_TABLE, dataset_ids={dataset_id})
+        indicators += [h.entry.payload for h in hits if h.entry.dataset_id == dataset_id]
     cards = [h.entry.payload.get("body", "") for h in index.search(question, "card", 2)]
-    categories = {d: tables[d].get("categories") or {} for d in ids}
+    categories = {d: codelists(d, list(tables[d].get("categories") or {}), question) for d in ids}
     return {"tables": entries, "indicators": indicators, "categories": categories, "cards": cards}
+
+
+def codelists(dataset_id: str, columns: list[str], question: str) -> dict[str, list[str]]:
+    """Category values to show: those whose words occur in the question, else the most frequent
+    ones (the full codelists are too long for a prompt: Mandi has 548 varieties)."""
+    import duckdb
+
+    words = {w for w in re.findall(r"[a-z0-9]+", question.lower()) if len(w) >= 4}
+    path = ROOT / "data" / "processed" / f"obs_{dataset_id}.parquet"
+    out: dict[str, list[str]] = {}
+    with duckdb.connect() as con:
+        for column in columns:
+            rows = con.execute(
+                f"SELECT {column}, count(*) n FROM read_parquet(?) "  # noqa: S608
+                f"WHERE {column} IS NOT NULL GROUP BY 1 ORDER BY n DESC",
+                [str(path)],
+            ).fetchall()
+            values = [str(r[0]) for r in rows]
+            matched = [v for v in values if words & set(re.findall(r"[a-z0-9]+", v.lower()))]
+            out[column] = (matched or values)[:CATEGORY_VALUES_SHOWN]
+    return out
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--yes", action="store_true", help="send the calls (spends credit)")
     parser.add_argument("--limit", type=int, help="first N questions only")
+    parser.add_argument("--only", nargs="+", help="question ids to run, e.g. rp-01 rp-05")
+    parser.add_argument(
+        "--schema", action="store_true", help="send the JSON Schema (response_format json_schema)"
+    )
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
@@ -75,7 +104,10 @@ def main() -> int:
 
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", gcloud_value("project"))
     client = LlmClient.from_config(max_llm_calls=2)
+    client.schema_output = client.schema_output or args.schema
     cases = [json.loads(x) for x in GOLD.read_text(encoding="utf-8").splitlines() if x.strip()]
+    if args.only:
+        cases = [c for c in cases if c["id"] in set(args.only)]
     cases = cases[: args.limit]
     effort = client.thinking_level("intent")
     cap = client.output_cap("intent", effort) or 0
@@ -85,6 +117,7 @@ def main() -> int:
     worst = worst_calls * (INPUT_TOKENS_GUESS * price_in + cap * price_out) / 1e6
     print(f"account  {gcloud_value('account')}\nproject  {os.environ['GOOGLE_CLOUD_PROJECT']}")
     print(f"model    {client.model}  thinking {effort}  output cap {cap}")
+    print(f"format   {'json_schema' if client.schema_output else 'json_object'}")
     print(f"questions {len(cases)}; at most {worst_calls} calls; worst-case cost ${worst:.4f}")
     if worst_calls > MAX_CALLS:
         print(f"refused: more than {MAX_CALLS} calls")
@@ -105,13 +138,12 @@ def main() -> int:
         class Counter:
             llm_calls = 0
 
-        retrieved = retrieved_for(index, case["question"], tables)
-        row: dict[str, Any] = {
-            "id": case["id"],
-            "expected": case["expected_dataset_ids"],
-            "retrieved": [t["dataset_id"] for t in retrieved["tables"]],
-        }
+        row: dict[str, Any] = {"id": case["id"], "expected": case["expected_dataset_ids"]}
+        attempts: list[Any] = []
         try:
+            retrieved = retrieved_for(index, case["question"], tables)
+            row["retrieved"] = [t["dataset_id"] for t in retrieved["tables"]]
+            row["indicators_shown"] = len(retrieved["indicators"])
             intent, record = extract_intent(case["question"], retrieved, None, client, Counter())
             attempts = [*record.earlier_attempts, record]
             row |= {
@@ -126,6 +158,8 @@ def main() -> int:
         except LlmError as error:
             attempts = error.records
             row |= {"error": str(error)[:200], "table_ok": False}
+        except Exception as error:  # record and continue with the next question
+            row |= {"error": f"{type(error).__name__}: {str(error)[:200]}", "table_ok": False}
         cost = sum(a.cost_usd_est or 0.0 for a in attempts)
         total += cost
         row |= {
@@ -148,6 +182,7 @@ def main() -> int:
                 {
                     "run_at": datetime.now(UTC).isoformat(timespec="seconds"),
                     "model": client.model,
+                    "response_format": "json_schema" if client.schema_output else "json_object",
                     "thinking": effort,
                     "output_cap": cap,
                     "table_ok": ok,

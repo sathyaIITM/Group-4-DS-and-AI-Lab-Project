@@ -41,7 +41,22 @@ Rules:
 2. Leave a slot empty when the user did not state it; defaults are applied later by code.
 3. For a follow-up ("and for Odisha?"), start from the prior plan and change only what the
    user changed.
-4. Return one JSON object with exactly these fields and nothing else.
+4. A dataset's `geo_levels` gives its finest level; its rows also carry the State (and the
+   district where one exists). A place coarser than that level (a State on a market or
+   district table) is a filter on that table, not a missing geography: keep the dataset and
+   copy the place into `place_mentions`.
+5. Return one JSON object with exactly these fields and nothing else. Every list field is a
+   JSON list, even when empty or holding one item: `indicator_ids`, `place_mentions`,
+   `period_mentions`, `derivations`, `changed_slots`. `categories` is an object whose values
+   are lists. Each derivation is an object with `op` and `args`, where `args` is an object of
+   strings.
+
+Example for "By what percentage did unemployment in Kerala fall between 2017-18 and 2021-22?":
+{"action": "answer", "dataset_id": "<a listed dataset_id>", "indicator_ids": ["<a listed
+indicator_id>"], "place_mentions": ["Kerala"], "all_places_level": null, "period_mentions":
+["2017-18", "2021-22"], "categories": {}, "operation": "change", "order": null, "limit": null,
+"derivations": [{"op": "pct_change", "args": {"from_period": "2017-18", "to_period":
+"2021-22"}}], "changed_slots": [], "reason": null}
 
 ## User
 <context>

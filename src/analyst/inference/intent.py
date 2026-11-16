@@ -9,7 +9,7 @@ retried once with the same prompt, then the node fails with `backend_error`.
     {"tables": [{"dataset_id", "title", "geo_levels", "coverage_start", "coverage_end",
                  "period_types", "caveats"}, ...],
      "indicators": [{"dataset_id", "indicator_id", "label", "unit"}, ...],
-     "categories": {dataset_id: {column: [values]}},
+     "categories": {dataset_id: {column: [values shown to the model]}},
      "cards": [str, ...]}
 """
 
@@ -65,9 +65,10 @@ def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:
         raise ValueError("action 'answer' needs at least one indicator_id")
     codelists = retrieved.get("categories", {}).get(intent.dataset_id, {})
     for column, values in intent.categories.items():
-        if column not in codelists:
+        shown = codelists.get(column)
+        if not isinstance(shown, list):  # only value lists shown to the model count
             raise ValueError(f"category column {column!r} is not listed for {intent.dataset_id}")
-        bad = [v for v in values if v not in codelists[column]]
+        bad = [v for v in values if v not in shown]
         if bad:
             raise ValueError(f"values {bad} are not in the codelist of {column!r}")
     if intent.action in {"clarify", "decline"} and not intent.reason:

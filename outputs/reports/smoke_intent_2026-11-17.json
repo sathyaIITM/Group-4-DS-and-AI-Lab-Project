@@ -1,0 +1,336 @@
+{
+  "run_at": "2026-11-16T20:22:20+00:00",
+  "model": "google/gemini-3.5-flash-lite",
+  "response_format": "json_schema",
+  "thinking": "low",
+  "output_cap": 1536,
+  "table_ok": 8,
+  "questions": 12,
+  "total_cost_usd_est": 0.016381700000000003,
+  "rows": [
+    {
+      "id": "rp-01",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "indicators_shown": 13,
+      "dataset_id": "plfs_state_ur_usual_status",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "ur_usual_ps_ss"
+      ],
+      "operation": "ranking",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3298,
+      "tokens_out": 147,
+      "thinking_tokens": 0,
+      "latency_ms": 2673,
+      "cost_usd_est": 0.001357
+    },
+    {
+      "id": "rp-02",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "indicators_shown": 13,
+      "dataset_id": "plfs_state_ur_usual_status",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "ur_usual_ps_ss"
+      ],
+      "operation": "lookup",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3314,
+      "tokens_out": 106,
+      "thinking_tokens": 0,
+      "latency_ms": 2175,
+      "cost_usd_est": 0.001259
+    },
+    {
+      "id": "rp-03",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "retrieved": [
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "mandi_daily_prices",
+        "nfhs5_district_indicators"
+      ],
+      "indicators_shown": 10,
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "rainfall_mm"
+      ],
+      "operation": "lookup",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3524,
+      "tokens_out": 128,
+      "thinking_tokens": 0,
+      "latency_ms": 2522,
+      "cost_usd_est": 0.001377
+    },
+    {
+      "id": "rp-04",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "retrieved": [
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "indicators_shown": 11,
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "rainfall_mm"
+      ],
+      "operation": "aggregate",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3506,
+      "tokens_out": 129,
+      "thinking_tokens": 0,
+      "latency_ms": 2304,
+      "cost_usd_est": 0.001374
+    },
+    {
+      "id": "rp-05",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "indicators_shown": 14,
+      "dataset_id": "plfs_state_ur_usual_status",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "ur_usual_ps_ss"
+      ],
+      "operation": "change",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3340,
+      "tokens_out": 223,
+      "thinking_tokens": 0,
+      "latency_ms": 2444,
+      "cost_usd_est": 0.001559
+    },
+    {
+      "id": "rp-06",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "retrieved": [
+        "nfhs5_district_indicators",
+        "plfs_state_ur_usual_status",
+        "imd_subdivision_monthly_rainfall",
+        "ncrb_annual_crime_statistics"
+      ],
+      "indicators_shown": 8,
+      "dataset_id": "nfhs5_district_indicators",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "nfhs5_women_age_15_49_who_are_literate4_47d1ef18"
+      ],
+      "operation": "ranking",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3121,
+      "tokens_out": 160,
+      "thinking_tokens": 0,
+      "latency_ms": 15775,
+      "cost_usd_est": 0.001336
+    },
+    {
+      "id": "rp-07",
+      "expected": [
+        "mandi_daily_prices"
+      ],
+      "retrieved": [
+        "mandi_daily_prices",
+        "nfhs5_district_indicators",
+        "plfs_state_ur_usual_status",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "indicators_shown": 10,
+      "dataset_id": "none_fit",
+      "table_ok": false,
+      "action": "decline",
+      "indicator_ids": [],
+      "operation": "ranking",
+      "reason": "The dataset mandi_daily_prices has no state-level geography.",
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3293,
+      "tokens_out": 124,
+      "thinking_tokens": 0,
+      "latency_ms": 2614,
+      "cost_usd_est": 0.001298
+    },
+    {
+      "id": "rp-08",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "ncrb_annual_crime_statistics",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "indicators_shown": 13,
+      "dataset_id": "plfs_state_ur_usual_status",
+      "table_ok": true,
+      "action": "answer",
+      "indicator_ids": [
+        "ur_usual_ps_ss"
+      ],
+      "operation": "lookup",
+      "reason": null,
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3528,
+      "tokens_out": 134,
+      "thinking_tokens": 0,
+      "latency_ms": 3952,
+      "cost_usd_est": 0.001393
+    },
+    {
+      "id": "rp-09",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "mandi_daily_prices"
+      ],
+      "indicators_shown": 13,
+      "dataset_id": "none_fit",
+      "table_ok": false,
+      "action": "decline",
+      "indicator_ids": [],
+      "operation": "lookup",
+      "reason": "The PLFS dataset does not have a split by sex for the unemployment rate.",
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3581,
+      "tokens_out": 148,
+      "thinking_tokens": 0,
+      "latency_ms": 2279,
+      "cost_usd_est": 0.001444
+    },
+    {
+      "id": "rp-10",
+      "expected": [
+        "ncrb_annual_crime_statistics"
+      ],
+      "retrieved": [
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators"
+      ],
+      "indicators_shown": 13,
+      "dataset_id": "none_fit",
+      "table_ok": false,
+      "action": "decline",
+      "indicator_ids": [],
+      "operation": "ranking",
+      "reason": "The NCRB dataset only contains national totals and does not have state-level breakdowns for crime incidence.",
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3289,
+      "tokens_out": 109,
+      "thinking_tokens": 0,
+      "latency_ms": 2413,
+      "cost_usd_est": 0.001259
+    },
+    {
+      "id": "rp-11",
+      "expected": [],
+      "retrieved": [
+        "plfs_state_ur_usual_status",
+        "ncrb_annual_crime_statistics",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "indicators_shown": 16,
+      "dataset_id": "none_fit",
+      "table_ok": true,
+      "action": "decline",
+      "indicator_ids": [],
+      "operation": "lookup",
+      "reason": "No listed dataset contains GDP growth figures.",
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3620,
+      "tokens_out": 141,
+      "thinking_tokens": 0,
+      "latency_ms": 2246,
+      "cost_usd_est": 0.001438
+    },
+    {
+      "id": "rp-12",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "retrieved": [
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "mandi_daily_prices",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "indicators_shown": 11,
+      "dataset_id": "none_fit",
+      "table_ok": false,
+      "action": "decline",
+      "indicator_ids": [],
+      "operation": "lookup",
+      "reason": "The dataset provides percentages, not exact counts of households.",
+      "calls": 1,
+      "parse_errors": [],
+      "tokens_in": 3275,
+      "tokens_out": 121,
+      "thinking_tokens": 0,
+      "latency_ms": 2129,
+      "cost_usd_est": 0.001285
+    }
+  ]
+}
