@@ -257,10 +257,15 @@ class LlmClient:
     def from_config(
         cls, tier: str | None = None, max_llm_calls: int = 8, path: Path = MODEL_CONFIG
     ) -> "LlmClient":
-        """Build the agent's client from `configs/model.yaml` and the environment."""
+        """Build the agent's client from `configs/model.yaml` and the environment.
+
+        The model comes only from `model.yaml` (the tier's id); `LLM_MODEL` is not read here, so
+        an old `.env` entry cannot switch the agent to another model unnoticed. To use another
+        model, change `model.yaml` or pass `tier`. The environment supplies only credentials
+        and the project (`LLM_API_KEY`, `GOOGLE_CLOUD_PROJECT`)."""
         config = yaml.safe_load(path.read_text(encoding="utf-8"))["hosted_llm"]
         tier = tier or config["default_tier"]
-        model = os.environ.get("LLM_MODEL") or config["tiers"][tier]
+        model = config["tiers"][tier]
         prices = config.get("price_per_mtok", {}).get(tier, {}) or {}
         thinking = config.get("thinking") or {}
         common = {

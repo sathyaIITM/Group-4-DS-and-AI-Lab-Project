@@ -217,3 +217,13 @@ def test_every_configured_level_has_an_allowance() -> None:
     assert set(config["thinking"]["allowance"]) == set(THINKING_ORDER)
     assert config["thinking"]["allowance"]["minimal"] == 0
     assert set(config["tiers"]) <= set(config["price_per_mtok"])
+
+
+def test_from_config_ignores_llm_model_in_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    from analyst.inference.llm import LlmClient
+
+    monkeypatch.setenv("LLM_MODEL", "gemini-3.5-flash")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test-project")
+    client = LlmClient.from_config()
+    assert client.model == "google/gemini-3.5-flash-lite"
+    assert LlmClient.from_config(tier="large").model == "google/gemini-3.8-flash"
