@@ -107,9 +107,9 @@ class ChatReply:
     latency_ms: int
 
 
-Transport = Callable[[str, str, str, float], ChatReply]
-"""(system, user, model, temperature) -> reply; raises `LlmError` on a non-transient failure
-and `TransientError` on one worth retrying."""
+Transport = Callable[[str, str, str, float, int | None], ChatReply]
+"""(system, user, model, temperature, max_output_tokens) -> reply; raises `LlmError` on a
+non-transient failure and `TransientError` on one worth retrying."""
 
 
 class TransientError(LlmError):
@@ -143,10 +143,13 @@ def vertex_base_url(project: str, location: str) -> str:
 def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 60.0) -> Transport:
     """An OpenAI-compatible chat-completions transport with JSON output."""
 
-    def send(system: str, user: str, model: str, temperature: float) -> ChatReply:
+    def send(
+        system: str, user: str, model: str, temperature: float, max_tokens: int | None
+    ) -> ChatReply:
         body = {
             "model": model,
             "temperature": temperature,
+            **({"max_tokens": max_tokens} if max_tokens else {}),
             "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
         }
@@ -187,6 +190,7 @@ class LlmClient:
     temperature: float = 0.0
     max_llm_calls: int = 8
     price_per_mtok: dict[str, float | None] = field(default_factory=dict)
+    max_output_tokens: dict[str, int] = field(default_factory=dict)  # per purpose
     registry: PromptRegistry | None = None
     transport: Transport | None = None
     backoff_s: float = 1.0
@@ -213,6 +217,7 @@ class LlmClient:
             "temperature": float(config.get("temperature", 0)),
             "max_llm_calls": max_llm_calls,
             "price_per_mtok": {k: prices.get(k) for k in ("input", "output")},
+            "max_output_tokens": dict(config.get("max_output_tokens") or {}),
         }
         if config["provider"] == "vertex":
             project = os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -360,7 +365,9 @@ class LlmClient:
             "rendered_prompt": f"## System\n{system}\n## User\n{user}",
         }
         try:
-            reply = self._transport()(system, user, self.model, self.temperature)
+            reply = self._transport()(
+                system, user, self.model, self.temperature, self.max_output_tokens.get(purpose)
+            )
         except LlmError as error:  # recorded; retried only when transient
             failed = LlmCallRecord(
                 **base,

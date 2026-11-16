@@ -5,6 +5,15 @@ hosted_llm:
   provider: vertex             # vertex | ai_studio
   location: null               # Vertex region; set when the GCP project is ready (T4 task G)
   temperature: 0
+  # Output-token cap per call purpose (cost guard, T4 document Section 12; initial values).
+  # A reply cut at the cap fails validation and is retried once like any malformed reply.
+  max_output_tokens:
+    intent: 512
+    sql: 512
+    sql_repair: 512
+    narrate: 400
+    clarify: 150
+    route: 300
   # Two tiers are compared on e2e_dev (E2). Identifiers to be confirmed on the Vertex AI model
   # page before the first run; the version string returned by the API is logged per call.
   tiers:

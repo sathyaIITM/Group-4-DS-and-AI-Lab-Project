@@ -75,3 +75,21 @@ def test_validator_rejection_counts_as_a_parse_failure() -> None:
     )
     assert draft.sql == "SELECT 1"
     assert "not a SELECT" in (record.earlier_attempts[0].parse_error or "")
+
+
+def test_output_token_cap_is_sent_per_purpose() -> None:
+    client, transport = scripted_client(GOOD, GOOD)
+    client.max_output_tokens = {"sql_repair": 512}
+    client.structured("sql_repair", "sql_repair", VARS, SqlDraft, counters=Counters())
+    assert transport.max_tokens == [512]
+
+
+def test_configured_caps_cover_every_prompt() -> None:
+    import yaml
+
+    from analyst.inference.llm import MODEL_CONFIG
+    from analyst.inference.prompts import PromptRegistry
+
+    caps = yaml.safe_load(MODEL_CONFIG.read_text())["hosted_llm"]["max_output_tokens"]
+    assert {p.purpose for p in PromptRegistry()} <= set(caps)
+    assert all(isinstance(v, int) and v > 0 for v in caps.values())

@@ -16,9 +16,13 @@ class ScriptedTransport:
 
     replies: list[Any]
     calls: list[tuple[str, str]] = field(default_factory=list)
+    max_tokens: list[int | None] = field(default_factory=list)
 
-    def __call__(self, system: str, user: str, model: str, temperature: float) -> ChatReply:
+    def __call__(
+        self, system: str, user: str, model: str, temperature: float, max_tokens: int | None
+    ) -> ChatReply:
         self.calls.append((system, user))
+        self.max_tokens.append(max_tokens)
         if not self.replies:
             raise LlmError("script exhausted")
         reply = self.replies.pop(0)
