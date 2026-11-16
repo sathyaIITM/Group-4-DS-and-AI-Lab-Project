@@ -1,9 +1,11 @@
 # Labelling guide for the Kev decisions: tool selection and domain
 
-Version 1.0-draft.6 (2026-11-12). Status: **draft for team review; not frozen.** The guide is
-frozen as v1.0 after the team review, the two-person agreement check on 50 borderline items
-and the decisions listed in Section 7. Until then every label produced against it is
-provisional.
+Version 1.0 (2026-11-17). Status: **frozen for Milestone 4.** The decisions of Section 7 and
+the rules of Section 2.4 are confirmed. The planned two-person agreement check on 50 borderline
+items was not run separately: the `dev_human` set takes its place, since each of its 200 items
+is labelled by hand by two members against this version and Cohen's kappa is reported per
+decision. A rule found unclear there is clarified in version 1.1, and the affected stratum is
+labelled again.
 
 This guide is the single source of truth for every label, whether written by a person, a rule
 or a model. A recurring error is fixed by adding a rule, an example or a tie-break here, never
@@ -82,7 +84,7 @@ is absent, a clarifying question cannot lead to an answer.
 | R17 | Result present: "Where does this number come from?" | No result: same message -> R2 `search_catalog`, domain `unspecified`. Result present: "And what was it in 2020-21?" -> R13 `run_sql` | Questions about the stored result are answered from its evidence; anything that needs new rows is a query. |
 | R4 | Result present: "Add labels for the highest and lowest years." | Result present: "Group the bars by decade." -> R13 `run_sql` | Annotations computable from the rows in the result stay with the chart; regrouping needs a query. |
 
-### 2.4 Additional rules (proposed 2026-10-24 from the red-team and hard-case questions; awaiting confirmation)
+### 2.4 Additional rules (proposed 2026-10-24 from the red-team and hard-case questions; confirmed 2026-11-17)
 
 | Id | Situation | Rule |
 | --- | --- | --- |
@@ -194,7 +196,7 @@ to `decline_not_covered` ("Search for datasets about wages.") stay `search_catal
 4. If no rule decides the item, or two rules apply with no tie-break, label it `undecided` with
    a one-line note. Undecided items become guide questions, not guesses.
 
-## 7. Open questions for the team (blocks the v1.0 freeze)
+## 7. Decisions on the open questions (all decided; recorded for the v1.0 freeze)
 
 The generator does not produce items in a pending category. Decisions dated 2026-10-23 were
 made by T3 (acting for T1 on model-tuning data).
@@ -219,6 +221,7 @@ made by T3 (acting for T1 on model-tuning data).
 | Version | Date | Change |
 | --- | --- | --- |
 | 1.0-draft | 2026-10-23 | First draft from the six tool definitions in `src/analyst/decisions/routing.py`, the curation plan (Sections 4.1-4.3) and the 16 flagged week-1 items. |
+| 1.0 | 2026-11-17 | Frozen for Milestone 4: Section 2.4 (C1-C12) confirmed; Section 7 complete. The separate 50-item agreement check is replaced by the two-labeller `dev_human` set and its kappa per decision. `GUIDE_VERSION` set to `1.0`. |
 | 1.0-draft.6 | 2026-11-12 | Decisions of 2026-11-05 applied: seventh tool option `explain_result` (R17, precedence after R15, example row, M4 extended); Mandi and other market prices are `prices_economy`, MSP and crop production are `agriculture`; `other` with a shown table follows the ordinary rules (R15, H9); the state's catalogue is the top-4 candidates. `GUIDE_VERSION` in `kev_questions.py` set to `1.0-draft.6`. Domain option text unchanged, so the v1 domain splits remain valid. |
 | 1.0-draft.5 | 2026-10-24 | Proposed amendments from the red-team step and the questions raised by the hard-case step: R4/R13 boundary and precedence, R9 grain, R14 and R16 scope, Section 2.4 (C1-C12), domain scope (hydrology, road accidents, GSDP, health spending), M8 clarified, stale R3 example corrected. Awaiting confirmation. |
 | 1.0-draft.4 | 2026-10-23 | H2 decided: `unspecified` domain (M8). All open questions settled; the guide awaits the 50-item agreement check before the v1.0 freeze. |

@@ -9,7 +9,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-GUIDE_VERSION = "1.0-draft.6"
+GUIDE_VERSION = "1.0"
 STATE_CHAR_LIMIT = 1400  # about 384 tokens, the state length Kev-0.8B was mostly trained on
 
 Tool = Literal[
