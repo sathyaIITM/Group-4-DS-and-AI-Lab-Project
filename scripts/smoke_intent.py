@@ -152,6 +152,11 @@ def main() -> int:
                 or (not case["expected_dataset_ids"] and intent.dataset_id == "none_fit"),
                 "action": intent.action,
                 "indicator_ids": intent.indicator_ids,
+                "place_mentions": intent.place_mentions,
+                "all_places_level": intent.all_places_level,
+                "period_mentions": intent.period_mentions,
+                "categories": intent.categories,
+                "derivations": [d.model_dump() for d in intent.derivations],
                 "operation": intent.operation,
                 "reason": intent.reason,
             }
