@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-11-16T19:35:08+00:00",
+  "location": "global",
+  "tier": "small",
+  "output_cap": 512,
+  "calls": [
+    {
+      "model": "google/gemini-3.5-flash-lite",
+      "level": "minimal",
+      "served_model": "google/gemini-3.5-flash-lite",
+      "latency_ms": 2996,
+      "tokens_in": 126,
+      "tokens_out": 115,
+      "reasoning_tokens": null,
+      "finish_reason": "stop",
+      "valid_json": true,
+      "visible_chars": 355,
+      "cost_usd_est": 0.0003253
+    },
+    {
+      "model": "google/gemini-3.5-flash-lite",
+      "level": "medium",
+      "served_model": "google/gemini-3.5-flash-lite",
+      "latency_ms": 3354,
+      "tokens_in": 126,
+      "tokens_out": 18,
+      "reasoning_tokens": 490,
+      "finish_reason": "length",
+      "valid_json": false,
+      "visible_chars": 43,
+      "cost_usd_est": 8.28e-05
+    }
+  ],
+  "total_cost_usd_est": 0.0004081
+}
