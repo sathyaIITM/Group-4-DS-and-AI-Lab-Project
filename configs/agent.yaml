@@ -1,0 +1,20 @@
+catalogue_contract_version: "1"
+model:
+  id: "gemini"
+  version: "configure-in-model-yaml"
+prompt_hashes: {}
+limits:
+  run_deadline_s: 30
+  max_sql_generations: 3
+  max_sql_repairs: 2
+  max_narrations: 2
+  max_resolution_retries: 1
+  max_coverage_rechecks: 1
+  max_widened_searches: 1
+  max_clarifications: 2
+  max_llm_calls: 8
+  catalogue_top_k: 4
+  candidate_min_score: 0.5
+  routing_floor: 0.5
+  shortcut_threshold: 0.9
+  answer_threshold: 0.8

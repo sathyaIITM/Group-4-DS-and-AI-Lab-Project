@@ -10,6 +10,7 @@ from langgraph.graph import StateGraph, START, END
 
 from analyst.agents.state import AnalystState
 from analyst.agents.stubs import make_stub
+from analyst.agents import nodes as t2_nodes
 
 
 NODE_NAMES = [
@@ -63,16 +64,51 @@ def get_value(state, key, default=None):
     return value
 
 
+def _read(value, key, default=None):
+    if isinstance(value, dict):
+        return value.get(key, default)
+    return getattr(value, key, default)
+
+
 def get_counter(state, name):
-    counters = state.get("counters")
-    if counters is None:
-        return 0
-    return getattr(counters, name, 0)
+    counters = _read(state, "counters", {})
+    return int(_read(counters, name, 0) or 0)
 
 
 def get_limit(state, name):
-    config = state.get("config")
-    return getattr(config.limits, name)
+    config = _read(state, "config", {})
+    limits = _read(config, "limits", {})
+    return _read(limits, name, 0)
+
+
+LLM_DESTINATIONS = {
+    "extract_query_intent", "generate_sql_with_hosted_llm", "bounded_sql_repair",
+    "narrate_from_result_only", "ask_clarification",
+}
+
+
+def guarded(router):
+    """Apply the global deadline and hosted-LLM budget before every conditional edge."""
+    def route(state):
+        started = _read(state, "started_at")
+        if started is not None:
+            elapsed = time.time() - started.timestamp()
+            if elapsed > float(get_limit(state, "run_deadline_s")):
+                accepted = bool(_read(state, "answer_accepted", False))
+                if accepted:
+                    state["chart"] = {"chart_type": "table", "specification": {}}
+                    state["response_text"] = str(_read(state, "response_text", ""))
+                    state["requested_cause"] = None
+                    return "finalize_response"
+                state["requested_cause"] = "deadline_exceeded"
+                return "abstain_with_reason"
+        destination = router(state)
+        if destination in LLM_DESTINATIONS:
+            if get_counter(state, "llm_calls") >= int(get_limit(state, "max_llm_calls")):
+                state["requested_cause"] = "budget_exhausted"
+                return "report_system_failure"
+        return destination
+    return route
 
 
 def deadline_router(state, destination):
@@ -86,7 +122,7 @@ def deadline_router(state, destination):
 
     elapsed = time.time() - started.timestamp()
 
-    if elapsed > config.limits.run_deadline_s:
+    if elapsed > float(get_limit(state, "run_deadline_s")):
         return "abstain_with_reason"
 
     return destination
@@ -104,7 +140,7 @@ def after_screen(state):
 
 
 def after_routing(state):
-    label = state["routing"].label
+    label = _read(state["routing"], "label", "run_sql")
 
     mapping = {
         "run_sql": "retrieve_context_and_examples",
@@ -114,6 +150,7 @@ def after_routing(state):
         "explain_result": "explain_from_evidence",
         "ask_clarification": "ask_clarification",
         "decline_not_covered": "retrieve_context_and_examples",
+        "decline_shortcut": "decline_and_log_data_request",
     }
 
     if label == "explain_result" and not state.get("prior_result_ref"):
@@ -125,7 +162,7 @@ def after_routing(state):
 
 
 def after_coverage(state):
-    status = state["coverage"].status
+    status = _read(state["coverage"], "status", "covered")
 
     if status == "covered":
         return "generate_sql_with_hosted_llm"
@@ -179,7 +216,7 @@ def after_execution(state):
 
 
 def after_checks(state):
-    status = state["checks"].status
+    status = _read(state["checks"], "status", "pass")
 
     if status == "pass":
         return "build_evidence_bundle"
@@ -269,9 +306,23 @@ def build_graph():
 
     builder = StateGraph(AnalystState)
 
-    # Register every node.
+    # Register T2-owned runtime nodes. T3/T4-owned model and analysis nodes remain
+    # adapter stubs until their implementations are merged against the frozen contracts.
+    t2_implementations = {
+        "receive_request": t2_nodes.receive_request,
+        "screen_request": t2_nodes.screen_request,
+        "retrieve_catalogue_candidates": t2_nodes.retrieve_catalogue_candidates,
+        "resolve_routing_decision": t2_nodes.resolve_routing_decision,
+        "retrieve_context_and_examples": t2_nodes.retrieve_context_and_examples,
+        "describe_from_metadata": t2_nodes.describe_from_metadata,
+        "search_catalog_entries": t2_nodes.search_catalog_entries,
+        "explain_from_evidence": t2_nodes.explain_from_evidence,
+        "build_evidence_bundle": t2_nodes.build_evidence_bundle,
+        "select_chart_type": t2_nodes.select_chart_type,
+        "finalize_response": t2_nodes.finalize_response,
+    }
     for name in NODE_NAMES:
-        builder.add_node(name, make_stub(name))
+        builder.add_node(name, t2_implementations.get(name, make_stub(name)))
 
     # Intake.
     builder.add_edge(START, "receive_request")
@@ -329,7 +380,7 @@ def build_graph():
 
     builder.add_conditional_edges(
         "define_supported_scope_and_caveats",
-        lambda state: "generate_sql_with_hosted_llm",
+        guarded(lambda state: "generate_sql_with_hosted_llm"),
     )
 
     # SQL.

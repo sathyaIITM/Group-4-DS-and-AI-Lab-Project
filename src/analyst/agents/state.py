@@ -43,143 +43,15 @@ Cause = Literal[
 ]
 
 
-# ---------------------------------------------------------
-# Placeholder models
-# ---------------------------------------------------------
-
-class PendingClarification(BaseModel):
-    question: str = ""
-    options: list[str] = Field(default_factory=list)
-
-
-class InterpretationPlan(BaseModel):
-    dataset_id: str | None = None
-    indicator_id: str | None = None
-    geography: dict = Field(default_factory=dict)
-    period: dict = Field(default_factory=dict)
-    unit: str | None = None
-    filters: dict = Field(default_factory=dict)
-    derivations: list[dict] = Field(default_factory=list)
-    assumptions: list[str] = Field(default_factory=list)
-    unresolved: list[str] = Field(default_factory=list)
-
-
-class QueryIntent(BaseModel):
-    dataset_id: str | None = None
-    indicator_id: str | None = None
-    place_mentions: list[str] = Field(default_factory=list)
-    period_mentions: list[str] = Field(default_factory=list)
-    categories: dict = Field(default_factory=dict)
-    derivations: list[dict] = Field(default_factory=list)
-    changed_slots: list[str] = Field(default_factory=list)
-
-
-class RoutingDecision(BaseModel):
-    label: str = "run_sql"
-    domain: str = "unspecified"
-    probability: float = 1.0
-    backend: str = "stub"
-    escalated: bool = False
-
-
-class CoverageResult(BaseModel):
-    status: Literal[
-        "covered", "partial", "ambiguous", "not_covered"
-    ] = "covered"
-    probability: float = 1.0
-    decided_by: str = "stub"
-    missing_parts: list[str] = Field(default_factory=list)
-    supported_scope: str | None = None
-
-
-class SqlAttempt(BaseModel):
-    text: str = ""
-    validation: str | None = None
-    error: str | None = None
-
-
-class QueryResult(BaseModel):
-    rows: list[dict] = Field(default_factory=list)
-    schema: list[dict] = Field(default_factory=list)
-    dataset_version: str | None = None
-    elapsed_ms: float = 0
-
-
-class DerivedValue(BaseModel):
-    operation: str = ""
-    inputs: list[str] = Field(default_factory=list)
-    output: float | None = None
-    unit: str | None = None
-    rounding: str | None = None
-    status: Literal[
-        "ok",
-        "input_unreported",
-        "undefined",
-        "incompatible_inputs",
-    ] = "ok"
-
-
-class CheckReport(BaseModel):
-    status: str = "pass"
-    checks: dict = Field(default_factory=dict)
-    failures: list[str] = Field(default_factory=list)
-
-
-class EvidenceBundle(BaseModel):
-    evidence_id: str = ""
-    dataset_id: str | None = None
-    dataset_version: str | None = None
-    sql: str | None = None
-    rows: list[dict] = Field(default_factory=list)
-    caveats: list[str] = Field(default_factory=list)
-
-
-class Narration(BaseModel):
-    text: str = ""
-    claims: list[dict] = Field(default_factory=list)
-
-
-class VerificationResult(BaseModel):
-    number_check: str = "match"
-    claims_supported: bool = True
-    intent_aligned: bool = True
-    unsupported_claims: list[str] = Field(default_factory=list)
-    misaligned_slots: list[str] = Field(default_factory=list)
-    score: float = 1.0
-
-
-class ConfidenceResult(BaseModel):
-    probability: float | None = None
-    badge_level: str = "not verified"
-    inputs_used: dict = Field(default_factory=dict)
-
-
-class ChartSpec(BaseModel):
-    chart_type: str = "table"
-    specification: dict = Field(default_factory=dict)
-
-
-class Event(BaseModel):
-    stage: str
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-    details: dict = Field(default_factory=dict)
-
-
-class DecisionRecord(BaseModel):
-    decision: str
-    backend: str = "stub"
-    label: str | None = None
-    probability: float | None = None
-    escalated: bool = False
-
-
-class RetryHint(BaseModel):
-    stage: str
-    reason: str
-    change_required: str
-
+# Shared frozen contracts. Keep state orchestration separate from module-boundary models.
+from analyst.contracts import (
+    ChartSpec, CheckReport, ConfidenceResult, CoverageResult, DecisionRecord,
+    DerivedValue, EvidenceBundle, Event, InterpretationPlan, Narration,
+    QueryIntent, QueryResult, RetryHint, RoutingDecision, SqlAttempt,
+    VerificationResult,
+)
+from analyst.contracts.common import Clarification as PendingClarification
+# from analyst.contracts.response import Outcome, Cause
 
 # ---------------------------------------------------------
 # Counters and limits
@@ -220,6 +92,16 @@ class RunConfig(BaseModel):
     version: str = "v0"
     limits: Limits = Field(default_factory=Limits)
     stub_script: dict[str, list] = Field(default_factory=dict)
+    model_id: str = "unset"
+    model_version: str = "unset"
+    prompt_hashes: dict[str, str] = Field(default_factory=dict)
+    config_hashes: dict[str, str] = Field(default_factory=dict)
+    catalogue_contract_version: str = "unknown"
+
+    @classmethod
+    def from_files(cls, version: str = "v0", config_path: str = "configs/agent.yaml") -> "RunConfig":
+        from analyst.config import load_run_config
+        return load_run_config(version=version, config_path=config_path)
 
 
 # ---------------------------------------------------------
@@ -244,6 +126,16 @@ class AnalystState(BaseModel):
     config: RunConfig = Field(default_factory=RunConfig)
 
     screen: dict = Field(default_factory=lambda: {"passes": True})
+    response_text: str = ""
+    answer_decision: str = "answer"
+    validation_result: str = "valid"
+    execution_result: str = "success"
+    number_check_result: str = "match"
+    chart_result: str = "unverified"
+    requested_cause: str | None = None
+    answer_accepted: bool = False
+    finalized: bool = False
+    run_log_path: str | None = None
 
     catalogue_candidates: list[dict] = Field(default_factory=list)
     routing: RoutingDecision = Field(default_factory=RoutingDecision)
