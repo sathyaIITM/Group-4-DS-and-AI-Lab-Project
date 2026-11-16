@@ -3,6 +3,7 @@
     python scripts/check_vertex.py                      # plan only: prints what would be sent
     python scripts/check_vertex.py --yes                # sends the calls (spends credit)
     python scripts/check_vertex.py --tier small --levels minimal medium --yes
+    python scripts/check_vertex.py --model gemini-3.8-flash --price-in 0.75 --price-out 3.75
 
 For each call it prints the requested and served model, the thinking level, latency, input and
 output tokens, thinking tokens (when reported), the finish reason, whether the reply was valid
@@ -28,6 +29,7 @@ from analyst.inference.llm import (
     THINKING_ORDER,
     ChatRequest,
     LlmError,
+    billed_output_tokens,
     gcloud_token,
     http_transport,
     parse_json,
@@ -71,17 +73,24 @@ def plan_levels(requested: list[str] | None, accepted: list[str] | None) -> list
 def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--tier", default=None, help="tier name in model.yaml (default tier)")
-    parser.add_argument("--levels", nargs="+", choices=THINKING_ORDER)
+    parser.add_argument("--model", help="a Gemini model id not in the tiers (google/ is added)")
+    parser.add_argument("--price-in", type=float, help="USD per 1M input tokens (with --model)")
+    parser.add_argument("--price-out", type=float, help="USD per 1M output tokens (with --model)")
+    parser.add_argument("--levels", nargs="+", choices=[*THINKING_ORDER, "none"])
     parser.add_argument("--yes", action="store_true", help="send the calls (spends credit)")
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
     config = yaml.safe_load(MODEL_CONFIG.read_text(encoding="utf-8"))["hosted_llm"]
     tier = args.tier or config["default_tier"]
-    model = config["tiers"][tier]
+    model = args.model or config["tiers"][tier]
+    if args.model:
+        tier = "ad hoc"
     location = config["location"]
     cap = int(config.get("max_output_tokens", {}).get("sql", 512))
-    prices = config.get("price_per_mtok", {}).get(tier) or {}
+    prices = dict(config.get("price_per_mtok", {}).get(tier) or {})
+    if args.model:
+        prices = {"input": args.price_in, "output": args.price_out}
     accepted = (config.get("thinking", {}).get("supported_levels") or {}).get(model)
     levels = plan_levels(args.levels, accepted)
     project = os.environ.get("GOOGLE_CLOUD_PROJECT") or gcloud_value("project")
@@ -108,7 +117,8 @@ def main() -> int:
     send = http_transport(vertex_base_url(project, location), gcloud_token)
     rows = []
     for level in levels:
-        request = ChatRequest(SYSTEM, USER, f"google/{model}", 0.0, cap, level)
+        effort = None if level == "none" else level
+        request = ChatRequest(SYSTEM, USER, f"google/{model}", 0.0, cap, effort)
         row: dict[str, object] = {"model": request.model, "level": level}
         try:
             reply = send(request)
@@ -124,7 +134,8 @@ def main() -> int:
             valid = False
         cost = None
         if worst is not None:
-            cost = (reply.tokens_in * prices["input"] + reply.tokens_out * prices["output"]) / 1e6
+            billed = billed_output_tokens(reply)
+            cost = (reply.tokens_in * prices["input"] + billed * prices["output"]) / 1e6
         row |= {
             "served_model": reply.served_model,
             "latency_ms": reply.latency_ms,

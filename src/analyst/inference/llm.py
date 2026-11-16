@@ -151,6 +151,12 @@ def request_body(request: ChatRequest) -> dict[str, Any]:
     return body
 
 
+def billed_output_tokens(reply: ChatReply) -> int:
+    """Output tokens as billed: the visible reply plus the thinking tokens, which Vertex reports
+    separately from `completion_tokens` (checked 2026-11-17 with gemini-3.5-flash-lite)."""
+    return reply.tokens_out + (reply.reasoning_tokens or 0)
+
+
 def parse_reply(payload: dict[str, Any], model: str, latency_ms: int) -> ChatReply:
     usage = payload.get("usage") or {}
     details = usage.get("completion_tokens_details") or {}
@@ -471,7 +477,7 @@ class LlmClient:
             tokens_in=reply.tokens_in,
             tokens_out=reply.tokens_out,
             latency_ms=reply.latency_ms,
-            cost_usd_est=self._cost(reply.tokens_in, reply.tokens_out),
+            cost_usd_est=self._cost(reply.tokens_in, billed_output_tokens(reply)),
             reasoning_tokens=reply.reasoning_tokens,
             finish_reason=reply.finish_reason,
         ), False

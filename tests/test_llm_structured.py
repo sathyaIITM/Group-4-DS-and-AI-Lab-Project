@@ -180,3 +180,16 @@ def test_reply_reports_thinking_tokens_and_finish_reason() -> None:
     reply = parse_reply(payload, "m", 10)
     assert (reply.reasoning_tokens, reply.finish_reason) == (480, "length")
     assert parse_reply({"choices": [{"message": {"content": ""}}]}, "m", 1).reasoning_tokens is None
+
+
+def test_cost_counts_thinking_tokens_as_output() -> None:
+    from analyst.inference.llm import ChatReply, billed_output_tokens
+
+    reply = ChatReply(
+        "{}", tokens_in=126, tokens_out=18, served_model="m", latency_ms=1, reasoning_tokens=490
+    )
+    assert billed_output_tokens(reply) == 508
+    client, _ = scripted_client()
+    assert client._cost(126, billed_output_tokens(reply)) == pytest.approx(
+        (126 * 0.1 + 508 * 0.4) / 1e6
+    )
