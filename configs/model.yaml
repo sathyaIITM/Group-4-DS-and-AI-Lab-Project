@@ -1,0 +1,40 @@
+# Model identifiers by component. Owner: T3. Secrets and the GCP project id come from the
+# environment (.env), never from this file.
+
+hosted_llm:
+  provider: vertex             # vertex | ai_studio
+  location: null               # Vertex region; set when the GCP project is ready (T4 task G)
+  temperature: 0
+  # Two tiers are compared on e2e_dev (E2). Identifiers to be confirmed on the Vertex AI model
+  # page before the first run; the version string returned by the API is logged per call.
+  tiers:
+    small: gemini-3.5-flash-lite
+    large: gemini-3.5-flash
+  default_tier: small
+  # USD per million tokens; null until copied from the Vertex AI pricing page with its date.
+  price_per_mtok:
+    small: {input: null, output: null, checked: null}
+    large: {input: null, output: null, checked: null}
+  ai_studio_base_url: https://generativelanguage.googleapis.com/v1beta/openai
+
+kev:
+  model: jaredpalmer/kev-0.8b
+  revision: bf75a6a8848ea6960ff2ed108d9ed44c2941174f
+  checkpoint: null             # fine-tuned run id from models/registry.json, once the gate is run
+  temperature: null            # fitted on the calibration split; null serves raw probabilities
+  serve:
+    base_url_env: KEV_BASE_URL
+    api_key_env: KEV_API_KEY
+    dtype: fp32
+    raw_temperature: 1.0       # KEV_TEMPERATURE at the server; scaling is applied by the client
+
+jev:
+  model: jev-latest
+  backends:
+    - {name: typesafe, base_url: https://api.typesafe.ai, api_key_env: TYPESAFE_API_KEY}
+    - {name: openrouter, base_url: null, api_key_env: OPENROUTER_API_KEY}   # route to be confirmed
+
+embedding:
+  model: BAAI/bge-small-en-v1.5
+  revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
+  dim: 384
