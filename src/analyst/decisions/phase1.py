@@ -74,3 +74,18 @@ def subsample(records: list[dict[str, Any]], n: int, seed: int = 0) -> list[dict
     rng.shuffle(remaining)
     chosen.update(remaining[: max(0, n - len(chosen))])
     return [records[i] for i in sorted(chosen)]
+
+
+def to_laya_row(record: dict[str, Any], decision: str = "domain") -> dict[str, Any]:
+    """A Kev record as a Laya training row (`{state, questions, expected}`; laya 0.4.23,
+    `laya.train.rows_to_items`): the same state and question text, the label moved to
+    `expected`, so both models are fine-tuned on identical inputs."""
+    question = dict(record["questions"][decision])
+    label = question.pop("label")
+    question.setdefault("type", "choice")
+    return {
+        "state": record["state"],
+        "questions": {decision: question},
+        "expected": {decision: label},
+        "_meta": {"id": record["_meta"]["id"]},
+    }
