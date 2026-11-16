@@ -1,0 +1,50 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__(<p>__start__</p>)
+	receive_request(receive_request)
+	screen_request(screen_request)
+	retrieve_catalogue_candidates(retrieve_catalogue_candidates)
+	route_tool_and_domain(route_tool_and_domain)
+	escalate_to_jev(escalate_to_jev)
+	resolve_routing_decision(resolve_routing_decision)
+	validate_existing_result_for_chart(validate_existing_result_for_chart)
+	describe_from_metadata(describe_from_metadata)
+	search_catalog_entries(search_catalog_entries)
+	explain_from_evidence(explain_from_evidence)
+	retrieve_context_and_examples(retrieve_context_and_examples)
+	extract_query_intent(extract_query_intent)
+	resolve_places_periods_units(resolve_places_periods_units)
+	check_coverage(check_coverage)
+	define_supported_scope_and_caveats(define_supported_scope_and_caveats)
+	generate_sql_with_hosted_llm(generate_sql_with_hosted_llm)
+	validate_sql_with_sqlglot(validate_sql_with_sqlglot)
+	bounded_sql_repair(bounded_sql_repair)
+	execute_read_only_duckdb(execute_read_only_duckdb)
+	compute_derivations(compute_derivations)
+	deterministic_result_checks(deterministic_result_checks)
+	build_evidence_bundle(build_evidence_bundle)
+	narrate_from_result_only(narrate_from_result_only)
+	verify_numbers_deterministically(verify_numbers_deterministically)
+	verify_claim_support_and_intent(verify_claim_support_and_intent)
+	calibrate_end_to_end_confidence(calibrate_end_to_end_confidence)
+	decide_answer_or_abstain(decide_answer_or_abstain)
+	assemble_answer_and_evidence_panel(assemble_answer_and_evidence_panel)
+	select_chart_type(select_chart_type)
+	render_chart(render_chart)
+	ask_clarification(ask_clarification)
+	decline_and_log_data_request(decline_and_log_data_request)
+	abstain_with_reason(abstain_with_reason)
+	report_system_failure(report_system_failure)
+	respond_out_of_scope(respond_out_of_scope)
+	finalize_response(finalize_response)
+	__end__(<p>__end__</p>)
+	__start__ --> receive_request;
+	receive_request --> screen_request;
+	screen_request --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
