@@ -1,13 +1,30 @@
-from pydantic import Field
-from .common import Contract
+"""Deterministic checks and the number check (design document Section 4.5)."""
+
+from typing import Literal
+
+from analyst.contracts.common import Caveat, Contract
+
+FailureClass = Literal["none", "caveat", "query_fault", "empty_result", "data_absent"]
+
+
+class CheckOutcome(Contract):
+    name: str
+    passed: bool
+    failure_class: FailureClass
+    expected: str | None
+    observed: str | None
+    detail: str
+
+
 class CheckReport(Contract):
-    status: str = "pass"
-    checks: dict[str, bool | str | float] = Field(default_factory=dict)
-    failures: tuple[str, ...] = ()
-class VerificationResult(Contract):
-    number_check: str = "match"
-    claims_supported: bool = True
-    intent_aligned: bool = True
-    unsupported_claims: tuple[str, ...] = ()
-    misaligned_slots: tuple[str, ...] = ()
-    score: float = 1.0
+    outcomes: list[CheckOutcome]
+    verdict: Literal["pass", "pass_with_caveats", "query_fault", "empty_result", "data_absent"]
+    caveats: list[Caveat]
+    retry_hint: str | None
+
+
+class NumberCheck(Contract):
+    passed: bool
+    matched: list[str]
+    unmatched: list[str]
+    unit_or_direction_errors: list[str]

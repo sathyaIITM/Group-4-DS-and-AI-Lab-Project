@@ -1,5 +1,8 @@
 from pydantic import Field
+
 from .common import Contract
+
+
 class RunRecord(Contract):
     run_id: str
     conversation_id: str
@@ -11,6 +14,8 @@ class RunRecord(Contract):
     finished_at: str
     git_sha: str = "unknown"
     config_hash: str = ""
+
+
 class NodeEventRecord(Contract):
     run_id: str
     stage: str

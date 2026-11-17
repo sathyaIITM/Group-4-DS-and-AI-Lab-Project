@@ -1,7 +1,29 @@
-from datetime import datetime, timezone
-from pydantic import Field
-from .common import Contract
+"""Streamed events (design document Section 4.7)."""
+
+from datetime import datetime
+from typing import Any, Literal
+
+from analyst.contracts.common import Contract
+
+EventType = Literal[
+    "run_started",
+    "stage",
+    "clarification",
+    "decline",
+    "abstention",
+    "failure",
+    "answer",
+    "evidence",
+    "explanation",
+    "chart",
+    "done",
+]
+
+
 class Event(Contract):
-    stage: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    details: dict[str, object] = Field(default_factory=dict)
+    type: EventType
+    run_id: str
+    seq: int
+    at: datetime
+    stage: str | None
+    payload: dict[str, Any]
