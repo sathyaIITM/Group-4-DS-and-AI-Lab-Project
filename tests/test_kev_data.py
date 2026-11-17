@@ -92,14 +92,20 @@ def test_rule_labels_follow_the_guide(records: list[KevRecord]) -> None:
         rule, tags = r.meta.tool_rule, r.meta.tags
         if "by_removal" in tags:
             assert r.tool == "decline_not_covered"
-            needed = PLFS if r.domain == "labour" else IMD
+            if "generic" in tags:
+                needed = r.meta.template_id.split(".")[1]
+            else:
+                needed = PLFS if r.domain == "labour" else IMD
             assert not _table_shown(r, needed)
         if r.tool == "make_chart":
             assert r.meta.has_result
             assert r.state.context.startswith("A result table is available")
         if rule in {"R5", "R6"}:
             assert not r.meta.has_result
-            needed = PLFS if r.domain == "labour" else IMD
+            if "generic" in tags:  # template id: table.<name>.<kind>...
+                needed = r.meta.template_id.split(".")[1]
+            else:
+                needed = PLFS if r.domain == "labour" else IMD
             assert _table_shown(r, needed)
         if rule == "R1":
             assert (r.tool, r.domain) == ("decline_not_covered", "other")
@@ -168,8 +174,10 @@ def test_decided_categories_carry_their_labels(records: list[KevRecord]) -> None
             assert r.tool == "ask_clarification"  # H5
         if r.meta.tool_rule == "R14":
             assert r.tool == "ask_clarification"  # H11b
-        if r.domain == "unspecified":
+        if r.domain == "unspecified" and "explain_without_result" not in r.meta.tags:
             assert (r.tool, r.meta.has_result) == ("ask_clarification", False)  # H2
+        if "explain_without_result" in r.meta.tags:  # R17: nothing to explain, so search
+            assert (r.tool, r.meta.has_result) == ("search_catalog", False)
 
 
 def test_reader_tolerates_pasted_artefacts(tmp_path: Path) -> None:
@@ -184,3 +192,48 @@ def test_reader_tolerates_pasted_artefacts(tmp_path: Path) -> None:
     assert [o.get("a") for o in objects[:3]] == [1, 2, 3]
     assert objects[3]["question_for_human"] == 'Is "R3" right?'
     assert any("repaired" in p for p in problems)
+
+
+# --- Router catalogue (version 2.0) ------------------------------------------------------------
+
+PUBLISHED = Path("data/processed/catalogue.json")
+
+
+def test_every_real_table_has_a_short_line_starting_with_its_name() -> None:
+    for t in load_catalogue(CATALOGUE).real_tables():
+        assert t.line, t.name
+        assert len(t.line) <= 200, (t.name, len(t.line))
+        assert t.line.startswith(f"{t.name}: "), t.name
+
+
+@pytest.mark.skipif(not PUBLISHED.exists(), reason="published catalogue not built")
+def test_catalogue_tables_are_published() -> None:
+    import json
+
+    published = {t["dataset_id"] for t in json.loads(PUBLISHED.read_text())["tables"]}
+    names = {t.name for t in load_catalogue(CATALOGUE).real_tables()}
+    assert names <= published, sorted(names - published)
+
+
+def test_generic_tables_have_periods_and_places() -> None:
+    for t in load_catalogue(CATALOGUE).real_tables():
+        if t.measures:
+            assert t.periods, t.name
+            assert t.places or t.name == "crop_production_district", t.name
+
+
+def test_four_longest_lines_fit_the_router_state() -> None:
+    lengths = sorted(
+        (len(t.line) + 4 for t in load_catalogue(CATALOGUE).real_tables()), reverse=True
+    )
+    assert sum(lengths[:4]) + 350 <= STATE_CHAR_LIMIT
+
+
+def test_generated_records_have_no_conflicting_labels(tmp_path: Path) -> None:
+    """The same state must never carry two labels (a sibling table with a national row changes
+    the default for a missing place)."""
+    catalogue = load_catalogue(CATALOGUE)
+    records = generate(catalogue, n_families=700, seed=21)
+    write_splits(records, tmp_path, version=9)
+    result = run_checks(tmp_path, version=9, shortcuts=False)
+    assert not [e for e in result.errors if "conflicting labels" in e], result.errors
