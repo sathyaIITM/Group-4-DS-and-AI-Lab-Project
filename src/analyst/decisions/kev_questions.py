@@ -9,7 +9,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-GUIDE_VERSION = "1.0-draft.4"
+GUIDE_VERSION = "1.0"
 STATE_CHAR_LIMIT = 1400  # about 384 tokens, the state length Kev-0.8B was mostly trained on
 
 Tool = Literal[
@@ -19,6 +19,7 @@ Tool = Literal[
     "search_catalog",
     "ask_clarification",
     "decline_not_covered",
+    "explain_result",
 ]
 Domain = Literal[
     "labour",
@@ -61,6 +62,11 @@ TOOL_OPTIONS: dict[str, str] = {
     "decline_not_covered": (
         "Decline: the figure needs data absent from the catalogue, or the message is not a data "
         "request."
+    ),
+    "explain_result": (
+        "Explain the current result: a result table is already available and the user asks "
+        "where its figures come from, how they were computed, or which definition, period, "
+        "assumption or caveat applies, without asking for new figures."
     ),
 }
 

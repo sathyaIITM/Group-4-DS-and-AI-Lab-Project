@@ -1,0 +1,76 @@
+# Kev-0.8B fine-tuning runs (Milestone 4). Owner: T3.
+# Flags were checked against `python -m kev.train --help` at Kev commit
+# 2074cc44256200bb37540103fa4572901faa10f3 on 2026-11-12. Re-check after updating the Kev clone.
+#
+# Constraints found in that check:
+# - `--dtype` accepts only fp32 and bf16, and bf16 is CUDA autocast; the Colab T4 has no bf16,
+#   so every run uses fp32 (there is no fp16 option).
+# - With `--init_from`, the LoRA rank, head dimension, option isolation, special embeddings,
+#   base and base revision must equal the released checkpoint's (kev/checkpoint.py,
+#   COMPAT_FIELDS): rank 16, head_dim 256. A different rank is possible only from the base model.
+# - The learning-rate schedule is OneCycle with 10% warm-up; gradients are clipped at a global
+#   norm of 1.0 (constants, not flags). Clipped steps are reported per epoch in the run log.
+# - Snapshot and resume flags apply to full-weight training only, so early stopping for a LoRA
+#   run is emulated by the epoch runs (1, 2, 3), scored on calibration NLL.
+
+kev_commit: 2074cc44256200bb37540103fa4572901faa10f3
+
+base:
+  model: Qwen/Qwen3.5-0.8B-Base
+  revision: dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68
+init_from:
+  model: jaredpalmer/kev-0.8b
+  revision: bf75a6a8848ea6960ff2ed108d9ed44c2941174f   # released adapter: LoRA rank 16, head_dim 256
+
+data:
+  # Filled when routing data v2 is frozen (D2); hashes are copied from data/MANIFEST.md.
+  train: data/splits/kev_domain/train.v2.jsonl
+  train_sha256: null
+  calibration: data/splits/kev_domain/calibration.v2.jsonl
+  calibration_sha256: null
+  dev_synthetic: data/splits/kev_domain/dev_synthetic.v2.jsonl
+  dev_synthetic_sha256: null
+  subsets_dir: data/splits/kev_domain/subsets   # train-size runs; written by `kev_runs subsets`
+
+# Base configuration B0 (docs/Kev_Training_Plan.md Section 6, corrected for the flags above).
+b0:
+  lr: 2.0e-5
+  epochs: 2
+  batch: 1
+  accum: 8
+  lora: 16
+  lora_targets: all
+  dtype: fp32
+  weights_dtype: fp32
+  max_state: 384
+  seed: 0
+  device: cuda
+
+# One factor at a time from B0. Every run is scored on `calibration` and `dev_synthetic`.
+sweep:
+  lr: [1.0e-5, 2.0e-5, 4.0e-5]
+  epochs: [1, 2, 3]
+  train_size: [250, 500, 1000, full]
+  seeds: [0, 1, 2]              # for B0 and for the best setting
+  # LoRA rank cannot change under --init_from (see above). The rank runs therefore start from
+  # the base model and are compared with a from-base B0, which is also generalisation item 1.
+  from_base:
+    lora: [8, 16, 32]
+
+generalisation:
+  - id: init_from
+    runs: [b0, b0_from_base_r16]
+  - id: held_out_table
+    note: train without one table's records, evaluate on that table's records
+  - id: gradient_clipping
+    note: report clipped steps per epoch from the run log; compare lr 1e-5 with B0
+  - id: seed_spread
+    seeds: [0, 1, 2]
+  - id: temperature
+    note: fitted on calibration, applied unchanged to dev
+  - id: option_order
+    orders: 3
+  - id: early_stop
+    note: epochs 1, 2, 3 compared on calibration NLL
+
+# Commands are built from this file by `python -m analyst.models.kev_runs plan`.

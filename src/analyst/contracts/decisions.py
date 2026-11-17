@@ -1,14 +1,27 @@
+"""Decision records and the routing decision (design document Section 4.7)."""
+
 from typing import Literal
-from .common import Contract
-class RoutingDecision(Contract):
-    label: str = "run_sql"
-    domain: str = "unspecified"
-    probability: float = 1.0
-    backend: str = "stub"
-    escalated: bool = False
+
+from analyst.contracts.common import Contract
+
+
 class DecisionRecord(Contract):
-    decision: str
-    backend: str = "stub"
-    label: str | None = None
-    probability: float | None = None
-    escalated: bool = False
+    decision: Literal["tool", "domain", "coverage", "verification", "chart"]
+    backend: Literal["kev", "jev", "laya", "llm", "rules"]
+    model_revision: str | None
+    label: str
+    probabilities: dict[str, float]
+    calibrated: bool
+    temperature: float | None
+    escalated: bool
+    fallback: bool
+    latency_ms: int
+    cost_usd: float | None
+
+
+class RoutingDecision(Contract):
+    tool: DecisionRecord
+    domain: DecisionRecord
+    final_tool: str
+    final_domain: str
+    branch: Literal["query", "chart", "describe", "search", "explain", "clarify", "decline"]

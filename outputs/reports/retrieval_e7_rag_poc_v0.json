@@ -1,0 +1,210 @@
+{
+  "backend": "memory",
+  "cases_file": "data/sample/rag_poc_retrieval_gold.v0.jsonl",
+  "k": 4,
+  "cases": 12,
+  "scored": 11,
+  "recall_at_k": 1.0,
+  "mrr": 1.0,
+  "indicator_recall_at_k": null,
+  "per_case": [
+    {
+      "id": "rp-01",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "rp-02",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "rp-03",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "top": [
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "mandi_daily_prices",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "imd_subdivision_monthly_rainfall": 1
+      }
+    },
+    {
+      "id": "rp-04",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "top": [
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "imd_subdivision_monthly_rainfall": 1
+      }
+    },
+    {
+      "id": "rp-05",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "rp-06",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "top": [
+        "nfhs5_district_indicators",
+        "plfs_state_ur_usual_status",
+        "imd_subdivision_monthly_rainfall",
+        "ncrb_annual_crime_statistics"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "nfhs5_district_indicators": 1
+      }
+    },
+    {
+      "id": "rp-07",
+      "expected": [
+        "mandi_daily_prices"
+      ],
+      "top": [
+        "mandi_daily_prices",
+        "nfhs5_district_indicators",
+        "plfs_state_ur_usual_status",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "mandi_daily_prices": 1
+      }
+    },
+    {
+      "id": "rp-08",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "ncrb_annual_crime_statistics",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "rp-09",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "mandi_daily_prices"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "rp-10",
+      "expected": [
+        "ncrb_annual_crime_statistics"
+      ],
+      "top": [
+        "ncrb_annual_crime_statistics",
+        "imd_subdivision_monthly_rainfall",
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "ncrb_annual_crime_statistics": 1
+      }
+    },
+    {
+      "id": "rp-11",
+      "expected": [],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "ncrb_annual_crime_statistics",
+        "nfhs5_district_indicators",
+        "mandi_daily_prices"
+      ],
+      "scored": false
+    },
+    {
+      "id": "rp-12",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "top": [
+        "nfhs5_district_indicators",
+        "ncrb_annual_crime_statistics",
+        "mandi_daily_prices",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "nfhs5_district_indicators": 1
+      }
+    }
+  ]
+}

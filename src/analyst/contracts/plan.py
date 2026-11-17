@@ -1,16 +1,37 @@
-from __future__ import annotations
-from pydantic import Field
-from .common import Contract, Place, PeriodWindow
+"""Interpretation plan (design document Section 4.2): written by code only."""
+
+from typing import Literal
+
+from analyst.contracts.common import (
+    Assumption,
+    Contract,
+    GeoLevel,
+    IndicatorRef,
+    PeriodWindow,
+    Place,
+)
+from analyst.contracts.intent import DerivationRequest, Operation
+
+
+class UnresolvedSlot(Contract):
+    slot: Literal["place", "period", "indicator", "category", "geo_level"]
+    mention: str
+    options: list[str]
+
 
 class InterpretationPlan(Contract):
-    dataset_id: str | None = None
-    indicator_id: str | None = None
-    places: tuple[Place, ...] = ()
-    periods: tuple[PeriodWindow, ...] = ()
-    geography: dict[str, str] = Field(default_factory=dict)
-    period: dict[str, str] = Field(default_factory=dict)
-    unit: str | None = None
-    filters: dict[str, str] = Field(default_factory=dict)
-    derivations: tuple[dict[str, str], ...] = ()
-    assumptions: tuple[str, ...] = ()
-    unresolved: tuple[str, ...] = ()
+    dataset_id: str
+    obs_table: str
+    dataset_version: str
+    indicators: list[IndicatorRef]
+    places: list[Place]
+    all_places_level: GeoLevel | None
+    periods: list[PeriodWindow]
+    categories: dict[str, list[str]]
+    operation: Operation
+    order: Literal["asc", "desc"] | None
+    limit: int | None
+    derivations: list[DerivationRequest]
+    exclude_total_rows: bool
+    assumptions: list[Assumption]
+    unresolved: list[UnresolvedSlot]

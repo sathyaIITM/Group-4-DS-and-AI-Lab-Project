@@ -1,0 +1,117 @@
+{
+  "run_at": "2026-11-16T21:01:19+00:00",
+  "model": "google/gemini-3.5-flash-lite",
+  "ok": 6,
+  "questions": 7,
+  "total_cost_usd_est": 0.0084153,
+  "rows": [
+    {
+      "id": "rp-01",
+      "expected": 25.7,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_plfs_state_ur_usual_status WHERE indicator_id = 'ur_usual_ps_ss' AND geo_level = 'state' AND period_start = '2019-07-01 00:00:00' AND period_end = '2020-06-30 00:00:00' AND is_total_row = false ORDER BY value DESC LIMIT 1",
+      "ok": true,
+      "observed": [
+        25.7
+      ],
+      "row_count": 1,
+      "calls": 1,
+      "latency_ms": 2940,
+      "tokens_in": 797,
+      "tokens_out": 163,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.000647
+    },
+    {
+      "id": "rp-02",
+      "expected": 10.0,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_plfs_state_ur_usual_status WHERE geo_code = 'state:kerala' AND period_start = '2019-07-01 00:00:00' AND period_end = '2020-06-30 00:00:00' AND indicator_id = 'ur_usual_ps_ss'",
+      "ok": true,
+      "observed": [
+        10.0
+      ],
+      "row_count": 1,
+      "calls": 1,
+      "latency_ms": 2741,
+      "tokens_in": 824,
+      "tokens_out": 142,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.000602
+    },
+    {
+      "id": "rp-03",
+      "expected": 1856.5,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_imd_subdivision_monthly_rainfall WHERE geo_code = 'subdivision:kerala' AND indicator_id = 'rainfall_mm' AND period_start = '2017-06-01 00:00:00' AND period_end = '2017-09-30 00:00:00'",
+      "ok": true,
+      "observed": [
+        1856.5
+      ],
+      "row_count": 1,
+      "calls": 1,
+      "latency_ms": 2674,
+      "tokens_in": 814,
+      "tokens_out": 132,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.000574
+    },
+    {
+      "id": "rp-04",
+      "expected": 1098.84,
+      "ok": false,
+      "error": "sql: no valid reply after 2 attempts",
+      "calls": 2,
+      "latency_ms": 6241,
+      "tokens_in": 4896,
+      "tokens_out": 990,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.003944
+    },
+    {
+      "id": "rp-05",
+      "expected": -31.67,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_plfs_state_ur_usual_status WHERE geo_code = 'IN' AND indicator_id = 'ur_usual_ps_ss' AND ((period_start = '2017-07-01 00:00:00' AND period_end = '2018-06-30 00:00:00') OR (period_start = '2021-07-01 00:00:00' AND period_end = '2022-06-30 00:00:00'))",
+      "ok": true,
+      "observed": -31.67,
+      "row_count": 2,
+      "calls": 1,
+      "latency_ms": 2554,
+      "tokens_in": 911,
+      "tokens_out": 201,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.000776
+    },
+    {
+      "id": "rp-06",
+      "expected": 76.5,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_nfhs5_district_indicators WHERE geo_state = 'Bihar' AND geo_level = 'district' AND indicator_id = 'nfhs5_women_age_15_49_who_are_literate4_47d1ef18' AND period_start = '2019-01-01' AND period_end = '2021-12-31' AND is_total_rows = false ORDER BY value DESC LIMIT 1",
+      "first_error": "BinderException: Binder Error: Referenced column \"is_total_rows\" not found in FROM clause!\nCandidate bindings: \"is_total_row\", \"geo_state_source\", \"indicator_label_source\", \"sou",
+      "repaired_sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag FROM obs_nfhs5_district_indicators WHERE geo_state = 'Bihar' AND geo_level = 'district' AND indicator_id = 'nfhs5_women_age_15_49_who_are_literate4_47d1ef18' AND period_start = '2019-01-01' AND period_end = '2021-12-31' AND is_total_row = false ORDER BY value DESC LIMIT 1",
+      "ok": true,
+      "observed": [
+        76.5
+      ],
+      "row_count": 1,
+      "calls": 2,
+      "latency_ms": 4384,
+      "tokens_in": 1456,
+      "tokens_out": 327,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.001254
+    },
+    {
+      "id": "rp-07",
+      "expected": 5650.0,
+      "sql": "SELECT geo_name, period_label, indicator_id, value, unit, quality_flag, commodity_name FROM obs_mandi_daily_prices WHERE geo_state = 'Maharashtra' AND period_start >= '2026-10-29' AND period_end <= '2026-10-29' AND indicator_id = 'modal_price_inr_per_quintal' AND commodity_name = 'Onion' AND is_total_row = false ORDER BY value DESC LIMIT 1",
+      "ok": true,
+      "observed": [
+        5650.0
+      ],
+      "row_count": 1,
+      "calls": 1,
+      "latency_ms": 2315,
+      "tokens_in": 828,
+      "tokens_out": 148,
+      "thinking_tokens": 0,
+      "cost_usd_est": 0.000618
+    }
+  ]
+}

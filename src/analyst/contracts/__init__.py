@@ -1,14 +1,8 @@
-from .common import Clarification, ConfidenceResult, Contract, PeriodWindow, Place, RetryHint, ScreenResult
-from .intent import QueryIntent
-from .plan import InterpretationPlan
-from .coverage import CoverageResult
-from .sql import SqlAttempt, SqlDraft
-from .results import DerivedValue, QueryResult
-from .checks import CheckReport, VerificationResult
-from .evidence import EvidenceBundle
-from .narration import Narration
-from .decisions import DecisionRecord, RoutingDecision
-from .chart import ChartSpec
-from .events import Event
-from .response import AgentResponse, Cause, Outcome
-__all__ = [name for name in globals() if not name.startswith("_")]
+"""Shared contracts (design document Section 4).
+
+Provisional copy on the T3 branch, written field for field from Section 4 so that the T3 nodes
+can be built and tested before the contracts package of T2 is merged. At integration the T2
+package replaces this one; any difference is a defect in one of the two.
+"""
+
+CONTRACT_VERSION = "1.0"

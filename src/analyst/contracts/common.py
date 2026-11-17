@@ -1,37 +1,77 @@
-from __future__ import annotations
-from datetime import datetime, timezone
+"""Common types (design document Section 4.1)."""
+
+from datetime import date
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+
+from pydantic import BaseModel, ConfigDict
+
+GeoLevel = Literal["national", "state", "district", "subdivision", "market"]
+PeriodType = Literal[
+    "date",
+    "month",
+    "quarter",
+    "season",
+    "calendar_year",
+    "survey_year",
+    "survey_round",
+    "fiscal_year",
+    "agri_year",
+]
+QualityFlag = Literal[
+    "reported",
+    "low_sample_estimate",
+    "implausible",
+    "inconsistent",
+    "out_of_range",
+    "suppressed",
+    "missing_in_source",
+    "unparsed",
+    "revised",
+    "provisional",
+]
+
 
 class Contract(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    """Every contract is frozen and forbids extra fields."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
 
 class Place(Contract):
     requested: str
-    resolved: str | None = None
-    code: str | None = None
-    correction: str | None = None
+    level: GeoLevel
+    code: str
+    name: str
+    match: Literal["exact", "alias"]
+    vintage: str | None = None
+
 
 class PeriodWindow(Contract):
     requested: str
-    start: str | None = None
-    end: str | None = None
-    frequency: str | None = None
+    type: PeriodType
+    label: str
+    start: date
+    end: date
+    default_applied: str | None = None
 
-class ScreenResult(Contract):
-    passes: bool = True
-    reason: str | None = None
 
-class Clarification(Contract):
-    question: str
-    options: tuple[str, ...] = ()
+class IndicatorRef(Contract):
+    indicator_id: str
+    label: str
+    unit: str
 
-class RetryHint(Contract):
-    stage: str
-    reason: str
-    change_required: str
 
-class ConfidenceResult(Contract):
-    probability: float | None = None
-    badge_level: str = "not_verified"
-    inputs_used: dict[str, float | str | bool] = Field(default_factory=dict)
+class CellRef(Contract):
+    row: int
+    column: str
+
+
+class Assumption(Contract):
+    code: str
+    text: str
+
+
+class Caveat(Contract):
+    code: str
+    text: str
+    source: Literal["catalogue", "flag", "check", "statistical", "coverage"]
