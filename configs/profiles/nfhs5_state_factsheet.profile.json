@@ -1,0 +1,791 @@
+{
+  "indicators": {
+    "nfhs5_state_adolescent_fertility_rate_for_women_age_15_19_years5_fda344aa": {
+      "mad": 13.0,
+      "median": 27.0,
+      "p05": 2.0,
+      "p95": 75.19999999999999
+    },
+    "nfhs5_state_all_women_age_15_19_years_who_are_anaemic22_bde2c54c": {
+      "mad": 7.5,
+      "median": 57.7,
+      "p05": 31.48,
+      "p95": 72.83999999999999
+    },
+    "nfhs5_state_all_women_age_15_49_years_who_are_anaemic22_24d27f9b": {
+      "mad": 6.300000000000001,
+      "median": 55.75,
+      "p05": 29.125,
+      "p95": 67.55499999999999
+    },
+    "nfhs5_state_average_out_of_pocket_expenditure_per_delivery_in_a_public_health_facility_for_last_birth__3299e0b9": {
+      "mad": 1288.0,
+      "median": 3390.0,
+      "p05": 1568.6000000000001,
+      "p95": 9553.8
+    },
+    "nfhs5_state_births_attended_by_skilled_health_personnel_in_the_5_years_before_the_survey_10_690e555d": {
+      "mad": 4.400000000000006,
+      "median": 93.8,
+      "p05": 76.92,
+      "p95": 100.0
+    },
+    "nfhs5_state_births_delivered_by_caesarean_section_in_the_5_years_before_the_survey_62d74cdf": {
+      "mad": 10.100000000000001,
+      "median": 25.8,
+      "p05": 8.44,
+      "p95": 47.62
+    },
+    "nfhs5_state_births_in_a_private_health_facility_that_were_delivered_by_caesarean_section_in_the_5_year_3c1c02ff": {
+      "mad": 9.25,
+      "median": 47.15,
+      "p05": 29.435,
+      "p95": 81.45499999999998
+    },
+    "nfhs5_state_births_in_a_public_health_facility_that_were_delivered_by_caesarean_section_in_the_5_years_02b2ceb4": {
+      "mad": 8.9,
+      "median": 19.8,
+      "p05": 5.74,
+      "p95": 41.77999999999999
+    },
+    "nfhs5_state_breastfeeding_children_age_6_23_months_receiving_an_adequate_diet16_17_3c3445a7": {
+      "mad": 4.199999999999999,
+      "median": 12.5,
+      "p05": 6.55,
+      "p95": 27.625
+    },
+    "nfhs5_state_children_age_12_23_months_fully_vaccinated_based_on_information_from_either_vaccination_ca_04b7ebbb": {
+      "mad": 5.700000000000003,
+      "median": 77.19999999999999,
+      "p05": 64.625,
+      "p95": 91.4
+    },
+    "nfhs5_state_children_age_12_23_months_fully_vaccinated_based_on_information_from_vaccination_card_only_5efc8780": {
+      "mad": 4.5,
+      "median": 85.0,
+      "p05": 73.41000000000001,
+      "p95": 96.49
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_3_doses_of_penta_or_dpt_vaccine_c2977f9e": {
+      "mad": 3.8500000000000014,
+      "median": 88.15,
+      "p05": 77.025,
+      "p95": 95.975
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_3_doses_of_penta_or_hepatitis_b_vaccine_b39d6631": {
+      "mad": 3.6499999999999915,
+      "median": 85.4,
+      "p05": 72.025,
+      "p95": 94.7
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_3_doses_of_polio_vaccine13_8b4eaa5a": {
+      "mad": 5.500000000000007,
+      "median": 81.15,
+      "p05": 69.075,
+      "p95": 92.675
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_3_doses_of_rotavirus_vaccine14_740b7079": {
+      "mad": 18.1,
+      "median": 20.45,
+      "p05": 0.625,
+      "p95": 85.5
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_bcg_4564c661": {
+      "mad": 1.6499999999999986,
+      "median": 95.4,
+      "p05": 87.3,
+      "p95": 99.07499999999999
+    },
+    "nfhs5_state_children_age_12_23_months_who_have_received_the_first_dose_of_measles_containing_vaccine_m_57e63a06": {
+      "mad": 3.799999999999997,
+      "median": 88.65,
+      "p05": 74.5,
+      "p95": 96.125
+    },
+    "nfhs5_state_children_age_12_23_months_who_received_most_of_their_vaccinations_in_a_private_health_faci_80899183": {
+      "mad": 2.5,
+      "median": 3.2,
+      "p05": 0.0,
+      "p95": 15.150000000000002
+    },
+    "nfhs5_state_children_age_12_23_months_who_received_most_of_their_vaccinations_in_a_public_health_facil_3fa05738": {
+      "mad": 2.8999999999999986,
+      "median": 95.3,
+      "p05": 84.5,
+      "p95": 100.0
+    },
+    "nfhs5_state_children_age_24_35_months_who_have_received_a_second_dose_of_measles_containing_vaccine_mc_d7030515": {
+      "mad": 5.050000000000001,
+      "median": 30.1,
+      "p05": 14.2,
+      "p95": 46.125
+    },
+    "nfhs5_state_children_age_5_years_who_attended_pre_primary_school_during_the_school_year_2019_20_c1f628d3": {
+      "mad": 6.600000000000001,
+      "median": 11.5,
+      "p05": 3.24,
+      "p95": 35.379999999999995
+    },
+    "nfhs5_state_children_age_6_59_months_who_are_anaemic_11_0_g_dl_22_71c773b8": {
+      "mad": 7.200000000000003,
+      "median": 65.3,
+      "p05": 39.879999999999995,
+      "p95": 78.85999999999999
+    },
+    "nfhs5_state_children_age_6_8_months_receiving_solid_or_semi_solid_food_and_breastmilk16_c6c468a5": {
+      "mad": 9.599999999999994,
+      "median": 50.8,
+      "p05": 36.53,
+      "p95": 72.56
+    },
+    "nfhs5_state_children_age_9_35_months_who_received_a_vitamin_a_dose_in_the_last_6_months_103f671d": {
+      "mad": 10.099999999999994,
+      "median": 72.4,
+      "p05": 45.24,
+      "p95": 87.74
+    },
+    "nfhs5_state_children_born_at_home_who_were_taken_to_a_health_facility_for_a_check_up_within_24_hours_o_cd962c42": {
+      "mad": 1.85,
+      "median": 3.2,
+      "p05": 0.27500000000000013,
+      "p95": 14.38
+    },
+    "nfhs5_state_children_prevalence_of_symptoms_of_acute_respiratory_infection_ari_in_the_2_weeks_precedin_9f0a153c": {
+      "mad": 0.8000000000000003,
+      "median": 2.3,
+      "p05": 0.3,
+      "p95": 5.479999999999998
+    },
+    "nfhs5_state_children_swith_diarrhoea_in_the_2_weeks_preceding_the_survey_taken_to_a_health_facility_or_898f1a95": {
+      "mad": 6.449999999999996,
+      "median": 70.2,
+      "p05": 46.475,
+      "p95": 83.025
+    },
+    "nfhs5_state_children_under_5_years_who_are_overweight_weight_for_height_20_18d10f1d": {
+      "mad": 1.0999999999999996,
+      "median": 4.0,
+      "p05": 2.04,
+      "p95": 11.399999999999995
+    },
+    "nfhs5_state_children_under_5_years_who_are_severely_wasted_weight_for_height_19_bb2b5df1": {
+      "mad": 1.8999999999999995,
+      "median": 6.8,
+      "p05": 3.44,
+      "p95": 10.359999999999996
+    },
+    "nfhs5_state_children_under_5_years_who_are_stunted_height_for_age_18_0e5c888b": {
+      "mad": 4.399999999999999,
+      "median": 30.5,
+      "p05": 20.740000000000002,
+      "p95": 42.66
+    },
+    "nfhs5_state_children_under_5_years_who_are_underweight_weight_for_age_18_66ed1fb4": {
+      "mad": 5.799999999999997,
+      "median": 25.6,
+      "p05": 13.1,
+      "p95": 39.58
+    },
+    "nfhs5_state_children_under_5_years_who_are_wasted_weight_for_height_18_c287fb13": {
+      "mad": 3.400000000000002,
+      "median": 17.6,
+      "p05": 9.84,
+      "p95": 23.0
+    },
+    "nfhs5_state_children_under_age_3_years_breastfed_within_one_hour_of_birth15_f0a1ad8f": {
+      "mad": 9.900000000000006,
+      "median": 49.3,
+      "p05": 24.299999999999997,
+      "p95": 69.91999999999999
+    },
+    "nfhs5_state_children_under_age_5_years_whose_birth_was_registered_with_the_civil_authority_ac5dd6fb": {
+      "mad": 2.5999999999999943,
+      "median": 96.2,
+      "p05": 75.64,
+      "p95": 100.0
+    },
+    "nfhs5_state_children_under_age_6_months_exclusively_breastfed16_72e88560": {
+      "mad": 5.699999999999996,
+      "median": 64.65,
+      "p05": 43.2,
+      "p95": 77.625
+    },
+    "nfhs5_state_children_who_received_postnatal_care_from_a_doctor_nurse_lhv_anm_midwife_other_health_pers_0592a475": {
+      "mad": 6.299999999999997,
+      "median": 85.5,
+      "p05": 43.46,
+      "p95": 95.46
+    },
+    "nfhs5_state_children_with_diarrhoea_in_the_2_weeks_preceding_the_survey_who_received_oral_rehydration__5458d6dc": {
+      "mad": 5.249999999999993,
+      "median": 64.2,
+      "p05": 51.125,
+      "p95": 80.775
+    },
+    "nfhs5_state_children_with_diarrhoea_in_the_2_weeks_preceding_the_survey_who_received_zinc_children_und_826a249f": {
+      "mad": 5.049999999999997,
+      "median": 30.35,
+      "p05": 17.4,
+      "p95": 50.375
+    },
+    "nfhs5_state_children_with_fever_or_symptoms_of_ari_in_the_2_weeks_preceding_the_survey_taken_to_a_heal_50c50bac": {
+      "mad": 6.799999999999997,
+      "median": 67.8,
+      "p05": 45.8,
+      "p95": 86.2
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_any_method6_de66c5ec": {
+      "mad": 5.599999999999994,
+      "median": 66.7,
+      "p05": 40.34,
+      "p95": 76.74
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_any_modern__905eca7e": {
+      "mad": 7.300000000000004,
+      "median": 54.8,
+      "p05": 24.580000000000002,
+      "p95": 67.38
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_condom_9ad1f4a7": {
+      "mad": 4.199999999999999,
+      "median": 7.5,
+      "p05": 1.24,
+      "p95": 27.819999999999993
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_female_ster_f1d7844c": {
+      "mad": 13.0,
+      "median": 29.8,
+      "p05": 7.82,
+      "p95": 60.73999999999999
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_injectables_6239fbab": {
+      "mad": 0.30000000000000004,
+      "median": 0.4,
+      "p05": 0.0,
+      "p95": 3.5599999999999996
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_iud_ppiud_7e9fb384": {
+      "mad": 1.2,
+      "median": 2.5,
+      "p05": 0.2800000000000001,
+      "p95": 7.9
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_male_steril_4b08ac13": {
+      "mad": 0.2,
+      "median": 0.2,
+      "p05": 0.0,
+      "p95": 1.8799999999999983
+    },
+    "nfhs5_state_current_use_of_family_planning_methods_currently_married_women_age_15_49_years_pill_348a4109": {
+      "mad": 1.8,
+      "median": 3.0,
+      "p05": 0.3,
+      "p95": 22.519999999999985
+    },
+    "nfhs5_state_current_users_ever_told_about_side_effects_of_current_method_of_family_planning8_f5a82c8b": {
+      "mad": 7.199999999999996,
+      "median": 67.05000000000001,
+      "p05": 43.410000000000004,
+      "p95": 85.32499999999999
+    },
+    "nfhs5_state_currently_married_women_age_15_49_years_who_usually_participate_in_three_household_decisio_8b499743": {
+      "mad": 3.200000000000003,
+      "median": 91.2,
+      "p05": 81.405,
+      "p95": 98.295
+    },
+    "nfhs5_state_deaths_in_the_last_3_years_registered_with_the_civil_authority_559e04e0": {
+      "mad": 10.399999999999999,
+      "median": 82.15,
+      "p05": 38.22,
+      "p95": 97.78999999999999
+    },
+    "nfhs5_state_ever_married_women_age_18_49_years_who_have_ever_experienced_spousal_violence27_e3e145e5": {
+      "mad": 9.45,
+      "median": 22.0,
+      "p05": 6.140000000000001,
+      "p95": 41.639999999999986
+    },
+    "nfhs5_state_ever_married_women_age_18_49_years_who_have_experienced_physical_violence_during_any_pregn_ccc47659": {
+      "mad": 1.0,
+      "median": 2.1,
+      "p05": 0.0,
+      "p95": 4.194999999999998
+    },
+    "nfhs5_state_female_population_age_6_years_and_above_who_ever_attended_school_d7325076": {
+      "mad": 7.3999999999999915,
+      "median": 79.4,
+      "p05": 61.145,
+      "p95": 93.695
+    },
+    "nfhs5_state_health_worker_ever_talked_to_female_non_users_about_family_planning_42e5e5cf": {
+      "mad": 5.199999999999999,
+      "median": 21.3,
+      "p05": 9.899999999999999,
+      "p95": 31.299999999999997
+    },
+    "nfhs5_state_home_births_that_were_conducted_by_skilled_health_personnel_in_the_5_years_before_the_surv_442c60e3": {
+      "mad": 1.2,
+      "median": 1.9,
+      "p05": 0.0,
+      "p95": 7.219999999999999
+    },
+    "nfhs5_state_households_using_clean_fuel_for_cooking3_3ebc24c0": {
+      "mad": 17.5,
+      "median": 75.4,
+      "p05": 24.779999999999998,
+      "p95": 97.56
+    },
+    "nfhs5_state_households_using_iodized_salt_a4ae04a2": {
+      "mad": 1.7999999999999972,
+      "median": 97.4,
+      "p05": 89.17999999999999,
+      "p95": 99.6
+    },
+    "nfhs5_state_households_with_any_usual_member_covered_under_a_health_insurance_financing_scheme_f81dc15a": {
+      "mad": 15.799999999999997,
+      "median": 36.3,
+      "p05": 12.18,
+      "p95": 71.4
+    },
+    "nfhs5_state_infant_mortality_rate_per_1000_live_births_cf96cd62": {
+      "mad": 6.900000000000002,
+      "median": 26.2,
+      "p05": 5.040000000000001,
+      "p95": 44.71999999999997
+    },
+    "nfhs5_state_institutional_births_in_public_facility_in_the_5_years_before_the_survey_5383c326": {
+      "mad": 11.0,
+      "median": 62.8,
+      "p05": 39.220000000000006,
+      "p95": 87.36
+    },
+    "nfhs5_state_institutional_births_in_the_5_years_before_the_survey_762d3c5e": {
+      "mad": 4.599999999999994,
+      "median": 93.8,
+      "p05": 72.74,
+      "p95": 99.7
+    },
+    "nfhs5_state_men_age_15_19_years_who_are_anaemic_13_0_g_dl_22_7a90d73e": {
+      "mad": 5.449999999999999,
+      "median": 27.6,
+      "p05": 12.05,
+      "p95": 45.474999999999994
+    },
+    "nfhs5_state_men_age_15_49_who_are_literate4_a7866f24": {
+      "mad": 2.8999999999999915,
+      "median": 91.9,
+      "p05": 80.7,
+      "p95": 98.0
+    },
+    "nfhs5_state_men_age_15_49_who_have_ever_used_the_internet_5c4567cc": {
+      "mad": 10.900000000000006,
+      "median": 68.5,
+      "p05": 41.74,
+      "p95": 86.58
+    },
+    "nfhs5_state_men_age_15_49_with_10_or_more_years_of_schooling_d57fdae3": {
+      "mad": 9.200000000000003,
+      "median": 57.1,
+      "p05": 34.82,
+      "p95": 76.72
+    },
+    "nfhs5_state_men_age_15_49_years_who_are_anaemic_13_0_g_dl_22_e849ec91": {
+      "mad": 5.199999999999999,
+      "median": 20.3,
+      "p05": 8.1,
+      "p95": 38.999999999999986
+    },
+    "nfhs5_state_men_age_15_49_years_who_are_overweight_or_obese_bmi_25_0_kg_m2_0fd87616": {
+      "mad": 7.399999999999999,
+      "median": 28.9,
+      "p05": 13.72,
+      "p95": 43.22
+    },
+    "nfhs5_state_men_age_15_49_years_who_have_comprehensive_knowledge24_of_hiv_aids_915676be": {
+      "mad": 7.100000000000001,
+      "median": 33.6,
+      "p05": 21.0,
+      "p95": 65.02
+    },
+    "nfhs5_state_men_age_15_49_years_who_have_high_risk_waist_to_hip_ratio_0_90_6d8cb4f7": {
+      "mad": 7.799999999999997,
+      "median": 48.7,
+      "p05": 28.26,
+      "p95": 63.22
+    },
+    "nfhs5_state_men_age_15_49_years_who_know_that_consistent_condom_use_can_reduce_the_chance_of_getting_h_aa92ddf5": {
+      "mad": 5.200000000000003,
+      "median": 85.0,
+      "p05": 66.3,
+      "p95": 95.63999999999999
+    },
+    "nfhs5_state_men_age_15_49_years_whose_body_mass_index_bmi_is_below_normal_bmi_18_5_kg_m2_744936b2": {
+      "mad": 3.8000000000000007,
+      "median": 12.7,
+      "p05": 2.54,
+      "p95": 20.759999999999998
+    },
+    "nfhs5_state_men_age_15_years_and_above_who_consume_alcohol_d0f3d92e": {
+      "mad": 7.350000000000003,
+      "median": 23.700000000000003,
+      "p05": 7.205,
+      "p95": 41.54
+    },
+    "nfhs5_state_men_age_15_years_and_above_who_use_any_kind_of_tobacco_11167be7": {
+      "mad": 10.95,
+      "median": 37.9,
+      "p05": 13.89,
+      "p95": 60.01499999999999
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_elevated_blood_pressure_systolic_140_mm_of_hg_and_or_diasto_bb87d627": {
+      "mad": 4.5,
+      "median": 26.1,
+      "p05": 17.625,
+      "p95": 37.184999999999995
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_high_141_160_mg_dl_blood_sugar_level23_d3d4d3c3": {
+      "mad": 1.0,
+      "median": 7.0,
+      "p05": 4.835,
+      "p95": 10.254999999999999
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_high_or_very_high_140_mg_dl_blood_sugar_level_or_taking_med_c21f6f6a": {
+      "mad": 2.55,
+      "median": 15.7,
+      "p05": 8.79,
+      "p95": 23.919999999999998
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_mildly_elevated_blood_pressure_systolic_140_159_mm_of_hg_an_4096eb96": {
+      "mad": 2.3500000000000014,
+      "median": 16.85,
+      "p05": 11.424999999999999,
+      "p95": 23.814999999999998
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_moderately_or_severely_elevated_blood_pressure_systolic_160_f831afb2": {
+      "mad": 1.4000000000000004,
+      "median": 6.05,
+      "p05": 2.935,
+      "p95": 10.774999999999999
+    },
+    "nfhs5_state_men_age_15_years_and_above_wih_very_high_160_mg_dl_blood_sugar_level23_6cef1371": {
+      "mad": 1.6999999999999997,
+      "median": 7.0,
+      "p05": 3.035,
+      "p95": 12.809999999999999
+    },
+    "nfhs5_state_men_age_25_29_years_married_before_age_21_years_270f1831": {
+      "mad": 5.7,
+      "median": 14.15,
+      "p05": 3.8999999999999995,
+      "p95": 30.200000000000003
+    },
+    "nfhs5_state_men_age_30_49_years_ever_undergone_an_oral_cavity_examination_for_oral_cancer_2e608a58": {
+      "mad": 0.5,
+      "median": 0.8,
+      "p05": 0.0,
+      "p95": 3.95
+    },
+    "nfhs5_state_mothers_who_consumed_iron_folic_acid_for_100_days_or_more_when_they_were_pregnant_for_last_5496d875": {
+      "mad": 13.599999999999994,
+      "median": 54.0,
+      "p05": 16.58,
+      "p95": 83.89999999999999
+    },
+    "nfhs5_state_mothers_who_consumed_iron_folic_acid_for_180_days_or_more_when_they_were_pregnant_for_last_1b76a22f": {
+      "mad": 12.899999999999999,
+      "median": 31.5,
+      "p05": 7.3,
+      "p95": 65.72
+    },
+    "nfhs5_state_mothers_who_had_an_antenatal_check_up_in_the_first_trimester_for_last_birth_in_the_5_years_ec7cac12": {
+      "mad": 7.1000000000000085,
+      "median": 74.6,
+      "p05": 52.98,
+      "p95": 91.97999999999998
+    },
+    "nfhs5_state_mothers_who_had_at_least_4_antenatal_care_visits_for_last_birth_in_the_5_years_before_the__7dcdfa83": {
+      "mad": 11.0,
+      "median": 70.0,
+      "p05": 35.32,
+      "p95": 90.47999999999999
+    },
+    "nfhs5_state_mothers_who_received_postnatal_care_from_a_doctor_nurse_lhv_anm_midwife_other_health_perso_dc636def": {
+      "mad": 6.200000000000003,
+      "median": 85.4,
+      "p05": 55.44,
+      "p95": 93.58
+    },
+    "nfhs5_state_mothers_whose_last_birth_was_protected_against_neonatal_tetanus_for_last_birth_in_the_5_ye_bc4b6c9d": {
+      "mad": 2.299999999999997,
+      "median": 91.9,
+      "p05": 80.52,
+      "p95": 96.46000000000001
+    },
+    "nfhs5_state_neonatal_mortality_rate_per_1000_live_births_20505996": {
+      "mad": 5.500000000000002,
+      "median": 17.6,
+      "p05": 3.3600000000000003,
+      "p95": 34.63999999999999
+    },
+    "nfhs5_state_non_breastfeeding_children_age_6_23_months_receiving_an_adequate_diet16_17_7001b863": {
+      "mad": 6.0,
+      "median": 14.2,
+      "p05": 5.13,
+      "p95": 29.769999999999982
+    },
+    "nfhs5_state_non_pregnant_women_age_15_49_years_who_are_anaemic_12_0_g_dl_22_9910afc9": {
+      "mad": 6.600000000000001,
+      "median": 55.9,
+      "p05": 29.3,
+      "p95": 67.76
+    },
+    "nfhs5_state_population_below_age_15_years_9cff1db3": {
+      "mad": 2.1999999999999993,
+      "median": 23.95,
+      "p05": 19.7,
+      "p95": 32.355
+    },
+    "nfhs5_state_population_living_in_households_that_use_an_improved_sanitation_facility2_78cac023": {
+      "mad": 7.950000000000003,
+      "median": 79.35,
+      "p05": 53.455,
+      "p95": 97.86999999999999
+    },
+    "nfhs5_state_population_living_in_households_with_an_improved_drinking_water_source1_b15bb96d": {
+      "mad": 2.75,
+      "median": 96.35,
+      "p05": 84.505,
+      "p95": 99.5
+    },
+    "nfhs5_state_population_living_in_households_with_electricity_4809e5d8": {
+      "mad": 0.5,
+      "median": 99.3,
+      "p05": 92.735,
+      "p95": 99.955
+    },
+    "nfhs5_state_pregnant_women_age_15_49_years_who_are_anaemic_11_0_g_dl_22_ebaddc39": {
+      "mad": 8.249999999999996,
+      "median": 46.45,
+      "p05": 23.345,
+      "p95": 63.14
+    },
+    "nfhs5_state_prevalence_of_diarrhoea_in_the_2_weeks_preceding_the_survey_children_under_age_5_years_b43a5290": {
+      "mad": 1.3999999999999995,
+      "median": 5.6,
+      "p05": 2.64,
+      "p95": 11.359999999999994
+    },
+    "nfhs5_state_registered_pregnancies_for_which_the_mother_received_a_mother_and_child_protection_mcp_car_76c02b45": {
+      "mad": 1.8999999999999915,
+      "median": 96.8,
+      "p05": 86.0,
+      "p95": 99.46000000000001
+    },
+    "nfhs5_state_sex_ratio_at_birth_for_children_born_in_the_last_five_years_females_per_1_000_males_90eeda5e": {
+      "mad": 36.39999999999998,
+      "median": 933.6,
+      "p05": 820.8,
+      "p95": 1081.6
+    },
+    "nfhs5_state_sex_ratio_of_the_total_population_females_per_1_000_males_183f345b": {
+      "mad": 46.0,
+      "median": 1014.5,
+      "p05": 911.9,
+      "p95": 1119.65
+    },
+    "nfhs5_state_total_children_age_6_23_months_receiving_an_adequate_diet16_17_7bfbcd92": {
+      "mad": 4.4,
+      "median": 13.4,
+      "p05": 6.66,
+      "p95": 28.18999999999999
+    },
+    "nfhs5_state_total_fertility_rate_number_of_children_per_woman_073c789a": {
+      "mad": 0.19999999999999996,
+      "median": 1.7,
+      "p05": 1.24,
+      "p95": 2.5
+    },
+    "nfhs5_state_total_unmet_need_for_family_planning_currently_married_women_age_15_49_years_7_34f9b7f5": {
+      "mad": 1.8999999999999995,
+      "median": 9.2,
+      "p05": 5.98,
+      "p95": 18.259999999999998
+    },
+    "nfhs5_state_under_five_mortality_rate_per_1000_live_births_dfe1dd9b": {
+      "mad": 8.299999999999997,
+      "median": 31.5,
+      "p05": 6.160000000000001,
+      "p95": 53.15999999999996
+    },
+    "nfhs5_state_unmet_need_for_spacing_currently_married_women_age_15_49_years_7_36b81d51": {
+      "mad": 0.8999999999999999,
+      "median": 3.9,
+      "p05": 2.12,
+      "p95": 10.399999999999986
+    },
+    "nfhs5_state_women_age_15_19_years_who_were_already_mothers_or_pregnant_at_the_time_of_the_survey_2e0a41ce": {
+      "mad": 1.9000000000000004,
+      "median": 4.1,
+      "p05": 0.8,
+      "p95": 12.559999999999999
+    },
+    "nfhs5_state_women_age_15_24_years_who_use_hygienic_methods_of_protection_during_their_menstrual_period_cf9fb38f": {
+      "mad": 7.0,
+      "median": 88.6,
+      "p05": 61.82,
+      "p95": 98.78
+    },
+    "nfhs5_state_women_age_15_49_who_are_literate4_47d1ef18": {
+      "mad": 6.350000000000001,
+      "median": 83.0,
+      "p05": 63.525,
+      "p95": 96.66499999999999
+    },
+    "nfhs5_state_women_age_15_49_who_have_ever_used_the_internet_2f87d2d9": {
+      "mad": 13.199999999999996,
+      "median": 45.2,
+      "p05": 18.66,
+      "p95": 75.2
+    },
+    "nfhs5_state_women_age_15_49_with_10_or_more_years_of_schooling_2708f4dc": {
+      "mad": 11.849999999999994,
+      "median": 49.150000000000006,
+      "p05": 25.515,
+      "p95": 70.50999999999999
+    },
+    "nfhs5_state_women_age_15_49_years_having_a_bank_or_savings_account_that_they_themselves_use_26d28e8b": {
+      "mad": 4.699999999999989,
+      "median": 79.6,
+      "p05": 67.78,
+      "p95": 91.38
+    },
+    "nfhs5_state_women_age_15_49_years_having_a_mobile_phone_that_they_themselves_use_ed08c02b": {
+      "mad": 12.299999999999997,
+      "median": 68.9,
+      "p05": 40.78,
+      "p95": 89.97999999999999
+    },
+    "nfhs5_state_women_age_15_49_years_owning_a_house_and_or_land_alone_or_jointly_with_others_6f5d44ac": {
+      "mad": 15.0,
+      "median": 42.6,
+      "p05": 18.14,
+      "p95": 69.97999999999999
+    },
+    "nfhs5_state_women_age_15_49_years_who_are_overweight_or_obese_bmi_25_0_kg_m2_21_5ca97f88": {
+      "mad": 8.0,
+      "median": 29.3,
+      "p05": 12.3,
+      "p95": 44.18
+    },
+    "nfhs5_state_women_age_15_49_years_who_have_comprehensive_knowledge24_of_hiv_aids_3078cb82": {
+      "mad": 6.149999999999999,
+      "median": 24.05,
+      "p05": 11.605,
+      "p95": 50.46
+    },
+    "nfhs5_state_women_age_15_49_years_who_have_high_risk_waist_to_hip_ratio_0_85_248d51f7": {
+      "mad": 7.3999999999999915,
+      "median": 61.7,
+      "p05": 42.86,
+      "p95": 83.75999999999998
+    },
+    "nfhs5_state_women_age_15_49_years_who_know_that_consistent_condom_use_can_reduce_the_chance_of_getting_f082ddb5": {
+      "mad": 6.799999999999997,
+      "median": 72.3,
+      "p05": 57.48,
+      "p95": 89.82
+    },
+    "nfhs5_state_women_age_15_49_years_who_worked_in_the_last_12_months_and_were_paid_in_cash_a5d1048f": {
+      "mad": 6.899999999999999,
+      "median": 25.7,
+      "p05": 13.660000000000002,
+      "p95": 43.63999999999999
+    },
+    "nfhs5_state_women_age_15_49_years_whose_body_mass_index_bmi_is_below_normal_bmi_18_5_kg_m2_21_82aeb334": {
+      "mad": 4.100000000000001,
+      "median": 13.2,
+      "p05": 5.24,
+      "p95": 25.48
+    },
+    "nfhs5_state_women_age_15_years_and_above_who_consume_alcohol_843afaab": {
+      "mad": 0.45,
+      "median": 0.75,
+      "p05": 0.2,
+      "p95": 11.03499999999999
+    },
+    "nfhs5_state_women_age_15_years_and_above_who_use_any_kind_of_tobacco_35bea868": {
+      "mad": 4.6499999999999995,
+      "median": 7.050000000000001,
+      "p05": 0.8700000000000001,
+      "p95": 46.375
+    },
+    "nfhs5_state_women_age_15_years_and_above_wih_elevated_blood_pressure_systolic_140_mm_of_hg_and_or_dias_ebf4704b": {
+      "mad": 2.5,
+      "median": 22.55,
+      "p05": 15.535,
+      "p95": 30.955
+    },
+    "nfhs5_state_women_age_15_years_and_above_wih_high_or_very_high_140_mg_dl_blood_sugar_level_or_taking_m_c3f6bc5d": {
+      "mad": 3.3499999999999996,
+      "median": 13.6,
+      "p05": 7.99,
+      "p95": 21.155
+    },
+    "nfhs5_state_women_age_15_years_and_above_wih_mildly_elevated_blood_pressure_systolic_140_159_mm_of_hg__e65cb6c2": {
+      "mad": 1.4000000000000004,
+      "median": 13.1,
+      "p05": 8.79,
+      "p95": 17.669999999999995
+    },
+    "nfhs5_state_women_age_15_years_and_above_wih_moderately_or_severely_elevated_blood_pressure_systolic_1_047e28ff": {
+      "mad": 1.0,
+      "median": 5.2,
+      "p05": 3.0,
+      "p95": 7.764999999999999
+    },
+    "nfhs5_state_women_age_15_years_and_above_wih_very_high_160_mg_dl_blood_sugar_level23_472df18c": {
+      "mad": 1.7999999999999998,
+      "median": 6.3,
+      "p05": 2.89,
+      "p95": 12.549999999999997
+    },
+    "nfhs5_state_women_age_15_years_and_above_with_high_141_160_mg_dl_blood_sugar_level23_94653f07": {
+      "mad": 1.0,
+      "median": 6.0,
+      "p05": 3.9,
+      "p95": 8.659999999999998
+    },
+    "nfhs5_state_women_age_20_24_years_married_before_age_18_years_febcd33c": {
+      "mad": 7.199999999999999,
+      "median": 14.5,
+      "p05": 2.16,
+      "p95": 35.139999999999986
+    },
+    "nfhs5_state_women_age_30_49_years_ever_undergone_a_breast_examination_for_breast_cancer_a2ca88f5": {
+      "mad": 0.2,
+      "median": 0.4,
+      "p05": 0.040000000000000036,
+      "p95": 3.899999999999997
+    },
+    "nfhs5_state_women_age_30_49_years_ever_undergone_a_screening_test_for_cervical_cancer_94174bbf": {
+      "mad": 0.6000000000000001,
+      "median": 0.9,
+      "p05": 0.2,
+      "p95": 7.1999999999999975
+    },
+    "nfhs5_state_women_age_30_49_years_ever_undergone_an_oral_cavity_examination_for_oral_cancer_965821d8": {
+      "mad": 0.2,
+      "median": 0.4,
+      "p05": 0.1,
+      "p95": 5.35999999999998
+    },
+    "nfhs5_state_young_women_age_18_29_years_who_experienced_sexual_violence_by_age_18_9ef6f379": {
+      "mad": 1.5,
+      "median": 1.6,
+      "p05": 0.0,
+      "p95": 8.78
+    }
+  },
+  "observations": 14410
+}

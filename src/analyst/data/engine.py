@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from analyst.data import ops
-from analyst.data.config import Check, SourceConfig
+from analyst.data.config import Check, IndicatorOverride, SourceConfig
 from analyst.data.contract import (
     FLAG_RANK,
     OBS_HEAD,
@@ -44,6 +44,7 @@ class ValueColumn:
     indicator_label: str
     unit: str
     order: int
+    overrides: list[IndicatorOverride] = field(default_factory=list)
 
 
 @dataclass
@@ -189,6 +190,7 @@ def value_columns(config: SourceConfig, df: pd.DataFrame) -> list[ValueColumn]:
                     indicator_label=spec.label or header,
                     unit=spec.unit,
                     order=order,
+                    overrides=spec.overrides,
                 )
             )
         elif values.remaining and header not in roles:
@@ -308,6 +310,8 @@ def _row_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
         )
     if period.type == "quarter":
         return _quarter_periods(df, config)
+    if period.type == "month":
+        return _month_periods(df, config)
     header = next(h for h, role in roles.items() if role[0] in ("period_year", "period_date"))
     source = df[header]
     if period.type == "date":
@@ -382,6 +386,66 @@ def _quarter_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
             "period_type": "quarter",
             "period_label": labels,
             "period_source": df[year_header].astype("string") + " " + df[quarter_header],
+            "period_start": pd.to_datetime(pd.Series(starts, index=df.index)),
+            "period_end": pd.to_datetime(pd.Series(ends, index=df.index)),
+        },
+        index=df.index,
+    )
+
+
+MONTH_NAMES = {
+    name: number
+    for number, names in enumerate(
+        [
+            ("january", "jan"),
+            ("february", "feb"),
+            ("march", "mar"),
+            ("april", "apr"),
+            ("may",),
+            ("june", "jun"),
+            ("july", "jul"),
+            ("august", "aug"),
+            ("september", "sep", "sept"),
+            ("october", "oct"),
+            ("november", "nov"),
+            ("december", "dec"),
+        ],
+        start=1,
+    )
+    for name in names
+}
+
+
+def _month_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
+    """Period of each row from a year column and a month-name column."""
+    period = config.period
+    roles = _roles(config)
+    year_header = next((h for h, r in roles.items() if r[0] == "period_year"), None)
+    month_header = next((h for h, r in roles.items() if r[0] == "period_month"), None)
+    if year_header is None or month_header is None:
+        msg = "period.type = month needs columns with the roles period_year and period_month"
+        raise ValueError(msg)
+    months = dict(MONTH_NAMES)
+    months.update({ops.normalise_name(name): number for name, number in period.month_map.items()})
+    years = pd.to_numeric(df[year_header].str.replace(",", "", regex=False), errors="coerce")
+    starts: list[Any] = []
+    ends: list[Any] = []
+    labels: list[str | None] = []
+    for year, text in zip(years, df[month_header].astype("string").fillna(""), strict=True):
+        month = months.get(ops.normalise_name(str(text)))
+        if pd.isna(year) or month is None:
+            starts.append(pd.NaT)
+            ends.append(pd.NaT)
+            labels.append(None)
+            continue
+        starts.append(pd.Timestamp(date(int(year), month, 1)))
+        ends.append(pd.Timestamp(ops.month_end(int(year), month)))
+        labels.append(f"{int(year)}-{month:02d}")
+    return pd.DataFrame(
+        {
+            "period_type": "month",
+            "period_label": labels,
+            "period_source": df[year_header].astype("string") + " " + df[month_header],
             "period_start": pd.to_datetime(pd.Series(starts, index=df.index)),
             "period_end": pd.to_datetime(pd.Series(ends, index=df.index)),
         },
@@ -664,6 +728,28 @@ def run_source(
             piece[name] = series
         piece["value"] = wide[vcol.key]
         piece["unit"] = vcol.unit
+        for override in vcol.overrides:
+            if override.column not in frame.columns:
+                msg = f"override {override.id!r} names the column {override.column!r}, "
+                msg += "which is not in the table"
+                raise ValueError(msg)
+            hit = frame[override.column].isin(override.values)
+            piece.loc[hit, "indicator_id"] = override.id
+            piece.loc[hit, "indicator_label_source"] = override.label or override.id
+            piece.loc[hit, "unit"] = override.unit
+            absent = sorted(set(override.values) - set(frame[override.column].dropna()))
+            if absent:
+                review.append(
+                    ReviewItem(
+                        dataset_id=dataset.id,
+                        severity="warn",
+                        kind="override_value_missing",
+                        detail=f"override {override.id!r} of {vcol.header!r} names {absent}, "
+                        f"which are not in {override.column!r}",
+                        count=len(absent),
+                        suggestion="correct the values of the override or remove them",
+                    )
+                )
         piece["value_raw"] = frame[vcol.header]
         piece["quality_flag"] = base_rank[vcol.key].map(RANK_FLAG)
         piece["rule_ids"] = rule_wide[vcol.key]

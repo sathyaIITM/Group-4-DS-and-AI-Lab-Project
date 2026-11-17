@@ -1,0 +1,195 @@
+# CPI All India (Rural, Urban, Rural+Urban) by month, January 2013 to December 2023. Item groups as columns.
+
+[dataset]
+id = "cpi_all_india"
+domain = "prices_economy"
+title = "Consumer Price Index (base 2012 = 100), All India, rural, urban and combined, by item group and month, January 2013 to December 2023"
+source_name = "National Statistics Office, Ministry of Statistics and Programme Implementation"
+source_table = "All India Consumer Price Index (Rural/Urban), up to December 2023"
+publisher = "Ministry of Statistics and Programme Implementation (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "2a6edbfb-b416-48db-9183-645be023f757"
+raw_file = "cpi_all_india.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-05"
+caveats = [
+  "Values are index numbers with base 2012 = 100, not prices and not inflation rates. Inflation is the percentage change between two index values, usually the same month a year apart.",
+  "Each month has three figures: Rural, Urban and Rural+Urban (combined). The General index is the headline CPI.",
+  "Data ends in December 2023 and uses MoSPI's older series with base 2012 = 100. MoSPI now publishes a new series with base 2024 = 100; values from the two series cannot be compared directly.",
+  "April 2019 is missing from the source for all sectors.",
+  "April and May 2020 are missing for most item groups (COVID-19 lockdown, when prices could not be collected).",
+  "Housing is compiled for urban areas only, so Rural housing is empty, and Rural+Urban housing is (almost always) the same as the urban figure.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source", "-" = "missing_in_source" }
+
+[columns]
+Sector = "category:sector"
+Year = "period_year"
+Month = "period_month"
+
+[values]
+mode = "indicators"
+
+[values.columns."Cereals and products"]
+id = "cpi_cereals_and_products"
+label = "CPI, Cereals and products"
+unit = "index_2012_100"
+
+[values.columns."Meat and fish"]
+id = "cpi_meat_and_fish"
+label = "CPI, Meat and fish"
+unit = "index_2012_100"
+
+[values.columns."Egg"]
+id = "cpi_egg"
+label = "CPI, Egg"
+unit = "index_2012_100"
+
+[values.columns."Milk and products"]
+id = "cpi_milk_and_products"
+label = "CPI, Milk and products"
+unit = "index_2012_100"
+
+[values.columns."Oils and fats"]
+id = "cpi_oils_and_fats"
+label = "CPI, Oils and fats"
+unit = "index_2012_100"
+
+[values.columns."Fruits"]
+id = "cpi_fruits"
+label = "CPI, Fruits"
+unit = "index_2012_100"
+
+[values.columns."Vegetables"]
+id = "cpi_vegetables"
+label = "CPI, Vegetables"
+unit = "index_2012_100"
+
+[values.columns."Pulses and products"]
+id = "cpi_pulses_and_products"
+label = "CPI, Pulses and products"
+unit = "index_2012_100"
+
+[values.columns."Sugar and Confectionery"]
+id = "cpi_sugar_and_confectionery"
+label = "CPI, Sugar and Confectionery"
+unit = "index_2012_100"
+
+[values.columns."Spices"]
+id = "cpi_spices"
+label = "CPI, Spices"
+unit = "index_2012_100"
+
+[values.columns."Non-alcoholic beverages"]
+id = "cpi_non_alcoholic_beverages"
+label = "CPI, Non-alcoholic beverages"
+unit = "index_2012_100"
+
+[values.columns."Prepared meals, snacks, sweets etc."]
+id = "cpi_prepared_meals_snacks_sweets_etc"
+label = "CPI, Prepared meals, snacks, sweets etc."
+unit = "index_2012_100"
+
+[values.columns."Food and beverages"]
+id = "cpi_food_and_beverages"
+label = "CPI, Food and beverages: group total of Cereals to Prepared meals"
+unit = "index_2012_100"
+
+[values.columns."Pan, tobacco and intoxicants"]
+id = "cpi_pan_tobacco_and_intoxicants"
+label = "CPI, Pan, tobacco and intoxicants"
+unit = "index_2012_100"
+
+[values.columns."Clothing"]
+id = "cpi_clothing"
+label = "CPI, Clothing"
+unit = "index_2012_100"
+
+[values.columns."Footwear"]
+id = "cpi_footwear"
+label = "CPI, Footwear"
+unit = "index_2012_100"
+
+[values.columns."Clothing and footwear"]
+id = "cpi_clothing_and_footwear"
+label = "CPI, Clothing and footwear: group total of Clothing and Footwear"
+unit = "index_2012_100"
+
+[values.columns."Housing"]
+id = "cpi_housing"
+label = "CPI, Housing"
+unit = "index_2012_100"
+
+[values.columns."Fuel and light"]
+id = "cpi_fuel_and_light"
+label = "CPI, Fuel and light"
+unit = "index_2012_100"
+
+[values.columns."Household goods and services"]
+id = "cpi_household_goods_and_services"
+label = "CPI, Household goods and services"
+unit = "index_2012_100"
+
+[values.columns."Health"]
+id = "cpi_health"
+label = "CPI, Health"
+unit = "index_2012_100"
+
+[values.columns."Transport and communication"]
+id = "cpi_transport_and_communication"
+label = "CPI, Transport and communication"
+unit = "index_2012_100"
+
+[values.columns."Recreation and amusement"]
+id = "cpi_recreation_and_amusement"
+label = "CPI, Recreation and amusement"
+unit = "index_2012_100"
+
+[values.columns."Education"]
+id = "cpi_education"
+label = "CPI, Education"
+unit = "index_2012_100"
+
+[values.columns."Personal care and effects"]
+id = "cpi_personal_care_and_effects"
+label = "CPI, Personal care and effects"
+unit = "index_2012_100"
+
+[values.columns."Miscellaneous"]
+id = "cpi_miscellaneous"
+label = "CPI, Miscellaneous: group total of Household goods to Personal care"
+unit = "index_2012_100"
+
+[values.columns."General index"]
+id = "cpi_general_index"
+label = "CPI, General index: all groups, the headline CPI"
+unit = "index_2012_100"
+
+[period]
+type = "month"
+month_map = { "Marcrh" = 3 }   # misspelling in the source; "November " with a trailing space is matched already
+
+[geo]
+level = "national"
+vintage = "india"
+national_name = "India"
+
+[[checks]]
+name = "positive_index"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "unique_sector_month_group"
+kind = "unique_key"
+columns = ["sector", "period_label", "indicator_id"]
+
+[view]
+mode = "pivot_indicator"
+table = "cpi_all_india"
+columns = { sector = "sector", year = "period_start:year", month = "period_start:month" }
+int_columns = ["year", "month"]

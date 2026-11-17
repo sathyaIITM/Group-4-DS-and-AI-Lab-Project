@@ -1,0 +1,98 @@
+# District-wise, season-wise area and production of crops, crop years 1997-98 to 2015-16.
+# One row per State, district, crop year, season and crop; Area and Production as columns.
+
+[dataset]
+id = "crop_production_district"
+domain = "agriculture"
+title = "Area (hectares) and production of crops by district, season and crop year, 1997-98 to 2015-16"
+source_name = "Directorate of Economics and Statistics, Ministry of Agriculture and Farmers Welfare"
+source_table = "District-wise, season-wise crop production statistics from 1997"
+publisher = "Ministry of Agriculture and Farmers Welfare (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "35be999b-0208-4354-b557-f6ca9a5355de"
+raw_file = "crop_production_district.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-17"
+caveats = [
+  "Years are crop (agricultural) years, July to June: crop year 2000 is 2000-01, so its rabi crop is harvested in early 2001.",
+  "Production is in tonnes for most crops, but cotton (lint) is in bales of 170 kg and jute, mesta and sunn hemp are in bales of 180 kg. Each unit is a separate indicator: crop_production (tonnes), crop_production_bales_170kg and crop_production_bales_180kg. Do not add production across these indicators.",
+  "Coconut production is in nuts for some States (for example Kerala, Andhra Pradesh, Assam) and appears to be in tonnes for others (for example Karnataka, Tamil Nadu, West Bengal); the source does not say which. It is the separate indicator crop_production_coconut with a mixed unit: compare a State only with itself, never across States.",
+  "Area is in hectares for every crop.",
+  "Production is missing (NA in the source) for 3,730 rows; the area is still given. Production of 0 is recorded for 3,523 rows, mostly vegetables and fruit in a few States, and may mean not reported rather than no harvest.",
+  "Crop year 2015 has only 562 rows (a few States) and crop year 2014 is incomplete; totals for those years are not comparable with earlier years.",
+  "Seasons are Kharif, Rabi, Autumn, Summer, Winter and Whole Year. A crop's annual total is the sum over its seasons; Whole Year rows are crops not split by season.",
+  "Some crops are also totals of others in the same file (Total foodgrain, Pulses total, Oilseeds total, Jute & mesta); do not add them to their members.",
+  "District names are as published (upper case) and follow the boundaries of each year; districts created after 1997 appear only from their first year, and the parent district shrinks.",
+  "Telangana appears separately for all years, including those before its formation in 2014; Andhra Pradesh is the residual State throughout.",
+  "Crop names are as published, including spellings such as Arcanut, Atcanut, Pome Granet and Redish; they are not corrected.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+
+[columns]
+State_Name = "geo_state"
+District_Name = "geo_district"
+Crop_Year = "period_year"
+Season = "category:season"
+Crop = "category:crop"
+
+[values]
+mode = "indicators"
+
+[values.columns.Area]
+id = "crop_area"
+label = "Area under the crop"
+unit = "hectare"
+
+[values.columns.Production]
+id = "crop_production"
+label = "Production of the crop"
+unit = "tonne"
+
+[[values.columns.Production.overrides]]
+column = "Crop"
+values = ["Cotton(lint)"]
+id = "crop_production_bales_170kg"
+label = "Production of the crop, bales of 170 kg"
+unit = "bale_170kg"
+
+[[values.columns.Production.overrides]]
+column = "Crop"
+values = ["Jute", "Mesta", "Jute & mesta", "Sannhamp"]
+id = "crop_production_bales_180kg"
+label = "Production of the crop, bales of 180 kg"
+unit = "bale_180kg"
+
+[[values.columns.Production.overrides]]
+column = "Crop"
+values = ["Coconut"]
+id = "crop_production_coconut"
+label = "Production of coconut, nuts or tonnes depending on the State"
+unit = "mixed_nuts_or_tonne"
+
+[period]
+type = "survey_year"
+start_month = 7            # crop (agricultural) year July-June; Crop_Year is the starting year
+
+[geo]
+level = "district"
+vintage = "des_crop_statistics_1997_2015"
+state_reference = "states"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "unique_district_year_season_crop"
+kind = "unique_key"
+columns = ["geo_state", "geo_district", "period_label", "season", "crop", "indicator_id"]
+
+[view]
+mode = "pivot_indicator"
+table = "crop_production_district"
+columns = { state = "geo_state", district = "geo_district_source", crop_year = "period_label", season = "season", crop = "crop" }

@@ -1,0 +1,66 @@
+# Minimum support prices of 24 crops, 2013-14 to 2024-25. National; years as columns.
+
+[dataset]
+id = "msp_crops"
+domain = "agriculture"
+title = "Minimum support prices (rupees per quintal) of 24 crops, India, 2013-14 to 2024-25"
+source_name = "Rajya Sabha answer citing the Department of Agriculture and Farmers Welfare"
+source_table = "Commodity-wise minimum support prices (MSP) of kharif, rabi and other crops, 2013-14 to 2024-25 (Rajya Sabha Session 266, Unstarred Question 510, 29 November 2024)"
+publisher = "Department of Agriculture and Farmers Welfare (via Rajya Sabha answer on data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "82e89d31-2208-4be0-babd-2286a4d9110b"
+raw_file = "msp_crops.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-05"
+caveats = [
+  "Prices are the minimum support price fixed by the Government for the whole country, in rupees per quintal (100 kg); they are not market prices.",
+  "For sugarcane the figure is the fair and remunerative price (FRP), not an MSP.",
+  "Years are crop years, July to June: the 2023-24 wheat price is for wheat sown in late 2023 and sold in 2024.",
+  "Copra and de-husked coconut are fixed for a calendar year: their 2024-25 column holds the price for January to December 2024.",
+  "Black soyabean has no MSP from 2014-15 on; those years are empty because no price was fixed, not because data is missing.",
+  "Some crops have one price per variety or grade (for example paddy Common and Grade A); compare like with like. Variety NA means the crop has a single price.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["Sl. No."]
+
+[columns]
+Commodity = "category:commodity_name"
+Category = "category:crop_season"
+Variety = "category:variety"
+
+[values]
+mode = "periods"
+pattern = '^(\d{4})-(\d{2})$'
+
+[values.indicator]
+id = "msp"
+label = "Minimum support price"
+unit = "INR_per_quintal"
+
+[period]
+type = "survey_year"
+start_month = 7            # crop (agricultural) year July-June, as the years are published
+
+[geo]
+level = "national"
+vintage = "india"
+national_name = "India"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "unique_commodity_variety_year"
+kind = "unique_key"
+columns = ["commodity_name", "variety", "period_label"]
+
+[view]
+mode = "pivot_period"
+table = "msp_crops"
+columns = { commodity = "commodity_name", crop_season = "crop_season", variety = "variety" }

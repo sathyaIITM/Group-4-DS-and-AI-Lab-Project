@@ -90,8 +90,14 @@ def load_approved(
 ) -> tuple[list[str] | None, dict[str, Any] | None]:
     columns_path = directory / f"{dataset_id}.columns.json"
     profile_path = directory / f"{dataset_id}.profile.json"
-    columns = json.loads(columns_path.read_text()) if columns_path.exists() else None
-    profile = json.loads(profile_path.read_text()) if profile_path.exists() else None
+    # UTF-8 stated: headers can hold characters such as "≥", and the platform default
+    # encoding (cp1252 on Windows) cannot store them.
+    columns = (
+        json.loads(columns_path.read_text(encoding="utf-8")) if columns_path.exists() else None
+    )
+    profile = (
+        json.loads(profile_path.read_text(encoding="utf-8")) if profile_path.exists() else None
+    )
     return columns, profile
 
 
@@ -100,8 +106,8 @@ def save_approved(
 ) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{dataset_id}.columns.json").write_text(
-        json.dumps(columns, indent=2, ensure_ascii=False) + "\n"
+        json.dumps(columns, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     (directory / f"{dataset_id}.profile.json").write_text(
-        json.dumps(profile, indent=2, sort_keys=True) + "\n"
+        json.dumps(profile, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

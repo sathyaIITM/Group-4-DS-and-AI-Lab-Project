@@ -1,0 +1,57 @@
+# Per capita GSDP at current prices by State, 2019-20 to 2023-24. Fiscal years (April-March) as columns.
+
+[dataset]
+id = "gsdp_per_capita_state"
+domain = "prices_economy"
+title = "Per capita GSDP (rupees) at current prices, 28 States, 2019-20 to 2023-24"
+source_name = "Rajya Sabha answer (Session 265)"
+source_table = "State-wise per capita gross state domestic product (GSDP) at current prices, 2019-20 to 2023-24"
+publisher = "Rajya Sabha answer on data.gov.in"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "af17f25b-3bdf-4eeb-b3e3-b0fc93df16a7"
+raw_file = "gsdp_per_capita_state.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-05"
+caveats = [
+  "Gross State Domestic Product per person, in rupees, at current prices: not adjusted for inflation, so a rise between years is partly price rise.",
+  "Fiscal years, April to March (2023-24 is April 2023 to March 2024).",
+  "28 States only; Union Territories, including Delhi, are not in this table, and there is no All India figure.",
+  "2023-24 is not available for Arunachal Pradesh, Goa, Gujarat, Manipur, Mizoram and Nagaland.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["Sl. No."]
+
+[columns]
+State = "geo_state"
+
+[values]
+mode = "periods"
+pattern = '^Per Capita GSDP - (\d{4})-(?:\d{2}|\d{4})$'   # source writes 2019-2020 and 2021-22; labels are built as 2019-20
+
+[values.indicator]
+id = "gsdp_per_capita_current"
+label = "Per capita GSDP at current prices"
+unit = "INR"
+
+[period]
+type = "survey_year"
+start_month = 4            # fiscal year April-March
+
+[geo]
+level = "state"
+vintage = "states_2020"
+state_reference = "states"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[view]
+mode = "pivot_period"
+table = "gsdp_per_capita_state"
+columns = { state = "geo_name_source" }
