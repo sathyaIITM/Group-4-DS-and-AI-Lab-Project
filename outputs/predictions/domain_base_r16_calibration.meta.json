@@ -1,0 +1,14 @@
+{
+  "run_id": "base_r16",
+  "checkpoint": "models/checkpoints/base_r16",
+  "weights_sha256": {
+    "adapter_model.safetensors": "7c093e1cae565601a1d2569db1bf6399767c4fa65173a707e6136dfbae116573",
+    "head.pt": "e55f2d2c13e7e17197b5e9416366248de008c02aa48784ad6ba3e4500f37edd3",
+    "adapter_config.json": "e2c7614b4a9bb7eded29188eda76f8e500831fee28725fca28cdea5112aa5571"
+  },
+  "data": "data/splits/kev_domain/calibration.v2.jsonl",
+  "data_sha256": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+  "predictions_sha256": "15347c52ac9814e79f8a2190a73d1bd4b78610b6e67070cc1db30776e0aa2a12",
+  "device": "mps",
+  "created_utc": "2026-11-17T19:44:54+00:00"
+}

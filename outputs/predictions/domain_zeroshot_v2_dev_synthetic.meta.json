@@ -1,0 +1,10 @@
+{
+  "run_id": "zeroshot_v2",
+  "checkpoint": "released",
+  "weights_sha256": {},
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "cc3743e272f75e790b6cd5974079f68e561bc69007abc61de4740622b2118aaa",
+  "device": "mps",
+  "created_utc": "2026-11-17T18:59:44+00:00"
+}

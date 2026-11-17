@@ -1,0 +1,14 @@
+{
+  "run_id": "lr1e-05",
+  "checkpoint": "models/checkpoints/lr1e-05",
+  "weights_sha256": {
+    "adapter_model.safetensors": "d85b616a974b2972f24ae45c660650976adc1049b9f8e47b453af3cdca757f61",
+    "head.pt": "1576798443aab1c81f369a0ecdbd1866b98345c8cfc11a6bb7e6a720586c3da0",
+    "adapter_config.json": "8e28e36ba21adb34ac6cf04c5cb384b5ebe5cff1385a531d258d68ae33b530a0"
+  },
+  "data": "data/splits/kev_domain/calibration.v2.jsonl",
+  "data_sha256": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+  "predictions_sha256": "b9e3230a30c08cc91d38231d183e585bd64718e66f5bbc0781c3c2bf867c6932",
+  "device": "mps",
+  "created_utc": "2026-11-17T19:38:06+00:00"
+}

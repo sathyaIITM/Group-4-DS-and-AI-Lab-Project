@@ -1,0 +1,1220 @@
+[
+  {
+    "run_id": "b0_s0",
+    "created_at": "2026-11-17T19:49:07+00:00",
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "base": "Qwen/Qwen3.5-0.8B-Base",
+    "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+    "data": "data/splits/kev_domain/train.v2.jsonl",
+    "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+    "flags": {
+      "n_per_source": 1000,
+      "epochs": 2,
+      "lr": 2e-05,
+      "head_lr": 0.0,
+      "weight_decay": 0.01,
+      "lora": 16,
+      "accum": 8,
+      "holdout": "",
+      "perm_kl": 0.0,
+      "perm_frac": 0.3,
+      "ord_w": 0.0,
+      "label_smoothing": 0.0,
+      "brier_w": 0.0,
+      "focal_gamma": 0.0,
+      "suite": null,
+      "train_sources": "",
+      "device": "cuda",
+      "batch": 1,
+      "dtype": "fp32",
+      "weights_dtype": "fp32",
+      "checkpointing": 0,
+      "option_isolation": 0,
+      "special_embeddings": 0,
+      "head_dim": 256,
+      "lora_targets": "all",
+      "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+      "p_none": 0.0,
+      "p_none_distract": 0.12,
+      "p_distract": 0.15,
+      "p_none_pair": 0.0,
+      "none_pair_max_state": null,
+      "synthetic_repeat": 1,
+      "public_frac": 1.0,
+      "anchor": "",
+      "anchor_w": 0.0,
+      "anchor_sources": "",
+      "max_state": 384,
+      "replay": 0,
+      "full_ft": 0,
+      "row_budget": 0,
+      "shared_prefix": 0,
+      "length_sort": 0,
+      "pass_tokens_max": 0,
+      "max_steps": 0,
+      "save_every_steps": 0,
+      "save_every_minutes": 0,
+      "resume": 0,
+      "stop_after": 0,
+      "snapshot_fractions": "",
+      "snapshot_every_steps": 0,
+      "snapshot_dir": "",
+      "seed": 0
+    },
+    "seed": 0,
+    "weights_sha256": {
+      "adapter_model.safetensors": "9bb10ae3ff022fc8996bec4cf95b291e0cd9d64f470597f8672fe606293ff9e9",
+      "head.pt": "df85ba3e83ddc709ced8a436b1491992a48c00da32d2a1aaf65d20b813da313f",
+      "adapter_config.json": "ed3d623b7fd7b050ac95838e3fd13fda95e2d18a32c1b15e5d1487842bd602bb"
+    },
+    "grad_norm": [
+      {
+        "epoch": 0,
+        "steps": 235,
+        "mean": 18.069179438297873,
+        "max": 392.056335,
+        "clipped_steps": 164
+      },
+      {
+        "epoch": 1,
+        "steps": 235,
+        "mean": 7.092734021276596,
+        "max": 210.499069,
+        "clipped_steps": 45
+      }
+    ],
+    "wall_seconds": 2107.392770767212,
+    "device": "cuda",
+    "temperature": 3.473992124592523,
+    "scores": {
+      "calibration_n": 322,
+      "fitted_temperature": 3.473992124592523,
+      "calibration_raw": {
+        "n": 322,
+        "temperature": 1.0,
+        "accuracy": 0.9751552795031055,
+        "accuracy_ci95": [
+          0.9565217391304348,
+          0.9906832298136646
+        ],
+        "macro_f1": 0.967406136548415,
+        "per_label_f1": {
+          "labour": 0.9945945945945946,
+          "agriculture": 0.975609756097561,
+          "rainfall": 0.975609756097561,
+          "prices_economy": 0.9882352941176471,
+          "health": 0.9885057471264368,
+          "other": 0.9230769230769231,
+          "multiple": 1.0,
+          "unspecified": 0.8936170212765957
+        },
+        "support": {
+          "labour": 93,
+          "agriculture": 21,
+          "rainfall": 63,
+          "prices_economy": 42,
+          "health": 43,
+          "other": 27,
+          "multiple": 12,
+          "unspecified": 21
+        },
+        "nll": 0.25375772358641474,
+        "brier": 0.044990504657048486,
+        "ece": 0.023278252217029248,
+        "auroc_correct": 0.9140127388535032,
+        "mean_confidence": 0.9942841977804967,
+        "reliability": [
+          {
+            "low": 0.5,
+            "high": 0.6000000000000001,
+            "n": 1,
+            "confidence": 0.5723572357212828,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 1,
+            "confidence": 0.6157615761557685,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 1,
+            "confidence": 0.7595999999969616,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 4,
+            "confidence": 0.8760245068170884,
+            "accuracy": 0.25
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 315,
+            "confidence": 0.9990720471307224,
+            "accuracy": 0.9873015873015873
+          }
+        ],
+        "latency_s_p50": 0.5788405624989537,
+        "latency_s_p95": 0.6868904566064884,
+        "cost_usd_per_1000": null
+      },
+      "dev_raw": {
+        "n": 355,
+        "temperature": 1.0,
+        "accuracy": 0.9915492957746479,
+        "accuracy_ci95": [
+          0.9802816901408451,
+          1.0
+        ],
+        "macro_f1": 0.9856503532587124,
+        "per_label_f1": {
+          "labour": 0.9901960784313726,
+          "agriculture": 0.9824561403508771,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9894736842105263,
+          "multiple": 1.0,
+          "unspecified": 0.9230769230769231
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.03473954937165836,
+        "brier": 0.015385316553638657,
+        "ece": 0.007820460016486962,
+        "auroc_correct": 0.9839015151515151,
+        "mean_confidence": 0.998757422658246,
+        "reliability": [
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 1,
+            "confidence": 0.8913108689122173,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 354,
+            "confidence": 0.9990609439965116,
+            "accuracy": 0.9915254237288136
+          }
+        ],
+        "latency_s_p50": 0.5733774580003228,
+        "latency_s_p95": 0.65604853300174,
+        "cost_usd_per_1000": null
+      },
+      "dev_calibrated": {
+        "n": 355,
+        "temperature": 3.473992124592523,
+        "accuracy": 0.9915492957746479,
+        "accuracy_ci95": [
+          0.9802816901408451,
+          1.0
+        ],
+        "macro_f1": 0.9856503532587124,
+        "per_label_f1": {
+          "labour": 0.9901960784313726,
+          "agriculture": 0.9824561403508771,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9894736842105263,
+          "multiple": 1.0,
+          "unspecified": 0.9230769230769231
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.03507075386751978,
+        "brier": 0.015323015990503296,
+        "ece": 0.013428672474739143,
+        "auroc_correct": 0.9810606060606061,
+        "mean_confidence": 0.9781206232999088,
+        "reliability": [
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 2,
+            "confidence": 0.4526142197586721,
+            "accuracy": 0.5
+          },
+          {
+            "low": 0.5,
+            "high": 0.6000000000000001,
+            "n": 1,
+            "confidence": 0.5981812722052307,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 4,
+            "confidence": 0.6612680816694696,
+            "accuracy": 0.75
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 5,
+            "confidence": 0.7717059718968386,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 15,
+            "confidence": 0.8651593203608826,
+            "accuracy": 0.9333333333333333
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 328,
+            "confidence": 0.994659815756615,
+            "accuracy": 1.0
+          }
+        ],
+        "latency_s_p50": 0.5733774580003228,
+        "latency_s_p95": 0.65604853300174,
+        "cost_usd_per_1000": null
+      },
+      "inputs_sha256": {
+        "calibration_predictions": "6905782ed06bdae3de685e005abd7f1632f221c6fe4e2a676c2a8379c2abcfba",
+        "dev_predictions": "aa4e5371dda3476c28c491369ee3063f2cf6fa202e6e014cab91c8aa731d21c2"
+      }
+    },
+    "drive_path": "Group4/checkpoints/b0_s0",
+    "notes": "",
+    "platform": "kaggle",
+    "environment": {
+      "run_id": "b0_s0",
+      "platform": "kaggle",
+      "session": "kaggle_1",
+      "gpu": "Tesla T4, 15360 MiB, 580.178.04",
+      "gpu_index": 0,
+      "parallel_queues": 2,
+      "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+      "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+      "python": "3.13.16",
+      "torch": "2.8.0+cu128",
+      "cuda": "12.8",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "cuda_devices": 2,
+      "device_names": [
+        "Tesla T4",
+        "Tesla T4"
+      ],
+      "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+      "data_repo_path": "data/splits/kev_domain/train.v2.jsonl",
+      "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "plan_meta": {
+        "created_utc": "2026-11-17T17:18:02+00:00",
+        "train_yaml_sha256": "2ddb399c78731ed3d4854bed8dbaa7f9b2faeaa7700c9d75a954945a51b0407c",
+        "repo_commit": "ec43018d3976664dcd29f46cb5fc3d743c8c776a",
+        "repo_dirty": false,
+        "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+        "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+        "data_sha256": {
+          "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+          "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+        },
+        "sessions": {
+          "kaggle_1": [
+            [
+              "b0_s0"
+            ],
+            [
+              "lr1e-05"
+            ]
+          ],
+          "kaggle_2": [
+            [
+              "lr4e-05"
+            ],
+            [
+              "b0_s1"
+            ]
+          ],
+          "kaggle_3": [
+            [
+              "ep3"
+            ],
+            [
+              "b0_s2",
+              "ep1"
+            ]
+          ],
+          "colab_1": [
+            [
+              "base_r16"
+            ]
+          ]
+        }
+      },
+      "command": "/tmp/kev_work/kev/.venv/bin/python -m kev.train --data /kaggle/input/datasets/<kaggle-user>/group4-kev-data/train.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --init_from jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f --lr 2e-05 --epochs 2 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 0 --device cuda --out /tmp/kev_work/kev/runs/b0_s0",
+      "started_utc": "2026-11-17T18:45:14+00:00",
+      "ended_utc": "2026-11-17T19:20:44+00:00",
+      "exit_code": 0
+    },
+    "records_seen": 3752,
+    "truncated_records": 0,
+    "optimizer_steps": 470,
+    "peak_device_bytes": 6786173440,
+    "peak_rss_bytes": 5855318016,
+    "trainable_params_m": 11.3,
+    "final_train_loss": 0.086,
+    "log_sha256": "dc667a64d2c623318e31c8e34bae156ab2c767b4562b320e4dfdaef88d969a69",
+    "dropped_records": 0,
+    "init_source": {
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "resolved": "/root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "weights_sha256": "9b908623acb162118575f4e7a94524f9c139c335be4bfb74d6cfceca01e1885a",
+      "head_sha256": "f400bd12802b2b105ae45d6b03774a158a3db4fccff42413734ddca2e5c920b6",
+      "tensors": 372
+    }
+  },
+  {
+    "run_id": "base_r16",
+    "created_at": "2026-11-17T19:49:07+00:00",
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "base": "Qwen/Qwen3.5-0.8B-Base",
+    "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "init_from": null,
+    "data": "data/splits/kev_domain/train.v2.jsonl",
+    "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+    "flags": {
+      "n_per_source": 1000,
+      "epochs": 2,
+      "lr": 0.0002,
+      "head_lr": 0.0,
+      "weight_decay": 0.01,
+      "lora": 16,
+      "accum": 8,
+      "holdout": "",
+      "perm_kl": 0.0,
+      "perm_frac": 0.3,
+      "ord_w": 0.0,
+      "label_smoothing": 0.0,
+      "brier_w": 0.0,
+      "focal_gamma": 0.0,
+      "suite": null,
+      "train_sources": "",
+      "device": "cuda",
+      "batch": 1,
+      "dtype": "fp32",
+      "weights_dtype": "fp32",
+      "checkpointing": 0,
+      "option_isolation": 0,
+      "special_embeddings": 0,
+      "head_dim": 256,
+      "lora_targets": "all",
+      "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+      "p_none": 0.0,
+      "p_none_distract": 0.12,
+      "p_distract": 0.15,
+      "p_none_pair": 0.0,
+      "none_pair_max_state": null,
+      "synthetic_repeat": 1,
+      "public_frac": 1.0,
+      "anchor": "",
+      "anchor_w": 0.0,
+      "anchor_sources": "",
+      "max_state": 384,
+      "replay": 0,
+      "full_ft": 0,
+      "row_budget": 0,
+      "shared_prefix": 0,
+      "length_sort": 0,
+      "pass_tokens_max": 0,
+      "max_steps": 0,
+      "save_every_steps": 0,
+      "save_every_minutes": 0,
+      "resume": 0,
+      "stop_after": 0,
+      "snapshot_fractions": "",
+      "snapshot_every_steps": 0,
+      "snapshot_dir": "",
+      "seed": 0
+    },
+    "seed": 0,
+    "weights_sha256": {
+      "adapter_model.safetensors": "7c093e1cae565601a1d2569db1bf6399767c4fa65173a707e6136dfbae116573",
+      "head.pt": "e55f2d2c13e7e17197b5e9416366248de008c02aa48784ad6ba3e4500f37edd3",
+      "adapter_config.json": "e2c7614b4a9bb7eded29188eda76f8e500831fee28725fca28cdea5112aa5571"
+    },
+    "grad_norm": [
+      {
+        "epoch": 0,
+        "steps": 235,
+        "mean": 19.123513489361702,
+        "max": 209.807068,
+        "clipped_steps": 152
+      },
+      {
+        "epoch": 1,
+        "steps": 235,
+        "mean": 2.582901412765957,
+        "max": 107.524345,
+        "clipped_steps": 24
+      }
+    ],
+    "wall_seconds": 2221.427020072937,
+    "device": "cuda",
+    "temperature": 3.5441887516989192,
+    "scores": {
+      "calibration_n": 322,
+      "fitted_temperature": 3.5441887516989192,
+      "calibration_raw": {
+        "n": 322,
+        "temperature": 1.0,
+        "accuracy": 0.9875776397515528,
+        "accuracy_ci95": [
+          0.9751552795031055,
+          0.9968944099378882
+        ],
+        "macro_f1": 0.980559122135209,
+        "per_label_f1": {
+          "labour": 0.9945945945945946,
+          "agriculture": 1.0,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 0.9772727272727273,
+          "other": 0.9615384615384616,
+          "multiple": 0.9565217391304348,
+          "unspecified": 0.9545454545454546
+        },
+        "support": {
+          "labour": 93,
+          "agriculture": 21,
+          "rainfall": 63,
+          "prices_economy": 42,
+          "health": 43,
+          "other": 27,
+          "multiple": 12,
+          "unspecified": 21
+        },
+        "nll": 0.12557239439614024,
+        "brier": 0.020469321295557504,
+        "ece": 0.010192000099704026,
+        "auroc_correct": 0.866745283018868,
+        "mean_confidence": 0.997769639851257,
+        "reliability": [
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 1,
+            "confidence": 0.7279272072778162,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 3,
+            "confidence": 0.8684338358375675,
+            "accuracy": 0.6666666666666666
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 318,
+            "confidence": 0.9998383500544471,
+            "accuracy": 0.9937106918238994
+          }
+        ],
+        "latency_s_p50": 0.5678575624988298,
+        "latency_s_p95": 0.6823834125061694,
+        "cost_usd_per_1000": null
+      },
+      "dev_raw": {
+        "n": 355,
+        "temperature": 1.0,
+        "accuracy": 0.9887323943661972,
+        "accuracy_ci95": [
+          0.9774647887323944,
+          0.9971830985915493
+        ],
+        "macro_f1": 0.9796948263112484,
+        "per_label_f1": {
+          "labour": 0.9902912621359223,
+          "agriculture": 0.9655172413793104,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9894736842105263,
+          "multiple": 0.975609756097561,
+          "unspecified": 0.9166666666666666
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.06933798610316473,
+        "brier": 0.021255548406920424,
+        "ece": 0.011242428813203613,
+        "auroc_correct": 0.9893162393162394,
+        "mean_confidence": 0.9985879196162357,
+        "reliability": [
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 1,
+            "confidence": 0.7538246175382461,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 1,
+            "confidence": 0.8715871587158716,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 353,
+            "confidence": 0.9996410756020103,
+            "accuracy": 0.9915014164305949
+          }
+        ],
+        "latency_s_p50": 0.6048014999978477,
+        "latency_s_p95": 0.7185381796050934,
+        "cost_usd_per_1000": null
+      },
+      "dev_calibrated": {
+        "n": 355,
+        "temperature": 3.5441887516989192,
+        "accuracy": 0.9887323943661972,
+        "accuracy_ci95": [
+          0.9774647887323944,
+          0.9971830985915493
+        ],
+        "macro_f1": 0.9796948263112484,
+        "per_label_f1": {
+          "labour": 0.9902912621359223,
+          "agriculture": 0.9655172413793104,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9894736842105263,
+          "multiple": 0.975609756097561,
+          "unspecified": 0.9166666666666666
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.033453234857666166,
+        "brier": 0.016801414028733235,
+        "ece": 0.005526110447342892,
+        "auroc_correct": 0.9903846153846154,
+        "mean_confidence": 0.988379547609248,
+        "reliability": [
+          {
+            "low": 0.30000000000000004,
+            "high": 0.4,
+            "n": 2,
+            "confidence": 0.39229005447417864,
+            "accuracy": 0.5
+          },
+          {
+            "low": 0.5,
+            "high": 0.6000000000000001,
+            "n": 1,
+            "confidence": 0.5589937455177725,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 1,
+            "confidence": 0.6977235420746385,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 1,
+            "confidence": 0.7687747918343256,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 4,
+            "confidence": 0.8398151398817684,
+            "accuracy": 0.75
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 346,
+            "confidence": 0.9962584007323144,
+            "accuracy": 0.9971098265895953
+          }
+        ],
+        "latency_s_p50": 0.6048014999978477,
+        "latency_s_p95": 0.7185381796050934,
+        "cost_usd_per_1000": null
+      },
+      "inputs_sha256": {
+        "calibration_predictions": "15347c52ac9814e79f8a2190a73d1bd4b78610b6e67070cc1db30776e0aa2a12",
+        "dev_predictions": "50c0eadc71a6eccc651b016b62287b01b1c33f9a2c2f682cb7a909122d900603"
+      }
+    },
+    "drive_path": "Group4/checkpoints/base_r16",
+    "notes": "",
+    "platform": "colab",
+    "environment": {
+      "run_id": "base_r16",
+      "platform": "colab",
+      "session": "colab_1",
+      "gpu": "Tesla T4, 15360 MiB, 580.82.07",
+      "gpu_index": 0,
+      "parallel_queues": 1,
+      "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+      "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+      "python": "3.13.16",
+      "torch": "2.8.0+cu128",
+      "cuda": "12.8",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "cuda_devices": 1,
+      "device_names": [
+        "Tesla T4"
+      ],
+      "os": "Linux-6.6.159+-x86_64-with-glibc2.39",
+      "data_repo_path": "data/splits/kev_domain/train.v2.jsonl",
+      "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+      "init_from": null,
+      "plan_meta": {
+        "created_utc": "2026-11-17T17:18:02+00:00",
+        "train_yaml_sha256": "2ddb399c78731ed3d4854bed8dbaa7f9b2faeaa7700c9d75a954945a51b0407c",
+        "repo_commit": "ec43018d3976664dcd29f46cb5fc3d743c8c776a",
+        "repo_dirty": false,
+        "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+        "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+        "data_sha256": {
+          "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+          "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+        },
+        "sessions": {
+          "kaggle_1": [
+            [
+              "b0_s0"
+            ],
+            [
+              "lr1e-05"
+            ]
+          ],
+          "kaggle_2": [
+            [
+              "lr4e-05"
+            ],
+            [
+              "b0_s1"
+            ]
+          ],
+          "kaggle_3": [
+            [
+              "ep3"
+            ],
+            [
+              "b0_s2",
+              "ep1"
+            ]
+          ],
+          "colab_1": [
+            [
+              "base_r16"
+            ]
+          ]
+        }
+      },
+      "command": "/content/kev_work/kev/.venv/bin/python -m kev.train --data /content/drive/MyDrive/Group4/data/kev_domain/train.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --lr 0.0002 --epochs 2 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 0 --device cuda --out /content/kev_work/kev/runs/base_r16",
+      "started_utc": "2026-11-17T18:40:34+00:00",
+      "ended_utc": "2026-11-17T19:18:04+00:00",
+      "exit_code": 0
+    },
+    "records_seen": 3752,
+    "truncated_records": 0,
+    "optimizer_steps": 470,
+    "peak_device_bytes": 6786173440,
+    "peak_rss_bytes": 5706964992,
+    "trainable_params_m": 11.3,
+    "final_train_loss": 0.009,
+    "log_sha256": "bb7a8caa8380825fdb884e9329ca3a8b92cc19ac8bb237088bcbeddc1d8b86a0",
+    "dropped_records": 0,
+    "init_source": {}
+  },
+  {
+    "run_id": "lr1e-05",
+    "created_at": "2026-11-17T19:49:07+00:00",
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "base": "Qwen/Qwen3.5-0.8B-Base",
+    "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+    "data": "data/splits/kev_domain/train.v2.jsonl",
+    "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+    "flags": {
+      "n_per_source": 1000,
+      "epochs": 2,
+      "lr": 1e-05,
+      "head_lr": 0.0,
+      "weight_decay": 0.01,
+      "lora": 16,
+      "accum": 8,
+      "holdout": "",
+      "perm_kl": 0.0,
+      "perm_frac": 0.3,
+      "ord_w": 0.0,
+      "label_smoothing": 0.0,
+      "brier_w": 0.0,
+      "focal_gamma": 0.0,
+      "suite": null,
+      "train_sources": "",
+      "device": "cuda",
+      "batch": 1,
+      "dtype": "fp32",
+      "weights_dtype": "fp32",
+      "checkpointing": 0,
+      "option_isolation": 0,
+      "special_embeddings": 0,
+      "head_dim": 256,
+      "lora_targets": "all",
+      "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+      "p_none": 0.0,
+      "p_none_distract": 0.12,
+      "p_distract": 0.15,
+      "p_none_pair": 0.0,
+      "none_pair_max_state": null,
+      "synthetic_repeat": 1,
+      "public_frac": 1.0,
+      "anchor": "",
+      "anchor_w": 0.0,
+      "anchor_sources": "",
+      "max_state": 384,
+      "replay": 0,
+      "full_ft": 0,
+      "row_budget": 0,
+      "shared_prefix": 0,
+      "length_sort": 0,
+      "pass_tokens_max": 0,
+      "max_steps": 0,
+      "save_every_steps": 0,
+      "save_every_minutes": 0,
+      "resume": 0,
+      "stop_after": 0,
+      "snapshot_fractions": "",
+      "snapshot_every_steps": 0,
+      "snapshot_dir": "",
+      "seed": 0
+    },
+    "seed": 0,
+    "weights_sha256": {
+      "adapter_model.safetensors": "d85b616a974b2972f24ae45c660650976adc1049b9f8e47b453af3cdca757f61",
+      "head.pt": "1576798443aab1c81f369a0ecdbd1866b98345c8cfc11a6bb7e6a720586c3da0",
+      "adapter_config.json": "8e28e36ba21adb34ac6cf04c5cb384b5ebe5cff1385a531d258d68ae33b530a0"
+    },
+    "grad_norm": [
+      {
+        "epoch": 0,
+        "steps": 235,
+        "mean": 17.80525210212766,
+        "max": 194.770554,
+        "clipped_steps": 209
+      },
+      {
+        "epoch": 1,
+        "steps": 235,
+        "mean": 15.011266514893617,
+        "max": 150.551407,
+        "clipped_steps": 125
+      }
+    ],
+    "wall_seconds": 2147.0676860809326,
+    "device": "cuda",
+    "temperature": 2.930763109607743,
+    "scores": {
+      "calibration_n": 322,
+      "fitted_temperature": 2.930763109607743,
+      "calibration_raw": {
+        "n": 322,
+        "temperature": 1.0,
+        "accuracy": 0.9658385093167702,
+        "accuracy_ci95": [
+          0.9440993788819876,
+          0.984472049689441
+        ],
+        "macro_f1": 0.95693891467116,
+        "per_label_f1": {
+          "labour": 0.9837837837837838,
+          "agriculture": 0.975609756097561,
+          "rainfall": 0.975609756097561,
+          "prices_economy": 0.9882352941176471,
+          "health": 0.9772727272727273,
+          "other": 0.88,
+          "multiple": 1.0,
+          "unspecified": 0.875
+        },
+        "support": {
+          "labour": 93,
+          "agriculture": 21,
+          "rainfall": 63,
+          "prices_economy": 42,
+          "health": 43,
+          "other": 27,
+          "multiple": 12,
+          "unspecified": 21
+        },
+        "nll": 0.32213375216796447,
+        "brier": 0.06972489167073491,
+        "ece": 0.034750803925252795,
+        "auroc_correct": 0.8968137971353405,
+        "mean_confidence": 0.9846175635225148,
+        "reliability": [
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 1,
+            "confidence": 0.47379999999952616,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.5,
+            "high": 0.6000000000000001,
+            "n": 3,
+            "confidence": 0.5410827650543041,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 2,
+            "confidence": 0.6657499999983796,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 4,
+            "confidence": 0.7533007538794427,
+            "accuracy": 0.75
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 6,
+            "confidence": 0.8579000195397932,
+            "accuracy": 0.5
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 306,
+            "confidence": 0.9982277909357322,
+            "accuracy": 0.9771241830065359
+          }
+        ],
+        "latency_s_p50": 0.5716525419920799,
+        "latency_s_p95": 0.6823752478951064,
+        "cost_usd_per_1000": null
+      },
+      "dev_raw": {
+        "n": 355,
+        "temperature": 1.0,
+        "accuracy": 0.9859154929577465,
+        "accuracy_ci95": [
+          0.971830985915493,
+          0.9971830985915493
+        ],
+        "macro_f1": 0.9789595834946444,
+        "per_label_f1": {
+          "labour": 0.9853658536585366,
+          "agriculture": 0.9629629629629629,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9791666666666666,
+          "multiple": 0.975609756097561,
+          "unspecified": 0.9285714285714286
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.06396720894082528,
+        "brier": 0.022338724850721813,
+        "ece": 0.010980888065037143,
+        "auroc_correct": 0.9588571428571429,
+        "mean_confidence": 0.9898791206079377,
+        "reliability": [
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 2,
+            "confidence": 0.40582012201078255,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 2,
+            "confidence": 0.6386681381842625,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 2,
+            "confidence": 0.7385499999981608,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 5,
+            "confidence": 0.8540824417525921,
+            "accuracy": 0.8
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 344,
+            "confidence": 0.9987517415310131,
+            "accuracy": 0.9941860465116279
+          }
+        ],
+        "latency_s_p50": 0.5686287919961615,
+        "latency_s_p95": 0.6487287749056122,
+        "cost_usd_per_1000": null
+      },
+      "dev_calibrated": {
+        "n": 355,
+        "temperature": 2.930763109607743,
+        "accuracy": 0.9859154929577465,
+        "accuracy_ci95": [
+          0.971830985915493,
+          0.9971830985915493
+        ],
+        "macro_f1": 0.9789595834946444,
+        "per_label_f1": {
+          "labour": 0.9853658536585366,
+          "agriculture": 0.9629629629629629,
+          "rainfall": 1.0,
+          "prices_economy": 1.0,
+          "health": 1.0,
+          "other": 0.9791666666666666,
+          "multiple": 0.975609756097561,
+          "unspecified": 0.9285714285714286
+        },
+        "support": {
+          "labour": 102,
+          "agriculture": 28,
+          "rainfall": 72,
+          "prices_economy": 26,
+          "health": 45,
+          "other": 48,
+          "multiple": 21,
+          "unspecified": 13
+        },
+        "nll": 0.07611633788403047,
+        "brier": 0.0313826188802823,
+        "ece": 0.03711874831991823,
+        "auroc_correct": 0.970857142857143,
+        "mean_confidence": 0.9522866234956773,
+        "reliability": [
+          {
+            "low": 0.30000000000000004,
+            "high": 0.4,
+            "n": 2,
+            "confidence": 0.30972674863410643,
+            "accuracy": 0.0
+          },
+          {
+            "low": 0.4,
+            "high": 0.5,
+            "n": 3,
+            "confidence": 0.4532625925538987,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.5,
+            "high": 0.6000000000000001,
+            "n": 6,
+            "confidence": 0.5400834453540773,
+            "accuracy": 0.8333333333333334
+          },
+          {
+            "low": 0.6000000000000001,
+            "high": 0.7000000000000001,
+            "n": 5,
+            "confidence": 0.6302919295780365,
+            "accuracy": 0.8
+          },
+          {
+            "low": 0.7000000000000001,
+            "high": 0.8,
+            "n": 8,
+            "confidence": 0.7437185987835042,
+            "accuracy": 1.0
+          },
+          {
+            "low": 0.8,
+            "high": 0.9,
+            "n": 30,
+            "confidence": 0.8571724189786053,
+            "accuracy": 0.9666666666666667
+          },
+          {
+            "low": 0.9,
+            "high": 1.0,
+            "n": 301,
+            "confidence": 0.9901183667322083,
+            "accuracy": 1.0
+          }
+        ],
+        "latency_s_p50": 0.5686287919961615,
+        "latency_s_p95": 0.6487287749056122,
+        "cost_usd_per_1000": null
+      },
+      "inputs_sha256": {
+        "calibration_predictions": "b9e3230a30c08cc91d38231d183e585bd64718e66f5bbc0781c3c2bf867c6932",
+        "dev_predictions": "611fa5effcee6ef554cca85aaa2b7b132f1cc52cdb0bb2babb8590962176ffbb"
+      }
+    },
+    "drive_path": "Group4/checkpoints/lr1e-05",
+    "notes": "",
+    "platform": "kaggle",
+    "environment": {
+      "run_id": "lr1e-05",
+      "platform": "kaggle",
+      "session": "kaggle_1",
+      "gpu": "Tesla T4, 15360 MiB, 580.178.04",
+      "gpu_index": 1,
+      "parallel_queues": 2,
+      "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+      "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+      "python": "3.13.16",
+      "torch": "2.8.0+cu128",
+      "cuda": "12.8",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "cuda_devices": 2,
+      "device_names": [
+        "Tesla T4",
+        "Tesla T4"
+      ],
+      "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+      "data_repo_path": "data/splits/kev_domain/train.v2.jsonl",
+      "data_sha256": "bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f",
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "plan_meta": {
+        "created_utc": "2026-11-17T17:18:02+00:00",
+        "train_yaml_sha256": "2ddb399c78731ed3d4854bed8dbaa7f9b2faeaa7700c9d75a954945a51b0407c",
+        "repo_commit": "ec43018d3976664dcd29f46cb5fc3d743c8c776a",
+        "repo_dirty": false,
+        "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+        "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+        "data_sha256": {
+          "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+          "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+        },
+        "sessions": {
+          "kaggle_1": [
+            [
+              "b0_s0"
+            ],
+            [
+              "lr1e-05"
+            ]
+          ],
+          "kaggle_2": [
+            [
+              "lr4e-05"
+            ],
+            [
+              "b0_s1"
+            ]
+          ],
+          "kaggle_3": [
+            [
+              "ep3"
+            ],
+            [
+              "b0_s2",
+              "ep1"
+            ]
+          ],
+          "colab_1": [
+            [
+              "base_r16"
+            ]
+          ]
+        }
+      },
+      "command": "/tmp/kev_work/kev/.venv/bin/python -m kev.train --data /kaggle/input/datasets/<kaggle-user>/group4-kev-data/train.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --init_from jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f --lr 1e-05 --epochs 2 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 0 --device cuda --out /tmp/kev_work/kev/runs/lr1e-05",
+      "started_utc": "2026-11-17T18:45:14+00:00",
+      "ended_utc": "2026-11-17T19:21:44+00:00",
+      "exit_code": 0
+    },
+    "records_seen": 3752,
+    "truncated_records": 0,
+    "optimizer_steps": 470,
+    "peak_device_bytes": 6786173440,
+    "peak_rss_bytes": 5854310400,
+    "trainable_params_m": 11.3,
+    "final_train_loss": 0.153,
+    "log_sha256": "da42ead6b73232f4815418ddd7f25edad6bbcba5aaae87e5aa932248340054d4",
+    "dropped_records": 0,
+    "init_source": {
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "resolved": "/root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "weights_sha256": "9b908623acb162118575f4e7a94524f9c139c335be4bfb74d6cfceca01e1885a",
+      "head_sha256": "f400bd12802b2b105ae45d6b03774a158a3db4fccff42413734ddca2e5c920b6",
+      "tensors": 372
+    }
+  }
+]
