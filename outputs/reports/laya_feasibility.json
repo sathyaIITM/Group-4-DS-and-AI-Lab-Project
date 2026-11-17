@@ -19,10 +19,15 @@
     "mean_loss_epoch1": 1.8133
   },
   "criteria": {
-    "smoke_completes_on_mps": "pass (with --micro-batch 2 --grad-accum 32, same effective batch 64 as the default 8 x 8; without --eval)",
+    "smoke_completes_on_mps": "smoke passed, full run failed on MPS (fixed evaluation batch of 16)",
     "projected_full_run": "estimate 1-2 h (6,756 item passes = 233 x the smoke's 29; the smoke time includes model loading); confirm from the first epoch of the full run",
     "truncated_states": "not reported by laya-train; to be counted at scoring",
     "scoring_route": "open: evaluation at batch 16 ran out of memory; scoring must use a smaller batch or laya-serve"
   },
-  "decision": "feasible on the local machine with the smaller micro-batch; full run on the local machine (no Kev run is planned there), subject to approval"
+  "decision": "not feasible on the local machine as packaged; fallback fixed before the smoke run: a Kaggle T4 (CUDA), where the library defaults (micro-batch 8 x accumulation 8) can be used unchanged",
+  "full_run_local": {
+    "command": "laya-train --data data/splits/laya_domain/train.v2.jsonl --out models/checkpoints/laya_s0 --micro-batch 2 --grad-accum 32 --device mps --seed 0",
+    "log": "outputs/logs/laya_s0.log",
+    "result": "failed: MPS out of memory after 251 s, before the first epoch completed; laya-train evaluates its internal calibration slice (187 items) in fixed batches of 16 (laya/train.py:739-745, calls at 1120 and 1132), which has no command-line flag; the smoke run's slice had 3 items, so it did not reach this limit"
+  }
 }

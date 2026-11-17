@@ -76,6 +76,16 @@ the same way.
   therefore uses these two settings; evaluation is done by our scoring, not by `--eval`.
 - Projection for the full run: 1 to 2 hours on the local machine (estimate; 233 times the
   smoke's item passes, and the smoke time includes model loading).
+- Full run on the local machine (17 November, 22:48): failed with MPS out of memory after 251 s,
+  before the first epoch completed (`outputs/logs/laya_s0.log`). `laya-train` evaluates its own
+  calibration slice (10% of the rows, 187 items) in fixed batches of 16 (`laya/train.py:739-745`),
+  with no command-line flag; the smoke run's slice held 3 items. By the fallback in Section 5, the
+  run moves to a Kaggle T4, where the library defaults (micro-batch 8 x accumulation 8) apply
+  unchanged.
+- Next (decided 17 November): the run is prepared for a Kaggle T4 in
+  `notebooks/laya_train_t4.ipynb` (library defaults, seed 0, data hash checked, run saved to
+  `checkpoints/laya_s0`) and is scheduled for Thursday 19 November if time permits. If it is not
+  run, the report keeps the zero-shot Laya row and states the reason.
 - Open: the scoring route (batch size or `laya-serve`) and the truncation count.
   Record: `outputs/reports/laya_feasibility.json`.
 

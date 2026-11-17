@@ -8,6 +8,7 @@ paths relative to `data/`.
 | --- | --- |
 | `eda.ipynb` | Exploratory analysis of the catalogue tables |
 | `kev_train_t4.ipynb` | Kev-0.8B domain fine-tuning on a Colab or Kaggle T4 (smoke and planned runs) |
+| `laya_train_t4.ipynb` | Laya comparator fine-tuning on a Kaggle T4 (library defaults) |
 
 Fine-tuning uses fp32 on the T4: the T4 has no bf16, and `kev.train` offers fp32 or bf16 only
 (no fp16). The runs, the procedure and the records are fixed in
