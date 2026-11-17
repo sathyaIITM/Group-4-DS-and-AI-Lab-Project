@@ -35,6 +35,9 @@ class CatalogueTable(BaseModel):
     lacking_definitions: list[str] = Field(default_factory=list)
     describe_questions: list[str] = Field(default_factory=list)
     describe_templates: list[str] = Field(default_factory=list)
+    # Generic tables (routing data v2): measure phrases users ask for, and what a place is.
+    measures: list[str] = Field(default_factory=list)
+    place_kind: str = "State"
 
 
 class UncoveredMeasure(BaseModel):

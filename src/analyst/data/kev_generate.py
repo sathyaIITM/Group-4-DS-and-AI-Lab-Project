@@ -238,10 +238,42 @@ EXPLAIN_TEMPLATES = [
     "Which period does this figure refer to exactly?",
     "Is this an official figure?",
     "Why should I trust this number?",
+    "Which table did that come from?",
+    "Source for this figure?",
+    "how did you get that number",
+    "Is this a survey estimate or a count?",
+    "What does this figure measure exactly?",
+    "Which year does this refer to?",
+    "Show me the SQL behind this.",
+    "Did you adjust for inflation here?",
+    "Who published this data?",
+    "Are these numbers final or provisional?",
+    "What is the unit of this figure?",
+    "Is this the latest data you have?",
+    "Can I quote this? Where is it from?",
+    "Kahan se aaya yeh number?",
+    "Any caveats I should mention if I report this?",
+    "How was this percentage worked out?",
 ]
 # Without a result there is nothing to explain: the message names no table or topic, so the
 # agent searches the catalogue (agent_graph.md Section 6, routing rule 3; guide R17).
-EXPLAIN_WITHOUT_RESULT = {0, 1, 2, 4}
+EXPLAIN_WITHOUT_RESULT = {0, 1, 2, 4, 10, 11, 12, 16, 22, 23}
+
+GENERIC_VALUE = [
+    "What was the {measure} in {place} in {period}?",
+    "{Measure} in {place}, {period}?",
+    "Give me the {measure} for {place} for {period}.",
+    "Tell me the {measure} of {place} in {period}.",
+]
+GENERIC_RANK = [
+    "Which {place_kind} had the highest {measure} in {period}?",
+    "Which {place_kind} had the lowest {measure} in {period}?",
+]
+GENERIC_CHANGE = ["How did the {measure} in {place} change between {period} and {period2}?"]
+GENERIC_NO_PLACE = ["What was the {measure} in {period}?", "{Measure} for {period}?"]
+GENERIC_BREAKDOWN = "What was the {measure} {breakdown} in {period}?"
+GENERIC_GROUP = "What was the {measure} {group} in {place} in {period}?"
+CATALOGUE_TOP_K = 4  # the router shows the top-4 catalogue candidates (agent_graph.md v0.3)
 
 SEARCH_TEMPLATES = [
     "Which datasets cover {topic}?",
@@ -316,6 +348,9 @@ class Families:
         self.plfs = catalogue.get(PLFS)
         self.imd = catalogue.get(IMD)
         self.uncovered = catalogue.uncovered
+        tables = catalogue.real_tables()
+        self.generic = [x for x in tables if x.measures and x.periods and x.places]
+        self.describable = [x for x in tables if x.describe_questions]
         self.states = self.plfs.places
 
     def _template(self, prefix: str, templates: dict[str, list[str]]) -> tuple[str, str, str]:
@@ -978,10 +1013,147 @@ class Families:
             )
         return drafts
 
+    def table_query(self) -> list[Draft]:
+        """A covered question on a table described by `measures` in the catalogue, with its
+        minimal pairs: table removed (R7), period out of range (R8), breakdown absent (R9),
+        place missing without a national row (R10), named group absent (R12)."""
+        rng = self.rng
+        t: CatalogueTable = rng.choice(self.generic)
+        measure = rng.choice(t.measures)
+        period, period2 = (
+            sorted(rng.sample(t.periods, 2)) if len(t.periods) > 1 else (t.periods[0], t.periods[0])
+        )
+        slots = {
+            "measure": measure,
+            "Measure": measure[:1].upper() + measure[1:],
+            "place": rng.choice(t.places),
+            "place_kind": t.place_kind.lower(),
+            "period": period,
+            "period2": period2,
+        }
+        national_only = t.place_kind.lower() == "national"
+        kinds = ["value", "value", "change"] + ([] if national_only else ["rank"])
+        kind = rng.choice(kinds if len(t.periods) > 1 else [k for k in kinds if k != "change"])
+        pool = {"value": GENERIC_VALUE, "rank": GENERIC_RANK, "change": GENERIC_CHANGE}[kind]
+        index = rng.randrange(len(pool))
+        tid = f"table.{t.name}.{kind}.{index}"
+        base = Draft(
+            pool[index].format(**slots),
+            "run_sql",
+            t.domain,
+            "R6",
+            "M1",
+            tid,
+            slots,
+            needs=t.name,
+            tags=["generic"],
+        )
+        drafts = [base]
+        if rng.random() < 0.3:
+            drafts.append(
+                Draft(
+                    base.message,
+                    "decline_not_covered",
+                    t.domain,
+                    "R7",
+                    "M1",
+                    tid,
+                    slots,
+                    excludes=t.name,
+                    tags=["generic", "by_removal"],
+                )
+            )
+        variant = rng.random()
+        if variant < 0.2 and t.out_of_range_periods and kind == "value":
+            out = {**slots, "period": rng.choice(t.out_of_range_periods)}
+            drafts.append(
+                Draft(
+                    pool[index].format(**out),
+                    "decline_not_covered",
+                    t.domain,
+                    "R8",
+                    "M1",
+                    tid,
+                    out,
+                    needs=t.name,
+                    tags=["generic", "out_of_range"],
+                )
+            )
+        elif variant < 0.4 and t.absent_breakdowns:
+            extra = {**slots, "breakdown": rng.choice(t.absent_breakdowns)}
+            drafts.append(
+                Draft(
+                    GENERIC_BREAKDOWN.format(**extra),
+                    "decline_not_covered",
+                    t.domain,
+                    "R9",
+                    "M1",
+                    f"table.{t.name}.breakdown",
+                    extra,
+                    needs=t.name,
+                    tags=["generic", "absent_breakdown"],
+                )
+            )
+        elif variant < 0.55 and t.lacking_groups and not national_only:
+            extra = {**slots, "group": rng.choice(t.lacking_groups)}
+            drafts.append(
+                Draft(
+                    GENERIC_GROUP.format(**extra),
+                    "ask_clarification",
+                    t.domain,
+                    "R12",
+                    "M1",
+                    f"table.{t.name}.group",
+                    extra,
+                    needs=t.name,
+                    tags=["generic", "lacking_group"],
+                )
+            )
+        elif variant < 0.75:
+            index2 = rng.randrange(len(GENERIC_NO_PLACE))
+            message = GENERIC_NO_PLACE[index2].format(**slots)
+            # A sibling table with a national row on the same measure makes default D2 apply
+            # (run_sql) when it is shown, so the clarification holds only with it not shown.
+            siblings = [
+                o
+                for o in self.generic
+                if o is not t and o.national_row and set(o.measures) & set(t.measures)
+            ]
+            if t.national_row or national_only:  # default D2: the national figure
+                drafts.append(
+                    Draft(
+                        message,
+                        "run_sql",
+                        t.domain,
+                        "R6",
+                        "M1",
+                        f"table.{t.name}.no_place.{index2}",
+                        slots,
+                        needs=t.name,
+                        tags=["generic", "default_place"],
+                    )
+                )
+            else:
+                drafts.append(
+                    Draft(
+                        message,
+                        "ask_clarification",
+                        t.domain,
+                        "R10",
+                        "M1",
+                        f"table.{t.name}.no_place.{index2}",
+                        slots,
+                        needs=t.name,
+                        excludes=siblings[0].name if siblings else None,
+                        tags=["generic", "missing_place"],
+                    )
+                )
+        return drafts
+
     def describe(self) -> list[Draft]:
         rng = self.rng
-        t: CatalogueTable = rng.choice([self.plfs, self.imd])
-        if rng.random() < 0.3:
+        t: CatalogueTable = rng.choice(self.describable)
+        if rng.random() < 0.3 or not t.describe_templates:
             index = rng.randrange(len(t.describe_questions))
             return [
                 Draft(
@@ -1014,7 +1186,7 @@ class Families:
                 needs=t.name,
             )
         ]
-        if rng.random() < 0.25:
+        if rng.random() < 0.25 and t.name in (PLFS, IMD):
             # Minimal pair (R3 against R6): ask for the value instead of the table's coverage.
             if t.name == PLFS:
                 period = rng.choice(t.periods)
@@ -1119,14 +1291,15 @@ def family_weights(families: Families) -> dict[str, tuple[Callable[[], list[Draf
         "clarify": (families.clarify, 0.15),
         "chart": (families.chart, 0.17),
         "followup": (families.followup, 0.04),
-        "explain": (families.explain, 0.06),
-        "describe": (families.describe, 0.17),
+        "explain": (families.explain, 0.12),
+        "describe": (families.describe, 0.20),
         "absent_table": (families.absent_table, 0.04),
-        "no_measure": (families.no_measure, 0.08),
-        "cross_domain": (families.cross_domain, 0.07),
-        "search": (families.search, 0.12),
+        "no_measure": (families.no_measure, 0.13),
+        "cross_domain": (families.cross_domain, 0.13),
+        "search": (families.search, 0.14),
         "uncovered_query": (families.uncovered_query, 0.07),
         "non_data": (families.non_data, 0.05),
+        **({"table_query": (families.table_query, 0.30)} if families.generic else {}),
     }
 
 
@@ -1163,15 +1336,39 @@ def surface(rng: random.Random, drafts: list[Draft]) -> None:
 
 
 def catalogue_text(
-    rng: random.Random, tables: list[CatalogueTable], needs: set[str], excludes: str | None
+    rng: random.Random,
+    tables: list[CatalogueTable],
+    needs: set[str],
+    excludes: str | None,
+    ranked: list[str] | None = None,
+    k: int = CATALOGUE_TOP_K,
 ) -> str:
+    """The top-k catalogue lines shown to the router: the tables the label depends on, then
+    the best-ranked others (`ranked`, the retriever's order for the message, as at serving),
+    or random others when no ranking is given. A removed table (`excludes`) never appears."""
     pool = [t for t in tables if t.name != excludes]
-    chosen = [t for t in pool if t.name in needs or rng.random() < 0.6] or [rng.choice(pool)]
+    by_name = {t.name: t for t in pool}
+    chosen = [by_name[n] for n in sorted(needs) if n in by_name]
+    order = [by_name[n] for n in (ranked or []) if n in by_name]
+    rest = [t for t in pool if t not in order]
+    rng.shuffle(rest)
+    for t in [*order, *rest]:
+        if len(chosen) >= k:
+            break
+        if t not in chosen:
+            chosen.append(t)
     rng.shuffle(chosen)
     return "\n".join(f"{i}. {t.line}" for i, t in enumerate(chosen, start=1))
 
 
-def generate(catalogue: Catalogue, n_families: int, seed: int) -> list[KevRecord]:
+def generate(
+    catalogue: Catalogue,
+    n_families: int,
+    seed: int,
+    ranker: Callable[[str], list[str]] | None = None,
+) -> list[KevRecord]:
+    """`ranker(message)` returns table names, best first (the serving retriever); without it the
+    other tables in a state are random."""
     rng = random.Random(seed)  # noqa: S311 - reproducible sampling, not security
     families = Families(catalogue, rng)
     weights = family_weights(families)
@@ -1226,7 +1423,11 @@ def generate(catalogue: Catalogue, n_families: int, seed: int) -> list[KevRecord
         for draft in drafts:
             state = KevState(
                 catalogue=catalogue_text(
-                    rng, tables, {n for n in (draft.needs, draft.also) if n}, draft.excludes
+                    rng,
+                    tables,
+                    {n for n in (draft.needs, draft.also) if n},
+                    draft.excludes,
+                    ranker(draft.message) if ranker else None,
                 ),
                 context=render_context(draft.has_result, draft.prior_turn, draft.previous_tool),
                 user_message=draft.message,

@@ -22,8 +22,14 @@ GROUPS = {
     "Processed tables (`data/processed`, not tracked)": sorted(
         (DATA_DIR / "processed").glob("*.parquet")
     ),
-    "Routing splits (`data/splits/kev`, tracked)": sorted(
+    "Routing splits, version 1 (`data/splits/kev`, tracked)": sorted(
         (DATA_DIR / "splits" / "kev").glob("*.v1.jsonl")
+    ),
+    "Routing splits, version 2, frozen catalogue (`data/splits/kev`, tracked)": sorted(
+        (DATA_DIR / "splits" / "kev").glob("*.v2.jsonl")
+    ),
+    "dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)": sorted(
+        p for p in (DATA_DIR / "labels" / "dev_human_v1").glob("items*.jsonl")
     ),
     "Text-to-SQL ground truth (`data/ground_truths`, tracked)": sorted(
         (DATA_DIR / "ground_truths").glob("*.csv")
@@ -69,7 +75,8 @@ for title, paths in GROUPS.items():
     for path in paths:
         rows, columns = shape(path)
         lines.append(
-            f"| `{path.relative_to(ROOT_DIR)}` | {rows:,} | {columns} | {path.stat().st_size:,} | `{sha256(path)}` |"
+            f"| `{path.relative_to(ROOT_DIR).as_posix()}` | {rows:,} | {columns} | "
+            f"{path.stat().st_size:,} | `{sha256(path)}` |"
         )
     lines.append("")
 

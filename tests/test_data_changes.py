@@ -780,3 +780,25 @@ def test_a_total_row_is_recognised_whatever_its_case() -> None:
     total = result.obs[result.obs["geo_name_source"] == "ALL INDIA"]
     assert total["is_total_row"].all() and set(total["geo_level"]) == {"national"}
     assert set(total["geo_name"]) == {"India"} and "geo_unmatched" not in kinds(result)
+
+
+# --- Rows that are not observations of a place ----------------------------------------------
+
+
+def test_drop_rows_removes_subtotals_and_records_them() -> None:
+    cfg = config_from_toml(Path("configs/sources/ncrb_violent_crimes_state.toml").read_text())
+    frame = pd.DataFrame(
+        {
+            "Sl. No": ["1", "2", "Total State (S)", "Total UT (S)", "Total All India"],
+            "State/UT": ["Bihar", "Kerala", "Total State (S)", "Total UT (S)", "Total All India"],
+            "2023": ["300", "100", "400", "0", "400"],
+            "Mid-Year Projected Population (in Lakhs) (2023)": ["1"] * 5,
+            "Rate of Violent Crimes (2023)": ["1"] * 5,
+            "Chargesheeting Rate (2023)": ["1"] * 5,
+        }
+    )
+    result = run_config(cfg, frame, approved(frame))
+    assert not result.blocked, [i.detail for i in result.review if i.severity == "block"]
+    assert sorted(result.obs["geo_name"]) == ["Bihar", "India", "Kerala"]
+    dropped = [i for i in result.review if i.kind == "rows_dropped"]
+    assert len(dropped) == 1 and dropped[0].count == 2

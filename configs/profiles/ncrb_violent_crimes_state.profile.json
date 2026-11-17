@@ -1,0 +1,11 @@
+{
+  "indicators": {
+    "violent_crime_count": {
+      "mad": 6871.0,
+      "median": 7215.0,
+      "p05": 60.5,
+      "p95": 50887.5
+    }
+  },
+  "observations": 111
+}

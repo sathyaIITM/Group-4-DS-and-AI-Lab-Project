@@ -244,6 +244,7 @@ data/splits/*
 !data/splits/kev/
 data/splits/kev/*
 !data/splits/kev/*.v1.jsonl
+!data/splits/kev/*.v2.jsonl
 
 # Model checkpoints, adapters and calibration artefacts
 models/*

@@ -49,6 +49,9 @@ class ReadSection(BaseModel):
     flag_patterns: list[FlagPattern] = Field(default_factory=list)
     strip_chars: list[str] = Field(default_factory=list)
     drop_columns: list[str] = Field(default_factory=list)
+    # Rows to remove before parsing, by source header -> published values, for rows that are
+    # not observations of a place: subtotals such as "Total State (S)" next to an All India row.
+    drop_rows: dict[str, list[str]] = Field(default_factory=dict)
     dedupe_exact: bool = False
 
 

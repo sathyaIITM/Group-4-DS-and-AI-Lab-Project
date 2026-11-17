@@ -11,11 +11,11 @@ source_tier = "B"
 adapter = "ogd_api"
 resource_id = "7c568619-b9b4-40bb-b563-68c28c27a6c1"
 raw_file = "nfhs5_state_factsheet.csv"
-config_version = "1.0.0"
+config_version = "1.1.2"   # 1.1.x: API export headers (canonical), NA marker, percent rule, West Bengal Total present, minus-as-low-sample rule
 retrieved = "2026-11-05"
 caveats = [
   "Survey estimates from one round, with fieldwork in 2019-2021; there is no trend in this table.",
-  "Each State has three figures per indicator: Total, Urban and Rural. Compare like with like. West Bengal has no Total figure in the source, only Urban and Rural.",
+  "Each State has three figures per indicator: Total, Urban and Rural. Compare like with like.",
   "Values in brackets in the source are based on few cases (25-49) and are flagged as low-sample estimates; values marked * are not shown by NFHS (fewer than 25 cases) and are empty.",
   "Most indicators are percentages of the group named in the indicator; sex ratios are females per 1,000 males, and mortality rates are per 1,000 live births.",
   "The NFHS-5 infant mortality rate is a survey estimate for the years before the survey; it differs from the yearly SRS rate by design.",
@@ -23,7 +23,7 @@ caveats = [
 ]
 
 [read]
-missing_markers = { "" = "missing_in_source", "*" = "suppressed" }
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source", "*" = "suppressed" }   # NA appears in the API export
 strip_chars = ["*"]
 drop_columns = ["Unnamed: 136"]   # trailing column with no name and no values
 
@@ -51,6 +51,8 @@ unit_rules = [
   { contains = "children per woman", unit = "children_per_woman" },
   { contains = "adolescent fertility rate", unit = "births_per_1000_women" },
   { contains = "(rs.)", unit = "INR" },
+  # Last: the API export drops "(%)" from five birth-history headers; rupee headers match above.
+  { contains = "in the 5 years before the survey)", unit = "percent" },
 ]
 
 [period]
@@ -64,6 +66,10 @@ level = "state"
 vintage = "nfhs5_2019_21"
 state_reference = "states"
 total_members = ["India"]
+
+# The API export writes low-sample values "(x)" as "-x" (same as the district table).
+[[rules]]
+id = "nfhs5_minus_as_low_sample"
 
 [[checks]]
 name = "value_range"

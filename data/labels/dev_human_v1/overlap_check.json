@@ -1,0 +1,19 @@
+{
+  "method": "character 5-gram Jaccard after normalisation (kev_checks.normalise)",
+  "threshold": 0.8,
+  "items": 200,
+  "reference_messages": {
+    "data/splits/kev/train.v2.jsonl": 1876,
+    "data/splits/kev/calibration.v2.jsonl": 322,
+    "data/splits/kev/dev_synthetic.v2.jsonl": 355,
+    "data/splits/kev/train.v1.jsonl": 1718,
+    "data/splits/kev/calibration.v1.jsonl": 300,
+    "data/splits/kev/dev_synthetic.v1.jsonl": 338,
+    "../../Group-4-DS-and-AI-Lab-Project/data/splits/kev_candidates/paraphrase.v1.jsonl": 609,
+    "../../Group-4-DS-and-AI-Lab-Project/data/splits/kev_candidates/hard_cases.v1.jsonl": 398,
+    "data/sample/routing_week1.jsonl": 200,
+    "data/sample/v0_questions.jsonl": 20,
+    "data/sample/rag_poc_questions.v0.jsonl": 12
+  },
+  "flagged": []
+}
