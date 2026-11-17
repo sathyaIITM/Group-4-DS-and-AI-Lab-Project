@@ -638,6 +638,21 @@ def run_source(
     columns_seen = list(frame.columns)
     review += check_columns(config, columns_seen, approved_columns)
     frame = frame.drop(columns=[c for c in config.read.drop_columns if c in frame.columns])
+    for column, drop_values in config.read.drop_rows.items():
+        if column not in frame.columns:
+            continue
+        drop = frame[column].astype(str).str.strip().isin(drop_values)
+        if drop.any():
+            review.append(
+                ReviewItem(
+                    dataset_id=dataset.id,
+                    severity="info",
+                    kind="rows_dropped",
+                    detail=f"rows with {column} in {sorted(drop_values)} removed (read.drop_rows)",
+                    count=int(drop.sum()),
+                )
+            )
+            frame = frame[~drop]
     if any(item.kind == "column_missing" for item in review):
         return RunResult(config, pd.DataFrame(), review, {"dataset_id": dataset.id}, columns_seen)
 

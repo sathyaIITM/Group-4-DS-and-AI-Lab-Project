@@ -11,7 +11,7 @@ source_tier = "B"
 adapter = "ogd_api"
 resource_id = "cf80173e-fece-439d-a0b1-6e9cb510593d"
 raw_file = "datafile1.csv"
-config_version = "1.0.0"
+config_version = "1.0.1"   # 1.0.1: percent unit for three birth-history headers without "(%)"
 retrieved = "2026-10-29"
 caveats = [
   "District estimates have wide sampling error; low-sample estimates are flagged, suppressed ones are empty.",
@@ -45,6 +45,8 @@ unit_rules = [
   { contains = "(rs.", unit = "INR" },
   { contains = "rs.)", unit = "INR" },
   { contains = "number of", unit = "count" },
+  # Last: three birth-history headers in the API export end "... before the survey)" without "(%)".
+  { contains = "in the 5 years before the survey)", unit = "percent" },
 ]
 
 [period]

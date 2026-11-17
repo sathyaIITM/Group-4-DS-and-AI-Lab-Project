@@ -6,68 +6,86 @@ Produced by `scripts/build_manifest.py` on 2026-11-17. Recompute after regenerat
 
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
-| `data\raw\cpi_all_india.csv` | 393 | 30 | 69,755 | `570d0899c81f2ccd5d3fe6ff421b316df084ec5708bdea55f6c93fada5342d09` |
-| `data\raw\cpi_state.csv` | 441 | 39 | 93,240 | `2f860be773f42f8a344e106562ef6af86d4fff799a5fa2a6d7361d2f146e369a` |
-| `data\raw\crop_production_district.csv` | 246,091 | 7 | 12,748,923 | `c0b2e3b0fb669c0a3fe88aebd1fe80a58abd4500151688e383df7e9e6fa95985` |
-| `data\raw\datafile1.csv` | 707 | 109 | 356,689 | `de06b72f241fa9734676677a15941b93b890009b1c0f88be655b07e8a853a689` |
-| `data\raw\datafile2.csv` | 16,393 | 10 | 1,577,826 | `6f5bb19d0814247222160ea24df581c982b74ff4608a2486cca5a9d62ad1b73d` |
-| `data\raw\datafile3.csv` | 3 | 9 | 415 | `c04a05dd3359fe8a024d73126f6abd51a7fc1c3802d68bc527490816f2205512` |
-| `data\raw\gsdp_per_capita_state.csv` | 28 | 7 | 1,474 | `6d28ac4c1aa8b5c4fd1433ff6a431a04b3a21a24c0eba6517f9f7f3d9a7f2fa7` |
-| `data\raw\imd_district_rainfall_normals.csv` | 640 | 19 | 92,856 | `8f4417fd3707c6d0ecdb672330234f9c2d0cb895f00b1e53fb25d6775082ac6f` |
-| `data\raw\imd_subdivision_monthly_rainfall.csv` | 4,188 | 19 | 441,180 | `f655f42e672001c09fbd68ca14041f7299c76883d7aa9167400a1f963948bbad` |
-| `data\raw\msp_crops.csv` | 29 | 16 | 2,750 | `209586a358cf83d5922c57a0e42e15f6c3458fcde59b2c169eefbaceb6e42154` |
-| `data\raw\nfhs5_state_factsheet.csv` | 110 | 137 | 126,922 | `97ac35bb4bbb908617a3fe91701d222db1acc8bf5a07bee88a1a435669c55ff7` |
-| `data\raw\plfs_lfpr_urban_state.csv` | 37 | 3 | 816 | `3e347b0ba51f4864f331f98a358bd556d84e30cc96672a60c59aa34b694352c9` |
-| `data\raw\plfs_state_ur_usual_status_2017_22.csv` | 38 | 7 | 1,340 | `1c1b78de7d20ff7d75e40701fc3b940f0804c80032ba25bf79a78d1fb030b1a6` |
-| `data\raw\srs_imr_state.csv` | 37 | 7 | 1,403 | `6cd4d7123cb87a7066158de0e29516711bdf7f475c844422a9add3147812fc39` |
+| `data/raw/cpi_all_india.csv` | 393 | 30 | 69,754 | `5eff4272f8729dbe973569068d2063ccc05994a0bbead29711e74e8c84f306b1` |
+| `data/raw/cpi_state.csv` | 441 | 39 | 93,235 | `ac786313cb19629e348796f79e48e11507fbdcce3385b53d3b5f922cdf68692c` |
+| `data/raw/crop_production_district.csv` | 246,091 | 7 | 12,748,923 | `c0b2e3b0fb669c0a3fe88aebd1fe80a58abd4500151688e383df7e9e6fa95985` |
+| `data/raw/datafile1.csv` | 707 | 109 | 356,689 | `de06b72f241fa9734676677a15941b93b890009b1c0f88be655b07e8a853a689` |
+| `data/raw/datafile2.csv` | 16,393 | 10 | 1,577,826 | `6f5bb19d0814247222160ea24df581c982b74ff4608a2486cca5a9d62ad1b73d` |
+| `data/raw/datafile3.csv` | 3 | 9 | 415 | `c04a05dd3359fe8a024d73126f6abd51a7fc1c3802d68bc527490816f2205512` |
+| `data/raw/gsdp_per_capita_state.csv` | 28 | 7 | 1,474 | `6d28ac4c1aa8b5c4fd1433ff6a431a04b3a21a24c0eba6517f9f7f3d9a7f2fa7` |
+| `data/raw/imd_district_rainfall_normals.csv` | 641 | 19 | 69,259 | `18e47de2a0598600d53f2e6cd0130b518cef9a623ec625d2ec764e512755580b` |
+| `data/raw/imd_subdivision_monthly_rainfall.csv` | 4,188 | 19 | 441,180 | `f655f42e672001c09fbd68ca14041f7299c76883d7aa9167400a1f963948bbad` |
+| `data/raw/msp_crops.csv` | 29 | 16 | 2,750 | `209586a358cf83d5922c57a0e42e15f6c3458fcde59b2c169eefbaceb6e42154` |
+| `data/raw/ncrb_violent_crimes_state.csv` | 39 | 8 | 1,962 | `a106fe328b5f08b571755f540a6887cfd75ea83af509615a36b3b1828d79aa00` |
+| `data/raw/nfhs5_state_factsheet.csv` | 111 | 136 | 80,216 | `03e7cb0fff3688a03483372375cda18294433272fae3e8cf8421c6f5ffb1e3d5` |
+| `data/raw/plfs_lfpr_urban_state.csv` | 37 | 3 | 816 | `3e347b0ba51f4864f331f98a358bd556d84e30cc96672a60c59aa34b694352c9` |
+| `data/raw/plfs_state_ur_usual_status_2017_22.csv` | 38 | 7 | 1,340 | `1c1b78de7d20ff7d75e40701fc3b940f0804c80032ba25bf79a78d1fb030b1a6` |
+| `data/raw/srs_imr_state.csv` | 37 | 7 | 1,403 | `6cd4d7123cb87a7066158de0e29516711bdf7f475c844422a9add3147812fc39` |
 
 ## Processed tables (`data/processed`, not tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
-| `data\processed\cpi_all_india.parquet` | 393 | 32 | 67,007 | `fb878ef22316523d1a26ae1698d636d04c99f9e6259ce363b9b35b22120aa04d` |
-| `data\processed\crop_production_district.parquet` | 246,091 | 12 | 1,664,262 | `894d1c131b2d69887546f704b383d77871b04fb98e16b10a837d187dc642a2bf` |
-| `data\processed\dim_period.parquet` | 47,482 | 6 | 433,722 | `86173a78af57c1d413c657c5929522d8410d7e2f56dd5c90dfaefe0199316ebc` |
-| `data\processed\gsdp_per_capita_state.parquet` | 28 | 8 | 7,066 | `b57a6a2f016ba8f3f6237ea2615b55b408906b435250f934f3e4f16004917091` |
-| `data\processed\imd_district_rainfall_normals.parquet` | 640 | 21 | 67,837 | `85681aa28027fee55d5714d23523223e4eab9ecc3c45fe78a3c4ea9722d46646` |
-| `data\processed\imd_subdivision_monthly_rainfall.parquet` | 4,188 | 21 | 264,309 | `16af302b4883994ce84247443a05ce850385078cc26713ac9e145952c28dfe94` |
-| `data\processed\mandi_daily_prices.parquet` | 16,393 | 23 | 191,450 | `edd91f6c1e5c0376cbe2660d3709c538787d24192f05fe4210de5bc99d63e08b` |
-| `data\processed\msp_crops.parquet` | 29 | 17 | 12,305 | `d01bdd6e30caa1ce9c70558cc90b7fe0b65428f9e491d15c11090da7e5d9489e` |
-| `data\processed\ncrb_annual_crime_statistics.parquet` | 3 | 23 | 14,227 | `f4c2a69990a57910f55492ded5cc15b8bc21e3f5591eefc937aa5a6f483fc47d` |
-| `data\processed\nfhs5_district_indicators.parquet` | 73,528 | 21 | 312,155 | `579b4cd48e2934b969f63b85a8b0a7c286c5699e9106187cc56803a1556283d5` |
-| `data\processed\nfhs5_state_factsheet.parquet` | 14,410 | 20 | 82,567 | `0cc159178a368c76a331da3162e4b97f3787b4bbb8a1339d07ba1e232fa318c4` |
-| `data\processed\obs_cpi_all_india.parquet` | 10,611 | 28 | 63,979 | `5e014a7b46ee898125367df9e14af5987bb14adee9fcc9a8ac96349fc7646549` |
-| `data\processed\obs_crop_production_district.parquet` | 492,182 | 29 | 4,988,584 | `bd17db7146c9b275c7915e781545be598b55fa8f2740f886115e5380dea5042e` |
-| `data\processed\obs_gsdp_per_capita_state.parquet` | 140 | 27 | 20,559 | `1bef4065085048636e9646f9c573690a9ea375ced381e3dc1dfbc62636b5669b` |
-| `data\processed\obs_imd_district_rainfall_normals.parquet` | 10,880 | 27 | 137,009 | `fcf81ee088c9d177bf98ad6c0f816fd8dfbf8040d66c086b5059913a235a4b05` |
-| `data\processed\obs_imd_subdivision_monthly_rainfall.parquet` | 71,196 | 27 | 732,536 | `c4ed1a01b4d66f6554b29370d5039184b63c50b4e32c656bebbf0cd002293f1d` |
-| `data\processed\obs_mandi_daily_prices.parquet` | 49,179 | 30 | 650,677 | `c0972ff648d47910773cee09e8b93fe04e3e8a059c246a66a9061366a9c612ec` |
-| `data\processed\obs_msp_crops.parquet` | 348 | 30 | 21,294 | `827b2fe494a846f682d48818276b0e22e51e176739a47c15e361d60494263b1a` |
-| `data\processed\obs_ncrb_annual_crime_statistics.parquet` | 24 | 27 | 16,214 | `2d20150aaa6ac2f1fd240f8123be5b870286a2a72ed15d8217414d2aeb5033fe` |
-| `data\processed\obs_nfhs5_district_indicators.parquet` | 73,528 | 30 | 344,961 | `1debabb4d79e01beb9d71040e1aa7427a75c579f22f3147679205eec539addcc` |
-| `data\processed\obs_nfhs5_state_factsheet.parquet` | 14,410 | 31 | 90,377 | `1c75010f66220006fe6a4d3eec7fb2429e68eed4860a7c2c138ad6dce9c5e532` |
-| `data\processed\obs_plfs_lfpr_urban_state.parquet` | 37 | 27 | 18,898 | `6acb51ea02b1279c0fa472f2607255f661c15a0d27707c3a548688b510f1eb31` |
-| `data\processed\obs_plfs_state_ur_usual_status.parquet` | 190 | 27 | 20,833 | `df5efa7e947821afcd5ba83fec16915f26807a4b130f337b07b5e4cd815ff66c` |
-| `data\processed\obs_srs_imr_state.parquet` | 185 | 27 | 20,192 | `a34c57ab95ae7e701031f1ac3b229a0168680781b81b6f40ae10cd221774e476` |
-| `data\processed\plfs_lfpr_urban_state.parquet` | 37 | 2 | 1,668 | `538585babe1c24fcd24afebf1f63d905e70db21e00049ab2038e4a949fdb06ef` |
-| `data\processed\plfs_state_ur_usual_status.parquet` | 38 | 8 | 6,572 | `6bce9e995972419fa3d55510b393e3e4c3f5ff1d7ac89c88362241c132b5f2e6` |
-| `data\processed\srs_imr_state.parquet` | 37 | 8 | 7,899 | `b529c2c56197b2029fa113177a8b29e0728de74da36991ad70eb7b20605003c3` |
+| `data/processed/cpi_all_india.parquet` | 393 | 32 | 67,007 | `f37ba7b8a54646aff0a289e879130b22fb600b82598eb09e01464c432837ab6b` |
+| `data/processed/crop_production_district.parquet` | 246,091 | 12 | 1,664,262 | `d8c7297731ba939c61b695019b3e8d25c8180ec02e7f87367c58fca2db114691` |
+| `data/processed/dim_period.parquet` | 47,482 | 6 | 433,722 | `d57333207a4129b786b06391ca5fee0292db098a8ced5aa17affcdef47cfacfe` |
+| `data/processed/gsdp_per_capita_state.parquet` | 28 | 8 | 7,066 | `420cc7086a0a6e4ddd40610feb77c1b1521a303e8a0c39af0e2c83ad502477cd` |
+| `data/processed/imd_district_rainfall_normals.parquet` | 641 | 21 | 68,083 | `6193d16f4a70d6c2964cf7840438664ce6487e46223404a35e9d0ae406d084f9` |
+| `data/processed/imd_subdivision_monthly_rainfall.parquet` | 4,188 | 21 | 264,309 | `aebf88a7faa13d4ce8052316d0a9b6764220c71b70d947556963b0fb029925e8` |
+| `data/processed/mandi_daily_prices.parquet` | 16,393 | 23 | 191,450 | `f7890ca7e7a25a029a5632cc39c613430a35acb0150e55bd1f72a7011edbe371` |
+| `data/processed/msp_crops.parquet` | 29 | 17 | 12,305 | `e3f7524b6154cde80b3016da978a035a1a67aaef92ca8a63f11c52db95fa4d49` |
+| `data/processed/ncrb_annual_crime_statistics.parquet` | 3 | 23 | 14,227 | `1787a31d588c0d13979f4c1300fbef1f519d298e0eb9fbcabaf9a5cc94d2b912` |
+| `data/processed/ncrb_violent_crimes_state.parquet` | 37 | 6 | 4,989 | `1d4c2ba3b84372f81d66e18f04af528bffb91ded4ba7dc753c221f7f39229d86` |
+| `data/processed/nfhs5_district_indicators.parquet` | 73,528 | 21 | 311,836 | `741f566e5a7bb8b23c0d0cc99ca2eb7b6f5507e0f669907b0664db9a58841159` |
+| `data/processed/nfhs5_state_factsheet.parquet` | 14,541 | 20 | 82,526 | `15189923d6dfa4a2b0f33208ed8787fa03b6da828c77c98443714259b83484d0` |
+| `data/processed/obs_cpi_all_india.parquet` | 10,611 | 28 | 63,979 | `e852acf2fe18ee4b064a116973889bc526513e8cdd68c5b5879f20e1183e6399` |
+| `data/processed/obs_crop_production_district.parquet` | 492,182 | 29 | 4,988,584 | `7a17c50ffa5fbb836d6be1db5d24d88d24c554021abe719bcd50ffdbe4e3c627` |
+| `data/processed/obs_gsdp_per_capita_state.parquet` | 140 | 27 | 20,559 | `5f0a25e002120f4245c0d72da63c7ceb054105a4ed1d1bb394b8e1c416b504ea` |
+| `data/processed/obs_imd_district_rainfall_normals.parquet` | 10,897 | 27 | 137,245 | `8a714f9be3e633a0030fbd4137162a7ca4a7ed049fc156e13a93f7674cc85cd8` |
+| `data/processed/obs_imd_subdivision_monthly_rainfall.parquet` | 71,196 | 27 | 732,536 | `274fe27bb2575a43fad6fec6115895ee0d882f43502d47c9072fbbb7055d3ec3` |
+| `data/processed/obs_mandi_daily_prices.parquet` | 49,179 | 30 | 650,677 | `27bce2a9823f652758d76abc2c00454168a7a8567bf9e4ad15c3972153ad8382` |
+| `data/processed/obs_msp_crops.parquet` | 348 | 30 | 21,294 | `a0dc224a0c60fba1e8f0e624e0428015b4fec34febaed7c8613790634c97abad` |
+| `data/processed/obs_ncrb_annual_crime_statistics.parquet` | 24 | 27 | 16,214 | `fa719e3697e95aa8a716d1a101115643a4de69b96933a22f554bd4f4458650a8` |
+| `data/processed/obs_ncrb_violent_crimes_state.parquet` | 111 | 27 | 20,313 | `e9d12ef00912492ed8b159e705bfebb4986746d4d79f92db9541e92b5bc57a9d` |
+| `data/processed/obs_nfhs5_district_indicators.parquet` | 73,528 | 30 | 344,915 | `8d44f06e0ef1c46bc392344bdcc034c93cac0f20e929c027a3b5edfe9ba45afb` |
+| `data/processed/obs_nfhs5_state_factsheet.parquet` | 14,541 | 31 | 90,324 | `93fe35cdd19a4230c22ab30c28153bddce43ff7757417fa9e8a868aa8d3dd629` |
+| `data/processed/obs_plfs_lfpr_urban_state.parquet` | 37 | 27 | 18,898 | `c7d70738ccdf65ec8282fa75343fbe0a9d10f73a70e0d0fd3de162e8eb6809d9` |
+| `data/processed/obs_plfs_state_ur_usual_status.parquet` | 190 | 27 | 20,833 | `0aabdeb6b5b63ab4d6562a7f2b51f52d884579303392df855f94508777878289` |
+| `data/processed/obs_srs_imr_state.parquet` | 185 | 27 | 20,192 | `c4f3fc95ee5eec0bb470a1447abf00c2897be1f48e02565dfe3297b6f5b6d270` |
+| `data/processed/plfs_lfpr_urban_state.parquet` | 37 | 2 | 1,668 | `dee32cd1760d74540d7283aefaa7fbbb35819868722668e68134f1a90038c446` |
+| `data/processed/plfs_state_ur_usual_status.parquet` | 38 | 8 | 6,572 | `b5ad91ebf6c7bae77ac00917dfea97706dc21dcd61b8af8f8e99049b706dde42` |
+| `data/processed/srs_imr_state.parquet` | 37 | 8 | 7,899 | `073999531c0e6bc1a4f372e9bb4231522d6326b315149647369130407ffd1280` |
 
-## Routing splits (`data/splits/kev`, tracked)
+## Routing splits, version 1 (`data/splits/kev`, tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
-| `data\splits\kev\calibration.v1.jsonl` | 300 | - | 819,566 | `82f72d581d27bcd08e87ed5b7ce47045812187568923334edd835a51d022924b` |
-| `data\splits\kev\dev_synthetic.v1.jsonl` | 338 | - | 924,560 | `e33e643719a4b224bc48a9a0f7213bfed03b8ec1af941bac11f9489a03fb27bf` |
-| `data\splits\kev\train.v1.jsonl` | 1,718 | - | 4,699,912 | `fe4e573089c170ed30551e8a98ae02d94b3d6c2f6a112e25b1b1a3f0101988ad` |
+| `data/splits/kev/calibration.v1.jsonl` | 300 | - | 819,266 | `45995818623813e9927071140b2fb7faff08b98980d446b88410327bedf12ccc` |
+| `data/splits/kev/dev_synthetic.v1.jsonl` | 338 | - | 924,222 | `e2f7aebd282e1220d3662864bf62080713e7f7cf93e61c7690a3bbd820f688c0` |
+| `data/splits/kev/train.v1.jsonl` | 1,718 | - | 4,698,194 | `04c24468567c645c9959251866fc6f00f29338235af02e39a217be6df9a0226a` |
+
+## Routing splits, version 2, frozen catalogue (`data/splits/kev`, tracked)
+
+| File | Rows | Columns | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `data/splits/kev/calibration.v2.jsonl` | 322 | - | 1,054,950 | `f1a8fafc64fa829e3fde12375a262366658cec7b9d0faa43af3ce58c4c4b5c2f` |
+| `data/splits/kev/dev_synthetic.v2.jsonl` | 355 | - | 1,172,802 | `3a249faf05ac85c099a45a4c6a0d522cbd17df7918186a80f3edfc7f7db9fac3` |
+| `data/splits/kev/train.v2.jsonl` | 1,876 | - | 6,048,918 | `4829691c1b21b5243185fb308e882e7e490e199bf1a67d649e6eeaf6f29ca427` |
+
+## dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)
+
+| File | Rows | Columns | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `data/labels/dev_human_v1/items.jsonl` | 200 | - | 34,145 | `190f75f034add0d9d6fc8ca9169c82f4d1bd3b121a13d1b28a35a9cc90e23d39` |
+| `data/labels/dev_human_v1/items_rendered.jsonl` | 200 | - | 183,904 | `4b13e28f4b3345eabb967a9cda2f844fe9d1621ba42ab9dd7c558dce38ac4c17` |
 
 ## Text-to-SQL ground truth (`data/ground_truths`, tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
-| `data\ground_truths\text_to_sql_dev.v1.csv` | 63 | 9 | 23,182 | `8b6b6cae770547773b3619acc15a5bc435805d71310f6e5547c0b9134b9b8211` |
-| `data\ground_truths\text_to_sql_ground_truth_100.csv` | 100 | 9 | 36,147 | `4f2d4f4b920e16d2bca75dc0edce5a434bc25eacfeaafcbca1ebc679e518523b` |
-| `data\ground_truths\text_to_sql_test.v1.csv` | 37 | 9 | 13,070 | `f6990aa6f6ed1ff81b54188b8ebcea906a23f485604eec111cc9819fc945102a` |
+| `data/ground_truths/text_to_sql_dev.v1.csv` | 63 | 9 | 23,088 | `b56f691a64f8f67c698d7dea68cc83a14f633e034a395a59ec343a4033589b1b` |
+| `data/ground_truths/text_to_sql_ground_truth_100.csv` | 100 | 9 | 36,012 | `b093fdab96fe7f074061d77bcad73622f57c529194b4b71021792d428a6e9358` |
+| `data/ground_truths/text_to_sql_test.v1.csv` | 37 | 9 | 13,028 | `255ff03526d59b72392a28e4c4d65c2ed7556dcea54ea54b41b1002e23660ce8` |
 
 ## Pipeline release (`data/processed/catalogue.json`)
 
@@ -76,16 +94,17 @@ commit that produced it, so any figure can be traced back and reproduced.
 
 | Dataset | Dataset version | Config | Raw SHA-256 | Code commit | Observation SHA-256 |
 | --- | --- | --- | --- | --- | --- |
-| `cpi_all_india` | `1.0.0+570d0899` | 1.0.0 | `570d0899c81f2ccd5d3fe6ff421b316df084ec5708bdea55f6c93fada5342d09` | `908a9affabb3` | `5e014a7b46ee898125367df9e14af5987bb14adee9fcc9a8ac96349fc7646549` |
-| `crop_production_district` | `1.0.0+c0b2e3b0` | 1.0.0 | `c0b2e3b0fb669c0a3fe88aebd1fe80a58abd4500151688e383df7e9e6fa95985` | `c3fec1b32eb3` | `bd17db7146c9b275c7915e781545be598b55fa8f2740f886115e5380dea5042e` |
-| `gsdp_per_capita_state` | `1.0.0+6d28ac4c` | 1.0.0 | `6d28ac4c1aa8b5c4fd1433ff6a431a04b3a21a24c0eba6517f9f7f3d9a7f2fa7` | `908a9affabb3` | `1bef4065085048636e9646f9c573690a9ea375ced381e3dc1dfbc62636b5669b` |
-| `imd_district_rainfall_normals` | `1.0.0+8f4417fd` | 1.0.0 | `8f4417fd3707c6d0ecdb672330234f9c2d0cb895f00b1e53fb25d6775082ac6f` | `c3fec1b32eb3` | `fcf81ee088c9d177bf98ad6c0f816fd8dfbf8040d66c086b5059913a235a4b05` |
-| `imd_subdivision_monthly_rainfall` | `1.0.0+f655f42e` | 1.0.0 | `f655f42e672001c09fbd68ca14041f7299c76883d7aa9167400a1f963948bbad` | `7c497cf1ab69` | `c4ed1a01b4d66f6554b29370d5039184b63c50b4e32c656bebbf0cd002293f1d` |
-| `mandi_daily_prices` | `1.0.0+6f5bb19d` | 1.0.0 | `6f5bb19d0814247222160ea24df581c982b74ff4608a2486cca5a9d62ad1b73d` | `7c497cf1ab69` | `c0972ff648d47910773cee09e8b93fe04e3e8a059c246a66a9061366a9c612ec` |
-| `msp_crops` | `1.0.0+209586a3` | 1.0.0 | `209586a358cf83d5922c57a0e42e15f6c3458fcde59b2c169eefbaceb6e42154` | `908a9affabb3` | `827b2fe494a846f682d48818276b0e22e51e176739a47c15e361d60494263b1a` |
-| `ncrb_annual_crime_statistics` | `1.0.0+c04a05dd` | 1.0.0 | `c04a05dd3359fe8a024d73126f6abd51a7fc1c3802d68bc527490816f2205512` | `7c497cf1ab69` | `2d20150aaa6ac2f1fd240f8123be5b870286a2a72ed15d8217414d2aeb5033fe` |
-| `nfhs5_district_indicators` | `1.0.0+de06b72f` | 1.0.0 | `de06b72f241fa9734676677a15941b93b890009b1c0f88be655b07e8a853a689` | `7c497cf1ab69` | `1debabb4d79e01beb9d71040e1aa7427a75c579f22f3147679205eec539addcc` |
-| `nfhs5_state_factsheet` | `1.0.0+97ac35bb` | 1.0.0 | `97ac35bb4bbb908617a3fe91701d222db1acc8bf5a07bee88a1a435669c55ff7` | `908a9affabb3` | `1c75010f66220006fe6a4d3eec7fb2429e68eed4860a7c2c138ad6dce9c5e532` |
-| `plfs_lfpr_urban_state` | `1.0.0+3e347b0b` | 1.0.0 | `3e347b0ba51f4864f331f98a358bd556d84e30cc96672a60c59aa34b694352c9` | `908a9affabb3` | `6acb51ea02b1279c0fa472f2607255f661c15a0d27707c3a548688b510f1eb31` |
-| `plfs_state_ur_usual_status` | `1.0.0+1c1b78de` | 1.0.0 | `1c1b78de7d20ff7d75e40701fc3b940f0804c80032ba25bf79a78d1fb030b1a6` | `7c497cf1ab69` | `df5efa7e947821afcd5ba83fec16915f26807a4b130f337b07b5e4cd815ff66c` |
-| `srs_imr_state` | `1.0.0+6cd4d712` | 1.0.0 | `6cd4d7123cb87a7066158de0e29516711bdf7f475c844422a9add3147812fc39` | `908a9affabb3` | `a34c57ab95ae7e701031f1ac3b229a0168680781b81b6f40ae10cd221774e476` |
+| `cpi_all_india` | `1.0.0+5eff4272` | 1.0.0 | `5eff4272f8729dbe973569068d2063ccc05994a0bbead29711e74e8c84f306b1` | `e69082b91668` | `e852acf2fe18ee4b064a116973889bc526513e8cdd68c5b5879f20e1183e6399` |
+| `crop_production_district` | `1.0.0+c0b2e3b0` | 1.0.0 | `c0b2e3b0fb669c0a3fe88aebd1fe80a58abd4500151688e383df7e9e6fa95985` | `e69082b91668` | `7a17c50ffa5fbb836d6be1db5d24d88d24c554021abe719bcd50ffdbe4e3c627` |
+| `gsdp_per_capita_state` | `1.0.0+6d28ac4c` | 1.0.0 | `6d28ac4c1aa8b5c4fd1433ff6a431a04b3a21a24c0eba6517f9f7f3d9a7f2fa7` | `e69082b91668` | `5f0a25e002120f4245c0d72da63c7ceb054105a4ed1d1bb394b8e1c416b504ea` |
+| `imd_district_rainfall_normals` | `1.0.0+18e47de2` | 1.0.0 | `18e47de2a0598600d53f2e6cd0130b518cef9a623ec625d2ec764e512755580b` | `e69082b91668` | `8a714f9be3e633a0030fbd4137162a7ca4a7ed049fc156e13a93f7674cc85cd8` |
+| `imd_subdivision_monthly_rainfall` | `1.0.0+f655f42e` | 1.0.0 | `f655f42e672001c09fbd68ca14041f7299c76883d7aa9167400a1f963948bbad` | `e69082b91668` | `274fe27bb2575a43fad6fec6115895ee0d882f43502d47c9072fbbb7055d3ec3` |
+| `mandi_daily_prices` | `1.0.0+6f5bb19d` | 1.0.0 | `6f5bb19d0814247222160ea24df581c982b74ff4608a2486cca5a9d62ad1b73d` | `e69082b91668` | `27bce2a9823f652758d76abc2c00454168a7a8567bf9e4ad15c3972153ad8382` |
+| `msp_crops` | `1.0.0+209586a3` | 1.0.0 | `209586a358cf83d5922c57a0e42e15f6c3458fcde59b2c169eefbaceb6e42154` | `e69082b91668` | `a0dc224a0c60fba1e8f0e624e0428015b4fec34febaed7c8613790634c97abad` |
+| `ncrb_annual_crime_statistics` | `1.0.0+c04a05dd` | 1.0.0 | `c04a05dd3359fe8a024d73126f6abd51a7fc1c3802d68bc527490816f2205512` | `e69082b91668` | `fa719e3697e95aa8a716d1a101115643a4de69b96933a22f554bd4f4458650a8` |
+| `ncrb_violent_crimes_state` | `1.0.0+a106fe32` | 1.0.0 | `a106fe328b5f08b571755f540a6887cfd75ea83af509615a36b3b1828d79aa00` | `e69082b91668` | `e9d12ef00912492ed8b159e705bfebb4986746d4d79f92db9541e92b5bc57a9d` |
+| `nfhs5_district_indicators` | `1.0.1+de06b72f` | 1.0.1 | `de06b72f241fa9734676677a15941b93b890009b1c0f88be655b07e8a853a689` | `e69082b91668` | `8d44f06e0ef1c46bc392344bdcc034c93cac0f20e929c027a3b5edfe9ba45afb` |
+| `nfhs5_state_factsheet` | `1.1.2+03e7cb0f` | 1.1.2 | `03e7cb0fff3688a03483372375cda18294433272fae3e8cf8421c6f5ffb1e3d5` | `e69082b91668` | `93fe35cdd19a4230c22ab30c28153bddce43ff7757417fa9e8a868aa8d3dd629` |
+| `plfs_lfpr_urban_state` | `1.0.0+3e347b0b` | 1.0.0 | `3e347b0ba51f4864f331f98a358bd556d84e30cc96672a60c59aa34b694352c9` | `e69082b91668` | `c7d70738ccdf65ec8282fa75343fbe0a9d10f73a70e0d0fd3de162e8eb6809d9` |
+| `plfs_state_ur_usual_status` | `1.0.0+1c1b78de` | 1.0.0 | `1c1b78de7d20ff7d75e40701fc3b940f0804c80032ba25bf79a78d1fb030b1a6` | `e69082b91668` | `0aabdeb6b5b63ab4d6562a7f2b51f52d884579303392df855f94508777878289` |
+| `srs_imr_state` | `1.0.0+6cd4d712` | 1.0.0 | `6cd4d7123cb87a7066158de0e29516711bdf7f475c844422a9add3147812fc39` | `e69082b91668` | `c4f3fc95ee5eec0bb470a1447abf00c2897be1f48e02565dfe3297b6f5b6d270` |
