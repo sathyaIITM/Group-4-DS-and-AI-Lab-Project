@@ -40,6 +40,8 @@ escalation:
 
 gate:
   margin_points: 3             # fine-tuned Kev accuracy may trail Jev's by at most 3 points
+  decides: point_estimate      # which rule decides adoption (fixed 2026-11-17, before dev_human);
+                               # the non-inferiority result (lower 95% bound) is reported beside it
   ece_max: 0.10                # after temperature scaling, 10 equal-width bins
   error_budget: 0.05           # for the share handled by Kev in the cascade
   evaluation_set: dev_human

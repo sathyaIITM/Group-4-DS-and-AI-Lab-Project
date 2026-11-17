@@ -89,3 +89,22 @@ def to_laya_row(record: dict[str, Any], decision: str = "domain") -> dict[str, A
         "expected": {decision: label},
         "_meta": {"id": record["_meta"]["id"]},
     }
+
+
+def dev_human_record(row: dict[str, Any]) -> dict[str, Any]:
+    """A frozen dev_human row (`{id, state, tool, domain, label_source}`, written by
+    `scripts/label_agreement.py freeze`) as a Kev record with both routing questions in their
+    canonical text, so every backend is scored on identical requests."""
+    questions = {}
+    for decision in ("tool", "domain"):
+        instructions, criteria = QUESTIONS[decision]
+        if row[decision] not in criteria:
+            raise ValueError(f"{row['id']}: {decision} label {row[decision]!r} is not an option")
+        questions[decision] = {
+            "type": "choice",
+            "instructions": instructions,
+            "criteria": criteria,
+            "label": row[decision],
+        }
+    meta = {"id": row["id"], "label_source": row.get("label_source", "human"), "split": "dev_human"}
+    return {"state": row["state"], "questions": questions, "_meta": meta}

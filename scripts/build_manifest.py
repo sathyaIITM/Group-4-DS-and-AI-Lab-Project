@@ -28,6 +28,13 @@ GROUPS = {
     "Routing splits, version 2, frozen catalogue (`data/splits/kev`, tracked)": sorted(
         (DATA_DIR / "splits" / "kev").glob("*.v2.jsonl")
     ),
+    "Domain-only Kev files, version 2 (`data/splits/kev_domain`, not tracked; "
+    "`python scripts/build_domain_phase1.py --version v2 --laya`)": sorted(
+        (DATA_DIR / "splits" / "kev_domain").glob("*.v2.jsonl")
+    ),
+    "Domain-only Laya rows, version 2 (`data/splits/laya_domain`, not tracked; same command)": (
+        sorted((DATA_DIR / "splits" / "laya_domain").glob("*.v2.jsonl"))
+    ),
     "dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)": sorted(
         p for p in (DATA_DIR / "labels" / "dev_human_v1").glob("items*.jsonl")
     ),

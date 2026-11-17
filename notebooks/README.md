@@ -4,17 +4,12 @@ Exploration and profiling only. Anything the pipeline depends on moves into
 `src/analyst` with tests. Clear outputs before committing, and keep data
 paths relative to `data/`.
 
-Numbered by stage, one notebook per stage:
-
-| Notebook | Stage |
+| Notebook | Purpose |
 | --- | --- |
-| `01_EDA.ipynb` | Exploratory analysis of the candidate and frozen tables |
-| `02_Preprocessing.ipynb` | Cleaning steps, comparability checks, catalogue construction |
-| `03_Model_Experiments.ipynb` | Kev fine-tuning runs, calibration fits, retrieval experiments |
-| `04_Evaluation.ipynb` | Version-ladder and ablation runs (E1–E6), result tables |
+| `eda.ipynb` | Exploratory analysis of the catalogue tables |
+| `kev_train_t4.ipynb` | Kev-0.8B domain fine-tuning on a Colab or Kaggle T4 (smoke and planned runs) |
 
-None exist yet; the catalogue and its EDA land in Milestone 2.
-
-Fine-tuning runs on a Colab T4 (about 15 GB, fp16 only — the T4 does not
-support bf16). Keep a copy of each training notebook here with its outputs
-cleared, and record the run configuration in `outputs/`.
+Fine-tuning uses fp32 on the T4: the T4 has no bf16, and `kev.train` offers fp32 or bf16 only
+(no fp16). The runs, the procedure and the records are fixed in
+`docs/specs/kev_training_protocol.md`. Commit the training notebook with its outputs cleared;
+each run's configuration and records are kept in `outputs/reports/kev_runs/<run id>/`.

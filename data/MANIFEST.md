@@ -72,6 +72,26 @@ Produced by `scripts/build_manifest.py` on 2026-11-17. Recompute after regenerat
 | `data/splits/kev/dev_synthetic.v2.jsonl` | 355 | - | 1,172,802 | `3a249faf05ac85c099a45a4c6a0d522cbd17df7918186a80f3edfc7f7db9fac3` |
 | `data/splits/kev/train.v2.jsonl` | 1,876 | - | 6,048,918 | `4829691c1b21b5243185fb308e882e7e490e199bf1a67d649e6eeaf6f29ca427` |
 
+## Domain-only Kev files, version 2 (`data/splits/kev_domain`, not tracked; `python scripts/build_domain_phase1.py --version v2 --laya`)
+
+| File | Rows | Columns | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `data/splits/kev_domain/calibration.v2.jsonl` | 322 | - | 645,896 | `8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba` |
+| `data/splits/kev_domain/dev_synthetic.v2.jsonl` | 355 | - | 721,987 | `2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17` |
+| `data/splits/kev_domain/overfit32.v2.jsonl` | 32 | - | 64,170 | `fafb70ccd0201b351efa0fd3608f43f2e3ac5e83fdb2b91a80236fd84f72eaee` |
+| `data/splits/kev_domain/train.v2.jsonl` | 1,876 | - | 3,666,000 | `bd762f0f56dde25df964eadcaf2cd4a95a939ff059e3d2aa15daccfd7e79a54f` |
+| `data/splits/kev_domain/train250.v2.jsonl` | 250 | - | 491,693 | `f8aa13685b2e6a0606eea0dc7fc10dba588bd568253d5ef84dc7d2517c9717e9` |
+
+## Domain-only Laya rows, version 2 (`data/splits/laya_domain`, not tracked; same command)
+
+| File | Rows | Columns | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `data/splits/laya_domain/calibration.v2.jsonl` | 322 | - | 511,837 | `9e82c4742f8fef5ec94463f07b9b36a572cb4ddccf6984f213e5c7ac9e5f34b8` |
+| `data/splits/laya_domain/dev_synthetic.v2.jsonl` | 355 | - | 570,015 | `de2fd4b25a28a89e1c1fbbf6ad18a2dc93728662624b2689290da6d33eaf1016` |
+| `data/splits/laya_domain/overfit32.v2.jsonl` | 32 | - | 51,045 | `a7a54b1b9cbc72ecd2863a727079b09dbd6bb40c897dc6bbc2a95e759d0ddd1c` |
+| `data/splits/laya_domain/train.v2.jsonl` | 1,876 | - | 2,905,996 | `5234bcedfb1512243c8ec1c10203ce3064db1ad0458a8dee77765cc45cfe5892` |
+| `data/splits/laya_domain/train250.v2.jsonl` | 250 | - | 389,111 | `60b4b976bc1f195a52a59320980ebb2bc8f43105ad7c45622e74f285ed0508c7` |
+
 ## dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
