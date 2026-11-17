@@ -1,0 +1,200 @@
+{"id": "dh-001", "message": "Unemployment by current weekly status in Delhi, 2020-21", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-002", "message": "WPI inflation in October 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-003", "message": "numbers for Bihar pls", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-004", "message": "Compare Assam with Tripura.", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-005", "message": "Do you hold any yield-per-hectare data for crops?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-006", "message": "Turn this into a horizontal bar chart", "context": {"has_result": true, "prior_turn": "per capita GSDP of all States, 2022-23; a 28-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-007", "message": "Now do the same for Tamil Nadu", "context": {"has_result": true, "prior_turn": "the unemployment rate in Kerala, 2017-18 to 2021-22; a 5-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-008", "message": "Does per capita GSDP adjust for inflation, or is it at current prices?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-009", "message": "Add data labels", "context": {"has_result": true, "prior_turn": "the infant mortality rate in Assam, 2015 to 2019; a 5-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-010", "message": "Is the NCRB state table violent crime only or all crime?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-011", "message": "Show me what you have on unemployment, and also other sources for it", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-012", "message": "Has infant mortality in Assam come down since 2015?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-013", "message": "Does this count cases or victims?", "context": {"has_result": true, "prior_turn": "violent crimes in Rajasthan, 2022; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-014", "message": "Anything in your catalogue about how many vehicles get registered each year?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-015", "message": "Cheapest onion among Maharashtra markets in your latest data?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-016", "message": "Got any state income or SDP numbers somewhere in your sources?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-017", "message": "List datasets about health spending", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-018", "message": "Unemployment in Gujarat for calendar year 2019 (Jan to Dec)", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-019", "message": "By how much did the paddy MSP go up between 2015-16 and 2024-25?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-020", "message": "Wheat MSP for 2022-23 and the CPI cereals index for March 2023, please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-021", "message": "Is it higher in the north or the south?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-022", "message": "Which state is the best?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-023", "message": "Daily wage for casual labourers in Tamil Nadu?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-024", "message": "District crop production in Andhra Pradesh for 2019-20", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-025", "message": "Group these by decade", "context": {"has_result": true, "prior_turn": "annual rainfall in Vidarbha, 1990 to 2010; a 21-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-026", "message": "Datasets with both rainfall and crop output?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-027", "message": "Which Kerala markets are in the mandi price data?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-028", "message": "Which years does the IMR table cover?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-029", "message": "Which district grew the most cotton in 2014-15?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-030", "message": "School enrolment ratio in Bihar", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-031", "message": "Write a poem on Indian farmers", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-032", "message": "Stunting among under-five children in Jharkhand, NFHS-5 figure?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-033", "message": "Can I see that as a graph?", "context": {"has_result": true, "prior_turn": "rice production in Nashik district, 2005-06 to 2015-16; an 11-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-034", "message": "IMR for girls in Kerala, 2018", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-035", "message": "What's the modal price of tomato at Kolar mandi?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-036", "message": "Is this the announced MSP or the procurement price?", "context": {"has_result": true, "prior_turn": "the MSP of wheat, 2023-24; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-037", "message": "line graph please", "context": {"has_result": true, "prior_turn": "the total cognizable crime rate in India, 2022 to 2024; a 3-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-038", "message": "Which states had urban labour force participation above 55 per cent in 2023-24?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-039", "message": "Did violent crime in Kerala go up between 2021 and 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-040", "message": "Show it as bars with the All India value highlighted", "context": {"has_result": true, "prior_turn": "urban LFPR of all States and All India, 2023-24; a 37-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-041", "message": "and for Meghalaya?", "context": {"has_result": true, "prior_turn": "the infant mortality rate in Assam, 2015 to 2019; a 5-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-042", "message": "Overlay unemployment on this chart", "context": {"has_result": true, "prior_turn": "annual rainfall in Kerala, 2000 to 2017; a 18-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-043", "message": "Did unemployment in Goa actually fall between 2017-18 and 2021-22?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-044", "message": "Per capita GSDP in 2022-23", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-045", "message": "Which definition of unemployment is this?", "context": {"has_result": true, "prior_turn": "the unemployment rate in Bihar, 2020-21; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-046", "message": "Is 2015-16 really the latest year, or did you pick it?", "context": {"has_result": true, "prior_turn": "rice production in Nashik district, 2015-16; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-047", "message": "Rice production in 2011-12?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-048", "message": "IMR in Odisha for 2021", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-049", "message": "How much rain did Karnataka get in 2010?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-050", "message": "Normal rainfall for Bangalore?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-051", "message": "Does the crop production table have yield?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-052", "message": "How did unemployment change during the lockdown?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-053", "message": "CPI combined index for food and beverages in March 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-054", "message": "Area under sugarcane in Muzaffarnagar, 2012-13?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-055", "message": "Is joblessness high in Haryana?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-056", "message": "Which sub-division was driest in the 2002 monsoon season?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-057", "message": "IMR per 1,000 what exactly?", "context": {"has_result": true, "prior_turn": "the infant mortality rate in Madhya Pradesh, 2019; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-058", "message": "Unemployment rate in Nagpur district, 2019-20", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-059", "message": "bar chart banao", "context": {"has_result": true, "prior_turn": "monsoon rainfall of all sub-divisions in 2002; a 36-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-060", "message": "Is this adjusted for inflation?", "context": {"has_result": true, "prior_turn": "per capita GSDP of Karnataka, 2022-23; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-061", "message": "Who publishes the unemployment numbers you use?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-062", "message": "Rajasthan mein 2022 mein kitne violent crime cases darj hue?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-063", "message": "Normal annual rainfall for Pune district?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-064", "message": "Why does it say Haryana Delhi & Chandigarh?", "context": {"has_result": true, "prior_turn": "annual rainfall for Delhi, 2016; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-065", "message": "Road accident deaths in Tamil Nadu in 2022", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-066", "message": "What does JJAS mean in the rainfall data?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-067", "message": "what's the source for that figure?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-068", "message": "Kya aapke paas literacy ka data hai?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-069", "message": "Which state recorded the most violent crimes in 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-070", "message": "Can you order the bars, tallest first?", "context": {"has_result": true, "prior_turn": "the infant mortality rate of all States, 2019; a 36-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-071", "message": "MGNREGA person-days in Rajasthan, 2021-22", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-072", "message": "Why is cotton in bales and not tonnes?", "context": {"has_result": true, "prior_turn": "cotton production by district, 2014-15; a 300-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-073", "message": "Average modal price of potato across UP markets in the mandi data", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-074", "message": "Rainfall figures for the 1999 monsoon?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-075", "message": "hey quick one - Maharashtra per capita GSDP 2020-21?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-076", "message": "Put both on one chart", "context": {"has_result": true, "prior_turn": "Bihar's unemployment rate 2018-19 and infant mortality rate 2018; a 2-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-077", "message": "What did the CPI do during demonetisation?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-078", "message": "Maternal mortality ratio of Assam?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-079", "message": "Is this usual status or weekly status?", "context": {"has_result": true, "prior_turn": "urban LFPR in Tamil Nadu, 2023-24; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-080", "message": "Do you have anything on inflation?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-081", "message": "Give me the top ten.", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-082", "message": "Make it a grouped bar chart by year", "context": {"has_result": true, "prior_turn": "per capita GSDP of five States, 2019-20 to 2023-24; a 25-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-083", "message": "Show me the SQL you ran.", "context": {"has_result": true, "prior_turn": "the total cognizable crime rate in India, 2024; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-084", "message": "Unemployment in Uttarakhand?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-085", "message": "Show me the trend from 2015 to 2019.", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-086", "message": "Highlight the best one", "context": {"has_result": true, "prior_turn": "annual rainfall of all sub-divisions in 2005; a 36-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-087", "message": "how did you calculate this?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-088", "message": "Which sources publish wage data for farm labourers?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-089", "message": "What base year does the CPI series use?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-090", "message": "Kutch district - normal monsoon rainfall, June to September?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-091", "message": "What does CWS mean in the LFPR table?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-092", "message": "Will it rain in Mumbai tomorrow?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-093", "message": "Per capita GSDP of Karnataka in 2022-23?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-094", "message": "Which year does the hospital beds table start from?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-095", "message": "Kerala unemployment for FY 2020-21, April to March", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-096", "message": "Rice production in Nashik district in 2010-11", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-097", "message": "What period do the district rainfall normals refer to?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-098", "message": "Kerala: urban LFPR and per capita GSDP, both for 2023-24", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-099", "message": "Mark the wettest and driest years", "context": {"has_result": true, "prior_turn": "annual rainfall in Vidarbha, 1990 to 2017; a 28-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-100", "message": "visualise the top 10", "context": {"has_result": true, "prior_turn": "violent crimes by State, 2023; a 37-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-101", "message": "What about 2019?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-102", "message": "Any caveats I should mention in my story?", "context": {"has_result": true, "prior_turn": "anaemia among women in Kerala, NFHS-5; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-103", "message": "Sort them highest first", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-104", "message": "How has the kharif paddy MSP moved since 2013?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-105", "message": "Are the NFHS-5 state figures split by urban and rural?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-106", "message": "IMR, India, 2017", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-107", "message": "MSP of wheat for 2023-24?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-108", "message": "Which date are these prices from?", "context": {"has_result": true, "prior_turn": "modal tomato prices in Karnataka markets on the latest date; a 41-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-109", "message": "What years does the fertiliser table cover?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-110", "message": "Can you help me fix a pandas merge error in my code?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-111", "message": "Groundwater level in Punjab in 2020?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-112", "message": "Kerala's jobless rate in 2019 - how high was it?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-113", "message": "District-level stunting figure please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-114", "message": "Extend that to Uttar Pradesh", "context": {"has_result": true, "prior_turn": "violent crimes in Bihar, 2021 to 2023; a 3-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-115", "message": "MSP in 2021-22?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-116", "message": "Female unemployment in UP in 2018-19", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-117", "message": "Total rainfall in Telangana for agricultural year 2014-15", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-118", "message": "Source of these figures?", "context": {"has_result": true, "prior_turn": "the unemployment rate in Kerala, 2017-18 to 2021-22; a 5-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-119", "message": "Delhi rainfall in 2016, annual total please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-120", "message": "unemployment rate in 2019", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-121", "message": "Plot this as a line chart", "context": {"has_result": true, "prior_turn": "the unemployment rate in Kerala, 2017-18 to 2021-22; a 5-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-122", "message": "Is there data on mandi vegetable prices and on MSP?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-123", "message": "Compare the wheat MSP with mandi wheat prices in 2020", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-124", "message": "use a log scale", "context": {"has_result": true, "prior_turn": "the MSP of paddy and wheat, 2013-14 to 2024-25; a 24-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-125", "message": "CPI inflation for Tamil Nadu in 2023", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-126", "message": "In what unit is cotton production reported?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-127", "message": "What was retail inflation in December 2022 compared with a year earlier?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-128", "message": "What is Wayanad's normal June rainfall?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-129", "message": "Does the violent crime table give rates per lakh population?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-130", "message": "Out-of-pocket spend per delivery in a public facility, Patna district?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-131", "message": "Unemployment rate in Kerala in 2023-24", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-132", "message": "Kerala unemployment 2019-20 - and write a two-line blurb for my story", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-133", "message": "Normals over which years?", "context": {"has_result": true, "prior_turn": "monthly normal rainfall in Pune district; a 12-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-134", "message": "Fertiliser use per hectare in Haryana", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-135", "message": "What other sources besides PLFS report joblessness?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-136", "message": "What's the base year of this index?", "context": {"has_result": true, "prior_turn": "the CPI general index, urban, December 2023; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-137", "message": "Health spending in Maharashtra?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-138", "message": "Which state had the lowest unemployment as per PLFS in 2021-22?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-139", "message": "Give me Bihar's unemployment rate and its infant mortality rate for 2018", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-140", "message": "Any data on crime against women?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-141", "message": "Plot both side by side", "context": {"has_result": true, "prior_turn": "anaemia among women in Kerala and Tamil Nadu, NFHS-5; a 2-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-142", "message": "Rural LFPR in Bihar 2023-24", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-143", "message": "What was India's GDP growth last quarter?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-144", "message": "Change the title to Joblessness in Kerala", "context": {"has_result": true, "prior_turn": "the unemployment rate in Kerala, 2017-18 to 2021-22; a 5-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-145", "message": "Mandi table mein modal price ka matlab kya hota hai?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-146", "message": "What's the unit in the IMR table, and what was Punjab's IMR in 2016?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-147", "message": "CPI clothing, rural vs urban, for 2019?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-148", "message": "What share of women in Kerala are anaemic according to NFHS-5?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-149", "message": "Konkan & Goa monsoon 2005 mein kitni barish hui?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-150", "message": "Lowest figure among the districts of Kerala?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-151", "message": "Bihar ka unemployment rate 2020-21 mein kitna tha?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-152", "message": "Chart it", "context": {"has_result": true, "prior_turn": "the CPI food and beverages index, combined, January to December 2022; a 12-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-153", "message": "Which sources are these two numbers from?", "context": {"has_result": true, "prior_turn": "Bihar's unemployment rate 2018-19 and infant mortality rate 2018; a 2-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-154", "message": "Does the urban LFPR table include an All India figure?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-155", "message": "Add paddy to this chart", "context": {"has_result": true, "prior_turn": "the MSP of wheat, 2013-14 to 2024-25; a 12-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-156", "message": "Is Leh district in the rainfall normals table?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-157", "message": "Which states are missing from the GSDP table?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-158", "message": "Modal price of onion?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-159", "message": "Does the NFHS district file cover Ladakh?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-160", "message": "Youth unemployment rate in Punjab, 2019-20?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-161", "message": "Tur MSP 2020-21 kya tha?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-162", "message": "How wet was the 1998 monsoon in Saurashtra & Kutch?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-163", "message": "Where can I find district-level rainfall data?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-164", "message": "India's unemployment rate - latest year you have?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-165", "message": "Is there any dataset on groundwater depth?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-166", "message": "Crop production in Ludhiana, 2009-10", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-167", "message": "Do you have hospital-level data?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-168", "message": "How reliable is this district figure - what's the sample?", "context": {"has_result": true, "prior_turn": "stunting among children under five in Purnia district, NFHS-5; a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-169", "message": "State with the best per capita GSDP in 2021-22?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-170", "message": "Can you repeat that for Jharkhand?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-171", "message": "Show the monthly normals as columns", "context": {"has_result": true, "prior_turn": "monthly normal rainfall in Pune district; a 12-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-172", "message": "And the national figure?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-173", "message": "Monthly unemployment in Delhi for March 2020", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-174", "message": "kitna tha 2021 mein?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-175", "message": "Plot violent crime against infant mortality by state", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-176", "message": "Make the line red and label each year", "context": {"has_result": true, "prior_turn": "the MSP of wheat, 2013-14 to 2024-25; a 12-row result table was returned.", "previous_tool": "make_chart"}}
+{"id": "dh-177", "message": "Why three numbers instead of one for Karnataka?", "context": {"has_result": true, "prior_turn": "rainfall in Karnataka, 2010, by sub-division; a 3-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-178", "message": "Is there data on child malnutrition?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-179", "message": "Violent crimes against women in Assam in 2022", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-180", "message": "Hospital beds per lakh people in Kerala", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-181", "message": "Which crops are covered in the MSP list?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-182", "message": "IMR of Madhya Pradesh in 2019?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-183", "message": "Odisha rainfall 2003", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-184", "message": "Share of IPC/BNS crimes in total cognizable crimes, 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-185", "message": "thanks, that's all for now", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-186", "message": "How much rain did Vidarbha receive in July 2012?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-187", "message": "chart these two together", "context": {"has_result": true, "prior_turn": "the wheat MSP for 2022-23 and the CPI cereals index for March 2023; a 2-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-188", "message": "Show the 2019-20 values as well", "context": {"has_result": true, "prior_turn": "per capita GSDP of all States, 2022-23; a 28-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-189", "message": "CPI general index, urban, for the latest month", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-190", "message": "How did you compute the percentage rise?", "context": {"has_result": true, "prior_turn": "the paddy MSP, 2015-16 and 2024-25, and the change between them; a 2-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-191", "message": "make a quick chart of this", "context": {"has_result": true, "prior_turn": "modal tomato prices in Karnataka markets on the latest date; a 41-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-192", "message": "Urban LFPR in Tamil Nadu for 2023-24?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-193", "message": "Did bad monsoons push up joblessness in Marathwada? use your data", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-194", "message": "Which district of UP has the lowest share of institutional births in NFHS-5?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-195", "message": "How many tractors were sold in Punjab in 2023?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-196", "message": "What's the normal rainfall in August?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-197", "message": "Why did you give me 2019-20 when I asked about 2019?", "context": {"has_result": true, "prior_turn": "the unemployment rate in Kerala for 2019 (survey year 2019-20 used); a 1-row result table was returned.", "previous_tool": "run_sql"}}
+{"id": "dh-198", "message": "How many people were unemployed in India in 2020-21, in lakh?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-199", "message": "Rainfall in Kerala during the August 2018 floods", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "dh-200", "message": "Total cognizable crime rate in India for 2024", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
