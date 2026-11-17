@@ -257,10 +257,8 @@ def test_a_quarter_table_without_a_quarter_map_is_refused() -> None:
 
 # --- Months as rows --------------------------------------------------------------------------
 
-MONTHS = (
-    QUARTERS_BASE.replace('quarter = "period_quarter"', 'month = "period_month"').replace(
-        'type = "quarter"', 'type = "month"\nmonth_map = { "Marcrh" = 3 }'
-    )
+MONTHS = QUARTERS_BASE.replace('quarter = "period_quarter"', 'month = "period_month"').replace(
+    'type = "quarter"', 'type = "month"\nmonth_map = { "Marcrh" = 3 }'
 )
 
 
@@ -300,6 +298,97 @@ def test_a_month_table_without_a_month_column_is_refused() -> None:
     cfg = config_from_toml(MONTHS.replace('month = "period_month"\n', ""))
     frame = month_frame(["2019"], ["April"]).drop(columns="month")
     with pytest.raises(ValueError, match="period_month"):
+        run_config(cfg, frame, approved(frame))
+
+
+# --- A unit that depends on the row ---------------------------------------------------------
+
+UNITS_BY_CROP = """
+[dataset]
+id = "t_crops"
+domain = "agriculture"
+title = "t"
+source_name = "s"
+source_table = "s"
+publisher = "p"
+raw_file = "x.csv"
+config_version = "0.1.0"
+retrieved = "2026-11-17"
+
+[columns]
+state = "geo_state"
+year = "period_year"
+crop = "category:crop"
+
+[values]
+mode = "indicators"
+
+[values.columns.production]
+id = "crop_production"
+unit = "tonne"
+
+[[values.columns.production.overrides]]
+column = "crop"
+values = ["Cotton(lint)"]
+id = "crop_production_bales_170kg"
+unit = "bale_170kg"
+
+[period]
+type = "survey_year"
+start_month = 7
+
+[geo]
+level = "state"
+vintage = "t"
+state_reference = "states"
+
+[view]
+mode = "rows"
+table = "t_crops"
+
+[view.columns]
+state = "geo_name"
+"""
+
+
+def crop_frame(crops: list[str]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "state": ["Kerala"] * len(crops),
+            "year": ["2000"] * len(crops),
+            "crop": crops,
+            "production": [str(10 * (i + 1)) for i in range(len(crops))],
+        },
+        dtype="string",
+    )
+
+
+def test_an_override_gives_listed_rows_their_own_indicator_and_unit() -> None:
+    frame = crop_frame(["Rice", "Cotton(lint)", "Wheat"])
+    result = run_config(config_from_toml(UNITS_BY_CROP), frame, approved(frame))
+    assert not result.blocked, result.review
+    got = {r.crop: (r.indicator_id, r.unit) for r in result.obs.itertuples()}
+    assert got == {
+        "Rice": ("crop_production", "tonne"),
+        "Cotton(lint)": ("crop_production_bales_170kg", "bale_170kg"),
+        "Wheat": ("crop_production", "tonne"),
+    }
+    # One unit per indicator, as the catalogue records it.
+    assert (result.obs.groupby("indicator_id")["unit"].nunique() == 1).all()
+    assert "override_value_missing" not in kinds(result)
+
+
+def test_an_override_value_not_in_the_table_is_reported() -> None:
+    frame = crop_frame(["Rice", "Wheat"])
+    result = run_config(config_from_toml(UNITS_BY_CROP), frame, approved(frame))
+    assert "override_value_missing" in kinds(result, "warn")
+    assert set(result.obs["indicator_id"]) == {"crop_production"}
+
+
+def test_an_override_naming_an_absent_column_is_refused() -> None:
+    cfg = config_from_toml(UNITS_BY_CROP.replace('column = "crop"', 'column = "variety"'))
+    frame = crop_frame(["Rice"])
+    with pytest.raises(ValueError, match="variety"):
         run_config(cfg, frame, approved(frame))
 
 

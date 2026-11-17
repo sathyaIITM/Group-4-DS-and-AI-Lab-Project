@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from analyst.data import ops
-from analyst.data.config import Check, SourceConfig
+from analyst.data.config import Check, IndicatorOverride, SourceConfig
 from analyst.data.contract import (
     FLAG_RANK,
     OBS_HEAD,
@@ -44,6 +44,7 @@ class ValueColumn:
     indicator_label: str
     unit: str
     order: int
+    overrides: list[IndicatorOverride] = field(default_factory=list)
 
 
 @dataclass
@@ -189,6 +190,7 @@ def value_columns(config: SourceConfig, df: pd.DataFrame) -> list[ValueColumn]:
                     indicator_label=spec.label or header,
                     unit=spec.unit,
                     order=order,
+                    overrides=spec.overrides,
                 )
             )
         elif values.remaining and header not in roles:
@@ -726,6 +728,28 @@ def run_source(
             piece[name] = series
         piece["value"] = wide[vcol.key]
         piece["unit"] = vcol.unit
+        for override in vcol.overrides:
+            if override.column not in frame.columns:
+                msg = f"override {override.id!r} names the column {override.column!r}, "
+                msg += "which is not in the table"
+                raise ValueError(msg)
+            hit = frame[override.column].isin(override.values)
+            piece.loc[hit, "indicator_id"] = override.id
+            piece.loc[hit, "indicator_label_source"] = override.label or override.id
+            piece.loc[hit, "unit"] = override.unit
+            absent = sorted(set(override.values) - set(frame[override.column].dropna()))
+            if absent:
+                review.append(
+                    ReviewItem(
+                        dataset_id=dataset.id,
+                        severity="warn",
+                        kind="override_value_missing",
+                        detail=f"override {override.id!r} of {vcol.header!r} names {absent}, "
+                        f"which are not in {override.column!r}",
+                        count=len(absent),
+                        suggestion="correct the values of the override or remove them",
+                    )
+                )
         piece["value_raw"] = frame[vcol.header]
         piece["quality_flag"] = base_rank[vcol.key].map(RANK_FLAG)
         piece["rule_ids"] = rule_wide[vcol.key]

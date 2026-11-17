@@ -52,10 +52,26 @@ class ReadSection(BaseModel):
     dedupe_exact: bool = False
 
 
+class IndicatorOverride(BaseModel):
+    """Rows whose category column holds one of `values` get another indicator and unit.
+
+    For a value column whose unit depends on the row, such as production in tonnes for most
+    crops and in bales for cotton: each unit becomes its own indicator, so that one indicator
+    always has one unit.
+    """
+
+    column: str  # source header of a column given a category role in [columns]
+    values: list[str]
+    id: str
+    label: str | None = None
+    unit: str = "unknown"
+
+
 class IndicatorSpec(BaseModel):
     id: str
     label: str | None = None
     unit: str = "unknown"
+    overrides: list[IndicatorOverride] = Field(default_factory=list)
 
 
 class PeriodSpec(BaseModel):

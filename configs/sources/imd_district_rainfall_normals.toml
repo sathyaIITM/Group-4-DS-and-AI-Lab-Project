@@ -157,4 +157,4 @@ columns = ["geo_state", "geo_district", "indicator_id"]
 [view]
 mode = "pivot_indicator"
 table = "imd_district_rainfall_normals"
-columns = { state = "geo_name_source", district = "geo_district_source" }
+columns = { state = "geo_state", district = "geo_district_source" }
