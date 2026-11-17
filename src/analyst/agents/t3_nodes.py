@@ -305,7 +305,33 @@ def live_t3_nodes(version: str) -> dict[str, NodeFn]:
     """
     client = LlmClient.from_config()
     config = RouterConfig.from_files(version)
-    return make_t3_nodes(T3Dependencies(client, config, Backends(llm=client)))
+    from pathlib import Path
+
+    from analyst.agents.context import _obs, published_catalogue
+    from analyst.agents.tool_nodes import ToolNodeDependencies, make_tool_nodes
+    from analyst.tools.sql_runner import ReadOnlyDatabase
+
+    def database_for(dataset_id: str) -> ReadOnlyDatabase:
+        if not dataset_id.isidentifier() or dataset_id.lower() != dataset_id:
+            raise ValueError("invalid dataset identifier")
+        return ReadOnlyDatabase({f"obs_{dataset_id}": _obs(dataset_id)})
+
+    refs_dir = Path("configs/reference")
+    tool_nodes = make_tool_nodes(
+        ToolNodeDependencies(
+            catalogue=published_catalogue(),
+            refs={
+                "imd_subdivisions": refs_dir / "imd_subdivisions.csv",
+                "place_aliases": refs_dir / "place_aliases.csv",
+                "subdivision_aliases": refs_dir / "subdivision_aliases.csv",
+            },
+            database_for=database_for,
+        )
+    )
+    return {
+        **make_t3_nodes(T3Dependencies(client, config, Backends(llm=client))),
+        **tool_nodes,
+    }
 
 
 __all__ = ["LlmCallRecord", "T3Dependencies", "live_t3_nodes", "make_t3_nodes"]

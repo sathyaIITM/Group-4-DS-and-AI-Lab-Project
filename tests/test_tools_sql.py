@@ -24,6 +24,16 @@ def test_select_returns_rows(database: ReadOnlyDatabase) -> None:
     assert rows == [("Kerala",)]
 
 
+def test_check_columns_and_resource_caps(database: ReadOnlyDatabase) -> None:
+    database.check_columns("SELECT state FROM rain")
+    with pytest.raises(SqlRejectedError, match="column or query validation"):
+        database.check_columns("SELECT missing_column FROM rain")
+    assert database._con.execute("SELECT current_setting('threads')").fetchone()[0] == 1
+    memory_limit = database._con.execute("SELECT current_setting('memory_limit')").fetchone()[0]
+    amount, unit = memory_limit.split()
+    assert float(amount) <= (1024 if unit == "MiB" else 1)
+
+
 def test_cte_and_union_are_allowed() -> None:
     check_sql("WITH a AS (SELECT 1 AS x) SELECT x FROM a", TABLES)
     check_sql("SELECT 1 UNION ALL SELECT 2", TABLES)
