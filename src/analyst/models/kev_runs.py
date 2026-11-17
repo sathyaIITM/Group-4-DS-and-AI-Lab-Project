@@ -24,7 +24,6 @@ import argparse
 import hashlib
 import json
 import re
-import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -47,6 +46,13 @@ RECORD_FILES = (
 )
 WEIGHT_FILES = ("adapter_model.safetensors", "head.pt")
 REQUIRED_RUN_FILES = (*WEIGHT_FILES, "adapter_config.json", "training_metrics.json")
+# Kaggle mounts a dataset under its owner's user name; committed records show a placeholder.
+KAGGLE_USER = re.compile(r"(/kaggle/input/datasets/)[^/\s\"']+/")
+
+
+def redact(text: str) -> str:
+    """Replace the Kaggle user name in dataset paths with `<kaggle-user>`."""
+    return KAGGLE_USER.sub(r"\1<kaggle-user>/", text)
 
 
 def load_config(path: Path = TRAIN_CONFIG) -> dict[str, Any]:
@@ -378,13 +384,18 @@ def entry_from_run(run_dir: Path, run_id: str, kev_commit: str | None = None) ->
     environment = json.loads(env_path.read_text()) if env_path.exists() else {}
     log_path = run_dir / "train.log"
     log = parse_train_log(log_path) if log_path.exists() else {"points": []}
+    log_text = (
+        redact(log_path.read_text(encoding="utf-8", errors="replace"))
+        if log_path.exists()
+        else None
+    )
     data = environment.get("data_repo_path") or args.get("data") or None
     data_path = ROOT / data if data and not Path(data).is_absolute() else None
     missing = [name for name in REQUIRED_RUN_FILES if not (run_dir / name).exists()]
     if missing:
         raise FileNotFoundError(f"{run_dir} is not a complete run: missing {missing}")
     weights = {name: sha256_file(run_dir / name) for name in (*WEIGHT_FILES, "adapter_config.json")}
-    return RegistryEntry(
+    entry = RegistryEntry(
         run_id=run_id,
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         kev_commit=kev_commit,
@@ -409,10 +420,12 @@ def entry_from_run(run_dir: Path, run_id: str, kev_commit: str | None = None) ->
         peak_rss_bytes=metrics.get("peak_rss_bytes"),
         trainable_params_m=log.get("trainable_params_m"),
         final_train_loss=log["points"][-1]["loss"] if log["points"] else None,
-        log_sha256=sha256_file(log_path) if log_path.exists() else None,
+        # hash of the archived (redacted) log, so the committed file can be checked against it
+        log_sha256=hashlib.sha256(log_text.encode("utf-8")).hexdigest() if log_text else None,
         dropped_records=log.get("dropped_records"),
         init_source=config.get("init_source") or {},
     )
+    return RegistryEntry.model_validate_json(redact(entry.model_dump_json()))
 
 
 def archive_records(run_dir: Path, run_id: str, target: Path = RUN_RECORDS) -> list[str]:
@@ -422,7 +435,8 @@ def archive_records(run_dir: Path, run_id: str, target: Path = RUN_RECORDS) -> l
     copied = []
     for name in RECORD_FILES:
         if (run_dir / name).exists():
-            shutil.copy2(run_dir / name, out / name)
+            text = (run_dir / name).read_text(encoding="utf-8", errors="replace")
+            (out / name).write_text(redact(text), encoding="utf-8")
             copied.append(str((out / name).relative_to(ROOT) if out.is_relative_to(ROOT) else out))
     return copied
 

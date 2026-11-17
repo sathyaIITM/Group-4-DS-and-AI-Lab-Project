@@ -1,5 +1,6 @@
 """Tests for the Kev run plan, subsets and registry."""
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -165,3 +166,24 @@ def test_register_reads_environment_and_log(tmp_path: Path) -> None:
     copied = kev_runs.archive_records(run, "b0_s1", tmp_path / "records")
     assert len(copied) == 5
     assert (tmp_path / "records" / "b0_s1" / "train.log").exists()
+
+
+def test_kaggle_user_name_is_redacted(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    path = "/kaggle/input/datasets/someone123/group4-kev-data/train.v2.jsonl"
+    (run / "training_config.json").write_text(json.dumps({"args": {"data": path, "seed": 0}}))
+    (run / "training_metrics.json").write_text("{}")
+    (run / "environment.json").write_text(json.dumps({"platform": "kaggle", "command": path}))
+    (run / "train.log").write_text(f"loading {path}\n")
+    for name in ("adapter_model.safetensors", "adapter_config.json", "head.pt"):
+        (run / name).write_text("x")
+    entry = kev_runs.entry_from_run(run, "b0_s0")
+    assert "someone123" not in entry.model_dump_json()
+    assert "<kaggle-user>" in entry.environment["command"]
+    kev_runs.archive_records(run, "b0_s0", tmp_path / "records")
+    archived = tmp_path / "records" / "b0_s0"
+    for name in ("train.log", "environment.json", "training_config.json"):
+        assert "someone123" not in (archived / name).read_text()
+    log_digest = hashlib.sha256((archived / "train.log").read_bytes()).hexdigest()
+    assert entry.log_sha256 == log_digest  # the committed log matches the registry hash
