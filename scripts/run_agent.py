@@ -1,39 +1,47 @@
+"""Run the analyst agent on one question or a file of questions.
+
+    python scripts/run_agent.py --question "Show monthly rainfall in Kerala" --version v0
+    python scripts/run_agent.py --file questions.jsonl --version v2 --eval-set e2e_dev
+    python scripts/run_agent.py --question "..." --llm live --yes   # spends cloud credit
+
+The run log is written once, by the `finalize_response` node. Each question gives one JSON line
+on stdout (run_id, outcome, cause, response); an error is printed to stderr as one JSON line,
+with the traceback only under --debug.
+"""
+
 from __future__ import annotations
+
 import argparse
 import json
 import sys
+import traceback
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-from analyst.agents.graph import build_graph
-from analyst.agents.runlog import RunLogger
-from analyst.agents.state import AnalystState, RunConfig
-import traceback
 
-def run_one(question: str, *, version: str = "v0", conversation_id: str | None = None,
-            experiment: str | None = None, eval_set: str | None = None, member: str | None = None) -> dict[str, Any]:
-    config = RunConfig.from_files(version)
-    initial = AnalystState(
-        run_id=str(uuid.uuid4()), conversation_id=conversation_id or str(uuid.uuid4()),
-        question=question, config=config
+from analyst.agents.graph import invoke_graph
+from analyst.agents.state import AnalystState, RunConfig
+
+
+def run_one(
+    question: str,
+    *,
+    version: str = "v0",
+    conversation_id: str | None = None,
+    config: RunConfig | None = None,
+    meta: dict[str, str | None] | None = None,
+    nodes: dict[str, Callable[[AnalystState], dict[str, Any]]] | None = None,
+) -> AnalystState:
+    state = AnalystState(
+        run_id=str(uuid.uuid4()),
+        conversation_id=conversation_id or str(uuid.uuid4()),
+        question=question,
+        config=config or RunConfig.from_files(version),
+        meta=meta or {},
     )
-    graph = build_graph()
-    result = graph.invoke(initial.model_dump())
-    # for update in graph.stream(
-    #     initial.model_dump(),
-    #     config={"recursion_limit": 100},
-    #     stream_mode="updates",
-    # ):
-    #     for node_name, node_output in update.items():
-    #         print(
-    #             f"\n[NODE EXECUTED] {node_name}",
-    #             f"\n[OUTPUT KEYS] {list(node_output.keys()) if isinstance(node_output, dict) else type(node_output)}",
-    #         )
-    if result is None:
-        raise RuntimeError("Graph execution returned no final state")
-    RunLogger().write_state(result)
-    result["_cli_metadata"] = {"experiment": experiment, "eval_set": eval_set, "member": member}
-    return result
+    return invoke_graph(state, overrides=nodes)
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the analyst agent")
@@ -41,36 +49,52 @@ def main() -> int:
     source.add_argument("--question")
     source.add_argument("--file", type=Path)
     parser.add_argument("--version", default="v0", choices=[f"v{i}" for i in range(7)])
-    parser.add_argument("--experiment")
-    parser.add_argument("--eval-set")
-    parser.add_argument("--member")
+    parser.add_argument("--experiment", help="free label such as v2_run1")
+    parser.add_argument("--eval-set", help="e2e_dev, e2e_test, adhoc, ...")
+    parser.add_argument("--member", help="T1 to T4")
+    parser.add_argument(
+        "--llm",
+        choices=["stub", "live"],
+        default="stub",
+        help="stub: no model call (default); live: T3 nodes on the hosted model",
+    )
+    parser.add_argument("--yes", action="store_true", help="confirm that a live run spends credit")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
-    questions = [args.question] if args.question else [
-        json.loads(line)["question"] for line in args.file.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    failed = False
+    nodes = None
+    if args.llm == "live":
+        if not args.yes:
+            parser.error("--llm live calls the hosted model and spends cloud credit; add --yes")
+        from analyst.agents.t3_nodes import live_t3_nodes
+
+        nodes = live_t3_nodes(args.version)
+    if args.question:
+        questions = [args.question]
+    else:
+        lines = args.file.read_text(encoding="utf-8").splitlines()
+        questions = [json.loads(line)["question"] for line in lines if line.strip()]
     for question in questions:
         try:
-            result = run_one(question, version=args.version, experiment=args.experiment,
-                             eval_set=args.eval_set, member=args.member)
-            print(json.dumps({
-                "run_id": result.get("run_id"), "outcome": result.get("outcome"),
-                "cause": result.get("outcome_cause"), "response": result.get("response_text", ""),
-            }, default=str))
-        except Exception as error:
-            failed = True
+            meta = {"experiment": args.experiment, "eval_set": args.eval_set, "member": args.member}
+            state = run_one(question, version=args.version, meta=meta, nodes=nodes)
+            record: dict[str, Any] = {
+                "run_id": state.run_id,
+                "outcome": state.outcome,
+                "cause": state.outcome_cause,
+                "response": state.response_text,
+            }
+            print(json.dumps(record, default=str))
+        except Exception as error:  # a failed run is an evaluation outcome, not a CLI crash
             print(
-                json.dumps({
-                    "outcome": "failed",
-                    "error_type": type(error).__name__,
-                    "error": str(error),
-                }),
+                json.dumps(
+                    {"outcome": "failed", "error_type": type(error).__name__, "error": str(error)}
+                ),
                 file=sys.stderr,
             )
-            traceback.print_exc()
-    # A failed agent run is a valid recorded evaluation outcome, not a CLI crash.
+            if args.debug:
+                traceback.print_exc()
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

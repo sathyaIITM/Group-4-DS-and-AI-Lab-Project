@@ -1,17 +1,23 @@
+"""The agent graph (design document Section 5, specification `agent_graph.md` v0.3).
 
-# src/analyst/agents/graph.py
+Routers only choose the next node; they never write state. The cause of an abstention or a
+failure is derived inside the terminal node (`nodes.failure_cause`, `nodes.abstention_cause`).
+"""
 
 from __future__ import annotations
 
-import time
-from typing import Literal
+from collections.abc import Callable
+from typing import Any
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
+from analyst.agents import nodes as t2
+from analyst.agents.limits import budget_exhausted, deadline_exceeded
 from analyst.agents.state import AnalystState
 from analyst.agents.stubs import make_stub
-from analyst.agents import nodes as t2_nodes
 
+RECURSION_LIMIT = 100
 
 NODE_NAMES = [
     "receive_request",
@@ -20,36 +26,30 @@ NODE_NAMES = [
     "route_tool_and_domain",
     "escalate_to_jev",
     "resolve_routing_decision",
-
     "validate_existing_result_for_chart",
     "describe_from_metadata",
     "search_catalog_entries",
     "explain_from_evidence",
-
     "retrieve_context_and_examples",
     "extract_query_intent",
     "resolve_places_periods_units",
     "check_coverage",
     "define_supported_scope_and_caveats",
-
     "generate_sql_with_hosted_llm",
     "validate_sql_with_sqlglot",
     "bounded_sql_repair",
     "execute_read_only_duckdb",
     "compute_derivations",
     "deterministic_result_checks",
-
     "build_evidence_bundle",
     "narrate_from_result_only",
     "verify_numbers_deterministically",
     "verify_claim_support_and_intent",
     "calibrate_end_to_end_confidence",
     "decide_answer_or_abstain",
-
     "assemble_answer_and_evidence_panel",
     "select_chart_type",
     "render_chart",
-
     "ask_clarification",
     "decline_and_log_data_request",
     "abstain_with_reason",
@@ -58,414 +58,247 @@ NODE_NAMES = [
     "finalize_response",
 ]
 
-
-def get_value(state, key, default=None):
-    value = state.get(key, default)
-    return value
-
-
-def _read(value, key, default=None):
-    if isinstance(value, dict):
-        return value.get(key, default)
-    return getattr(value, key, default)
-
-
-def get_counter(state, name):
-    counters = _read(state, "counters", {})
-    return int(_read(counters, name, 0) or 0)
-
-
-def get_limit(state, name):
-    config = _read(state, "config", {})
-    limits = _read(config, "limits", {})
-    return _read(limits, name, 0)
-
-
-LLM_DESTINATIONS = {
-    "extract_query_intent", "generate_sql_with_hosted_llm", "bounded_sql_repair",
-    "narrate_from_result_only", "ask_clarification",
+# Nodes that call the hosted LLM; an edge into one of them is subject to the call budget.
+LLM_NODES = {
+    "route_tool_and_domain",
+    "extract_query_intent",
+    "generate_sql_with_hosted_llm",
+    "bounded_sql_repair",
+    "narrate_from_result_only",
+    "ask_clarification",
 }
 
+# Nodes whose only edge leads to finalize_response; their edges are not guarded.
+TERMINAL = {
+    "describe_from_metadata",
+    "search_catalog_entries",
+    "explain_from_evidence",
+    "render_chart",
+    "ask_clarification",
+    "decline_and_log_data_request",
+    "abstain_with_reason",
+    "report_system_failure",
+    "respond_out_of_scope",
+}
 
-def guarded(router):
-    """Apply the global deadline and hosted-LLM budget before every conditional edge."""
-    def route(state):
-        started = _read(state, "started_at")
-        if started is not None:
-            elapsed = time.time() - started.timestamp()
-            if elapsed > float(get_limit(state, "run_deadline_s")):
-                accepted = bool(_read(state, "answer_accepted", False))
-                if accepted:
-                    state["chart"] = {"chart_type": "table", "specification": {}}
-                    state["response_text"] = str(_read(state, "response_text", ""))
-                    state["requested_cause"] = None
-                    return "finalize_response"
-                state["requested_cause"] = "deadline_exceeded"
-                return "abstain_with_reason"
+Router = Callable[[AnalystState], str]
+NodeFn = Callable[[AnalystState], dict[str, Any]]
+
+
+def guarded(router: Router) -> Router:
+    """Apply the deadline and the LLM-call budget to an edge, exactly once."""
+
+    def route(state: AnalystState) -> str:
+        if state.node_error:
+            return "report_system_failure"
+        if not state.answer_accepted and deadline_exceeded(state):
+            return "abstain_with_reason"
         destination = router(state)
-        if destination in LLM_DESTINATIONS:
-            if get_counter(state, "llm_calls") >= int(get_limit(state, "max_llm_calls")):
-                state["requested_cause"] = "budget_exhausted"
-                return "report_system_failure"
+        if destination in LLM_NODES and budget_exhausted(state):
+            return "report_system_failure"
         return destination
+
     return route
 
 
-def deadline_router(state, destination):
-    """Central deadline check used by conditional routers."""
-
-    started = state.get("started_at")
-    config = state.get("config")
-
-    if started is None:
-        return destination
-
-    elapsed = time.time() - started.timestamp()
-
-    if elapsed > float(get_limit(state, "run_deadline_s")):
-        return "abstain_with_reason"
-
-    return destination
+def to(destination: str) -> Router:
+    return lambda _state: destination
 
 
-def finish_router(state):
-    return END
-
-
-def after_screen(state):
-    if not state["screen"]["passes"]:
+def after_screen(state: AnalystState) -> str:
+    if state.screen is not None and not state.screen.passes:
         return "respond_out_of_scope"
-
     return "retrieve_catalogue_candidates"
 
 
-def after_routing(state):
-    label = _read(state["routing"], "label", "run_sql")
+BRANCH_NODES = {
+    "query": "retrieve_context_and_examples",
+    "chart": "validate_existing_result_for_chart",
+    "describe": "describe_from_metadata",
+    "search": "search_catalog_entries",
+    "explain": "explain_from_evidence",
+    "clarify": "ask_clarification",
+    "decline": "decline_and_log_data_request",
+}
 
-    mapping = {
-        "run_sql": "retrieve_context_and_examples",
-        "make_chart": "validate_existing_result_for_chart",
-        "describe_table": "describe_from_metadata",
-        "search_catalog": "search_catalog_entries",
-        "explain_result": "explain_from_evidence",
-        "ask_clarification": "ask_clarification",
-        "decline_not_covered": "retrieve_context_and_examples",
-        "decline_shortcut": "decline_and_log_data_request",
-    }
 
-    if label == "explain_result" and not state.get("prior_result_ref"):
+def after_routing(state: AnalystState) -> str:
+    branch = state.routing.branch if state.routing else "query"
+    if branch == "explain" and not state.prior_result_ref:
         return "search_catalog_entries"
-
-    destination = mapping.get(label, "retrieve_context_and_examples")
-
-    return deadline_router(state, destination)
+    return BRANCH_NODES.get(branch, "retrieve_context_and_examples")
 
 
-def after_coverage(state):
-    status = _read(state["coverage"], "status", "covered")
+def after_chart_validation(state: AnalystState) -> str:
+    return "select_chart_type" if state.chart_result == "verified" else "ask_clarification"
 
+
+def after_coverage(state: AnalystState) -> str:
+    status = state.coverage.status if state.coverage else "covered"
+    limits = state.config.limits
     if status == "covered":
         return "generate_sql_with_hosted_llm"
-
     if status == "partial":
         return "define_supported_scope_and_caveats"
-
     if status == "ambiguous":
         return "ask_clarification"
-
-    if status == "not_covered":
-        count = get_counter(state, "widened_searches")
-        limit = get_limit(state, "max_widened_searches")
-
-        if count < limit:
-            return "retrieve_context_and_examples"
-
-        return "decline_and_log_data_request"
-
-    return "report_system_failure"
+    if state.counters.widened_searches < limits.max_widened_searches:
+        return "retrieve_context_and_examples"
+    return "decline_and_log_data_request"
 
 
-def after_sql_validation(state):
-    result = state.get("validation_result", "valid")
-
-    if result == "valid":
+def after_sql_validation(state: AnalystState) -> str:
+    if state.validation_result == "valid":
         return "execute_read_only_duckdb"
-
-    if get_counter(state, "sql_repairs") < get_limit(
-        state, "max_sql_repairs"
-    ):
+    if state.counters.sql_repairs < state.config.limits.max_sql_repairs:
         return "bounded_sql_repair"
-
-    state["requested_cause"] = "sql_invalid"
     return "report_system_failure"
 
 
-def after_execution(state):
-    result = state.get("execution_result", "success")
-
-    if result == "success":
+def after_execution(state: AnalystState) -> str:
+    if state.execution_result == "success":
         return "compute_derivations"
-
-    if get_counter(state, "sql_generations") < get_limit(
-        state, "max_sql_generations"
-    ):
+    if state.counters.sql_generations < state.config.limits.max_sql_generations:
         return "generate_sql_with_hosted_llm"
-
-    state["requested_cause"] = "execution_error"
     return "report_system_failure"
 
 
-def after_checks(state):
-    status = _read(state["checks"], "status", "pass")
-
-    if status == "pass":
+def after_checks(state: AnalystState) -> str:
+    verdict = state.checks.verdict if state.checks else "pass"
+    counters, limits = state.counters, state.config.limits
+    if verdict in {"pass", "pass_with_caveats"}:
         return "build_evidence_bundle"
-
-    if status == "empty":
-        if get_counter(state, "resolution_retries") < get_limit(
-            state, "max_resolution_retries"
-        ):
+    if verdict == "empty_result":
+        if counters.resolution_retries < limits.max_resolution_retries:
             return "resolve_places_periods_units"
-
-        state["requested_cause"] = "no_rows"
         return "abstain_with_reason"
-
-    if status == "absent":
-        if get_counter(state, "coverage_rechecks") < get_limit(
-            state, "max_coverage_rechecks"
-        ):
+    if verdict == "data_absent":
+        if counters.coverage_rechecks < limits.max_coverage_rechecks:
             return "check_coverage"
-
-        state["requested_cause"] = "no_rows"
         return "abstain_with_reason"
-
-    if status == "query_fault":
-        if get_counter(state, "sql_generations") < get_limit(
-            state, "max_sql_generations"
-        ):
-            return "generate_sql_with_hosted_llm"
-
-        state["requested_cause"] = "result_check_failed"
-        return "report_system_failure"
-
-    return "abstain_with_reason"
+    if counters.sql_generations < limits.max_sql_generations:  # query_fault
+        return "generate_sql_with_hosted_llm"
+    return "report_system_failure"
 
 
-def after_number_check(state):
-    result = state.get("number_check_result", "match")
-
-    if result == "match":
+def after_number_check(state: AnalystState) -> str:
+    if state.number_check is None or state.number_check.passed:
         return "verify_claim_support_and_intent"
-
-    if get_counter(state, "narrations") < get_limit(
-        state, "max_narrations"
-    ):
+    if state.counters.narrations < state.config.limits.max_narrations:
         return "narrate_from_result_only"
-
-    state["requested_cause"] = "unverified"
     return "abstain_with_reason"
 
 
-def after_claim_check(state):
-    verification = state["verification"]
-
-    if verification.claims_supported and verification.intent_aligned:
+def after_claim_check(state: AnalystState) -> str:
+    v = state.verification
+    supported = (
+        v is None
+        or v.skipped_reason is not None
+        or (v.claims_supported is not False and v.intent_aligned is not False)
+    )
+    if supported:
         return "calibrate_end_to_end_confidence"
-
-    if get_counter(state, "narrations") < get_limit(
-        state, "max_narrations"
-    ):
+    if state.counters.narrations < state.config.limits.max_narrations:
         return "narrate_from_result_only"
-
-    state["requested_cause"] = "unverified"
     return "abstain_with_reason"
 
 
-def after_answer_decision(state):
-    decision = state.get("answer_decision", "answer")
-
-    if decision == "answer":
+def after_answer_decision(state: AnalystState) -> str:
+    if state.answer_decision == "answer":
         return "assemble_answer_and_evidence_panel"
-
-    state["requested_cause"] = "low_confidence"
     return "abstain_with_reason"
 
 
-def after_chart_validation(state):
-    if state.get("chart_result") == "verified":
-        return "select_chart_type"
+T2_NODES: dict[str, NodeFn] = {
+    "receive_request": t2.receive_request,
+    "screen_request": t2.screen_request,
+    "retrieve_catalogue_candidates": t2.retrieve_catalogue_candidates,
+    "resolve_routing_decision": t2.resolve_routing_decision,
+    "validate_existing_result_for_chart": t2.validate_existing_result_for_chart,
+    "describe_from_metadata": t2.describe_from_metadata,
+    "search_catalog_entries": t2.search_catalog_entries,
+    "explain_from_evidence": t2.explain_from_evidence,
+    "retrieve_context_and_examples": t2.retrieve_context_and_examples,
+    "build_evidence_bundle": t2.build_evidence_bundle,
+    "assemble_answer_and_evidence_panel": t2.assemble_answer_and_evidence_panel,
+    "select_chart_type": t2.select_chart_type,
+    "render_chart": t2.render_chart,
+    "ask_clarification": t2.ask_clarification,
+    "decline_and_log_data_request": t2.decline_and_log_data_request,
+    "abstain_with_reason": t2.abstain_with_reason,
+    "report_system_failure": t2.report_system_failure,
+    "respond_out_of_scope": t2.respond_out_of_scope,
+    "finalize_response": t2.finalize_response,
+}
 
-    return "ask_clarification"
+# (source, router) pairs: conditional edges, all guarded.
+CONDITIONAL: list[tuple[str, Router]] = [
+    ("screen_request", after_screen),
+    ("resolve_routing_decision", after_routing),
+    ("validate_existing_result_for_chart", after_chart_validation),
+    ("check_coverage", after_coverage),
+    ("validate_sql_with_sqlglot", after_sql_validation),
+    ("execute_read_only_duckdb", after_execution),
+    ("deterministic_result_checks", after_checks),
+    ("verify_numbers_deterministically", after_number_check),
+    ("verify_claim_support_and_intent", after_claim_check),
+    ("decide_answer_or_abstain", after_answer_decision),
+]
+
+# Plain edges; all but those leaving a terminal node are guarded.
+PLAIN: list[tuple[str, str]] = [
+    ("receive_request", "screen_request"),
+    ("retrieve_catalogue_candidates", "route_tool_and_domain"),
+    ("route_tool_and_domain", "escalate_to_jev"),
+    ("escalate_to_jev", "resolve_routing_decision"),
+    ("describe_from_metadata", "finalize_response"),
+    ("search_catalog_entries", "finalize_response"),
+    ("explain_from_evidence", "finalize_response"),
+    ("retrieve_context_and_examples", "extract_query_intent"),
+    ("extract_query_intent", "resolve_places_periods_units"),
+    ("resolve_places_periods_units", "check_coverage"),
+    ("define_supported_scope_and_caveats", "generate_sql_with_hosted_llm"),
+    ("generate_sql_with_hosted_llm", "validate_sql_with_sqlglot"),
+    ("bounded_sql_repair", "validate_sql_with_sqlglot"),
+    ("compute_derivations", "deterministic_result_checks"),
+    ("build_evidence_bundle", "narrate_from_result_only"),
+    ("narrate_from_result_only", "verify_numbers_deterministically"),
+    ("calibrate_end_to_end_confidence", "decide_answer_or_abstain"),
+    ("assemble_answer_and_evidence_panel", "select_chart_type"),
+    ("select_chart_type", "render_chart"),
+    ("render_chart", "finalize_response"),
+    ("ask_clarification", "finalize_response"),
+    ("decline_and_log_data_request", "finalize_response"),
+    ("abstain_with_reason", "finalize_response"),
+    ("report_system_failure", "finalize_response"),
+    ("respond_out_of_scope", "finalize_response"),
+]
 
 
-def after_chart_render(state):
-    return "finalize_response"
-
-
-def build_graph():
-
+def build_graph(
+    overrides: dict[str, NodeFn] | None = None,
+) -> CompiledStateGraph[AnalystState, None, AnalystState, AnalystState]:
+    """Compile the graph. `overrides` replaces stubs with real nodes by name."""
     builder = StateGraph(AnalystState)
-
-    # Register T2-owned runtime nodes. T3/T4-owned model and analysis nodes remain
-    # adapter stubs until their implementations are merged against the frozen contracts.
-    t2_implementations = {
-        "receive_request": t2_nodes.receive_request,
-        "screen_request": t2_nodes.screen_request,
-        "retrieve_catalogue_candidates": t2_nodes.retrieve_catalogue_candidates,
-        "resolve_routing_decision": t2_nodes.resolve_routing_decision,
-        "retrieve_context_and_examples": t2_nodes.retrieve_context_and_examples,
-        "describe_from_metadata": t2_nodes.describe_from_metadata,
-        "search_catalog_entries": t2_nodes.search_catalog_entries,
-        "explain_from_evidence": t2_nodes.explain_from_evidence,
-        "build_evidence_bundle": t2_nodes.build_evidence_bundle,
-        "select_chart_type": t2_nodes.select_chart_type,
-        "finalize_response": t2_nodes.finalize_response,
-    }
+    implementations = {**T2_NODES, **(overrides or {})}
     for name in NODE_NAMES:
-        builder.add_node(name, t2_implementations.get(name, make_stub(name)))
-
-    # Intake.
+        node: NodeFn = implementations.get(name) or make_stub(name)
+        builder.add_node(name, node)  # type: ignore[call-overload]  # langgraph overloads
     builder.add_edge(START, "receive_request")
-    builder.add_edge("receive_request", "screen_request")
-
-    builder.add_conditional_edges(
-        "screen_request",
-        after_screen,
-    )
-
-    # Routing.
-    builder.add_edge(
-        "retrieve_catalogue_candidates",
-        "route_tool_and_domain",
-    )
-
-    builder.add_edge(
-        "route_tool_and_domain",
-        "resolve_routing_decision",
-    )
-
-    builder.add_conditional_edges(
-        "resolve_routing_decision",
-        after_routing,
-    )
-
-    # Chart, description, search and explanation.
-    builder.add_conditional_edges(
-        "validate_existing_result_for_chart",
-        after_chart_validation,
-    )
-
-    builder.add_edge("describe_from_metadata", "finalize_response")
-    builder.add_edge("search_catalog_entries", "finalize_response")
-    builder.add_edge("explain_from_evidence", "finalize_response")
-
-    # Retrieval and coverage.
-    builder.add_edge(
-        "retrieve_context_and_examples",
-        "extract_query_intent",
-    )
-    builder.add_edge(
-        "extract_query_intent",
-        "resolve_places_periods_units",
-    )
-    builder.add_edge(
-        "resolve_places_periods_units",
-        "check_coverage",
-    )
-
-    builder.add_conditional_edges(
-        "check_coverage",
-        after_coverage,
-    )
-
-    builder.add_conditional_edges(
-        "define_supported_scope_and_caveats",
-        guarded(lambda state: "generate_sql_with_hosted_llm"),
-    )
-
-    # SQL.
-    builder.add_edge(
-        "generate_sql_with_hosted_llm",
-        "validate_sql_with_sqlglot",
-    )
-
-    builder.add_conditional_edges(
-        "validate_sql_with_sqlglot",
-        after_sql_validation,
-    )
-
-    builder.add_edge(
-        "bounded_sql_repair",
-        "validate_sql_with_sqlglot",
-    )
-
-    builder.add_conditional_edges(
-        "execute_read_only_duckdb",
-        after_execution,
-    )
-
-    builder.add_edge(
-        "compute_derivations",
-        "deterministic_result_checks",
-    )
-
-    builder.add_conditional_edges(
-        "deterministic_result_checks",
-        after_checks,
-    )
-
-    # Evidence and verification.
-    builder.add_edge(
-        "build_evidence_bundle",
-        "narrate_from_result_only",
-    )
-
-    builder.add_edge(
-        "narrate_from_result_only",
-        "verify_numbers_deterministically",
-    )
-
-    builder.add_conditional_edges(
-        "verify_numbers_deterministically",
-        after_number_check,
-    )
-
-    builder.add_conditional_edges(
-        "verify_claim_support_and_intent",
-        after_claim_check,
-    )
-
-    builder.add_edge(
-        "calibrate_end_to_end_confidence",
-        "decide_answer_or_abstain",
-    )
-
-    builder.add_conditional_edges(
-        "decide_answer_or_abstain",
-        after_answer_decision,
-    )
-
-    # Output.
-    builder.add_edge(
-        "assemble_answer_and_evidence_panel",
-        "select_chart_type",
-    )
-
-    builder.add_edge("select_chart_type", "render_chart")
-    builder.add_edge("render_chart", "finalize_response")
-
-    # Terminal branches.
-    terminal_nodes = [
-        "ask_clarification",
-        "decline_and_log_data_request",
-        "abstain_with_reason",
-        "report_system_failure",
-        "respond_out_of_scope",
-    ]
-
-    for node in terminal_nodes:
-        builder.add_edge(node, "finalize_response")
-
+    for source, router in CONDITIONAL:
+        builder.add_conditional_edges(source, guarded(router))
+    for source, destination in PLAIN:
+        if source not in TERMINAL:
+            builder.add_conditional_edges(source, guarded(to(destination)))
+        else:
+            builder.add_edge(source, destination)
     builder.add_edge("finalize_response", END)
-
     return builder.compile()
+
+
+def invoke_graph(state: AnalystState, overrides: dict[str, NodeFn] | None = None) -> AnalystState:
+    """Run one request through the graph and return the final state."""
+    final = build_graph(overrides).invoke(  # type: ignore[call-overload]
+        state.model_dump(), config={"recursion_limit": RECURSION_LIMIT}
+    )
+    return AnalystState.model_validate(final)

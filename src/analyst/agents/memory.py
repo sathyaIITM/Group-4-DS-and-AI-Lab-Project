@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import json
 import sqlite3
 from pathlib import Path
 from typing import Any
 
+
 class ConversationMemory:
     """Small local SQLite conversation store; no credentials or network identifiers are stored."""
+
     def __init__(self, path: str | Path = "outputs/runs/memory.sqlite") -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -26,7 +29,8 @@ class ConversationMemory:
         with self._connect() as db:
             row = db.execute(
                 "SELECT pending_clarification, prior_plan, prior_sql, prior_result_ref "
-                "FROM memory WHERE conversation_id=?", (conversation_id,)
+                "FROM memory WHERE conversation_id=?",
+                (conversation_id,),
             ).fetchone()
         if row is None:
             return {}
@@ -37,11 +41,18 @@ class ConversationMemory:
             "prior_result_ref": row[3],
         }
 
-    def save(self, conversation_id: str, *, pending_clarification: dict | None = None,
-             prior_plan: dict | None = None, prior_sql: str | None = None,
-             prior_result_ref: str | None = None) -> None:
+    def save(
+        self,
+        conversation_id: str,
+        *,
+        pending_clarification: dict | None = None,
+        prior_plan: dict | None = None,
+        prior_sql: str | None = None,
+        prior_result_ref: str | None = None,
+    ) -> None:
         with self._connect() as db:
-            db.execute("""INSERT INTO memory
+            db.execute(
+                """INSERT INTO memory
                 (conversation_id,pending_clarification,prior_plan,prior_sql,prior_result_ref,updated_at)
                 VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)
                 ON CONFLICT(conversation_id) DO UPDATE SET
@@ -50,5 +61,11 @@ class ConversationMemory:
                 prior_sql=COALESCE(excluded.prior_sql,memory.prior_sql),
                 prior_result_ref=COALESCE(excluded.prior_result_ref,memory.prior_result_ref),
                 updated_at=CURRENT_TIMESTAMP""",
-                (conversation_id, json.dumps(pending_clarification) if pending_clarification else None,
-                 json.dumps(prior_plan) if prior_plan else None, prior_sql, prior_result_ref))
+                (
+                    conversation_id,
+                    json.dumps(pending_clarification) if pending_clarification else None,
+                    json.dumps(prior_plan) if prior_plan else None,
+                    prior_sql,
+                    prior_result_ref,
+                ),
+            )

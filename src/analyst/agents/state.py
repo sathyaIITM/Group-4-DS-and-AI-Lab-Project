@@ -1,64 +1,53 @@
-
-# src/analyst/agents/state.py
+"""Graph state, run configuration, limits and counters (design document Section 4, note)."""
 
 from __future__ import annotations
 
-from email.policy import default
 import operator
-from datetime import datetime, timezone
-from typing import Annotated, Literal
+from datetime import UTC, datetime
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
-
-# ---------------------------------------------------------
-# Outcome and cause types
-# ---------------------------------------------------------
-
-Outcome = Literal[
-    "answered",
-    "charted",
-    "described",
-    "searched",
-    "explained",
-    "clarifying",
-    "declined",
-    "abstained",
-    "failed",
-    "out_of_scope",
-]
-
-Cause = Literal[
-    "not_covered",
-    "not_comparable",
-    "no_rows",
-    "unverified",
-    "low_confidence",
-    "verifier_unavailable",
-    "deadline_exceeded",
-    "sql_invalid",
-    "execution_error",
-    "result_check_failed",
-    "budget_exhausted",
-    "backend_error",
-]
-
-
-# Shared frozen contracts. Keep state orchestration separate from module-boundary models.
 from analyst.contracts import (
-    ChartSpec, CheckReport, ConfidenceResult, CoverageResult, DecisionRecord,
-    DerivedValue, EvidenceBundle, Event, InterpretationPlan, Narration,
-    QueryIntent, QueryResult, RetryHint, RoutingDecision, SqlAttempt,
+    Cause,
+    ChartSpec,
+    CheckReport,
+    Clarification,
+    ConfidenceResult,
+    CoverageResult,
+    DecisionRecord,
+    DerivedValue,
+    Event,
+    EvidenceBundle,
+    InterpretationPlan,
+    Narration,
+    NumberCheck,
+    Outcome,
+    QueryIntent,
+    QueryResult,
+    RetryHint,
+    RoutingDecision,
+    ScreenResult,
+    SqlAttempt,
     VerificationResult,
 )
-from analyst.contracts.common import Clarification as PendingClarification
-# from analyst.contracts.response import Outcome, Cause
+from analyst.decisions.kev_questions import KevState
+from analyst.inference.llm import LlmCallRecord
 
-# ---------------------------------------------------------
-# Counters and limits
-# ---------------------------------------------------------
+__all__ = [
+    "AnalystState",
+    "Cause",
+    "Counters",
+    "Limits",
+    "Outcome",
+    "RagPaths",
+    "RunConfig",
+]
+
 
 class Counters(BaseModel):
+    """Attempt counters. The node that performs an attempt increments its counter."""
+
     sql_generations: int = 0
     sql_repairs: int = 0
     narrations: int = 0
@@ -68,10 +57,13 @@ class Counters(BaseModel):
     clarifications: int = 0
     llm_calls: int = 0
 
+    def bumped(self, name: str) -> Counters:
+        """A copy with counter `name` incremented by one."""
+        return self.model_copy(update={name: getattr(self, name) + 1})
+
 
 class Limits(BaseModel):
     run_deadline_s: float = 30
-
     max_sql_generations: int = 3
     max_sql_repairs: int = 2
     max_narrations: int = 2
@@ -80,19 +72,28 @@ class Limits(BaseModel):
     max_widened_searches: int = 1
     max_clarifications: int = 2
     max_llm_calls: int = 8
-
     catalogue_top_k: int = 4
+    # Thresholds are chosen on e2e_dev; None switches the rule that uses them off.
+    candidate_min_score: float | None = None  # decline shortcut
+    routing_floor: float | None = None  # not used by any rule (review item P8)
+    shortcut_threshold: float | None = None  # decline and early-clarification shortcuts
+    answer_threshold: float | None = None  # unused before v5
 
-    candidate_min_score: float = 0.5
-    routing_floor: float = 0.5
-    shortcut_threshold: float = 0.9
-    answer_threshold: float = 0.8
+
+class RagPaths(BaseModel):
+    """Guidance cards and verified examples; the v0 files are the fallback."""
+
+    cards: str = "configs/rag/guidance_cards.v1.json"
+    examples: str = "data/sample/rag_verified_examples.v1.jsonl"
+    cards_fallback: str = "configs/rag/guidance_cards.v0.json"
+    examples_fallback: str = "data/sample/rag_verified_examples.v0.jsonl"
 
 
 class RunConfig(BaseModel):
     version: str = "v0"
     limits: Limits = Field(default_factory=Limits)
-    stub_script: dict[str, list] = Field(default_factory=dict)
+    rag: RagPaths = Field(default_factory=RagPaths)
+    stub_script: dict[str, list[Any]] = Field(default_factory=dict)
     model_id: str = "unset"
     model_version: str = "unset"
     prompt_hashes: dict[str, str] = Field(default_factory=dict)
@@ -100,109 +101,67 @@ class RunConfig(BaseModel):
     catalogue_contract_version: str = "unknown"
 
     @classmethod
-    def from_files(cls, version: str = "v0", config_path: str = "configs/agent.yaml") -> "RunConfig":
+    def from_files(cls, version: str = "v0", config_path: str = "configs/agent.yaml") -> RunConfig:
         from analyst.config import load_run_config
+
         return load_run_config(version=version, config_path=config_path)
 
 
-# ---------------------------------------------------------
-# Main graph state
-# ---------------------------------------------------------
-
 class AnalystState(BaseModel):
-    
+    """LangGraph state. Contract-typed fields are None until the node that writes them runs."""
 
     run_id: str = ""
     conversation_id: str = ""
     question: str = ""
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    started_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-
-    pending_clarification: PendingClarification | None = None
+    pending_clarification: Clarification | None = None
     prior_result_ref: str | None = None
     prior_plan: InterpretationPlan | None = None
     prior_sql: str | None = None
 
     config: RunConfig = Field(default_factory=RunConfig)
 
-    screen: dict = Field(default_factory=lambda: {"passes": True})
-    response_text: str = ""
-    answer_decision: str = "answer"
+    screen: ScreenResult | None = None
+    catalogue_candidates: list[dict[str, Any]] = Field(default_factory=list)
+    routing: RoutingDecision | None = None
+    router_state: KevState | None = None  # what the router saw; escalation asks again with it
+    retrieved: dict[str, Any] = Field(default_factory=dict)
+    intent: QueryIntent | None = None
+    plan: InterpretationPlan | None = None
+    coverage: CoverageResult | None = None
+
+    sql: Annotated[list[SqlAttempt], operator.add] = Field(default_factory=list)
     validation_result: str = "valid"
     execution_result: str = "success"
-    number_check_result: str = "match"
-    chart_result: str = "unverified"
-    requested_cause: str | None = None
-    answer_accepted: bool = False
-    finalized: bool = False
-    run_log_path: str | None = None
-
-    catalogue_candidates: list[dict] = Field(default_factory=list)
-    routing: RoutingDecision = Field(default_factory=RoutingDecision)
-
-    retrieved: dict = Field(default_factory=dict)
-    intent: QueryIntent = Field(default_factory=QueryIntent)
-    plan: InterpretationPlan = Field(default_factory=InterpretationPlan)
-
-    coverage: CoverageResult = Field(default_factory=CoverageResult)
-
-    sql: Annotated[list[SqlAttempt], operator.add] = Field(
-        default_factory=list
-    )
-
     result: QueryResult | None = None
     derived: list[DerivedValue] = Field(default_factory=list)
-
-    checks: CheckReport = Field(default_factory=CheckReport)
-
-    retry_hints: Annotated[list[RetryHint], operator.add] = Field(
-        default_factory=list
-    )
+    checks: CheckReport | None = None
+    retry_hints: Annotated[list[RetryHint], operator.add] = Field(default_factory=list)
 
     evidence: EvidenceBundle | None = None
+    narration: Annotated[list[Narration], operator.add] = Field(default_factory=list)
+    number_check: NumberCheck | None = None
+    verification: VerificationResult | None = None
+    confidence: ConfidenceResult | None = None
+    answer_decision: str = "answer"
+    answer_accepted: bool = False
 
-    narration: Annotated[list[Narration], operator.add] = Field(
-        default_factory=list
-    )
-
-    verification: VerificationResult = Field(
-        default_factory=VerificationResult
-    )
-
-    confidence: ConfidenceResult = Field(
-        default_factory=ConfidenceResult
-    )
-
+    chart_result: str = "unverified"
     chart: ChartSpec | None = None
 
+    response_text: str = ""
+    requested_cause: Cause | None = None
     outcome: Outcome | None = None
     outcome_cause: Cause | None = None
+    # Set by a node whose backend failed; the next edge ends the run in report_system_failure.
+    node_error: Literal["backend_error", "budget_exhausted"] | None = None
+    finalized: bool = False
 
     counters: Counters = Field(default_factory=Counters)
-
-    events: Annotated[list[Event], operator.add] = Field(
-        default_factory=list
-    )
-
-    decision_log: Annotated[list[DecisionRecord], operator.add] = Field(
-        default_factory=list
-    )
-
+    events: Annotated[list[Event], operator.add] = Field(default_factory=list)
+    decision_log: Annotated[list[DecisionRecord], operator.add] = Field(default_factory=list)
+    llm_records: Annotated[list[LlmCallRecord], operator.add] = Field(default_factory=list)
+    # Evaluation labels written to the run log: question_id, eval_set, experiment, member, turn.
+    meta: dict[str, str | None] = Field(default_factory=dict)
     stub_positions: dict[str, int] = Field(default_factory=dict)
-
-    def get(self, key: str, default=None):
-        """Dictionary-compatible read."""
-        return getattr(self, key, default)
-
-    def __getitem__(self, key: str):
-        """Support state['key'] access."""
-        if not hasattr(self, key):
-            raise KeyError(key)
-        return getattr(self, key)
-
-    def __setitem__(self, key: str, value):
-        """Support state['key'] = value."""
-        setattr(self, key, value)
-    
