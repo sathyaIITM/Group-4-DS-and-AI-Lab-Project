@@ -255,6 +255,54 @@ def test_a_quarter_table_without_a_quarter_map_is_refused() -> None:
         config_from_toml(QUARTERS_BASE)
 
 
+# --- Months as rows --------------------------------------------------------------------------
+
+MONTHS = (
+    QUARTERS_BASE.replace('quarter = "period_quarter"', 'month = "period_month"').replace(
+        'type = "quarter"', 'type = "month"\nmonth_map = { "Marcrh" = 3 }'
+    )
+)
+
+
+def month_frame(years: list[str], months: list[str]) -> pd.DataFrame:
+    frame = quarter_frame(years, months)
+    return frame.rename(columns={"quarter": "month"})
+
+
+def test_months_get_their_own_dates_and_labels() -> None:
+    cfg = config_from_toml(MONTHS)
+    frame = month_frame(["2019", "2020", "2019", "2019"], ["January", "February", "Marcrh", "Sept"])
+    result = run_config(cfg, frame, approved(frame))
+    assert not result.blocked, result.review
+    spans = {
+        r.period_label: (str(r.period_start.date()), str(r.period_end.date()))
+        for r in result.obs.itertuples()
+    }
+    assert spans == {
+        "2019-01": ("2019-01-01", "2019-01-31"),
+        "2020-02": ("2020-02-01", "2020-02-29"),
+        "2019-03": ("2019-03-01", "2019-03-31"),
+        "2019-09": ("2019-09-01", "2019-09-30"),
+    }
+    assert set(result.obs["period_type"]) == {"month"}
+
+
+def test_an_unknown_month_name_blocks_and_flags_the_value() -> None:
+    cfg = config_from_toml(MONTHS)
+    frame = month_frame(["2019", "2019"], ["April", "Auust"])
+    result = run_config(cfg, frame, approved(frame))
+    assert "unparsed_period" in kinds(result, "block")
+    bad = result.obs[result.obs["period_source"] == "2019 Auust"]
+    assert set(bad["quality_flag"]) == {"unparsed"} and bad["period_start"].isna().all()
+
+
+def test_a_month_table_without_a_month_column_is_refused() -> None:
+    cfg = config_from_toml(MONTHS.replace('month = "period_month"\n', ""))
+    frame = month_frame(["2019"], ["April"]).drop(columns="month")
+    with pytest.raises(ValueError, match="period_month"):
+        run_config(cfg, frame, approved(frame))
+
+
 # --- A year window that moves --------------------------------------------------------------
 
 

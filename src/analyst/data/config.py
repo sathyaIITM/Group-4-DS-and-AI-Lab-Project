@@ -139,7 +139,7 @@ class YearException(BaseModel):
 
 
 class PeriodSection(BaseModel):
-    type: Literal["date", "calendar_year", "survey_year", "survey_round", "quarter"]
+    type: Literal["date", "calendar_year", "survey_year", "survey_round", "quarter", "month"]
     start_month: int | None = None  # survey_year: month the year starts; must be stated
     date_format: str | None = None  # date: strptime format
     # survey_round: one fixed period for the whole table
@@ -149,6 +149,10 @@ class PeriodSection(BaseModel):
     # quarter: published quarter name -> label and months; needs period_year and
     # period_quarter columns
     quarter_map: dict[str, QuarterSpec] = Field(default_factory=dict)
+    # month: one row per month, from a period_year column and a period_month column holding
+    # the month name. English names (January, Jan, Sept) are known; month_map adds spellings
+    # that a source uses, such as {"Marcrh" = 3}. Case and spacing are ignored.
+    month_map: dict[str, int] = Field(default_factory=dict)
     # Year windows that changed over time: later conventions apply from their first year on
     # and earlier years keep the window they were published with.
     conventions: list[YearConvention] = Field(default_factory=list)

@@ -1,0 +1,160 @@
+# IMD district rainfall normals (mm): average over 1951-2000, by month, season and year. No year dimension.
+
+[dataset]
+id = "imd_district_rainfall_normals"
+domain = "rainfall"
+title = "IMD normal rainfall (mm) by district: long-term average 1951-2000, by month, season and year"
+source_name = "India Meteorological Department"
+source_table = "District rainfall normal (mm), monthly, seasonal and annual, data period 1951-2000"
+publisher = "India Meteorological Department, Ministry of Earth Sciences (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "d0419b03-b41b-4226-b48b-0bc92bf139f8"
+raw_file = "imd_district_rainfall_normals.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-05"
+caveats = [
+  "These are normals: the average rainfall over 1951-2000. They are not the rainfall of any actual year, so they cannot answer how much it rained in a given year.",
+  "District and State boundaries are those of the source (before 2014): Telangana districts are listed under Andhra Pradesh, Ladakh (Leh) under Jammu and Kashmir, and newer districts are absent.",
+  "Seasons are January-February (winter), March-May (pre-monsoon), June-September (south-west monsoon) and October-December (post-monsoon); season and annual values are sums of the months.",
+  "Some district names are shortened or carry the parent district in brackets, for example SONEPAT(RTK).",
+  "Four district names occur in two States (Aurangabad, Bijapur, Bilaspur, Hamirpur); the State and district together identify a district.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+
+[columns]
+"STATE/UT" = "geo_state"
+DISTRICT = "geo_district"
+
+[values]
+mode = "indicators"
+
+[values.columns.JAN]
+id = "rainfall_normal_jan"
+label = "Normal rainfall, January (1951-2000 average)"
+unit = "mm"
+
+[values.columns.FEB]
+id = "rainfall_normal_feb"
+label = "Normal rainfall, February (1951-2000 average)"
+unit = "mm"
+
+[values.columns.MAR]
+id = "rainfall_normal_mar"
+label = "Normal rainfall, March (1951-2000 average)"
+unit = "mm"
+
+[values.columns.APR]
+id = "rainfall_normal_apr"
+label = "Normal rainfall, April (1951-2000 average)"
+unit = "mm"
+
+[values.columns.MAY]
+id = "rainfall_normal_may"
+label = "Normal rainfall, May (1951-2000 average)"
+unit = "mm"
+
+[values.columns.JUN]
+id = "rainfall_normal_jun"
+label = "Normal rainfall, June (1951-2000 average)"
+unit = "mm"
+
+[values.columns.JUL]
+id = "rainfall_normal_jul"
+label = "Normal rainfall, July (1951-2000 average)"
+unit = "mm"
+
+[values.columns.AUG]
+id = "rainfall_normal_aug"
+label = "Normal rainfall, August (1951-2000 average)"
+unit = "mm"
+
+[values.columns.SEP]
+id = "rainfall_normal_sep"
+label = "Normal rainfall, September (1951-2000 average)"
+unit = "mm"
+
+[values.columns.OCT]
+id = "rainfall_normal_oct"
+label = "Normal rainfall, October (1951-2000 average)"
+unit = "mm"
+
+[values.columns.NOV]
+id = "rainfall_normal_nov"
+label = "Normal rainfall, November (1951-2000 average)"
+unit = "mm"
+
+[values.columns.DEC]
+id = "rainfall_normal_dec"
+label = "Normal rainfall, December (1951-2000 average)"
+unit = "mm"
+
+[values.columns.ANNUAL]
+id = "rainfall_normal_annual"
+label = "Normal annual rainfall, January-December (1951-2000 average)"
+unit = "mm"
+
+[values.columns."JAN+FEB"]
+id = "rainfall_normal_jf"
+label = "Normal winter rainfall, January-February (1951-2000 average)"
+unit = "mm"
+
+[values.columns.MAM]
+id = "rainfall_normal_mam"
+label = "Normal pre-monsoon rainfall, March-May (1951-2000 average)"
+unit = "mm"
+
+[values.columns.JJAS]
+id = "rainfall_normal_jjas"
+label = "Normal south-west monsoon rainfall, June-September (1951-2000 average)"
+unit = "mm"
+
+[values.columns.OND]
+id = "rainfall_normal_ond"
+label = "Normal post-monsoon rainfall, October-December (1951-2000 average)"
+unit = "mm"
+
+[period]
+type = "survey_round"
+label = "1951-2000"          # long-term average; one period for the whole table
+start = "1951-01-01"
+end = "2000-12-31"
+
+[geo]
+level = "district"
+vintage = "imd_districts_pre2014"
+state_reference = "states"
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[[checks]]
+name = "annual_is_sum_of_months"
+kind = "sum"
+total = "rainfall_normal_annual"
+parts = ["rainfall_normal_jan", "rainfall_normal_feb", "rainfall_normal_mar", "rainfall_normal_apr", "rainfall_normal_may", "rainfall_normal_jun", "rainfall_normal_jul", "rainfall_normal_aug", "rainfall_normal_sep", "rainfall_normal_oct", "rainfall_normal_nov", "rainfall_normal_dec"]
+atol = 1.0
+flag = "inconsistent"
+
+[[checks]]
+name = "monsoon_is_sum_of_months"
+kind = "sum"
+total = "rainfall_normal_jjas"
+parts = ["rainfall_normal_jun", "rainfall_normal_jul", "rainfall_normal_aug", "rainfall_normal_sep"]
+atol = 1.0
+flag = "inconsistent"
+
+[[checks]]
+name = "unique_district"
+kind = "unique_key"
+columns = ["geo_state", "geo_district", "indicator_id"]
+
+[view]
+mode = "pivot_indicator"
+table = "imd_district_rainfall_normals"
+columns = { state = "geo_name_source", district = "geo_district_source" }

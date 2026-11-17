@@ -308,6 +308,8 @@ def _row_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
         )
     if period.type == "quarter":
         return _quarter_periods(df, config)
+    if period.type == "month":
+        return _month_periods(df, config)
     header = next(h for h, role in roles.items() if role[0] in ("period_year", "period_date"))
     source = df[header]
     if period.type == "date":
@@ -382,6 +384,66 @@ def _quarter_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
             "period_type": "quarter",
             "period_label": labels,
             "period_source": df[year_header].astype("string") + " " + df[quarter_header],
+            "period_start": pd.to_datetime(pd.Series(starts, index=df.index)),
+            "period_end": pd.to_datetime(pd.Series(ends, index=df.index)),
+        },
+        index=df.index,
+    )
+
+
+MONTH_NAMES = {
+    name: number
+    for number, names in enumerate(
+        [
+            ("january", "jan"),
+            ("february", "feb"),
+            ("march", "mar"),
+            ("april", "apr"),
+            ("may",),
+            ("june", "jun"),
+            ("july", "jul"),
+            ("august", "aug"),
+            ("september", "sep", "sept"),
+            ("october", "oct"),
+            ("november", "nov"),
+            ("december", "dec"),
+        ],
+        start=1,
+    )
+    for name in names
+}
+
+
+def _month_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
+    """Period of each row from a year column and a month-name column."""
+    period = config.period
+    roles = _roles(config)
+    year_header = next((h for h, r in roles.items() if r[0] == "period_year"), None)
+    month_header = next((h for h, r in roles.items() if r[0] == "period_month"), None)
+    if year_header is None or month_header is None:
+        msg = "period.type = month needs columns with the roles period_year and period_month"
+        raise ValueError(msg)
+    months = dict(MONTH_NAMES)
+    months.update({ops.normalise_name(name): number for name, number in period.month_map.items()})
+    years = pd.to_numeric(df[year_header].str.replace(",", "", regex=False), errors="coerce")
+    starts: list[Any] = []
+    ends: list[Any] = []
+    labels: list[str | None] = []
+    for year, text in zip(years, df[month_header].astype("string").fillna(""), strict=True):
+        month = months.get(ops.normalise_name(str(text)))
+        if pd.isna(year) or month is None:
+            starts.append(pd.NaT)
+            ends.append(pd.NaT)
+            labels.append(None)
+            continue
+        starts.append(pd.Timestamp(date(int(year), month, 1)))
+        ends.append(pd.Timestamp(ops.month_end(int(year), month)))
+        labels.append(f"{int(year)}-{month:02d}")
+    return pd.DataFrame(
+        {
+            "period_type": "month",
+            "period_label": labels,
+            "period_source": df[year_header].astype("string") + " " + df[month_header],
             "period_start": pd.to_datetime(pd.Series(starts, index=df.index)),
             "period_end": pd.to_datetime(pd.Series(ends, index=df.index)),
         },
