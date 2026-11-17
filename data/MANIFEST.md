@@ -26,9 +26,10 @@ Produced by `scripts/build_manifest.py` on 2026-11-17. Recompute after regenerat
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
 | `data\processed\cpi_all_india.parquet` | 393 | 32 | 67,007 | `fb878ef22316523d1a26ae1698d636d04c99f9e6259ce363b9b35b22120aa04d` |
+| `data\processed\crop_production_district.parquet` | 246,091 | 12 | 1,664,262 | `894d1c131b2d69887546f704b383d77871b04fb98e16b10a837d187dc642a2bf` |
 | `data\processed\dim_period.parquet` | 47,482 | 6 | 433,722 | `86173a78af57c1d413c657c5929522d8410d7e2f56dd5c90dfaefe0199316ebc` |
 | `data\processed\gsdp_per_capita_state.parquet` | 28 | 8 | 7,066 | `b57a6a2f016ba8f3f6237ea2615b55b408906b435250f934f3e4f16004917091` |
-| `data\processed\imd_district_rainfall_normals.parquet` | 640 | 21 | 73,761 | `423cef899a7fa2617cdc38f4e0ee7866b8252e39b58878694e18b325b386e78a` |
+| `data\processed\imd_district_rainfall_normals.parquet` | 640 | 21 | 67,837 | `85681aa28027fee55d5714d23523223e4eab9ecc3c45fe78a3c4ea9722d46646` |
 | `data\processed\imd_subdivision_monthly_rainfall.parquet` | 4,188 | 21 | 264,309 | `16af302b4883994ce84247443a05ce850385078cc26713ac9e145952c28dfe94` |
 | `data\processed\mandi_daily_prices.parquet` | 16,393 | 23 | 191,450 | `edd91f6c1e5c0376cbe2660d3709c538787d24192f05fe4210de5bc99d63e08b` |
 | `data\processed\msp_crops.parquet` | 29 | 17 | 12,305 | `d01bdd6e30caa1ce9c70558cc90b7fe0b65428f9e491d15c11090da7e5d9489e` |
@@ -36,6 +37,7 @@ Produced by `scripts/build_manifest.py` on 2026-11-17. Recompute after regenerat
 | `data\processed\nfhs5_district_indicators.parquet` | 73,528 | 21 | 312,155 | `579b4cd48e2934b969f63b85a8b0a7c286c5699e9106187cc56803a1556283d5` |
 | `data\processed\nfhs5_state_factsheet.parquet` | 14,410 | 20 | 82,567 | `0cc159178a368c76a331da3162e4b97f3787b4bbb8a1339d07ba1e232fa318c4` |
 | `data\processed\obs_cpi_all_india.parquet` | 10,611 | 28 | 63,979 | `5e014a7b46ee898125367df9e14af5987bb14adee9fcc9a8ac96349fc7646549` |
+| `data\processed\obs_crop_production_district.parquet` | 492,182 | 29 | 4,988,584 | `bd17db7146c9b275c7915e781545be598b55fa8f2740f886115e5380dea5042e` |
 | `data\processed\obs_gsdp_per_capita_state.parquet` | 140 | 27 | 20,559 | `1bef4065085048636e9646f9c573690a9ea375ced381e3dc1dfbc62636b5669b` |
 | `data\processed\obs_imd_district_rainfall_normals.parquet` | 10,880 | 27 | 137,009 | `fcf81ee088c9d177bf98ad6c0f816fd8dfbf8040d66c086b5059913a235a4b05` |
 | `data\processed\obs_imd_subdivision_monthly_rainfall.parquet` | 71,196 | 27 | 732,536 | `c4ed1a01b4d66f6554b29370d5039184b63c50b4e32c656bebbf0cd002293f1d` |
@@ -75,8 +77,9 @@ commit that produced it, so any figure can be traced back and reproduced.
 | Dataset | Dataset version | Config | Raw SHA-256 | Code commit | Observation SHA-256 |
 | --- | --- | --- | --- | --- | --- |
 | `cpi_all_india` | `1.0.0+570d0899` | 1.0.0 | `570d0899c81f2ccd5d3fe6ff421b316df084ec5708bdea55f6c93fada5342d09` | `908a9affabb3` | `5e014a7b46ee898125367df9e14af5987bb14adee9fcc9a8ac96349fc7646549` |
+| `crop_production_district` | `1.0.0+c0b2e3b0` | 1.0.0 | `c0b2e3b0fb669c0a3fe88aebd1fe80a58abd4500151688e383df7e9e6fa95985` | `c3fec1b32eb3` | `bd17db7146c9b275c7915e781545be598b55fa8f2740f886115e5380dea5042e` |
 | `gsdp_per_capita_state` | `1.0.0+6d28ac4c` | 1.0.0 | `6d28ac4c1aa8b5c4fd1433ff6a431a04b3a21a24c0eba6517f9f7f3d9a7f2fa7` | `908a9affabb3` | `1bef4065085048636e9646f9c573690a9ea375ced381e3dc1dfbc62636b5669b` |
-| `imd_district_rainfall_normals` | `1.0.0+8f4417fd` | 1.0.0 | `8f4417fd3707c6d0ecdb672330234f9c2d0cb895f00b1e53fb25d6775082ac6f` | `908a9affabb3` | `fcf81ee088c9d177bf98ad6c0f816fd8dfbf8040d66c086b5059913a235a4b05` |
+| `imd_district_rainfall_normals` | `1.0.0+8f4417fd` | 1.0.0 | `8f4417fd3707c6d0ecdb672330234f9c2d0cb895f00b1e53fb25d6775082ac6f` | `c3fec1b32eb3` | `fcf81ee088c9d177bf98ad6c0f816fd8dfbf8040d66c086b5059913a235a4b05` |
 | `imd_subdivision_monthly_rainfall` | `1.0.0+f655f42e` | 1.0.0 | `f655f42e672001c09fbd68ca14041f7299c76883d7aa9167400a1f963948bbad` | `7c497cf1ab69` | `c4ed1a01b4d66f6554b29370d5039184b63c50b4e32c656bebbf0cd002293f1d` |
 | `mandi_daily_prices` | `1.0.0+6f5bb19d` | 1.0.0 | `6f5bb19d0814247222160ea24df581c982b74ff4608a2486cca5a9d62ad1b73d` | `7c497cf1ab69` | `c0972ff648d47910773cee09e8b93fe04e3e8a059c246a66a9061366a9c612ec` |
 | `msp_crops` | `1.0.0+209586a3` | 1.0.0 | `209586a358cf83d5922c57a0e42e15f6c3458fcde59b2c169eefbaceb6e42154` | `908a9affabb3` | `827b2fe494a846f682d48818276b0e22e51e176739a47c15e361d60494263b1a` |
