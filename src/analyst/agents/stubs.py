@@ -21,6 +21,8 @@ from analyst.agents.state import (
     SqlAttempt,
 )
 
+from analyst.agents.state import AnalystState
+
 
 DEFAULTS = {
     "screen_request": "pass",
@@ -28,6 +30,7 @@ DEFAULTS = {
     "resolve_routing_decision": "run_sql",
     "check_coverage": "covered",
     "validate_sql_with_sqlglot": "valid",
+    "execute_read_only_duckdb": "success", 
     "deterministic_result_checks": "pass",
     "verify_numbers_deterministically": "match",
     "verify_claim_support_and_intent": "supported",
@@ -37,31 +40,37 @@ DEFAULTS = {
 }
 
 
-def next_script_value(state: dict, node_name: str) -> Any:
-    """Read the next scripted result for a node."""
+def next_script_value(state: AnalystState, node_name: str) -> Any:
+    """Read and advance the next scripted result for a node."""
 
     config = state.get("config")
-
-    if hasattr(config, "stub_script"):
-        script = config.stub_script
-    else:
-        script = config.get("stub_script", {})
+    script = config.stub_script if hasattr(config, "stub_script") else {}
 
     values = script.get(node_name, [])
 
     if not values:
         return DEFAULTS.get(node_name, "pass")
 
-    # Script position is stored in a private counter.
-    positions = state.get("_stub_positions", {})
+    positions = state.get("stub_positions", {})
     index = positions.get(node_name, 0)
 
     value = values[min(index, len(values) - 1)]
 
+    positions = dict(positions)
     positions[node_name] = index + 1
 
-    return value
+    return value, positions
 
+def increment_counter(state: AnalystState, counter_name: str) -> dict:
+    """Return an updated copy of the run counters."""
+
+    counters = state.counters.model_copy(
+        update={
+            counter_name: getattr(state.counters, counter_name) + 1
+        }
+    )
+
+    return {"counters": counters}
 
 def stage_event(node_name: str) -> list[Event]:
     return [Event(stage=node_name)]

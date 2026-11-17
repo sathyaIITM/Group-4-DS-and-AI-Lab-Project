@@ -68,7 +68,7 @@ def screen_request(state: dict[str, Any]) -> dict[str, Any]:
     elif any(re.search(pattern, question, re.IGNORECASE) for pattern in patterns):
         reason = "unsafe_instruction"
     result = ScreenResult(passes=reason is None, reason=reason)
-    return {"screen": result, "events": _event("screen_request", passes=result.passes, reason=reason)}
+    return {"screen": result.model_dump(mode="python"), "events": _event("screen_request", passes=result.passes, reason=reason)}
 
 def _catalogue():
     return load_catalogue(Path("configs/catalogue.toml"))
@@ -145,7 +145,7 @@ def resolve_routing_decision(state: dict[str, Any]) -> dict[str, Any]:
     decision = RoutingDecision(label=label, domain=domain, probability=probability,
                                backend=str(routing.get("backend", "unknown")),
                                escalated=bool(routing.get("escalated", False)))
-    return {"routing": decision, "events": _event("resolve_routing_decision", label=label)}
+    return {"routing": decision.model_dump(exclude_none=True), "events": _event("resolve_routing_decision", label=label)}
 
 def describe_from_metadata(state: dict[str, Any]) -> dict[str, Any]:
     catalogue = _catalogue()

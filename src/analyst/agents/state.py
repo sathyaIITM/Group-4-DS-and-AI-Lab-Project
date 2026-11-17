@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from email.policy import default
 import operator
 from datetime import datetime, timezone
 from typing import Annotated, Literal
@@ -109,6 +110,7 @@ class RunConfig(BaseModel):
 # ---------------------------------------------------------
 
 class AnalystState(BaseModel):
+    
 
     run_id: str = ""
     conversation_id: str = ""
@@ -187,4 +189,20 @@ class AnalystState(BaseModel):
     decision_log: Annotated[list[DecisionRecord], operator.add] = Field(
         default_factory=list
     )
+
+    stub_positions: dict[str, int] = Field(default_factory=dict)
+
+    def get(self, key: str, default=None):
+        """Dictionary-compatible read."""
+        return getattr(self, key, default)
+
+    def __getitem__(self, key: str):
+        """Support state['key'] access."""
+        if not hasattr(self, key):
+            raise KeyError(key)
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value):
+        """Support state['key'] = value."""
+        setattr(self, key, value)
     
