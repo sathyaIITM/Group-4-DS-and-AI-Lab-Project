@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from analyst.agents import nodes as t2
+from analyst.agents import templates
 from analyst.agents.context import published_catalogue
 from analyst.agents.events import stage_event
 from analyst.agents.state import AnalystState, Counters
@@ -43,7 +44,7 @@ def default_schemas(plan: InterpretationPlan) -> Mapping[str, Any] | str:
         return plan.obs_table
     import duckdb
 
-    rows = duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{path}')").fetchall()  # noqa: S608
+    rows = duckdb.execute(f"DESCRIBE SELECT * FROM read_parquet('{path}')").fetchall()  # noqa: S608
     return {plan.obs_table: {r[0]: r[1] for r in rows}}
 
 
@@ -177,7 +178,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
     def attempt(state: AnalystState, draft: SqlDraft, kind: str) -> SqlAttempt:
         return SqlAttempt(
             attempt=len(state.sql) + 1,
-            kind=kind,  # type: ignore[arg-type]
+            kind=kind,
             sql=draft.sql,
             statement=draft.statement,
             valid=True,
@@ -277,7 +278,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
             return update
         pending = update["pending_clarification"].model_copy(update={"question": text})
         update.update(
-            response_text=t2.templates.clarification(text, options),
+            response_text=templates.clarification(text, options),
             pending_clarification=pending,
             llm_records=[record],
             counters=counters.bumped("clarifications"),

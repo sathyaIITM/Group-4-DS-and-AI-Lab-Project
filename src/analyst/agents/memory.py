@@ -45,8 +45,8 @@ class ConversationMemory:
         self,
         conversation_id: str,
         *,
-        pending_clarification: dict | None = None,
-        prior_plan: dict | None = None,
+        pending_clarification: dict[str, Any] | None = None,
+        prior_plan: dict[str, Any] | None = None,
         prior_sql: str | None = None,
         prior_result_ref: str | None = None,
     ) -> None:

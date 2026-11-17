@@ -43,7 +43,7 @@ def indicators_of(table: dict[str, Any]) -> list[dict[str, str]]:
     units: dict[str, str] = table.get("indicator_units", {})
     labels: dict[str, str] = {}
     if _obs(dataset_id).exists():
-        rows = duckdb.sql(
+        rows = duckdb.execute(
             "SELECT DISTINCT indicator_id, indicator_label_source "  # noqa: S608
             f"FROM read_parquet('{_obs(dataset_id)}')"
         ).fetchall()
@@ -66,7 +66,7 @@ def codelists_of(table: dict[str, Any]) -> dict[str, list[str]]:
         return out
     for column, count in (table.get("categories") or {}).items():
         if isinstance(count, int) and count <= MAX_CODELIST:
-            rows = duckdb.sql(
+            rows = duckdb.execute(
                 f"SELECT DISTINCT \"{column}\" FROM read_parquet('{_obs(dataset_id)}') "  # noqa: S608
                 f'WHERE "{column}" IS NOT NULL ORDER BY 1'
             ).fetchall()

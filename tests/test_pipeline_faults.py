@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from tests.data_fixtures import BUILDERS, approved, config, run
 
 from analyst.data import profile as profile_mod
 from analyst.data.engine import RunResult
 from analyst.data.publish import _write_parquet
+from tests.data_fixtures import BUILDERS, approved, config, run
 
 
 def kinds(result: RunResult, severity: str | None = None) -> set[str]:
