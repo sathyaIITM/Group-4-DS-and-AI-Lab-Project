@@ -17,13 +17,13 @@ from sklearn.metrics import f1_score
 
 from analyst.decisions.routing import TOOLS, RoutingExample, RoutingPrediction, route
 from analyst.decisions.system_one import SystemOneClient
+from analyst.evaluation.metrics import ece
 
 EXAMPLES = Path("data/sample/routing_week1.jsonl")
 BACKENDS = {
     "kev": ("http://127.0.0.1:8009", "kev-latest", "KEV_API_KEY"),
     "jev": ("https://api.typesafe.ai", "jev-latest", "TYPESAFE_API_KEY"),
 }
-N_BINS = 10
 N_BOOTSTRAP = 2000
 SEED = 0
 
@@ -64,18 +64,6 @@ def _confidence(prediction: RoutingPrediction) -> float:
     """Share of the summed yes-probabilities held by the chosen tool."""
     total = sum(prediction.probabilities.values())
     return prediction.probabilities[prediction.predicted] / total if total > 0 else 0.0
-
-
-def ece(confidence: np.ndarray, correct: np.ndarray) -> float:
-    """Expected calibration error with equal-width bins."""
-    edges = np.linspace(0.0, 1.0, N_BINS + 1)
-    bins = np.clip(np.digitize(confidence, edges[1:-1]), 0, N_BINS - 1)
-    error = 0.0
-    for b in range(N_BINS):
-        mask = bins == b
-        if mask.any():
-            error += mask.mean() * abs(correct[mask].mean() - confidence[mask].mean())
-    return float(error)
 
 
 def score(predictions: list[RoutingPrediction]) -> dict[str, Any]:

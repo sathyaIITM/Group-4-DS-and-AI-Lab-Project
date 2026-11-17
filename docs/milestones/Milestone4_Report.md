@@ -144,19 +144,38 @@ about USD 0.07 of the cloud credit (estimate from token counts).
 
 ### A3. Tools and reliability checks
 
-*Pending (T4, T1).*
+**Built (T4).** The deterministic tool layer now resolves places, periods, units and query plans;
+provides calculations and bounded result-frame operations; validates intent-tied results; and
+checks narrated numbers against executed evidence. The read-only SQL runner applies a 1 GB
+memory limit, one DuckDB thread, disabled external access, a 10-second timeout, a 1,000-row cap,
+and SQL column binding before execution. Live graph wiring is in
+[`src/analyst/agents/tool_nodes.py`](../../src/analyst/agents/tool_nodes.py) and
+[`src/analyst/agents/t3_nodes.py`](../../src/analyst/agents/t3_nodes.py). The targeted tool and
+graph tests cover the deterministic tools and SQL runner; end-to-end data validation remains
+pending T1.
 
 ### A4. Experiments
 
-*Pending (T4, T3).* Includes retrieval recall at 4 and MRR on `e2e_dev` (E7, T3).
+**Harness built (T4).** [`src/analyst/evaluation/e2e_eval.py`](../../src/analyst/evaluation/e2e_eval.py)
+creates the fixed 40/60 action-and-table stratified split, verifies gold SQL read-only, limits
+parallel questions to two, retries provider 429 responses through the existing client, scores
+the agent-level outcomes, and reports per-case predictions and repeat spread. The shared metric
+implementations are in [`src/analyst/evaluation/metrics.py`](../../src/analyst/evaluation/metrics.py).
+Split hashes and run targets are recorded in [`configs/evaluation.yaml`](../../configs/evaluation.yaml).
+The source set is still marked unvalidated by T1 and the published Parquet tables are not present
+in this checkout, so no live runs or score claims are reported yet. Retrieval recall and MRR are
+owned by T3.
 
 ### A5. Stability
 
-*Pending (T4).*
+**Framework built (T4).** Three-run scoring reports which case outcomes change across repeats,
+with bootstrap intervals per run. Measured spread is pending validated inputs and completed runs.
 
 ### A6. Results and error analysis
 
-*Pending (T4, T1, T2).*
+*Pending measured results (T4, T1, T2).* The harness refuses unvalidated gold and verifies the
+gold SQL before spending model credit. T1 validation and the processed observation tables are
+prerequisites for reportable results.
 
 ## Part B. The decision models
 
@@ -206,7 +225,13 @@ either way. Code: [`src/analyst/evaluation/decision_eval.py`](../../src/analyst/
 
 ## 3. Drift baseline and log collation
 
-*Pending (T4).*
+**Built (T4).** Run bundles use a versioned manifest with row counts and file hashes;
+[`src/analyst/ops/collate_runs.py`](../../src/analyst/ops/collate_runs.py) validates bundles,
+deduplicates imports and records conflicting rows without overwriting them. The offline drift
+report in [`src/analyst/ops/drift.py`](../../src/analyst/ops/drift.py) compares outcome, routing,
+confidence, result-check, repair, cost and latency signals, with minimum window sizes and human
+review suggestions. No real baseline or simulated-shift report is claimed because the evaluation
+runs and collated warehouse are not yet available.
 
 ## 4. Key findings
 
