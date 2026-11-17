@@ -1,0 +1,22 @@
+catalogue_contract_version: "1"
+# The hosted model is set only in configs/model.yaml; prompt hashes come from the prompt registry.
+limits:
+  run_deadline_s: 30
+  max_sql_generations: 3
+  max_sql_repairs: 2
+  max_narrations: 2
+  max_resolution_retries: 1
+  max_coverage_rechecks: 1
+  max_widened_searches: 1
+  max_clarifications: 2
+  max_llm_calls: 8
+  catalogue_top_k: 4
+  candidate_min_score: null   # set on e2e_dev; null disables the router decline shortcut
+  routing_floor: null
+  shortcut_threshold: null
+  answer_threshold: null      # unused before v5
+rag:
+  cards: configs/rag/guidance_cards.v1.json
+  examples: data/sample/rag_verified_examples.v1.jsonl
+  cards_fallback: configs/rag/guidance_cards.v0.json
+  examples_fallback: data/sample/rag_verified_examples.v0.jsonl

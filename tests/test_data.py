@@ -4,13 +4,13 @@ from datetime import date
 
 import pandas as pd
 import pytest
-from tests.data_fixtures import BUILDERS, approved, config, run
 
 from analyst.data import ops
 from analyst.data.config import ReadSection, load_all
 from analyst.data.contract import EMPTY_VALUE_FLAGS, FLAG_RANK, Flag
 from analyst.data.publish import build_catalogue_entry, build_dim_period
 from analyst.data.source_rules import RULES, SourceRule, register
+from tests.data_fixtures import BUILDERS, approved, config, run
 
 NFHS_READ = ReadSection(
     missing_markers={"": "missing_in_source", "*": "suppressed"},

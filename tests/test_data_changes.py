@@ -10,6 +10,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from pydantic import ValidationError
+
+from analyst.data import ops, reconcile
+from analyst.data.config import SourceConfig
+from analyst.data.contract import PERIOD_TYPES
+from analyst.data.engine import RunResult
+from analyst.data.publish import _write_parquet, build_catalogue_entry, run_with_baseline
 from tests.data_fixtures import (
     BUILDERS,
     approved,
@@ -19,12 +25,6 @@ from tests.data_fixtures import (
     run,
     run_config,
 )
-
-from analyst.data import ops, reconcile
-from analyst.data.config import SourceConfig
-from analyst.data.contract import PERIOD_TYPES
-from analyst.data.engine import RunResult
-from analyst.data.publish import _write_parquet, build_catalogue_entry, run_with_baseline
 
 PLFS = "plfs_state_ur_usual_status"
 IMD = "imd_subdivision_monthly_rainfall"
