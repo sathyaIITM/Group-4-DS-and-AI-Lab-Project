@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-17",
+  "package": "laya==0.4.23 (uvx --from 'laya[serve]==0.4.23')",
+  "device": "mps (local machine, 16 GB)",
+  "smoke_a": {
+    "command": "laya-train --data data/splits/laya_domain/overfit32.v2.jsonl --eval data/splits/laya_domain/calibration.v2.jsonl --out models/checkpoints/laya_smoke --epochs 1 --device mps --seed 0",
+    "log": "outputs/logs/laya_smoke.log",
+    "result": "failed: MPS out of memory during the pre-training evaluation of 322 rows (evaluation batch 16), after 640 s; no training step reached"
+  },
+  "smoke_b": {
+    "command": "laya-train --data data/splits/laya_domain/overfit32.v2.jsonl --out models/checkpoints/laya_smoke --epochs 1 --micro-batch 2 --grad-accum 32 --device mps --seed 0",
+    "log": "outputs/logs/laya_smoke_b.log",
+    "result": "passed: exit 0, checkpoint written",
+    "wall_seconds": 29.16,
+    "peak_rss_bytes": 2915926016,
+    "train_items": 29,
+    "internal_holdout_items": 3,
+    "optimizer_updates": 1,
+    "mean_loss_epoch1": 1.8133
+  },
+  "criteria": {
+    "smoke_completes_on_mps": "pass (with --micro-batch 2 --grad-accum 32, same effective batch 64 as the default 8 x 8; without --eval)",
+    "projected_full_run": "estimate 1-2 h (6,756 item passes = 233 x the smoke's 29; the smoke time includes model loading); confirm from the first epoch of the full run",
+    "truncated_states": "not reported by laya-train; to be counted at scoring",
+    "scoring_route": "open: evaluation at batch 16 ran out of memory; scoring must use a smaller batch or laya-serve"
+  },
+  "decision": "feasible on the local machine with the smaller micro-batch; full run on the local machine (no Kev run is planned there), subject to approval"
+}

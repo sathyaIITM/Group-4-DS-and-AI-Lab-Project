@@ -1,0 +1,44 @@
+Downloading transformers (12.7MiB)
+Downloading numpy (5.3MiB)
+ Downloaded numpy
+ Downloaded transformers
+Installed 48 packages in 378ms
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 5 files:  40%|████      | 2/5 [00:00<00:00,  6.88it/s]Fetching 5 files:  60%|██████    | 3/5 [00:00<00:00,  7.77it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 10.62it/s]
+W1117 21:08:25.168000 35385 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+eval items 322 from data/splits/laya_domain/calibration.v2.jsonl (skipped {}, 0 overlapping training/calibration items)
+train items 29, calibration items 3, eval items 322 (data/splits/laya_domain/calibration.v2.jsonl), skipped {}, device mps
+optimizer budget: 29 train item(s), effective batch up to 64 (micro_batch 8 x grad_accum 8), 1 optimizer updates over 1 epoch(s)
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)
+	<AGXG17GFamilyCommandBuffer: 0x7990c64700>
+    label = <none> 
+    device = <AGXG17GDevice: 0x103bf6f40>
+        name = Apple M5 
+    commandQueue = <AGXG17GFamilyCommandQueue: 0x799580c000>
+        label = <none> 
+        device = <AGXG17GDevice: 0x103bf6f40>
+            name = Apple M5 
+    retainedReferences = 1
+laya-train: unexpected error: MPS command buffer execution failed: Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory). This error may have been asynchronously reported, so the stack trace below might be incorrect.
+      640.20 real         5.34 user       136.56 sys
+          2947530752  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              254620  page reclaims
+               67655  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                 369  messages sent
+                3304  messages received
+                   1  signals received
+             3346104  voluntary context switches
+              654103  involuntary context switches
+         10547847092  instructions retired
+          4015264289  cycles elapsed
+            87769808  peak memory footprint
