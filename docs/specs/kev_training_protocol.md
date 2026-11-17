@@ -184,6 +184,9 @@ inference only. The Laya row follows `docs/specs/laya_feasibility_plan.md`.
 | 17 Nov | Local smoke run (32 records, 4 updates): every update clipped (gradient norm about 18 against 1.0); about 17 s per update on MPS | Clipped-step share reported per run; `ep1` projected at about 67 min (estimate) |
 | 17 Nov | Laya smoke run ran out of MPS memory in its own pre-training evaluation | Laya runs without `--eval` and with micro-batch 2 x accumulation 32 (same effective batch); see `docs/specs/laya_feasibility_plan.md` |
 | M3 | 30 of 32 optimizer steps clipped in the 250-record local run | Clipped-step share is reported per run; lr 1e-5 tests whether it falls |
+| 17 Nov | T4 smoke runs (Colab; Kaggle, two GPUs at once): 16 updates in 17-20 s (0.56-0.66 s per record), peak GPU memory 6.6 GB of 16 GB, 15 of 16 updates clipped | Per-session estimates of about 45-65 min; records in `outputs/reports/kev_runs/smoke_colab/` |
+| 17 Nov | The three T4 smoke runs (Colab, Kaggle GPU 0 and GPU 1) saved byte-identical adapters and the same loss (0.906 at step 10); `head.pt` hashes differ only because the file also stores each run's arguments (paths) | Training on the T4 is reproducible across platforms with the locked environment; reported as evidence for reproducibility |
+| 17 Nov | Kaggle prints `Error in sitecustomize ... No module named 'wrapt'` and an unauthenticated Hugging Face download warning | Harmless: Kaggle's start-up hook fails inside the separate Kev environment and is skipped; two model downloads need no token. No change |
 | 17 Nov | External code review (two independent reviewers) | Section 9 |
 
 ## 9. Changes after the external code review (17 November)
