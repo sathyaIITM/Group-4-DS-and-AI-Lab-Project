@@ -1,9 +1,17 @@
+"""Run configuration: `RunConfig.from_files` loads and hashes the configuration files."""
+
 from __future__ import annotations
+
 import hashlib
 from pathlib import Path
 from typing import Any
+
 import yaml
-from analyst.agents.state import Limits, RunConfig
+
+from analyst.agents.state import Limits, RagPaths, RunConfig
+
+CONFIG_FILES = ("configs/model.yaml", "configs/inference.yaml")
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -12,23 +20,53 @@ def sha256_file(path: Path) -> str:
             digest.update(chunk)
     return digest.hexdigest()
 
+
+def _prompt_hashes() -> dict[str, str]:
+    from analyst.inference.prompts import PromptRegistry
+
+    return PromptRegistry().hashes()
+
+
+def _hosted_model(path: Path = Path("configs/model.yaml")) -> tuple[str, str]:
+    """The default hosted model id and tier from `model.yaml` (the only place it is set)."""
+    if not path.exists():
+        return "unset", "unset"
+    config = yaml.safe_load(path.read_text(encoding="utf-8")).get("hosted_llm", {})
+    tier = config.get("default_tier", "unset")
+    return str(config.get("tiers", {}).get(tier, "unset")), str(tier)
+
+
 def load_run_config(version: str = "v0", config_path: str = "configs/agent.yaml") -> RunConfig:
-    """Load an immutable run configuration and retain hashes of its source files."""
+    """An immutable run configuration with the hash of every file it was built from.
+
+    Hashed: `agent.yaml`, `model.yaml`, `inference.yaml`, the guidance-card and example files in
+    use, and every prompt (`prompt_hashes`, from the prompt registry).
+    """
     if version not in {f"v{i}" for i in range(7)}:
-        raise ValueError(f"unsupported agent version: {version}")
+        msg = f"unsupported agent version: {version}"
+        raise ValueError(msg)
     path = Path(config_path)
     raw: dict[str, Any] = {}
     hashes: dict[str, str] = {}
     if path.exists():
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         hashes[str(path)] = sha256_file(path)
+    for name in CONFIG_FILES:
+        if Path(name).exists():
+            hashes[name] = sha256_file(Path(name))
     limits = Limits.model_validate(raw.get("limits", {}))
+    rag = RagPaths.model_validate(raw.get("rag", {}))
+    for name in (rag.cards, rag.examples, rag.cards_fallback, rag.examples_fallback):
+        if Path(name).exists():
+            hashes[name] = sha256_file(Path(name))
+    hosted = _hosted_model()
     return RunConfig(
         version=version,
         limits=limits,
-        model_id=str(raw.get("model", {}).get("id", "unset")),
-        model_version=str(raw.get("model", {}).get("version", "unset")),
-        prompt_hashes=dict(raw.get("prompt_hashes", {})),
+        rag=rag,
+        model_id=hosted[0],
+        model_version=hosted[1],
+        prompt_hashes=_prompt_hashes(),
         config_hashes=hashes,
         catalogue_contract_version=str(raw.get("catalogue_contract_version", "unknown")),
     )
