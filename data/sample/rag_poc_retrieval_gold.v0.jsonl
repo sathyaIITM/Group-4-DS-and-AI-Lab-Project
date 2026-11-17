@@ -1,0 +1,12 @@
+{"id": "rp-01", "question": "Which state had the highest unemployment rate in 2019-20?", "expected_dataset_ids": ["plfs_state_ur_usual_status"]}
+{"id": "rp-02", "question": "What was Kerala's unemployment rate in 2019-20?", "expected_dataset_ids": ["plfs_state_ur_usual_status"]}
+{"id": "rp-03", "question": "How much rain did Kerala get during the 2017 southwest monsoon, in millimetres?", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"]}
+{"id": "rp-04", "question": "What was Odisha's average monsoon rainfall between 1971 and 2000?", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"]}
+{"id": "rp-05", "question": "By what percentage did India's overall unemployment rate fall between 2017-18 and 2021-22?", "expected_dataset_ids": ["plfs_state_ur_usual_status"]}
+{"id": "rp-06", "question": "Which district in Bihar has the highest share of women aged 15-49 who are literate?", "expected_dataset_ids": ["nfhs5_district_indicators"]}
+{"id": "rp-07", "question": "Which market reported the highest modal price for onion in Maharashtra?", "expected_dataset_ids": ["mandi_daily_prices"]}
+{"id": "rp-08", "question": "What was the unemployment rate in Kerala in 2022-23?", "expected_dataset_ids": ["plfs_state_ur_usual_status"]}
+{"id": "rp-09", "question": "What was the female unemployment rate in Bihar in 2019-20?", "expected_dataset_ids": ["plfs_state_ur_usual_status"]}
+{"id": "rp-10", "question": "Which state has the highest total crime incidence in 2024?", "expected_dataset_ids": ["ncrb_annual_crime_statistics"]}
+{"id": "rp-11", "question": "What was Tamil Nadu's GDP growth in 2022-23?", "expected_dataset_ids": []}
+{"id": "rp-12", "question": "Give me the exact number of households with electricity in every district.", "expected_dataset_ids": ["nfhs5_district_indicators"]}

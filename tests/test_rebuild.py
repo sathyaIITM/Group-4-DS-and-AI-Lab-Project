@@ -28,11 +28,11 @@ pytestmark = pytest.mark.skipif(
 
 # SHA-256 of the Milestone 2 outputs, as recorded in the submitted data manifest.
 GOLDEN_SHA256 = {
-    "imd_subdivision_monthly_rainfall": "9db782cb7ef9af0b48c3e2e5b3ef63f106c28ee2782c919e261f008f1fb02891",  # noqa: E501
+    "imd_subdivision_monthly_rainfall": "9db782cb7ef9af0b48c3e2e5b3ef63f106c28ee2782c919e261f008f1fb02891",
     "mandi_daily_prices": "74fccb849339cd9592ccf882c148ab0080f380415123d0b26c15120ed1aebd8e",
-    "ncrb_annual_crime_statistics": "e4878fad6dbc66a01e079d5ccd552f8b48b2c3880772249e72d7539af0364f6b",  # noqa: E501
+    "ncrb_annual_crime_statistics": "e4878fad6dbc66a01e079d5ccd552f8b48b2c3880772249e72d7539af0364f6b",
     "nfhs5_district_indicators": "8308c32c297eafa03dd9ef8129e6a3a97a86d81b5cd88fb6df195af0eda73731",
-    "plfs_state_ur_usual_status": "02294673edc08311080cac3c3ead40fc4609a6e0b0d2c71a0847bc77b66f6dab",  # noqa: E501
+    "plfs_state_ur_usual_status": "02294673edc08311080cac3c3ead40fc4609a6e0b0d2c71a0847bc77b66f6dab",
 }
 # Old flag name -> shared vocabulary (a rename; no value changes meaning).
 FLAG_RENAME = {
@@ -167,7 +167,7 @@ def test_reference_queries_return_the_same_results(release) -> None:
         con = duckdb.connect()
         for table in tables:
             con.execute(
-                f"CREATE VIEW {table} AS SELECT * FROM read_parquet('{base / table}.parquet')"  # noqa: S608
+                f"CREATE VIEW {table} AS SELECT * FROM read_parquet('{base / table}.parquet')"
             )
         return con
 
