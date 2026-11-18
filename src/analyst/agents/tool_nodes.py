@@ -353,6 +353,32 @@ def codelist_of(table: Mapping[str, Any], column: str) -> list[str]:
     return values if len(values) <= 6 else []
 
 
+def inherit_from_prior(
+    plan: InterpretationPlan,
+    intent: QueryIntent,
+    prior: InterpretationPlan,
+    table: Mapping[str, Any],
+) -> InterpretationPlan:
+    """A follow-up keeps the slots it neither names nor marks as changed (design Section 5):
+    "What was the crime rate that year?" keeps the prior year; "And Maharashtra?" keeps the
+    measure and the period. Places and indicators carry over within the same table only."""
+    changed = set(intent.changed_slots)
+    update: dict[str, Any] = {}
+    same_table = prior.dataset_id == plan.dataset_id
+    types = set(table.get("period_types", []))
+    keep_period = not intent.period_mentions and "period" not in changed and prior.periods
+    if keep_period and (same_table or all(p.type in types for p in prior.periods)):
+        update["periods"] = prior.periods
+        update["assumptions"] = [a for a in plan.assumptions if a.code != "D1"]
+    keep_place = not intent.place_mentions and not intent.all_places_level
+    if same_table and keep_place and "place" not in changed and prior.places:
+        update["places"] = prior.places
+        update["exclude_total_rows"] = prior.exclude_total_rows
+    if same_table and not intent.indicator_ids and "indicator" not in changed:
+        update["indicators"] = prior.indicators
+    return plan.model_copy(update=update) if update else plan
+
+
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
     """Return graph node overrides; callers combine these with the T2 and T3 adapters."""
 
@@ -367,11 +393,21 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         table = deps.catalogue.get(state.intent.dataset_id)
         if table is None or state.intent.action == "decline":
             # No listed table fits, or the intent declines: coverage reports it as not covered.
+            # A clarify intent without a table ("during demonetisation": no dates) keeps its
+            # missing slot, which coverage turns into a clarification before any table check.
             plan = _no_fit_plan(state.intent)
+            if state.intent.action == "clarify":
+                slot = UnresolvedSlot(
+                    slot=_missing_slot(state.intent), mention=state.intent.reason or "", options=[]
+                )
+                plan = plan.model_copy(update={"unresolved": [slot]})
             return {
                 "plan": plan,
                 "events": stage_event(
-                    state, "resolve_places_periods_units", dataset_id=plan.dataset_id, unresolved=0
+                    state,
+                    "resolve_places_periods_units",
+                    dataset_id=plan.dataset_id,
+                    unresolved=len(plan.unresolved),
                 ),
             }
         try:
@@ -398,6 +434,8 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
                     detail=str(error)[:300],
                 ),
             }
+        if state.prior_plan is not None:
+            plan = inherit_from_prior(plan, state.intent, state.prior_plan, table)
         if state.intent.action == "clarify" and not plan.unresolved:
             # The intent asks for a detail the question leaves out; coverage turns an
             # unresolved slot into a clarification.

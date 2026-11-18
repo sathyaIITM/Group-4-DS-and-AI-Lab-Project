@@ -67,10 +67,13 @@ def run_result_checks(
         )
     )
     outcomes.extend(run_intent_checks(plan, result))
+    quality, quality_caveats = _value_quality(result)
+    if quality is not None:
+        outcomes.append(quality)
     # Design Section 4.5: an unreported input or an undefined value passes with a caveat;
     # incompatible inputs mean the data is absent; a derivation whose rows the query did not
     # return is a query fault (the query is retried with a hint).
-    caveats: list[Caveat] = []
+    caveats: list[Caveat] = list(quality_caveats)
     faults, absent = [], []
     for item in derived:
         status, note = item.get("status"), str(item.get("note") or "")
@@ -119,6 +122,38 @@ def run_result_checks(
         caveats=caveats,
         retry_hint=_retry_hint(failures) if verdict in {"empty_result", "query_fault"} else None,
     )
+
+
+CAVEAT_FLAGS = {
+    "suppressed": "suppressed by the publisher",
+    "low_sample_estimate": "a low-sample estimate",
+    "missing_in_source": "not reported in the source",
+}
+
+
+def _value_quality(result: QueryResult) -> tuple[CheckOutcome | None, list[Caveat]]:
+    """Design Section 4.5, value quality: an implausible value is a query fault (the query must
+    exclude it); suppressed, low-sample and missing values pass with a caveat."""
+    names = [column.name for column in result.columns]
+    if "quality_flag" not in names:
+        return None, []
+    index = names.index("quality_flag")
+    flags = [str(row[index]) for row in result.rows]
+    implausible = flags.count("implausible")
+    caveats = [
+        Caveat(code=flag, text=f"{flags.count(flag)} value(s) {text}.", source="flag")
+        for flag, text in CAVEAT_FLAGS.items()
+        if flag in flags
+    ]
+    outcome = CheckOutcome(
+        name="value_quality",
+        passed=implausible == 0,
+        failure_class="none" if implausible == 0 else "query_fault",
+        expected="no row with quality_flag = 'implausible'",
+        observed=f"{implausible} implausible",
+        detail="Implausible values must be excluded with quality_flag <> 'implausible'.",
+    )
+    return outcome, caveats
 
 
 def _retry_hint(failures: list[CheckOutcome]) -> str | None:

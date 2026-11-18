@@ -9,8 +9,17 @@ from typing import Any
 from analyst.contracts.common import Assumption, IndicatorRef, Place
 from analyst.contracts.intent import QueryIntent
 from analyst.contracts.plan import InterpretationPlan, UnresolvedSlot
-from analyst.tools.periods import resolve_period
-from analyst.tools.places import FILTER_LEVELS, resolve_filter_place, resolve_place
+from analyst.tools.codelists import codelist
+from analyst.tools.periods import _year_type, latest_complete_period, resolve_period
+from analyst.tools.places import FILTER_LEVELS, is_national, resolve_filter_place, resolve_place
+
+# The total of an area or sector breakdown, used when the question names none (design D1-D8:
+# defaults are applied by code and stated in the answer).
+DEFAULT_TOTALS = {"area": "Total", "sector": "Rural+Urban"}
+
+
+def _has_value(dataset_id: str, column: str, value: str) -> bool:
+    return value in codelist(dataset_id, column)
 
 
 def resolve_plan(
@@ -65,7 +74,13 @@ def resolve_plan(
             )
         )
     places: list[Place] = []
+    assumptions: list[Assumption] = []
     for mention in intent.place_mentions:
+        if is_national(mention) and "national" in dataset.get("geo_levels", []):
+            national = resolve_place("India", dataset_id, "national", refs, db)
+            if national.place is not None:
+                places.append(national.place.model_copy(update={"requested": mention}))
+                continue
         levels = (
             [str(intent.all_places_level)]
             if intent.all_places_level
@@ -92,9 +107,15 @@ def resolve_plan(
                 )
             )
             continue
-        places.append(matches[0])
+        place = matches[0]
+        if " including " in place.name.casefold() and " including " not in mention.casefold():
+            assumptions.append(
+                Assumption(
+                    code="D6", text=f"{mention} is read as '{place.name}', the name in the table."
+                )
+            )
+        places.append(place)
     periods = []
-    assumptions: list[Assumption] = []
     round_labels: list[str] | None = None
     if intent.period_mentions and set(dataset.get("period_types", [])) == {"survey_round"}:
         if not re.fullmatch(r"obs_[a-z][a-z0-9_]*", obs_table):
@@ -116,6 +137,35 @@ def resolve_plan(
             periods.append(resolution.window)
             if resolution.assumption is not None:
                 assumptions.append(resolution.assumption)
+    single = intent.operation in {"lookup", "ranking", "comparison", "share", "aggregate"}
+    if not intent.period_mentions and single and not intent.derivations:
+        # D1: no period named -> the latest period the table publishes, stated in the answer.
+        types = [str(t) for t in dataset.get("period_types", [])]
+        kind = _year_type(set(types), dataset.get("period_start_month")) or (
+            types[0] if types else None
+        )
+        if kind is not None:
+            try:
+                latest = latest_complete_period(dataset_id, kind, db)
+            except LookupError:
+                latest = None
+            if latest is not None:
+                periods.append(latest)
+                assumptions.append(
+                    Assumption(code="D1", text=f"No period named: the latest, {latest.label}.")
+                )
+    categories = dict(intent.categories)
+    for column, total in DEFAULT_TOTALS.items():
+        values = (dataset.get("categories") or {}).get(column)
+        if (
+            values is not None
+            and column not in categories
+            and _has_value(dataset_id, column, total)
+        ):
+            categories[column] = [total]
+            assumptions.append(
+                Assumption(code="TOTAL", text=f"{column} = {total}: no {column} was named.")
+            )
     return InterpretationPlan(
         dataset_id=dataset_id,
         obs_table=obs_table,
@@ -124,12 +174,13 @@ def resolve_plan(
         places=places,
         all_places_level=intent.all_places_level,
         periods=periods,
-        categories=intent.categories,
+        categories=categories,
         operation=intent.operation,
         order=intent.order,
         limit=intent.limit,
         derivations=intent.derivations,
-        exclude_total_rows=True,
+        # The national row is flagged as the table's total row; asking for it keeps total rows.
+        exclude_total_rows=not any(place.level == "national" for place in places),
         assumptions=list({item.code + item.text: item for item in assumptions}.values()),
         unresolved=unresolved,
     )

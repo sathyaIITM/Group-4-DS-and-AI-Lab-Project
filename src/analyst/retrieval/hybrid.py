@@ -99,6 +99,10 @@ class HybridIndex:
     # -- embeddings ------------------------------------------------------------------------
     def _model(self) -> Any:
         if self._embedder is None:
+            # The model is pinned by revision and cached after the first download; online hub
+            # checks held agent processes open for minutes at exit (18 Nov), so the cache is used
+            # unless HF_HUB_OFFLINE is set otherwise (set it to 0 for the first download).
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
             from sentence_transformers import SentenceTransformer  # heavy import, load lazily
 
             self._embedder = SentenceTransformer(EMBED_MODEL, revision=EMBED_REVISION, device="cpu")

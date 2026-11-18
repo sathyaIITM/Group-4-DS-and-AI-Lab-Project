@@ -46,6 +46,14 @@ def context_payload(retrieved: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def question_payload(retrieved: Mapping[str, Any]) -> dict[str, Any]:
+    """The per-question part of intent prompt v5: candidate datasets, the category values
+    shown for them and guidance cards. Indicators are in the fixed catalogue block."""
+    payload = context_payload(retrieved)
+    payload.pop("indicators")
+    return payload
+
+
 def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:
     """Raise `ValueError` when the intent uses a value retrieval did not return."""
     datasets = {t["dataset_id"] for t in retrieved["tables"]}
@@ -86,7 +94,13 @@ def extract_intent(
     return llm.structured(
         "intent",
         "intent",
-        {"question": question, "context": context_payload(retrieved), "prior_plan": prior},
+        {
+            # Fixed for a catalogue release, so the long prefix is cached by the provider.
+            "catalogue": retrieved.get("catalogue_block") or {},
+            "question": question,
+            "context": question_payload(retrieved),
+            "prior_plan": prior,
+        },
         QueryIntent,
         counters=counters,
         validate=lambda intent: check_intent(intent, retrieved),

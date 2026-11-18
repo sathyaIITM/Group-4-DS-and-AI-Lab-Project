@@ -513,3 +513,175 @@ def test_answer_page_escapes_text_and_embeds_the_chart() -> None:
     assert "&lt;b&gt;Rain&lt;/b&gt;" in page and "<b>Rain" not in page
     assert "vegaEmbed('#chart'" in page and "<\\/script>" in page
     assert "Kerala" in page and "SELECT 1" in page
+
+
+# Fifth batch: causes found in the first e2e_dev run.
+
+
+def _plfs_like_db(tmp_path: Path) -> ReadOnlyDatabase:
+    parquet = tmp_path / "obs_srs.parquet"
+    pd.DataFrame(
+        {
+            "dataset_version": ["v1"] * 2,
+            "geo_level": ["national", "state"],
+            "geo_code": ["IN", "state:jammu_and_kashmir_including_ladakh"],
+            "geo_name": ["India", "Jammu and Kashmir Including Ladakh"],
+            "geo_vintage": ["2011", "2011"],
+        }
+    ).to_parquet(parquet)
+    return ReadOnlyDatabase({"obs_srs": parquet})
+
+
+def test_all_india_and_the_extended_state_name_resolve(tmp_path: Path) -> None:
+    from analyst.tools.resolve import resolve_plan
+
+    intent = _intent("answer", "srs").model_copy(
+        update={"place_mentions": ["All India", "Jammu and Kashmir"]}
+    )
+    dataset = {"dataset_id": "srs", "dataset_version": "v1", "geo_levels": ["national", "state"]}
+    plan = resolve_plan(
+        intent, dataset=dataset, indicators=[], db=_plfs_like_db(tmp_path), refs={}, catalogue={}
+    )
+    assert [p.code for p in plan.places] == ["IN", "state:jammu_and_kashmir_including_ladakh"]
+    assert not plan.unresolved
+    assert any("Including Ladakh" in a.text for a in plan.assumptions)
+
+
+def test_implausible_rows_are_a_query_fault_and_flags_become_caveats() -> None:
+    from analyst.tools.checks import run_result_checks
+
+    plan = stub_plan("demo").model_copy(update={"periods": [], "indicators": []})
+
+    def result(flags: list[str]) -> QueryResult:
+        return QueryResult.model_validate(
+            {
+                "sql": "SELECT 1",
+                "columns": [
+                    {"name": "value", "type": "DOUBLE"},
+                    {"name": "quality_flag", "type": "?"},
+                ],
+                "rows": [[1.0, f] for f in flags],
+                "row_count": len(flags),
+                "truncated": False,
+                "dataset_versions": {},
+                "exec_ms": 1,
+            }
+        )
+
+    bad = run_result_checks(plan, result(["reported", "implausible"]))
+    assert bad.verdict == "query_fault" and "implausible" in (bad.retry_hint or "")
+    flagged = run_result_checks(plan, result(["reported", "suppressed"]))
+    assert flagged.verdict == "pass_with_caveats"
+    assert [c.code for c in flagged.caveats] == ["suppressed"]
+
+
+def test_scoring_reads_items_and_series_endpoints() -> None:
+    from analyst.evaluation.e2e_eval import _case_checks
+
+    case = {
+        "expected_values": [1400.0, 1450.0, 1525.0, 2425.0],
+        "actual_numbers": [1400.0, 1450.0, 1525.0, 2425.0],
+        "narrated_numbers": [1400.0, 2425.0],
+        "expected_entities": ["Wheat"],
+        "actual_entities": ["Wheat"],
+    }
+    assert _case_checks(case) == {
+        "values_match": True,
+        "narration_match": True,
+        "entity_match": True,
+    }
+
+
+def test_vertex_token_is_fetched_once_and_cached(monkeypatch) -> None:
+    from analyst.inference import llm
+
+    calls: list[int] = []
+    monkeypatch.setattr(llm, "_TOKEN", {"value": None, "at": 0.0})
+    monkeypatch.setattr(llm, "_fetch_gcloud_token", lambda: calls.append(1) or "tok")
+    assert llm.gcloud_token() == "tok" and llm.gcloud_token() == "tok"
+    assert len(calls) == 1
+
+
+def test_national_question_keeps_total_rows_and_gets_the_latest_period(tmp_path: Path) -> None:
+    from analyst.tools.resolve import resolve_plan
+
+    parquet = tmp_path / "obs_srs.parquet"
+    pd.DataFrame(
+        {
+            "dataset_version": ["v1"] * 2,
+            "geo_level": ["national"] * 2,
+            "geo_code": ["IN"] * 2,
+            "geo_name": ["India"] * 2,
+            "geo_vintage": ["2011"] * 2,
+            "period_type": ["calendar_year"] * 2,
+            "period_label": ["2018", "2019"],
+            "period_start": pd.to_datetime(["2018-01-01", "2019-01-01"]),
+            "period_end": pd.to_datetime(["2018-12-31", "2019-12-31"]),
+        }
+    ).to_parquet(parquet)
+    intent = _intent("answer", "srs").model_copy(update={"place_mentions": ["all-India"]})
+    dataset = {
+        "dataset_id": "srs",
+        "dataset_version": "v1",
+        "geo_levels": ["national", "state"],
+        "period_types": ["calendar_year"],
+    }
+    db = ReadOnlyDatabase({"obs_srs": parquet})
+    plan = resolve_plan(intent, dataset=dataset, indicators=[], db=db, refs={}, catalogue={})
+    assert plan.places[0].code == "IN" and plan.exclude_total_rows is False
+    assert [p.label for p in plan.periods] == ["2019"]
+    assert [a.code for a in plan.assumptions] == ["D1"]
+
+
+def test_follow_up_keeps_the_prior_period_and_place() -> None:
+    from analyst.agents.tool_nodes import inherit_from_prior
+
+    prior = stub_plan("demo").model_copy(
+        update={"places": [_place("Kerala")], "periods": [_window("2021-22", 2021)]}
+    )
+    latest = stub_plan("demo").model_copy(
+        update={"periods": [_window("2022-23", 2022)], "places": []}
+    )
+    intent = _intent("answer", "demo").model_copy(update={"place_mentions": []})
+    plan = inherit_from_prior(latest, intent, prior, CATALOGUE["demo"])
+    assert [p.label for p in plan.periods] == ["2021-22"]
+    assert [p.name for p in plan.places] == ["Kerala"]
+    moved = intent.model_copy(update={"changed_slots": ["period"]})
+    assert [
+        p.label for p in inherit_from_prior(latest, moved, prior, CATALOGUE["demo"]).periods
+    ] == ["2022-23"]
+
+
+def test_clarify_without_a_table_becomes_a_clarification_not_a_decline(tmp_path: Path) -> None:
+    from analyst.decisions.coverage import check_coverage
+
+    nodes = make_tool_nodes(
+        ToolNodeDependencies(CATALOGUE, {}, lambda _d: _market_db(tmp_path))  # type: ignore[arg-type]
+    )
+    intent = _intent("clarify", "none_fit").model_copy(
+        update={"missing_slot": "period", "place_mentions": []}
+    )
+    plan = nodes["resolve_places_periods_units"](AnalystState(intent=intent))["plan"]
+    assert [u.slot for u in plan.unresolved] == ["period"]
+    assert check_coverage(plan, CATALOGUE).status == "ambiguous"
+
+
+def test_cached_input_tokens_are_read_and_priced_at_ten_percent() -> None:
+    from analyst.inference.llm import parse_reply
+
+    payload = {
+        "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}],
+        "usage": {
+            "prompt_tokens": 20000,
+            "completion_tokens": 100,
+            "prompt_tokens_details": {"cached_tokens": 18000},
+        },
+    }
+    reply = parse_reply(payload, "m", 5)
+    assert reply.cached_tokens == 18000
+    from analyst.inference.scripted import scripted_client
+
+    client, _ = scripted_client()  # input 0.1, output 0.4 USD per 1M tokens
+    full, cached = client._cost(20000, 100), client._cost(20000, 100, 18000)
+    assert full is not None and cached is not None
+    assert abs(cached - (2000 * 0.1 + 1800 * 0.1 + 100 * 0.4) / 1e6) < 1e-12

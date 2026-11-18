@@ -21,7 +21,9 @@ Providers (`configs/model.yaml`, `hosted_llm.provider`):
 import json
 import os
 import re
+import signal
 import subprocess
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -93,6 +95,7 @@ class LlmCallRecord(BaseModel):
     thinking_level: str | None = None
     reasoning_tokens: int | None = None
     finish_reason: str | None = None
+    cached_tokens: int | None = None  # part of tokens_in served from the implicit cache
     retry_of: int | None = None
     earlier_attempts: list["LlmCallRecord"] = Field(default_factory=list)
 
@@ -126,6 +129,7 @@ class ChatReply:
     latency_ms: int
     reasoning_tokens: int | None = None  # when the provider reports them separately
     finish_reason: str | None = None
+    cached_tokens: int | None = None  # input tokens served from the provider's implicit cache
 
 
 Transport = Callable[[ChatRequest], ChatReply]
@@ -201,6 +205,7 @@ def parse_reply(payload: dict[str, Any], model: str, latency_ms: int) -> ChatRep
     details = usage.get("completion_tokens_details") or {}
     choice = payload["choices"][0]
     reasoning = details.get("reasoning_tokens")
+    cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
     return ChatReply(
         content=choice["message"].get("content") or "",
         tokens_in=int(usage.get("prompt_tokens", 0)),
@@ -209,26 +214,58 @@ def parse_reply(payload: dict[str, Any], model: str, latency_ms: int) -> ChatRep
         latency_ms=latency_ms,
         reasoning_tokens=int(reasoning) if reasoning is not None else None,
         finish_reason=choice.get("finish_reason"),
+        cached_tokens=int(cached) if cached is not None else None,
     )
+
+
+CACHED_INPUT_SHARE = 0.1  # cached input billed at 10% of the input price
 
 
 class TransientError(LlmError):
     """A timeout, a network error or a retryable HTTP status."""
 
 
-def gcloud_token() -> str:
+_TOKEN: dict[str, Any] = {"value": None, "at": 0.0}
+_TOKEN_LOCK = threading.Lock()
+TOKEN_TTL_S = 45 * 60  # access tokens last about an hour
+TOKEN_TIMEOUT_S = 20
+
+
+def _fetch_gcloud_token() -> str:
+    """Run gcloud in its own process group, so a hung child cannot hold the pipes open."""
+    process = subprocess.Popen(
+        ["gcloud", "auth", "application-default", "print-access-token"],  # noqa: S607
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
     try:
-        result = subprocess.run(
-            ["gcloud", "auth", "application-default", "print-access-token"],  # noqa: S607
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=True,
-        )
-    except (OSError, subprocess.SubprocessError) as error:
-        msg = "no Vertex AI token: run `gcloud auth application-default login`"
+        out, _ = process.communicate(timeout=TOKEN_TIMEOUT_S)
+    except subprocess.TimeoutExpired as error:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.communicate()
+        msg = f"gcloud did not return a token within {TOKEN_TIMEOUT_S} s"
         raise LlmError(msg) from error
-    return result.stdout.strip()
+    if process.returncode != 0 or not out.strip():
+        msg = "no Vertex AI token: run `gcloud auth application-default login`"
+        raise LlmError(msg)
+    return out.strip()
+
+
+def gcloud_token() -> str:
+    """An application-default access token, cached for 45 minutes (one gcloud run per hour,
+    not one per call); questions run in parallel threads, so the cache is locked."""
+    with _TOKEN_LOCK:
+        now = time.monotonic()
+        if _TOKEN["value"] is None or now - float(_TOKEN["at"]) > TOKEN_TTL_S:
+            try:
+                _TOKEN["value"] = _fetch_gcloud_token()
+            except OSError as error:
+                msg = "no Vertex AI token: run `gcloud auth application-default login`"
+                raise LlmError(msg) from error
+            _TOKEN["at"] = now
+        return str(_TOKEN["value"])
 
 
 def vertex_base_url(project: str, location: str) -> str:
@@ -421,11 +458,15 @@ class LlmClient:
             return None
         return base + (self.thinking_allowance.get(effort, 0) if effort else 0)
 
-    def _cost(self, tokens_in: int, tokens_out: int) -> float | None:
+    def _cost(self, tokens_in: int, tokens_out: int, cached: int = 0) -> float | None:
+        """Estimate in USD; cached input tokens are billed at 10% of the input price (Vertex AI
+        implicit caching gives 90% off cached tokens; checked in the documentation 18 Nov)."""
         price_in, price_out = self.price_per_mtok.get("input"), self.price_per_mtok.get("output")
         if price_in is None or price_out is None:
             return None
-        return (tokens_in * price_in + tokens_out * price_out) / 1_000_000
+        cached = min(max(cached, 0), tokens_in)
+        billed_in = (tokens_in - cached) + cached * CACHED_INPUT_SHARE
+        return (billed_in * price_in + tokens_out * price_out) / 1_000_000
 
     def structured(
         self,
@@ -543,9 +584,12 @@ class LlmClient:
             tokens_in=reply.tokens_in,
             tokens_out=reply.tokens_out,
             latency_ms=reply.latency_ms,
-            cost_usd_est=self._cost(reply.tokens_in, billed_output_tokens(reply)),
+            cost_usd_est=self._cost(
+                reply.tokens_in, billed_output_tokens(reply), reply.cached_tokens or 0
+            ),
             reasoning_tokens=reply.reasoning_tokens,
             finish_reason=reply.finish_reason,
+            cached_tokens=reply.cached_tokens,
         ), False
 
 

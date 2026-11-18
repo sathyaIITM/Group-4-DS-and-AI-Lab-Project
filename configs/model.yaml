@@ -9,8 +9,9 @@ hosted_llm:
   location: global
   temperature: 0
   # Per-request timeout. Calls took 2-3 s (p50) and at most 10.6 s on e2e_dev (18 Nov); one
-  # 32 s spike used up the 30 s run deadline. A timed-out call is retried once as transient.
-  request_timeout_s: 15
+  # 32 s spike used up the 30 s run deadline. A timed-out call is retried once as transient;
+  # 12 s keeps one stalled call plus its retry inside the deadline.
+  request_timeout_s: 12
   # Reply format: json_schema (the contract's JSON Schema is sent and the model must follow it)
   # or json_object (any JSON, validated by code only). json_schema since 2026-11-17: confirmed
   # on Vertex AI with the QueryIntent contract; replies are still validated by code.
@@ -23,7 +24,7 @@ hosted_llm:
     intent: 512
     sql: 1024                 # raised from 512 on 2026-11-17: a 30-period query was cut off
     sql_repair: 1024
-    narrate: 400
+    narrate: 1000             # raised from 400 on 2026-11-18: a five-place ranking was cut off
     clarify: 150
     route: 300
   # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
@@ -45,7 +46,7 @@ hosted_llm:
     allowance:
       minimal: 0
       low: 1024
-      medium: 2048
+      medium: 4096              # raised from 2048 on 2026-11-18: a regenerated query used 2,950 thinking tokens and was cut off
       high: 4096
     # Levels each model accepts; a requested level is moved up to the nearest accepted one.
     # A model not listed gets the requested level unchanged. Sources: model pages (3.7, 3.8

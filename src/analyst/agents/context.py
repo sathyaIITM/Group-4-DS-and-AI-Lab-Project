@@ -8,6 +8,8 @@ values, which is the safe direction).
 
 from __future__ import annotations
 
+import hashlib
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -78,6 +80,26 @@ def codelists_of(table: dict[str, Any], question: str = "") -> dict[str, list[st
             if named:
                 out[column] = named
     return out
+
+
+def catalogue_block(path: Path = PUBLISHED) -> dict[str, Any]:
+    """Every published dataset with its indicators and short codelists, in catalogue order.
+
+    Identical for every question of a release, so it opens the intent prompt (v5) and the
+    provider's implicit cache can serve it (a prefix of at least 4,096 tokens is needed).
+    """
+    if not path.exists():
+        return {}
+    return _catalogue_block(hashlib.sha256(path.read_bytes()).hexdigest(), str(path))
+
+
+@lru_cache(maxsize=2)
+def _catalogue_block(release: str, path: str) -> dict[str, Any]:
+    from analyst.inference.intent import context_payload
+
+    published = published_catalogue(Path(path))
+    payload = context_payload(table_context(published, list(published)))
+    return {k: payload[k] for k in ("datasets", "indicators", "category_values")}
 
 
 def table_context(

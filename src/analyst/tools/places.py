@@ -103,6 +103,13 @@ def resolve_place(
         return PlaceResolution(
             status="unresolved", options=[f"{name} ({code})" for code, name, _ in same][:6]
         )
+    if not same:
+        # A table name that extends the asked name ("Jammu and Kashmir" in the SRS table is
+        # "Jammu and Kashmir Including Ladakh" before 2019): accepted only when it is unique.
+        longer = [
+            r for r in candidates if normalise(r[1]).startswith(normalise(target) + " including ")
+        ]
+        same = longer if len(longer) == 1 else []
     exact = same[0] if same else None
     if exact is not None:
         code, name, vintage = exact
@@ -156,6 +163,27 @@ def resolve_filter_place(
             match=matched,
         ),
     )
+
+
+# What users write for the national row ("All India", "rural India"); the sector or area word is
+# a category, which intent extraction records separately.
+NATIONAL_MENTIONS = {
+    "india",
+    "all india",
+    "all of india",
+    "national",
+    "nationwide",
+    "the country",
+    "country",
+    "bharat",
+    "rural india",
+    "urban india",
+    "all india level",
+}
+
+
+def is_national(mention: str) -> bool:
+    return normalise(mention) in NATIONAL_MENTIONS
 
 
 def map_state_to_subdivisions(state: str, refs: Mapping[str, Any]) -> list[str]:

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from analyst.agents import templates
-from analyst.agents.context import published_catalogue, table_context
+from analyst.agents.context import catalogue_block, published_catalogue, table_context
 from analyst.agents.events import stage_event
 from analyst.agents.limits import budget_exhausted, deadline_exceeded
 from analyst.agents.memory import ConversationMemory
@@ -188,6 +188,7 @@ def retrieve_context_and_examples(state: AnalystState) -> dict[str, Any]:
             every = [json.loads(line) for line in lines if line.strip()]
             examples = [e for e in every if e.get("dataset_id") in ids]
     retrieved.update(
+        catalogue_block=catalogue_block(),
         cards=[c["body"] for c in cards],
         card_ids=[c["id"] for c in cards],
         examples=[{"question": e.get("question"), "sql": e.get("sql")} for e in examples],
