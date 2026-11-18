@@ -26,7 +26,7 @@ from sklearn.metrics import f1_score
 from analyst.decisions.kev_questions import DOMAIN_OPTIONS
 from analyst.decisions.phase1 import domain_question, read_jsonl, write_jsonl
 from analyst.decisions.system_one import ChoiceQuestion, SystemOneClient
-from analyst.evaluation.routing_eval import ece
+from analyst.evaluation.metrics import ece
 
 ROOT = Path(__file__).resolve().parents[3]
 SPLIT_DIR = ROOT / "data" / "splits" / "kev_domain"

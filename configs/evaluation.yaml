@@ -1,0 +1,29 @@
+# Frozen end-to-end evaluation plan. The data set is not reportable until T1 validates it.
+sets:
+  source:
+    path: data/eval/e2e_v1.jsonl
+    sha256: 9ba8805346307ca54e48f1234c3a569cd2d3a4abfcd2b2ea55bc4a3e9a797d88
+    validated_by_t1: false
+  dev:
+    path: data/eval/e2e_dev.v1.jsonl
+    sha256: fabfc8eb8cac7e6550e199f679b48653c17b84b1e0d5a0713998630554e87144
+    size: 40
+  test:
+    path: data/eval/e2e_test.v1.jsonl
+    sha256: 5f1608032a478a74aeb9148ebb11c6ea2915156902e5a92ca9a26432aafe9f75
+    size: 60
+split:
+  seed: 0
+  stratify_by: [expected_action, first_dataset_id]
+repeats: 3
+versions: [v0, v1, v2]
+workers: 2
+targets:
+  execution_accuracy: null # fixed after the v0 baseline
+  claim_support: 0.95
+  ece: 0.10
+  abstention_precision: 0.85
+  first_event_ms_p95: 1500
+  duration_ms_p95: 20000
+  cost_per_answered_usd: null # compare with v0
+  chart_appropriateness: 0.90
