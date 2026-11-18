@@ -291,7 +291,6 @@ outputs/logs/*
 *.joblib
 *.pkl
 # Tabular dumps: allow small tracked samples under data/sample
-*.csv
 *.tsv
 *.xlsx
 *.xls
