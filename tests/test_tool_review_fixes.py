@@ -1,0 +1,409 @@
+"""Regression tests for the review of the T4 tool and evaluation branches (18 November)."""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+import pandas as pd
+
+from analyst.agents.state import AnalystState
+from analyst.agents.stubs import stub_plan
+from analyst.agents.tool_nodes import ToolNodeDependencies, make_tool_nodes
+from analyst.contracts import DerivationRequest, PeriodWindow, Place, QueryIntent
+from analyst.contracts.results import QueryResult
+from analyst.evaluation.e2e_eval import _case_success, _narrated_numbers, score_cases
+from analyst.tools.checks import run_intent_checks
+from analyst.tools.numbers import verify_numbers
+from analyst.tools.periods import resolve_period
+from analyst.tools.sql_runner import ReadOnlyDatabase
+
+CATALOGUE = {
+    "demo": {
+        "dataset_id": "demo",
+        "dataset_version": "v1",
+        "obs_table": "obs_demo",
+        "geo_levels": ["state"],
+        "period_types": ["survey_year"],
+        "period_start_month": 7,
+        "indicator_units": {"ur": "percent"},
+    },
+    "nfhs": {
+        "dataset_id": "nfhs",
+        "period_types": ["survey_round"],
+        "period_start_month": None,
+        "coverage_start": "2019-01-01",
+        "coverage_end": "2021-12-31",
+    },
+    "gsdp": {"dataset_id": "gsdp", "period_types": ["survey_year"], "period_start_month": 4},
+}
+
+
+def _window(label: str, year: int) -> PeriodWindow:
+    return PeriodWindow(
+        requested=label,
+        type="survey_year",
+        label=label,
+        start=date(year, 7, 1),
+        end=date(year + 1, 6, 30),
+    )
+
+
+def _place(name: str) -> Place:
+    return Place(
+        requested=name, level="state", code=f"state:{name.lower()}", name=name, match="exact"
+    )
+
+
+def _result(rows: list[list[object]]) -> QueryResult:
+    columns = [{"name": n, "type": "VARCHAR"} for n in ("geo_name", "period_label")]
+    return QueryResult.model_validate(
+        {
+            "sql": "SELECT 1",
+            "columns": [*columns, {"name": "value", "type": "DOUBLE"}],
+            "rows": rows,
+            "row_count": len(rows),
+            "truncated": False,
+            "dataset_versions": {"demo": "v1"},
+            "exec_ms": 1,
+        }
+    )
+
+
+def test_resolve_node_reads_places_through_the_read_only_database(tmp_path: Path) -> None:
+    parquet = tmp_path / "obs_demo.parquet"
+    pd.DataFrame(
+        {
+            "dataset_version": ["v1"],
+            "geo_code": ["state:kerala"],
+            "geo_name": ["Kerala"],
+            "geo_level": ["state"],
+            "geo_vintage": ["2011"],
+            "indicator_id": ["ur"],
+            "indicator_label_source": ["Unemployment rate"],
+        }
+    ).to_parquet(parquet)
+    nodes = make_tool_nodes(
+        ToolNodeDependencies(
+            catalogue=CATALOGUE,
+            refs={},
+            database_for=lambda _d: ReadOnlyDatabase({"obs_demo": parquet}),
+        )
+    )
+    intent = QueryIntent(
+        action="answer",
+        dataset_id="demo",
+        indicator_ids=[],
+        place_mentions=["Kerala"],
+        all_places_level=None,
+        period_mentions=["2019"],
+        categories={},
+        operation="lookup",
+        order=None,
+        limit=None,
+        derivations=[],
+        changed_slots=[],
+        reason=None,
+    )
+    update = nodes["resolve_places_periods_units"](AnalystState(intent=intent))
+    plan = update["plan"]
+    assert [place.name for place in plan.places] == ["Kerala"]
+    assert plan.periods[0].label == "2019-20"
+    assert [item.code for item in plan.assumptions] == ["D7"]
+
+
+def test_resolve_node_reports_a_fault_instead_of_raising() -> None:
+    def broken(_dataset: str) -> ReadOnlyDatabase:
+        raise FileNotFoundError("obs_demo.parquet")
+
+    nodes = make_tool_nodes(ToolNodeDependencies(CATALOGUE, {}, broken))
+    intent = QueryIntent.model_validate(
+        {
+            "action": "answer",
+            "dataset_id": "demo",
+            "indicator_ids": [],
+            "place_mentions": [],
+            "all_places_level": None,
+            "period_mentions": [],
+            "categories": {},
+            "operation": "lookup",
+            "order": None,
+            "limit": None,
+            "derivations": [],
+            "changed_slots": [],
+            "reason": None,
+        }
+    )
+    update = nodes["resolve_places_periods_units"](AnalystState(intent=intent))
+    assert update["node_error"] == "backend_error"
+
+
+def _derive(
+    derivations: list[DerivationRequest], rows: list[list[object]], places: list[str]
+) -> list:
+    plan = stub_plan("demo").model_copy(
+        update={
+            "periods": [_window("2017-18", 2017), _window("2021-22", 2021)],
+            "places": [_place(p) for p in places],
+            "derivations": derivations,
+        }
+    )
+    nodes = make_tool_nodes(ToolNodeDependencies(CATALOGUE, {}, lambda _d: None))  # type: ignore[arg-type,return-value]
+    state = AnalystState(plan=plan, result=_result(rows))
+    return nodes["compute_derivations"](state)["derived"]
+
+
+def test_derivations_use_the_intent_period_arguments_per_place() -> None:
+    request = DerivationRequest(
+        op="pct_change", args={"from_period": "2017-18", "to_period": "2021-22"}
+    )
+    derived = _derive(
+        [request],
+        [
+            ["Kerala", "2017-18", 10.0],
+            ["Kerala", "2021-22", 8.0],
+            ["Bihar", "2017-18", 5.0],
+            ["Bihar", "2021-22", 6.0],
+        ],
+        ["Kerala", "Bihar"],
+    )
+    assert [(d.note, d.status, d.output) for d in derived] == [
+        ("Kerala", "ok", Decimal("-20.0")),
+        ("Bihar", "ok", Decimal("20.0")),
+    ]
+    assert [d.id for d in derived] == ["d1", "d2"]
+    assert derived[0].inputs[0].row == 0
+
+
+def test_cagr_and_change_pp_run_on_float_cells() -> None:
+    rows: list[list[object]] = [["Kerala", "2017-18", 100.0], ["Kerala", "2021-22", 121.0]]
+    args = {"from_period": "2017-18", "to_period": "2021-22"}
+    cagr, change = _derive(
+        [DerivationRequest(op="cagr", args=args), DerivationRequest(op="change_pp", args=args)],
+        rows,
+        ["Kerala"],
+    )
+    assert cagr.status == "ok" and abs(float(cagr.output) - 4.8809) < 1e-3  # 4 years
+    assert change.output == Decimal("21.0") and change.unit == "percentage points"
+
+
+def test_missing_input_is_reported_not_raised() -> None:
+    request = DerivationRequest(
+        op="pct_change", args={"from_period": "2017-18", "to_period": "2021-22"}
+    )
+    (derived,) = _derive([request], [["Kerala", "2017-18", 10.0]], ["Kerala"])
+    assert derived.status == "input_unreported" and derived.output is None
+
+
+def test_survey_round_matches_the_published_label() -> None:
+    resolution = resolve_period("2019-21", "nfhs", CATALOGUE, ["2019-2021"])
+    assert resolution.status == "resolved"
+    assert resolution.window is not None and resolution.window.label == "2019-2021"
+    assert resolution.window.start == date(2019, 1, 1)
+    assert resolve_period("2015-16", "nfhs", CATALOGUE, ["2019-2021"]).status == "unresolved"
+
+
+def test_april_start_year_uses_the_catalogue_start_month() -> None:
+    window = resolve_period("2020-21", "gsdp", CATALOGUE).window
+    assert window is not None and window.start == date(2020, 4, 1)
+    assert window.end == date(2021, 3, 31)
+
+
+def test_aggregate_result_without_place_column_is_not_a_query_fault() -> None:
+    plan = stub_plan("demo").model_copy(update={"places": [_place("Kerala")]})
+    result = QueryResult.model_validate(
+        {
+            "sql": "SELECT avg(value) AS value FROM obs_demo",
+            "columns": [{"name": "value", "type": "DOUBLE"}],
+            "rows": [[7.5]],
+            "row_count": 1,
+            "truncated": False,
+            "dataset_versions": {},
+            "exec_ms": 1,
+        }
+    )
+    places = next(o for o in run_intent_checks(plan, result) if o.name == "requested_places")
+    assert places.passed
+
+
+def test_number_check_accepts_the_number_as_written_or_in_base_units() -> None:
+    assert verify_numbers("Output was 1,234 thousand tonnes.", [1234.0]).passed
+    assert verify_numbers("About 12 lakh people.", [1_200_000]).passed
+    assert not verify_numbers("About 13 lakh people.", [1_200_000, 12]).passed
+    assert 12.0 in _narrated_numbers("12 lakh") and 1_200_000.0 in _narrated_numbers("12 lakh")
+
+
+def test_router_clarification_scores_and_counts_as_a_non_answer() -> None:
+    case = {
+        "id": "c1",
+        "expected_action": "clarify",
+        "outcome": "clarifying",
+        "unresolved_slots": [],
+        "notes": "Missing slot: place.",
+        "expected_values": [],
+        "expected_entities": [],
+    }
+    assert _case_success(case)
+    assert not _case_success({**case, "unresolved_slots": ["period"]})
+    score = score_cases([case])
+    assert score["abstention_precision"] == 1.0
+    assert score["review_cases"][0]["slot_check"] == "manual"
+
+
+# Second batch: findings of the offline integration run on e2e_dev (scripted LLM replies).
+
+RAIN_CATALOGUE = {
+    "rain": {"dataset_id": "rain", "period_types": ["calendar_year", "month", "season"]},
+    "cpi": {"dataset_id": "cpi", "period_types": ["month"]},
+}
+
+
+def test_monsoon_mentions_use_the_published_season_label() -> None:
+    for mention in ("monsoon 2015", "2015 monsoon", "2015 monsoon season", "JJAS 2015"):
+        window = resolve_period(mention, "rain", RAIN_CATALOGUE).window
+        assert window is not None and window.label == "2015-JJAS", mention
+
+
+def test_a_year_on_a_monthly_table_is_the_span_of_its_months() -> None:
+    resolution = resolve_period("2023", "cpi", RAIN_CATALOGUE)
+    assert resolution.window is not None and resolution.window.type == "month"
+    assert (resolution.window.start, resolution.window.end) == (
+        date(2023, 1, 1),
+        date(2023, 12, 31),
+    )
+    assert resolution.assumption is not None and resolution.assumption.code == "YEAR_SPAN"
+
+
+def _market_db(tmp_path: Path) -> ReadOnlyDatabase:
+    parquet = tmp_path / "obs_mandi.parquet"
+    pd.DataFrame(
+        {
+            "dataset_version": ["v1"] * 3,
+            "geo_level": ["market"] * 3,
+            "geo_code": ["market:a", "market:b", "market:c"],
+            "geo_name": ["Agra APMC", "Aurangabad", "Aurangabad"],
+            "geo_state": ["Uttar Pradesh", "Bihar", "Maharashtra"],
+            "geo_district": ["Agra", "Aurangabad", "Aurangabad"],
+            "geo_vintage": ["2011"] * 3,
+        }
+    ).to_parquet(parquet)
+    return ReadOnlyDatabase({"obs_mandi": parquet})
+
+
+def test_a_state_on_a_market_table_resolves_as_a_filter(tmp_path: Path) -> None:
+    from analyst.tools.resolve import resolve_plan
+
+    intent = QueryIntent.model_validate(
+        {
+            "action": "answer",
+            "dataset_id": "mandi",
+            "indicator_ids": [],
+            "place_mentions": ["Uttar Pradesh", "Aurangabad"],
+            "all_places_level": None,
+            "period_mentions": [],
+            "categories": {},
+            "operation": "comparison",
+            "order": None,
+            "limit": None,
+            "derivations": [],
+            "changed_slots": [],
+            "reason": None,
+        }
+    )
+    dataset = {"dataset_id": "mandi", "dataset_version": "v1", "geo_levels": ["market"]}
+    plan = resolve_plan(
+        intent, dataset=dataset, indicators=[], db=_market_db(tmp_path), refs={}, catalogue={}
+    )
+    assert [(p.level, p.code) for p in plan.places] == [("state", "state:uttar_pradesh")]
+    assert [(u.slot, u.mention, len(u.options)) for u in plan.unresolved] == [
+        ("place", "Aurangabad", 2)
+    ]
+
+
+def test_coverage_accepts_a_state_filter_on_a_market_table() -> None:
+    from analyst.decisions.coverage import check_coverage
+
+    plan = stub_plan("mandi").model_copy(
+        update={"places": [_place("Kerala")], "periods": [], "indicators": []}
+    )
+    table = {
+        "dataset_id": "mandi",
+        "geo_levels": ["market"],
+        "coverage_start": "2024-01-01",
+        "coverage_end": "2024-12-31",
+        "period_types": ["date"],
+        "indicator_units": {},
+    }
+    assert check_coverage(plan, {"mandi": table}).status == "covered"
+
+
+def _intent(action: str, dataset_id: str) -> QueryIntent:
+    return QueryIntent.model_validate(
+        {
+            "action": action,
+            "dataset_id": dataset_id,
+            "indicator_ids": [],
+            "place_mentions": ["Kerala"],
+            "all_places_level": None,
+            "period_mentions": [],
+            "categories": {},
+            "operation": "lookup",
+            "order": None,
+            "limit": None,
+            "derivations": [],
+            "changed_slots": [],
+            "reason": "reason",
+        }
+    )
+
+
+def test_decline_intents_reach_coverage_as_none_fit(tmp_path: Path) -> None:
+    nodes = make_tool_nodes(
+        ToolNodeDependencies(CATALOGUE, {}, lambda _d: _market_db(tmp_path))  # type: ignore[arg-type]
+    )
+    declined = nodes["resolve_places_periods_units"](
+        AnalystState(intent=_intent("decline", "demo"))
+    )
+    assert declined["plan"].dataset_id == "none_fit"
+    no_fit = nodes["resolve_places_periods_units"](AnalystState(intent=_intent("decline", "x")))
+    assert no_fit["plan"].dataset_id == "none_fit" and "node_error" not in no_fit
+
+
+def test_derivation_statuses_follow_the_design_classes() -> None:
+    from analyst.tools.checks import NOT_IN_RESULT, run_result_checks
+
+    plan = stub_plan("demo").model_copy(update={"periods": [], "indicators": []})
+    result = _result([["Kerala", "2017-18", 10.0]])
+
+    def verdict(status: str, note: str) -> str:
+        derived = [{"op": "pct_change", "status": status, "note": note}]
+        return run_result_checks(plan, result, derived).verdict
+
+    assert verdict("input_unreported", "the value for '2021-22' is not reported") == (
+        "pass_with_caveats"
+    )
+    assert verdict("undefined", "") == "pass_with_caveats"
+    assert verdict("input_unreported", f"Kerala: {NOT_IN_RESULT}0 rows") == "query_fault"
+    assert verdict("incompatible_inputs", "base years differ") == "data_absent"
+
+
+def test_place_check_reads_entity_alias_and_state_column() -> None:
+    plan = stub_plan("demo").model_copy(update={"places": [_place("Wayanad")], "periods": []})
+    result = QueryResult.model_validate(
+        {
+            "sql": "SELECT geo_name AS entity, geo_state, value FROM obs_demo",
+            "columns": [
+                {"name": "entity", "type": "VARCHAR"},
+                {"name": "geo_state", "type": "VARCHAR"},
+                {"name": "value", "type": "DOUBLE"},
+            ],
+            "rows": [["Wayanad", "Kerala", 1.0]],
+            "row_count": 1,
+            "truncated": False,
+            "dataset_versions": {},
+            "exec_ms": 1,
+        }
+    )
+    places = next(o for o in run_intent_checks(plan, result) if o.name == "requested_places")
+    assert places.passed

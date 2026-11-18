@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import calendar
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from pydantic import Field
 
 from analyst.contracts import Assumption, Contract, PeriodWindow
+from analyst.contracts.common import PeriodType
 
 
 class PeriodResolution(Contract):
@@ -32,7 +33,7 @@ def _window(kind: str, start_year: int, start_month: int, requested: str) -> Per
         label = f"{start_year}-{(start_year + 1) % 100:02d}"
     return PeriodWindow(
         requested=requested,
-        type=kind,  # type: ignore[arg-type]
+        type=cast(PeriodType, kind),
         label=label,
         start=date(start_year, start_month, 1),
         end=date(end_year, end_month, end_day),
@@ -73,7 +74,7 @@ def latest_complete_period(dataset_id: str, period_type: str, db: Any) -> Period
     label, start, end = row
     return PeriodWindow(
         requested="latest",
-        type=period_type,  # type: ignore[arg-type]
+        type=cast(PeriodType, period_type),
         label=str(label),
         start=start.date() if hasattr(start, "date") else start,
         end=end.date() if hasattr(end, "date") else end,
@@ -84,7 +85,7 @@ def latest_complete_period(dataset_id: str, period_type: str, db: Any) -> Period
 def _catalogue_entry(dataset_id: str, catalogue: Any) -> Mapping[str, Any] | None:
     if isinstance(catalogue, Mapping):
         if dataset_id in catalogue and isinstance(catalogue[dataset_id], Mapping):
-            return catalogue[dataset_id]
+            return cast(Mapping[str, Any], catalogue[dataset_id])
         tables = catalogue.get("tables", [])
     else:
         tables = getattr(catalogue, "tables", [])
@@ -95,8 +96,51 @@ def _catalogue_entry(dataset_id: str, catalogue: Any) -> Mapping[str, Any] | Non
     return None
 
 
-def resolve_period(mention: str, dataset_id: str, catalogue: Any) -> PeriodResolution:
-    """Resolve a year, fiscal year, month, or monsoon period using published conventions."""
+def _year_span(text: str) -> tuple[int, int] | None:
+    """Read "2019-21", "2019-2021" or "2019\u201321" as (2019, 2021); None for anything else."""
+    match = re.fullmatch(r"(\d{4})\s*[-/\u2013]\s*(\d{2}|\d{4})", text.strip())
+    if match is None:
+        return None
+    first, second = int(match.group(1)), int(match.group(2))
+    if second < 100:
+        second += first - first % 100 + (100 if second < first % 100 else 0)
+    return (first, second) if second > first else None
+
+
+def _survey_round(
+    text: str, available_labels: Sequence[str] | None, entry: Mapping[str, Any]
+) -> PeriodResolution:
+    """Match a survey round by its year span against the labels published in the table."""
+    labels = list(available_labels or [])
+    span = _year_span(text)
+    matches = [label for label in labels if span is not None and _year_span(label) == span]
+    matches += [label for label in labels if label.casefold() == text.casefold()]
+    matches = list(dict.fromkeys(matches))
+    if len(matches) != 1:
+        return PeriodResolution(status="unresolved", options=labels[:6])
+    label = matches[0]
+    first, last = _year_span(label) or (None, None)
+    start = entry.get("coverage_start") if len(labels) == 1 else None
+    end = entry.get("coverage_end") if len(labels) == 1 else None
+    window = PeriodWindow(
+        requested=text,
+        type="survey_round",
+        label=label,
+        start=date.fromisoformat(str(start)) if start else date(first or 1900, 1, 1),
+        end=date.fromisoformat(str(end)) if end else date(last or 1900, 12, 31),
+    )
+    return PeriodResolution(status="resolved", window=window)
+
+
+def resolve_period(
+    mention: str,
+    dataset_id: str,
+    catalogue: Any,
+    available_labels: Sequence[str] | None = None,
+) -> PeriodResolution:
+    """Resolve a year, fiscal year, month, monsoon or survey-round period using published
+    conventions. ``available_labels`` are the table's survey-round labels, read by the caller.
+    """
     entry = _catalogue_entry(dataset_id, catalogue)
     if entry is None:
         return PeriodResolution(status="unresolved", options=[])
@@ -104,6 +148,8 @@ def resolve_period(mention: str, dataset_id: str, catalogue: Any) -> PeriodResol
     start_month = entry.get("period_start_month")
     text = mention.strip()
     lower = text.casefold()
+    if types == {"survey_round"}:
+        return _survey_round(text, available_labels, entry)
     if lower in {"latest", "last year"}:
         # Latest requires querying the data; catalogue metadata alone cannot prove completeness.
         labels = entry.get("latest_periods", {})
@@ -123,13 +169,17 @@ def resolve_period(mention: str, dataset_id: str, catalogue: Any) -> PeriodResol
             )
         return PeriodResolution(status="unresolved", options=sorted(types))
 
-    season_match = re.fullmatch(r"(?i)(?:monsoon|jjas)\s+(\d{4})", text)
+    season_match = re.fullmatch(
+        r"(?i)(?:(?:the\s+)?(?:monsoon|jjas)(?:\s+season)?(?:\s+of)?\s+(\d{4})"
+        r"|(\d{4})\s+(?:monsoon|jjas)(?:\s+season)?)",
+        text,
+    )
     if season_match and "season" in types:
-        year = int(season_match.group(1))
+        year = int(season_match.group(1) or season_match.group(2))
         window = PeriodWindow(
             requested=text,
             type="season",
-            label=f"JJAS {year}",
+            label=f"{year}-JJAS",  # the label published by the IMD table
             start=date(year, 6, 1),
             end=date(year, 9, 30),
         )
@@ -182,21 +232,40 @@ def resolve_period(mention: str, dataset_id: str, catalogue: Any) -> PeriodResol
             return PeriodResolution(status="unresolved", options=sorted(types))
         kind = _year_type(types, start_month)
         if kind in {"survey_year", "fiscal_year", "agri_year"}:
-            month = {"survey_year": 7, "fiscal_year": 4, "agri_year": 7}[kind]
+            month = _start_month(kind, start_month)
             return PeriodResolution(status="resolved", window=_window(kind, year, month, text))
         return PeriodResolution(status="unresolved", options=sorted(types))
     if year_match:
         year = int(year_match.group(1))
         kind = _year_type(types, start_month)
+        finer = next((grain for grain in ("month", "date") if grain in types), None)
+        if kind is None and finer is not None:
+            # A year on a monthly or daily table is the span of its months (or days).
+            return PeriodResolution(
+                status="resolved",
+                window=PeriodWindow(
+                    requested=text,
+                    type=cast(PeriodType, finer),
+                    label=str(year),
+                    start=date(year, 1, 1),
+                    end=date(year, 12, 31),
+                ),
+                assumption=Assumption(
+                    code="YEAR_SPAN", text=f"{year} read as January to December {year}."
+                ),
+            )
         if kind == "calendar_year":
             return PeriodResolution(status="resolved", window=_window(kind, year, 1, text))
         if kind in {"survey_year", "agri_year"}:
+            month = _start_month(kind, start_month)
+            window = _window(kind, year, month, text)
+            span = "July-June" if month == 7 else "April-March"
             return PeriodResolution(
                 status="resolved",
-                window=_window(kind, year, 7, text),
+                window=window,
                 assumption=Assumption(
                     code="D7",
-                    text="Bare year interpreted as the July-June year starting in that year.",
+                    text=f"{year} read as the {span} year {window.label}, which starts in {year}.",
                 ),
             )
         if kind == "fiscal_year":
@@ -209,6 +278,13 @@ def resolve_period(mention: str, dataset_id: str, catalogue: Any) -> PeriodResol
                 ),
             )
     return PeriodResolution(status="unresolved", options=sorted(types))
+
+
+def _start_month(kind: str, start_month: int | None) -> int:
+    """The table's own year start (GSDP is an April-March year labelled ``survey_year``)."""
+    if start_month in {4, 7}:
+        return int(start_month)
+    return {"survey_year": 7, "fiscal_year": 4, "agri_year": 7}[kind]
 
 
 def _year_type(types: set[str], start_month: int | None) -> str | None:

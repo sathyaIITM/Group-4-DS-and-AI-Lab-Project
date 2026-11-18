@@ -6,11 +6,11 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from analyst.contracts.common import IndicatorRef, Place
+from analyst.contracts.common import Assumption, IndicatorRef, Place
 from analyst.contracts.intent import QueryIntent
 from analyst.contracts.plan import InterpretationPlan, UnresolvedSlot
 from analyst.tools.periods import resolve_period
-from analyst.tools.places import resolve_place
+from analyst.tools.places import FILTER_LEVELS, resolve_filter_place, resolve_place
 
 
 def resolve_plan(
@@ -73,6 +73,16 @@ def resolve_plan(
         )
         resolutions = [resolve_place(mention, dataset_id, level, refs, db) for level in levels]
         matches = [resolution.place for resolution in resolutions if resolution.place is not None]
+        filters = [f for level in levels for f in FILTER_LEVELS.get(level, ()) if f not in levels]
+        if (
+            not matches
+            and not intent.all_places_level
+            and not any(resolution.options for resolution in resolutions)
+        ):
+            for level in dict.fromkeys(filters):
+                found = resolve_filter_place(mention, dataset_id, level, refs, db)
+                if found.place is not None:
+                    matches.append(found.place)
         if len(matches) != 1:
             options = [f"{place.name} ({place.level})" for place in matches]
             options.extend(option for resolution in resolutions for option in resolution.options)
@@ -84,14 +94,28 @@ def resolve_plan(
             continue
         places.append(matches[0])
     periods = []
+    assumptions: list[Assumption] = []
+    round_labels: list[str] | None = None
+    if intent.period_mentions and set(dataset.get("period_types", [])) == {"survey_round"}:
+        if not re.fullmatch(r"obs_[a-z][a-z0-9_]*", obs_table):
+            raise ValueError("invalid observation table name")
+        round_labels = [
+            str(row[0])
+            for row in db.execute(
+                f"SELECT DISTINCT period_label FROM {obs_table} "  # noqa: S608 - validated identifier
+                "WHERE period_label IS NOT NULL ORDER BY period_label"
+            ).fetchall()
+        ]
     for mention in intent.period_mentions:
-        resolution = resolve_period(mention, dataset_id, catalogue)
+        resolution = resolve_period(mention, dataset_id, catalogue, round_labels)
         if resolution.status != "resolved" or resolution.window is None:
             unresolved.append(
                 UnresolvedSlot(slot="period", mention=mention, options=resolution.options)
             )
         else:
             periods.append(resolution.window)
+            if resolution.assumption is not None:
+                assumptions.append(resolution.assumption)
     return InterpretationPlan(
         dataset_id=dataset_id,
         obs_table=obs_table,
@@ -106,6 +130,6 @@ def resolve_plan(
         limit=intent.limit,
         derivations=intent.derivations,
         exclude_total_rows=True,
-        assumptions=[],
+        assumptions=list({item.code + item.text: item for item in assumptions}.values()),
         unresolved=unresolved,
     )

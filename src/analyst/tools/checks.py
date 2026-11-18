@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Literal
 
 from analyst.contracts.checks import CheckOutcome, CheckReport, NumberCheck
 from analyst.contracts.common import Caveat
 from analyst.contracts.plan import InterpretationPlan
 from analyst.contracts.results import QueryResult
 from analyst.tools.numbers import verify_numbers
+
+NOT_IN_RESULT = "not in result: "  # prefix set by compute_derivations for missing rows
 
 
 def run_result_checks(
@@ -46,7 +48,10 @@ def run_result_checks(
         (i for i, column in enumerate(result.columns) if column.name == "indicator_id"), None
     )
     returned_ids = {str(row[id_column]) for row in result.rows} if id_column is not None else set()
-    matched = not required or required <= available or indicator_ids <= returned_ids
+    checkable = id_column is not None or bool(required & available)
+    matched = (
+        not required or not checkable or required <= available or indicator_ids <= returned_ids
+    )
     outcomes.append(
         CheckOutcome(
             name="requested_indicators",
@@ -56,34 +61,64 @@ def run_result_checks(
             observed=", ".join(sorted(available | returned_ids)),
             detail=(
                 "Checks that requested measures are represented by result labels or indicator ids."
+                if checkable
+                else "Not checkable: the result has no indicator column (single-measure query)."
             ),
         )
     )
     outcomes.extend(run_intent_checks(plan, result))
-    invalid = [item for item in derived if item.get("status") not in {None, "ok"}]
+    # Design Section 4.5: an unreported input or an undefined value passes with a caveat;
+    # incompatible inputs mean the data is absent; a derivation whose rows the query did not
+    # return is a query fault (the query is retried with a hint).
+    caveats: list[Caveat] = []
+    faults, absent = [], []
+    for item in derived:
+        status, note = item.get("status"), str(item.get("note") or "")
+        if status in {None, "ok"}:
+            continue
+        if note.startswith(NOT_IN_RESULT) or ": " + NOT_IN_RESULT in note:
+            faults.append(item)
+        elif status == "incompatible_inputs":
+            absent.append(item)
+        else:
+            caveats.append(
+                Caveat(
+                    code=f"derivation_{status}",
+                    text=f"{item.get('op')} could not be computed: {note}".strip(": "),
+                    source="check",
+                )
+            )
     outcomes.append(
         CheckOutcome(
             name="derived_values",
-            passed=not invalid,
-            failure_class="none" if not invalid else "query_fault",
-            expected="all derivations defined",
-            observed=f"{len(invalid)} undefined or incompatible",
+            passed=not faults and not absent,
+            failure_class="query_fault" if faults else "data_absent" if absent else "none",
+            expected="every derivation input returned by the query",
+            observed=f"{len(faults)} missing from the result, {len(absent)} incompatible, "
+            f"{len(caveats)} not computable",
             detail="Derived values must have compatible, reported inputs.",
         )
     )
     failures = [item for item in outcomes if not item.passed]
+    classes = {item.failure_class for item in failures}
+    verdict: Literal["pass", "pass_with_caveats", "query_fault", "empty_result", "data_absent"]
     verdict = (
         "empty_result"
-        if any(item.failure_class == "empty_result" for item in failures)
+        if "empty_result" in classes
         else "query_fault"
-        if failures
+        if "query_fault" in classes
+        else "data_absent"
+        if "data_absent" in classes
+        else "pass_with_caveats"
+        if caveats
         else "pass"
     )
     return CheckReport(
         outcomes=outcomes,
         verdict=verdict,
-        caveats=[],
-        retry_hint="Recheck period/place resolution and query predicates."
+        caveats=caveats,
+        retry_hint="Recheck period/place resolution and query predicates; return the rows "
+        "each derivation needs."
         if verdict in {"empty_result", "query_fault"}
         else None,
     )
@@ -94,18 +129,28 @@ def run_intent_checks(plan: InterpretationPlan, result: QueryResult) -> list[Che
     names = [column.name for column in result.columns]
     outcomes: list[CheckOutcome] = []
     if plan.places:
-        place_columns = [i for i, name in enumerate(names) if name in {"geo_code", "geo_name"}]
-        returned = {str(row[i]) for row in result.rows for i in place_columns}
-        expected = {value for place in plan.places for value in (place.code, place.name)}
-        matched = bool(returned & expected)
+        own = {"geo_code", "geo_name", "entity"}
+        by_level = {"state": own | {"geo_state"}, "district": own | {"geo_district"}}
+        unmatched, checked, observed = [], 0, set()
+        for place in plan.places:
+            columns = [i for i, name in enumerate(names) if name in by_level.get(place.level, own)]
+            if not columns:
+                continue  # not checkable from the returned columns (aggregate query)
+            checked += 1
+            values = {str(row[i]) for row in result.rows for i in columns}
+            observed |= values
+            if not {place.code, place.name} & values:
+                unmatched.append(place.name)
         outcomes.append(
             CheckOutcome(
                 name="requested_places",
-                passed=matched,
-                failure_class="none" if matched else "query_fault",
-                expected=", ".join(sorted(expected)),
-                observed=", ".join(sorted(returned)),
-                detail="Checks that a requested place is represented in the result.",
+                passed=not unmatched,
+                failure_class="query_fault" if unmatched else "none",
+                expected=", ".join(sorted(p.name for p in plan.places)),
+                observed=", ".join(sorted(observed))[:500],
+                detail="Checks that each requested place is represented in the result."
+                if checked
+                else "Not checkable: the result has no place column (aggregate query).",
             )
         )
     if plan.periods:
@@ -120,7 +165,11 @@ def run_intent_checks(plan: InterpretationPlan, result: QueryResult) -> list[Che
             for column_index in period_columns
         }
         expected = {period.label for period in plan.periods}
-        matched = not period_columns or any(label in returned for label in expected)
+        # A year asked of a monthly table is returned as its months ("2023" -> "2023-01").
+        matched = not period_columns or any(
+            label in returned or any(value.startswith(f"{label}-") for value in returned)
+            for label in expected
+        )
         outcomes.append(
             CheckOutcome(
                 name="requested_periods",

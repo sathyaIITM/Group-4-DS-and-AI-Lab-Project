@@ -35,15 +35,20 @@ def verify_numbers(
     for mention in parse_numbers(narration):
         if mention.is_period:
             continue
-        mentioned_value = mention.value
+        # A table may store a count in persons or already in lakh (or tonnes as '000 tonnes), so
+        # the number as written and its value in base units are both accepted as a match.
+        candidates = [mention.value]
         if mention.unit_hint in {"lakh", "crore", "million", "thousand", "persons"}:
-            mentioned_value = convert_unit(mentioned_value, mention.unit_hint, "persons")
+            candidates.append(convert_unit(mention.value, mention.unit_hint, "persons"))
         elif mention.unit_hint in {"lakh_inr", "crore_inr", "inr"}:
-            mentioned_value = convert_unit(mentioned_value, mention.unit_hint, "inr")
+            candidates.append(convert_unit(mention.value, mention.unit_hint, "inr"))
         elif mention.unit_hint in {"kg", "quintal", "tonne"}:
-            mentioned_value = convert_unit(mentioned_value, mention.unit_hint, "kg")
-        tolerance = max(absolute_tolerance, abs(mentioned_value) * relative_tolerance)
-        if any(abs(mentioned_value - value) <= tolerance for value in supported):
+            candidates.append(convert_unit(mention.value, mention.unit_hint, "kg"))
+        if any(
+            abs(candidate - value) <= max(absolute_tolerance, abs(candidate) * relative_tolerance)
+            for candidate in candidates
+            for value in supported
+        ):
             matched.append(mention.text)
         else:
             unmatched.append(mention.text)

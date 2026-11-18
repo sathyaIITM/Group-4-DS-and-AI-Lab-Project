@@ -24,7 +24,7 @@ def cagr(start: float, end: float, periods: int) -> float | None:
         raise ValueError("periods must be positive")
     if start <= 0 or end < 0:
         return None
-    return ((end / start) ** (1 / periods) - 1) * 100
+    return float(((end / start) ** (1 / periods) - 1) * 100)
 
 
 def share(part: float, total: float) -> float | None:

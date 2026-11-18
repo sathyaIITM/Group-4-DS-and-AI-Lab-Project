@@ -80,7 +80,7 @@ def pivot(
         index=index,
         columns=columns,
         values=values,
-        aggfunc=aggregate,
+        aggfunc=aggregate,  # type: ignore[arg-type]  # checked against the allowed names above
         fill_value=0,
         observed=False,
     ).reset_index()

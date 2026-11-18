@@ -102,6 +102,15 @@ class ReadOnlyDatabase:
         rows = self._con.execute(f"DESCRIBE {table}").fetchall()
         return [(str(row[0]), str(row[1])) for row in rows]
 
+    def execute(self, sql: str, params: list[Any] | None = None) -> duckdb.DuckDBPyConnection:
+        """Run a checked, parameterised lookup issued by tool code (place and period lookups).
+
+        The statement passes the same read-only check as generated SQL; the caller reads the
+        rows with ``fetchone`` or ``fetchall``.
+        """
+        check_sql(sql, self.table_names)
+        return self._con.execute(sql, params or [])
+
     def check_columns(self, sql: str) -> None:
         """Bind a validated query without executing it, catching unknown columns early."""
         check_sql(sql, self.table_names)

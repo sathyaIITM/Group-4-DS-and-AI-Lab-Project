@@ -19,6 +19,7 @@ from typing import Any, Literal
 
 from analyst.contracts.coverage import CoverageResult, MissingPart
 from analyst.contracts.plan import InterpretationPlan
+from analyst.tools.places import FILTER_LEVELS
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLISHED = ROOT / "data" / "processed" / "catalogue.json"
@@ -87,7 +88,14 @@ def check_coverage(
     levels = {p.level for p in plan.places} | (
         {plan.all_places_level} if plan.all_places_level else set()
     )
-    absent_levels = sorted(levels - set(table.get("geo_levels", [])))
+    table_levels = set(table.get("geo_levels", []))
+    # A State (or district) named on a finer table is a filter on its rows, not a missing level.
+    filters = {f for level in table_levels for f in FILTER_LEVELS.get(level, ())}
+    place_levels = {p.level for p in plan.places}
+    absent_levels = sorted(
+        (place_levels - table_levels - filters)
+        | ({plan.all_places_level} - table_levels if plan.all_places_level else set())
+    )
     for level in absent_levels:
         missing.append(MissingPart(kind="geo_level", detail=f"{level} not in {plan.dataset_id}"))
     kept_places = [p for p in plan.places if p.level not in absent_levels]
