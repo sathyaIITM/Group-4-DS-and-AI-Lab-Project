@@ -53,7 +53,20 @@ Domains: at least 20 items each for `labour`, `agriculture`, `rainfall`, `prices
   044, 053, 060, 075, 077, 080, 082, 089, 093, 125, 127);
 - `missing`, which is not an option, replaced by the label of the domain rule the labeller cited
   in `note`: M8 `unspecified` (dh-067, 081, 085, 087, 101, 103, 113) and M5 `other` (dh-110).
-  To be confirmed by T2.
+  Confirmed by T2 on 2026-11-19.
+
+`labels_T1.csv` was taken as submitted; only Windows line endings were converted.
+
+## Deviation: block A adjudicated by T3
+
+Block A was adjudicated by T3 instead of T4 (decided 2026-11-19, to meet the freeze while T4
+labels blocks B and C). The protocol excluded T3 because T3 prepared the items and the sealed
+intended labels; T3 states that the items and the sealed labels were not read before
+adjudication, and the sealed labels were not consulted. Each decision was taken by T3 from the
+item, the two labels and the guide text; no model or assistant chose or suggested a label. All 27
+rows of `disagreements_T4.csv` (18 tool, 9 domain, including the item T2 left undecided, dh-023)
+carry the note "adjudicated by T3". Block-A agreement before adjudication (T1 and T2, 66 items
+decided by both): tool kappa 0.68 (below the 0.80 target), domain kappa 0.86.
 
 T3's intended labels are sealed outside the repository; their SHA-256 is posted to the team
 before labelling starts and they are compared with the final labels only after the freeze.
