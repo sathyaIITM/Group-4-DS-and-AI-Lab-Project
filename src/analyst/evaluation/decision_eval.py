@@ -38,7 +38,9 @@ from analyst.decisions.kev_questions import QUESTIONS
 from analyst.decisions.phase1 import read_jsonl, write_jsonl
 from analyst.decisions.system_one import ChoiceQuestion, SystemOneClient
 from analyst.evaluation.domain_eval import apply_temperature, brier, fit_temperature, nll
-from analyst.evaluation.routing_eval import N_BINS, ece
+from analyst.evaluation.metrics import ece
+
+N_BINS = 10  # reliability-diagram bins; the same equal-width bins as `metrics.ece`
 
 N_BOOTSTRAP = 2000
 SEED = 0

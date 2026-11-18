@@ -252,10 +252,13 @@ def _narrated_numbers(text: str) -> list[float]:
     for parsed in parse_numbers(text):
         if parsed.is_period:
             continue
-        number = parsed.value
+        values.append(float(parsed.value))
         if parsed.unit_hint in target_by_dimension:
-            number = convert_unit(number, parsed.unit_hint, target_by_dimension[parsed.unit_hint])
-        values.append(float(number))
+            # Also keep the base-unit value: the gold may be in persons or already in lakh.
+            converted = convert_unit(
+                parsed.value, parsed.unit_hint, target_by_dimension[parsed.unit_hint]
+            )
+            values.append(float(converted))
     return values
 
 
@@ -400,7 +403,7 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
         expected = case.get("expected_action")
         outcome = case.get("outcome")
         outcomes[str(outcome)] += 1
-        is_non_answer = outcome in {"declined", "abstained"}
+        is_non_answer = outcome in {"declined", "abstained", "clarifying"}
         wants_non_answer = expected in {"decline", "clarify"}
         non_answer.append(is_non_answer)
         gold_non_answer.append(wants_non_answer)
@@ -413,13 +416,17 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
                 execution.append(False)
         successes.append(correct)
         wrong_answer.append(outcome in {"answered", "charted"} and not correct)
-        if not correct:
+        manual_slot = (
+            expected == "clarify" and outcome == "clarifying" and not case.get("unresolved_slots")
+        )
+        if not correct or manual_slot:
             review.append(
                 {
                     "id": case.get("id"),
                     "expected": expected,
                     "outcome": outcome,
                     **checks,
+                    **({"slot_check": "manual"} if manual_slot else {}),
                 }
             )
     latencies = [
@@ -523,20 +530,21 @@ def _case_success(case: dict[str, Any]) -> bool:
             and case.get("number_check_passed") is True
         )
     if expected == "clarify":
+        if outcome != "clarifying":
+            return False
+        # Resolution lists the missing slot; a clarification chosen by the router or by intent
+        # extraction (before resolution) has no plan, and is checked by hand in the review list.
+        unresolved = case.get("unresolved_slots", [])
+        if not unresolved:
+            return True
         required_slot = _expected_clarification_slot(str(case.get("notes", "")))
-        return (
-            outcome == "clarifying"
-            and required_slot is not None
-            and required_slot in case.get("unresolved_slots", [])
-        )
+        return required_slot is not None and required_slot in unresolved
     if expected in {"describe", "search"}:
         required = set(case.get("dataset_ids", []))
         retrieved = set(case.get("actual_dataset_ids", []))
         correct_outcome = outcome == ("described" if expected == "describe" else "searched")
         return correct_outcome and required.issubset(retrieved)
-    return {
-        "decline": outcome == "declined",
-    }.get(expected, False)
+    return expected == "decline" and outcome == "declined"
 
 
 def _expected_clarification_slot(notes: str) -> str | None:
@@ -607,6 +615,7 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.write_text(
         "".join(json.dumps(row, default=str, ensure_ascii=False) + "\n" for row in rows),
         encoding="utf-8",
+        newline="\n",
     )
 
 

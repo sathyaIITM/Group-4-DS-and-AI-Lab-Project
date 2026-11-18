@@ -45,7 +45,11 @@ def macro_f1(y_true: Sequence[Any], y_pred: Sequence[Any], labels: Sequence[Any]
     return float(np.mean(scores))
 
 
-def ece(confidence: Sequence[float], correct: Sequence[bool | int], n_bins: int = 10) -> float:
+def ece(
+    confidence: Sequence[float] | np.ndarray,
+    correct: Sequence[bool | int] | np.ndarray,
+    n_bins: int = 10,
+) -> float:
     """Expected calibration error using equal-width bins on [0, 1]."""
     _same_length(confidence, correct)
     conf = np.asarray(confidence, dtype=float)
@@ -196,7 +200,7 @@ def success_rate(cases: Sequence[bool | MappingLike]) -> float:
 MappingLike = dict[str, Any]
 
 
-def _same_length(a: Sequence[Any], b: Sequence[Any]) -> None:
+def _same_length(a: Sequence[Any] | np.ndarray, b: Sequence[Any] | np.ndarray) -> None:
     if len(a) != len(b):
         raise ValueError("inputs must have the same length")
     if not len(a):

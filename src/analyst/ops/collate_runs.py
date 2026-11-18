@@ -167,6 +167,11 @@ def _insert_table(
     return inserted, conflicts
 
 
+def _count(db: Any, sql: str) -> int:
+    row = db.execute(sql).fetchone()
+    return int(row[0]) if row else 0
+
+
 def _tables(db: Any) -> set[str]:
     return {str(row[0]) for row in db.execute("SHOW TABLES").fetchall()}
 
@@ -224,11 +229,9 @@ def collate_bundles(bundles_dir: Path, warehouse_path: Path) -> dict[str, Any]:
             db.execute("ROLLBACK")
             report["refused"].append({"bundle": bundle.name, "reason": str(error)})
     report["warehouse_runs"] = (
-        db.execute("SELECT count(*) FROM runs").fetchone()[0] if "runs" in _tables(db) else 0
+        _count(db, "SELECT count(*) FROM runs") if "runs" in _tables(db) else 0
     )
-    report["unresolved_conflicts"] = db.execute(
-        "SELECT count(*) FROM collation_conflicts"
-    ).fetchone()[0]
+    report["unresolved_conflicts"] = _count(db, "SELECT count(*) FROM collation_conflicts")
     db.close()
     return report
 

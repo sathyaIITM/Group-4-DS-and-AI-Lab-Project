@@ -6,6 +6,7 @@ import argparse
 import json
 import math
 from collections import Counter, defaultdict
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -110,7 +111,7 @@ def _categorical_signal(
 
 
 def _continuous_signal(
-    name: str, reference: list[float], current: list[float], minimum: int
+    name: str, reference: Sequence[float], current: Sequence[float], minimum: int
 ) -> dict[str, Any]:
     if min(len(reference), len(current)) < minimum:
         return {
@@ -120,7 +121,7 @@ def _continuous_signal(
             "reference_n": len(reference),
             "current_n": len(current),
         }
-    value = ks_statistic(reference, current)
+    value = ks_statistic(list(reference), list(current))
     return {
         "name": name,
         "reference": {"median": float(np.median(reference)), "mean": float(np.mean(reference))},
