@@ -39,4 +39,3 @@ def test_tool_nodes_validate_and_execute_read_only_sql(tmp_path: Path) -> None:
     assert execution["execution_result"] == "success"
     assert execution["result"]["rows"] == [[12.5]]
     assert execution["result"]["dataset_versions"] == {"demo": "stub"}
-

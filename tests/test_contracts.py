@@ -33,6 +33,9 @@ SECTION_4: dict[type[BaseModel], set[str]] = {
         "changed_slots",
         "reason",
         "missing_slot",
+        "follow_up",
+        "standalone_question",
+        "catalogue_dataset_id",
     },
     c.UnresolvedSlot: {"slot", "mention", "options"},
     c.InterpretationPlan: {

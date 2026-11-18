@@ -321,6 +321,50 @@ def test_a_state_on_a_market_table_resolves_as_a_filter(tmp_path: Path) -> None:
     ]
 
 
+def test_a_state_resolves_as_a_filter_when_the_question_names_markets(tmp_path: Path) -> None:
+    # Dev run 3, e2e-042: "Uttar Pradesh versus West Bengal markets" set all_places_level to
+    # market, which skipped the State filter and asked for a place.
+    from analyst.tools.resolve import resolve_plan
+
+    intent = QueryIntent.model_validate(
+        {
+            "action": "answer",
+            "dataset_id": "mandi",
+            "indicator_ids": [],
+            "place_mentions": ["Uttar Pradesh"],
+            "all_places_level": "market",
+            "period_mentions": [],
+            "categories": {},
+            "operation": "ranking",
+            "order": "desc",
+            "limit": 1,
+            "derivations": [],
+            "changed_slots": [],
+            "reason": None,
+        }
+    )
+    dataset = {"dataset_id": "mandi", "dataset_version": "v1", "geo_levels": ["market"]}
+    plan = resolve_plan(
+        intent, dataset=dataset, indicators=[], db=_market_db(tmp_path), refs={}, catalogue={}
+    )
+    assert [(p.level, p.code) for p in plan.places] == [("state", "state:uttar_pradesh")]
+    assert plan.all_places_level == "market"
+    assert plan.unresolved == []
+
+
+def test_a_clarification_with_one_fitting_measure_answers_with_it() -> None:
+    # Dev run 3, e2e-047: "Options: Crime rate, total" was asked although the plan held it.
+    from analyst.agents.tool_nodes import _single_measure
+    from analyst.contracts.plan import IndicatorRef
+
+    ref = IndicatorRef(indicator_id="total_crime_rate", label="Crime rate, total", unit="per lakh")
+    plan = stub_plan("ncrb").model_copy(update={"indicators": [ref]})
+    assert _single_measure("indicator", ["Crime rate, total"], plan)
+    assert not _single_measure("indicator", ["Crime rate, total", "IPC"], plan)
+    assert not _single_measure("period", ["2023"], plan)
+    assert not _single_measure("indicator", ["Other"], plan)
+
+
 def test_coverage_accepts_a_state_filter_on_a_market_table() -> None:
     from analyst.decisions.coverage import check_coverage
 
@@ -685,3 +729,44 @@ def test_cached_input_tokens_are_read_and_priced_at_ten_percent() -> None:
     full, cached = client._cost(20000, 100), client._cost(20000, 100, 18000)
     assert full is not None and cached is not None
     assert abs(cached - (2000 * 0.1 + 1800 * 0.1 + 100 * 0.4) / 1e6) < 1e-12
+
+
+def test_a_decline_with_a_named_table_states_the_intent_reason() -> None:
+    # Dev run 3, e2e-085: "past month" when the CPI table ends in December 2023.
+    from analyst.agents.nodes import decline_and_log_data_request
+    from analyst.agents.state import AnalystState
+    from analyst.contracts.coverage import CoverageResult, MissingPart
+
+    intent = QueryIntent.model_validate(
+        {
+            "action": "decline",
+            "dataset_id": "cpi_all_india",
+            "indicator_ids": ["cpi_general_index"],
+            "place_mentions": ["India"],
+            "all_places_level": None,
+            "period_mentions": [],
+            "categories": {},
+            "operation": "change",
+            "order": None,
+            "limit": None,
+            "derivations": [],
+            "changed_slots": [],
+            "reason": "The CPI table ends in December 2023, so the past month is not covered.",
+            "missing_slot": "period",
+        }
+    )
+    coverage = CoverageResult.model_validate(
+        {
+            "status": "not_covered",
+            "probability": None,
+            "decided_by": "rules",
+            "missing": [MissingPart(kind="indicator", detail="no table 'none_fit'")],
+            "supported_plan": None,
+            "left_out": [],
+            "pointers": [],
+        }
+    )
+    state = AnalystState(run_id="r1", question="q", intent=intent, coverage=coverage)
+    text = decline_and_log_data_request(state)["response_text"]
+    assert "none_fit" not in text
+    assert "period (The CPI table ends in December 2023" in text

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from analyst.agents import nodes as t2
@@ -139,7 +140,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
     def extract(state: AnalystState) -> dict[str, Any]:
         def body(counters: Counters) -> dict[str, Any]:
             result, record = intent.extract_intent(
-                state.question, state.retrieved, state.prior_plan, llm, counters
+                state.question, state.retrieved, state.prior_plan, llm, counters, state.history
             )
             return {
                 "intent": result,
@@ -253,7 +254,10 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
 
         def body(counters: Counters) -> dict[str, Any]:
             number = counters.narrations + 1
-            result, record = narrate.narrate(evidence, hints(state), llm, counters, attempt=number)
+            standalone = state.intent.standalone_question if state.intent else None
+            result, record = narrate.narrate(
+                evidence, hints(state), llm, counters, attempt=number, question=standalone
+            )
             return {
                 "narration": [result],
                 "llm_records": [record],
@@ -299,15 +303,35 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
     }
 
 
-def live_t3_nodes(version: str) -> dict[str, NodeFn]:
-    """T3 nodes on the real LLM client, built from `configs/model.yaml` and the environment.
+def jev_client(model_config: Path | None = None) -> Any:
+    """The hosted Jev client (first backend in `model.yaml` `jev.backends`). Raises when its key
+    is not set, so a Jev experiment never runs on the LLM fallback without notice."""
+    import os
 
-    Calling a node with this client spends the project's cloud credit.
+    import yaml
+
+    from analyst.decisions.system_one import SystemOneClient
+
+    path = model_config or Path("configs/model.yaml")
+    jev = yaml.safe_load(path.read_text(encoding="utf-8"))["jev"]
+    backend = jev["backends"][0]
+    key = os.environ.get(backend["api_key_env"])
+    if not key:
+        raise RuntimeError(f"{backend['api_key_env']} is not set; Jev routing needs it")
+    return SystemOneClient(backend["base_url"], jev["model"], api_key=key, timeout_s=10.0)
+
+
+def live_t3_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
+    """T3 nodes on the real LLM client, built from `configs/model.yaml` and the environment.
+    A `variant` from `configs/inference.yaml` (for example `jev_routing`) changes the decision
+    backends; Jev is connected whenever a chain names it.
+
+    Calling a node with this client spends the project's cloud credit (and Jev credit).
     """
     client = LlmClient.from_config()
-    config = RouterConfig.from_files(version)
-    from pathlib import Path
-
+    config = RouterConfig.from_files(version, variant=variant)
+    uses_jev = any("jev" in chain for chain in config.chains.values())
+    jev = jev_client() if uses_jev else None
     from analyst.agents.context import _obs, published_catalogue
     from analyst.agents.tool_nodes import ToolNodeDependencies, make_tool_nodes
     from analyst.tools.sql_runner import ReadOnlyDatabase
@@ -330,7 +354,7 @@ def live_t3_nodes(version: str) -> dict[str, NodeFn]:
         )
     )
     return {
-        **make_t3_nodes(T3Dependencies(client, config, Backends(llm=client))),
+        **make_t3_nodes(T3Dependencies(client, config, Backends(jev=jev, llm=client), jev=jev)),
         **tool_nodes,
     }
 

@@ -265,7 +265,7 @@ def test_intent_with_null_derivations_is_accepted() -> None:
     intent, record = client.structured(
         "intent",
         "intent",
-        {"catalogue": {}, "question": "q", "context": {}, "prior_plan": None},
+        {"catalogue": {}, "question": "q", "context": {}, "prior_plan": None, "history": []},
         QueryIntent,
         counters=Counters(),
     )

@@ -42,3 +42,14 @@ class QueryIntent(Contract):
     reason: str | None
     # Added in intent prompt v2: the slot a "clarify" intent asks about (None otherwise).
     missing_slot: Literal["place", "period", "indicator", "category", "geo_level"] | None = None
+    # Added in intent prompt v7 (conversation history). `follow_up`: the question continues the
+    # previous turn, so slots it does not name carry over; False for a new topic, None when the
+    # prompt does not say (older prompts: carry over as before). `standalone_question`: the
+    # question rewritten with references to earlier turns resolved ("And Maharashtra?" ->
+    # "Unemployment rate in Maharashtra in 2021-22"); narration and the evidence report use it.
+    follow_up: bool | None = None
+    standalone_question: str | None = None
+    # Intent v7: the dataset in the full catalogue that holds the measure when none of the
+    # retrieved candidates does. Only then does a not-covered result widen the search, and the
+    # widened search adds exactly this table (dev run 3: 5 of 6 widened searches were wasted).
+    catalogue_dataset_id: str | None = None

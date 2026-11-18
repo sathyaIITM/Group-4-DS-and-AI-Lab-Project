@@ -189,6 +189,16 @@ def resolve_period(
             assumption=Assumption(code="D5", text="Monsoon interpreted as June-September (JJAS)."),
         )
 
+    numeric = re.fullmatch(r"(\d{4})[-/.](\d{1,2})|(\d{1,2})[-/.](\d{4})", text)
+    if numeric and "month" in types:
+        # "2020-03" or "3/2020" on a monthly table (the intent model may write CPI's own label
+        # form). "2011-12" stays a year span when the table also has yearly periods.
+        year = int(numeric.group(1) or numeric.group(4))
+        month_no = int(numeric.group(2) or numeric.group(3))
+        yearly_types = types & {"survey_year", "fiscal_year", "agri_year"}
+        year_span = bool(numeric.group(1)) and month_no == (year + 1) % 100 and bool(yearly_types)
+        if 1 <= month_no <= 12 and not year_span:
+            text = f"{calendar.month_name[month_no]} {year}"
     month_match = re.fullmatch(r"(?i)([A-Za-z]+)\s+(\d{4})", text)
     if month_match and "month" in types:
         month_token = month_match.group(1).casefold()

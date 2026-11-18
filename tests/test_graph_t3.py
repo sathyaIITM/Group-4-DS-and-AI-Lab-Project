@@ -165,13 +165,35 @@ def test_answer(workdir: Path) -> None:
     assert runs == (4, "answered")
 
 
-def test_decline_after_one_widened_search(workdir: Path) -> None:
-    state, _ = run(ROUTE, intent("2030"), intent("2030"), question="Rainfall in Kerala in 2030?")
+def test_a_period_gap_on_a_named_table_is_declined_without_widening(workdir: Path) -> None:
+    # More tables cannot supply 2030, so no second intent call (dev run 3: wasted calls).
+    state, _ = run(ROUTE, intent("2030"), question="Rainfall in Kerala in 2030?")
     assert (state.outcome, state.outcome_cause) == ("declined", "not_covered")
-    assert state.counters.llm_calls == 3 and state.counters.widened_searches == 1
+    assert state.counters.llm_calls == 2 and state.counters.widened_searches == 0
     assert state.coverage is not None and state.coverage.missing[0].kind == "period"
     with sqlite3.connect("outputs/runs/runs.sqlite") as db:
         assert db.execute("SELECT count(*) FROM data_requests").fetchone()[0] == 1
+
+
+def test_a_pointer_to_another_table_widens_the_search_once(
+    workdir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The fixture catalogue has one table; the pointer check is tested in test_conversation.
+    import analyst.inference.intent as intent_mod
+
+    monkeypatch.setattr(intent_mod, "_checked_pointer", lambda parsed, _retrieved: parsed)
+    pointed = {
+        **intent("2030"),
+        "action": "decline",
+        "dataset_id": "none_fit",
+        "indicator_ids": [],
+        "reason": "Another catalogue table holds the measure.",
+        "follow_up": False,
+        "catalogue_dataset_id": "plfs_state_ur_usual_status",
+    }
+    state, _ = run(ROUTE, pointed, intent("2030"), question="Rainfall in Kerala in 2030?")
+    assert state.counters.widened_searches == 1 and state.counters.llm_calls == 3
+    assert state.outcome == "declined"
 
 
 def test_clarification_text_is_written_by_the_llm(workdir: Path) -> None:

@@ -89,11 +89,9 @@ def resolve_plan(
         resolutions = [resolve_place(mention, dataset_id, level, refs, db) for level in levels]
         matches = [resolution.place for resolution in resolutions if resolution.place is not None]
         filters = [f for level in levels for f in FILTER_LEVELS.get(level, ()) if f not in levels]
-        if (
-            not matches
-            and not intent.all_places_level
-            and not any(resolution.options for resolution in resolutions)
-        ):
+        # A State or district named on a finer table filters its rows, also when the question
+        # names the finer level ("Uttar Pradesh markets": dev run 3, e2e-042).
+        if not matches and not any(resolution.options for resolution in resolutions):
             for level in dict.fromkeys(filters):
                 found = resolve_filter_place(mention, dataset_id, level, refs, db)
                 if found.place is not None:

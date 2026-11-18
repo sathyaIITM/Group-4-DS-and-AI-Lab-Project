@@ -14,12 +14,14 @@ retried once with the same prompt, then the node fails with `backend_error`.
 """
 
 from collections.abc import Mapping
+from datetime import date
 from typing import Any
 
 from pydantic import BaseModel
 
 from analyst.contracts.intent import QueryIntent
 from analyst.inference.llm import CallCounter, LlmCallRecord, LlmClient
+from analyst.inference.prompts import PromptRegistry
 
 NONE_FIT = "none_fit"
 TABLE_FIELDS = (
@@ -47,10 +49,12 @@ def context_payload(retrieved: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def question_payload(retrieved: Mapping[str, Any]) -> dict[str, Any]:
-    """The per-question part of intent prompt v5: candidate datasets, the category values
-    shown for them and guidance cards. Indicators are in the fixed catalogue block."""
+    """The per-question part of intent prompts v5 and v6: candidate datasets, the category
+    values shown for them, guidance cards and today's date (v6 declines "past month" when the
+    data ends earlier). Indicators are in the fixed catalogue block, which stays cacheable."""
     payload = context_payload(retrieved)
     payload.pop("indicators")
+    payload["today"] = retrieved.get("today") or date.today().isoformat()
     return payload
 
 
@@ -83,26 +87,45 @@ def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:
         raise ValueError(f"action {intent.action!r} needs a reason")
 
 
+def _checked_pointer(intent: QueryIntent, retrieved: Mapping[str, Any]) -> QueryIntent:
+    """Keep `catalogue_dataset_id` only when it names a catalogue dataset that is not already a
+    candidate; otherwise drop it. A wrong pointer costs nothing (no retry, no widened search)."""
+    pointer = intent.catalogue_dataset_id
+    if pointer is None:
+        return intent
+    block = retrieved.get("catalogue_block") or {}
+    known = {str(d.get("dataset_id")) for d in block.get("datasets", []) if isinstance(d, dict)}
+    candidates = {str(t.get("dataset_id")) for t in retrieved.get("tables", [])}
+    if pointer in known and pointer not in candidates:
+        return intent
+    return intent.model_copy(update={"catalogue_dataset_id": None})
+
+
 def extract_intent(
     question: str,
     retrieved: Mapping[str, Any],
     prior_plan: BaseModel | Mapping[str, Any] | None,
     llm: LlmClient,
     counters: CallCounter,
+    history: list[dict[str, Any]] | None = None,
 ) -> tuple[QueryIntent, LlmCallRecord]:
     prior = prior_plan.model_dump(mode="json") if isinstance(prior_plan, BaseModel) else prior_plan
-    return llm.structured(
+    variables: dict[str, Any] = {
+        # Fixed for a catalogue release, so the long prefix is cached by the provider.
+        "catalogue": retrieved.get("catalogue_block") or {},
+        "question": question,
+        "context": question_payload(retrieved),
+        "prior_plan": prior,
+    }
+    if "history" in (getattr(llm, "registry", None) or PromptRegistry()).get("intent").inputs:
+        variables["history"] = history or []  # intent v7: the last turns, oldest first
+    parsed, record = llm.structured(
         "intent",
         "intent",
-        {
-            # Fixed for a catalogue release, so the long prefix is cached by the provider.
-            "catalogue": retrieved.get("catalogue_block") or {},
-            "question": question,
-            "context": question_payload(retrieved),
-            "prior_plan": prior,
-        },
+        variables,
         QueryIntent,
         counters=counters,
         validate=lambda intent: check_intent(intent, retrieved),
         node="extract_query_intent",
     )
+    return _checked_pointer(parsed, retrieved), record

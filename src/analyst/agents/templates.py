@@ -64,6 +64,6 @@ def failure(cause: Cause) -> str:
 
 def clarification(question: str | None, options: list[str]) -> str:
     text = question or "Please state the place, the period and the indicator."
-    if options:
-        text += " Options: " + "; ".join(options) + "."
+    if options:  # numbered, so that "the second one" or "2" maps onto an option
+        text += " Options: " + "; ".join(f"{n}. {o}" for n, o in enumerate(options, 1)) + "."
     return text

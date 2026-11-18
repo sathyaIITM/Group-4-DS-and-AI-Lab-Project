@@ -36,7 +36,9 @@ def _hosted_model(path: Path = Path("configs/model.yaml")) -> tuple[str, str]:
     return str(config.get("tiers", {}).get(tier, "unset")), str(tier)
 
 
-def load_run_config(version: str = "v0", config_path: str = "configs/agent.yaml") -> RunConfig:
+def load_run_config(
+    version: str = "v0", config_path: str = "configs/agent.yaml", variant: str | None = None
+) -> RunConfig:
     """An immutable run configuration with the hash of every file it was built from.
 
     Hashed: `agent.yaml`, `model.yaml`, `inference.yaml`, the guidance-card and example files in
@@ -45,6 +47,11 @@ def load_run_config(version: str = "v0", config_path: str = "configs/agent.yaml"
     if version not in {f"v{i}" for i in range(7)}:
         msg = f"unsupported agent version: {version}"
         raise ValueError(msg)
+    if variant is not None:
+        inference = Path("configs/inference.yaml")
+        variants = (yaml.safe_load(inference.read_text(encoding="utf-8")) or {}).get("variants")
+        if variant not in (variants or {}):
+            raise ValueError(f"unknown variant {variant!r} in {inference}")
     path = Path(config_path)
     raw: dict[str, Any] = {}
     hashes: dict[str, str] = {}
@@ -62,6 +69,7 @@ def load_run_config(version: str = "v0", config_path: str = "configs/agent.yaml"
     hosted = _hosted_model()
     return RunConfig(
         version=version,
+        variant=variant,
         limits=limits,
         rag=rag,
         model_id=hosted[0],

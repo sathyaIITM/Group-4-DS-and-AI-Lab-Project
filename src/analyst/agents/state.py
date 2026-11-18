@@ -91,6 +91,7 @@ class RagPaths(BaseModel):
 
 class RunConfig(BaseModel):
     version: str = "v0"
+    variant: str | None = None  # an `inference.yaml` variant, such as jev_routing
     limits: Limits = Field(default_factory=Limits)
     rag: RagPaths = Field(default_factory=RagPaths)
     stub_script: dict[str, list[Any]] = Field(default_factory=dict)
@@ -101,10 +102,15 @@ class RunConfig(BaseModel):
     catalogue_contract_version: str = "unknown"
 
     @classmethod
-    def from_files(cls, version: str = "v0", config_path: str = "configs/agent.yaml") -> RunConfig:
+    def from_files(
+        cls,
+        version: str = "v0",
+        config_path: str = "configs/agent.yaml",
+        variant: str | None = None,
+    ) -> RunConfig:
         from analyst.config import load_run_config
 
-        return load_run_config(version=version, config_path=config_path)
+        return load_run_config(version=version, config_path=config_path, variant=variant)
 
 
 class AnalystState(BaseModel):
@@ -119,6 +125,8 @@ class AnalystState(BaseModel):
     prior_result_ref: str | None = None
     prior_plan: InterpretationPlan | None = None
     prior_sql: str | None = None
+    # The last turns of the conversation (oldest first, at most HISTORY_TURNS), for intent v7.
+    history: list[dict[str, Any]] = Field(default_factory=list)
 
     config: RunConfig = Field(default_factory=RunConfig)
 

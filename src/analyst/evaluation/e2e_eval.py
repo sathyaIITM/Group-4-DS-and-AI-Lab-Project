@@ -283,8 +283,11 @@ def _run_case(
     experiment: str,
     member: str,
     live: bool,
+    variant: str | None = None,
 ) -> dict[str, Any]:
     from scripts.run_agent import run_one
+
+    from analyst.agents.state import RunConfig
 
     conversation_id = str(uuid.uuid4())
     nodes = None
@@ -302,12 +305,14 @@ def _run_case(
         if live:
             from analyst.agents.t3_nodes import live_t3_nodes
 
-            nodes = live_t3_nodes(version)
+            nodes = live_t3_nodes(version, variant)
+        config = RunConfig.from_files(version, variant=variant)
         for turn_no, prior in enumerate(item.get("prior_turns", []), start=1):
             prior_state = run_one(
                 prior,
                 version=version,
                 conversation_id=conversation_id,
+                config=config,
                 meta={**meta, "question_id": f"{item['id']}:prior-{turn_no}", "turn": str(turn_no)},
                 nodes=nodes,
             )
@@ -319,6 +324,7 @@ def _run_case(
             item["question"],
             version=version,
             conversation_id=conversation_id,
+            config=config,
             meta={**meta, "turn": str(len(item.get("prior_turns", [])) + 1)},
             nodes=nodes,
         )
@@ -350,7 +356,9 @@ def _run_case(
     result["llm_calls"] += prior_calls
     result["tokens_in"] += prior_tokens_in
     result["tokens_out"] += prior_tokens_out
-    result.update({"experiment": experiment, "version": version, "member": member})
+    result.update(
+        {"experiment": experiment, "version": version, "variant": variant, "member": member}
+    )
     return result
 
 
@@ -365,6 +373,7 @@ def run_evaluation(
     workers: int = DEFAULT_WORKERS,
     allow_unvalidated: bool = False,
     eval_set: str | None = None,
+    variant: str | None = None,
 ) -> list[dict[str, Any]]:
     """Run with at most two workers, preserving follow-ups and provider retries."""
     if workers < 1 or workers > DEFAULT_WORKERS:
@@ -398,6 +407,7 @@ def run_evaluation(
                 experiment=experiment,
                 member=member,
                 live=live,
+                variant=variant,
             )
             for item in items
         ]
@@ -671,6 +681,9 @@ def main() -> int:
     run_parser.add_argument("--set", type=Path, required=True)
     run_parser.add_argument("--version", choices=[f"v{i}" for i in range(7)], required=True)
     run_parser.add_argument("--experiment", required=True)
+    run_parser.add_argument(
+        "--variant", default=None, help="an inference.yaml variant, such as jev_routing"
+    )
     run_parser.add_argument("--member", choices=["T1", "T2", "T3", "T4"], default="T4")
     run_parser.add_argument("--out", type=Path, required=True)
     run_parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
@@ -707,6 +720,7 @@ def main() -> int:
             live=args.live,
             workers=args.workers,
             allow_unvalidated=args.allow_unvalidated,
+            variant=args.variant,
         )
         print(f"{len(rows)} questions written to {args.out}")
         return 0

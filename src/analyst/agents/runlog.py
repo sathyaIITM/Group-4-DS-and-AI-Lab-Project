@@ -132,12 +132,20 @@ def llm_rows(records: list[LlmCallRecord]) -> list[dict[str, Any]]:
         rows.append(row)
         return seq
 
+    # A successful call carries its failed attempts in `earlier_attempts`; a call that failed
+    # every attempt arrives as sibling records (from `LlmError.records`), each with `retry_of`
+    # set to the index of the previous sibling. Both forms map to the seq of the retried row.
+    siblings: list[int] = []
     for record in records:
         seqs = [add(a, None) for a in record.earlier_attempts]
-        retry = (
-            seqs[record.retry_of] if record.retry_of is not None else (seqs[-1] if seqs else None)
-        )
-        add(record, retry)
+        if record.retry_of is None:
+            siblings = []
+            retry = seqs[-1] if seqs else None
+        elif record.earlier_attempts:
+            retry = seqs[record.retry_of] if record.retry_of < len(seqs) else seqs[-1]
+        else:
+            retry = siblings[record.retry_of] if record.retry_of < len(siblings) else None
+        siblings.append(add(record, retry))
     return rows
 
 

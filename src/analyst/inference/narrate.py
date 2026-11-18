@@ -28,6 +28,39 @@ def _evidence_dict(evidence: BaseModel | Mapping[str, Any]) -> dict[str, Any]:
     return evidence.model_dump(mode="json") if isinstance(evidence, BaseModel) else dict(evidence)
 
 
+MONTHS = "January February March April May June July August September October November December"
+YEAR_KINDS = {1: "calendar year", 4: "fiscal year", 7: "July-June survey year"}
+
+
+def describe_period(window: Mapping[str, Any]) -> str | None:
+    """Plain words for a yearly window, chosen by its start month: the data contract types every
+    year that does not start in January as `survey_year`, so per capita GSDP (April to March)
+    was narrated as a "survey year" (dev run 3, e2e-066)."""
+    kind = str(window.get("type", ""))
+    if kind not in {"calendar_year", "survey_year", "fiscal_year", "agri_year"}:
+        return None
+    start, end = str(window.get("start", "")), str(window.get("end", ""))
+    if len(start) < 7 or len(end) < 7:
+        return None
+    names = MONTHS.split()
+    first, last = int(start[5:7]), int(end[5:7])
+    words = YEAR_KINDS.get(first, "year")
+    if kind == "agri_year":
+        words = "agricultural year"
+    return f"{words}, {names[first - 1]} {start[:4]} to {names[last - 1]} {end[:4]}"
+
+
+def _with_period_words(bundle: dict[str, Any]) -> dict[str, Any]:
+    plan = bundle.get("plan")
+    if not isinstance(plan, dict):
+        return bundle
+    periods = []
+    for window in plan.get("periods") or []:
+        words = describe_period(window) if isinstance(window, dict) else None
+        periods.append({**window, "description": words} if words else window)
+    return {**bundle, "plan": {**plan, "periods": periods}}
+
+
 def check_references(reply: NarrationReply, evidence: Mapping[str, Any]) -> None:
     result = evidence.get("result") or {}
     columns = {c["name"] for c in result.get("columns", [])}
@@ -53,12 +86,16 @@ def narrate(
     llm: LlmClient,
     counters: CallCounter,
     attempt: int = 1,
+    question: str | None = None,
 ) -> tuple[Narration, LlmCallRecord]:
-    bundle = _evidence_dict(evidence)
+    """`question` replaces the bundle's question when the intent rewrote a follow-up as a
+    standalone question ("And Maharashtra?" -> "Unemployment rate in Maharashtra, 2021-22")."""
+    bundle = _with_period_words(_evidence_dict(evidence))
+    asked = question or bundle.get("question", "")
     reply, record = llm.structured(
         "narrate",
         "narrate",
-        {"question": bundle.get("question", ""), "evidence": bundle, "hints": hints or None},
+        {"question": asked, "evidence": bundle, "hints": hints or None},
         NarrationReply,
         counters=counters,
         validate=lambda r: check_references(r, bundle),

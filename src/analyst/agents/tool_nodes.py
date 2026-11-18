@@ -7,12 +7,19 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from analyst.agents.context import indicators_of
 from analyst.agents.events import stage_event
 from analyst.agents.state import AnalystState
-from analyst.contracts import DerivedValue, InterpretationPlan, QueryIntent, UnresolvedSlot
+from analyst.contracts import (
+    Assumption,
+    DerivedValue,
+    InterpretationPlan,
+    QueryIntent,
+    UnresolvedSlot,
+)
+from analyst.contracts.common import PeriodType
 from analyst.tools.calc import (
     cagr,
     change_pp,
@@ -314,6 +321,34 @@ def _descriptors(state: AnalystState, catalogue: Mapping[str, Mapping[str, Any]]
     return texts
 
 
+PERIOD_TYPE_NAMES = set(get_args(PeriodType))
+
+
+def _period_options(
+    plan: InterpretationPlan,
+    intent: QueryIntent,
+    table: Mapping[str, Any],
+    deps: ToolNodeDependencies,
+) -> InterpretationPlan:
+    """An unresolved period offers the table's latest periods, not its period-type names
+    ("Options: month" in the jev_routing smoke test of 18 Nov)."""
+    slots = [
+        slot.model_copy(update={"options": _clarify_options("period", intent, table, deps)})
+        if slot.slot == "period" and set(slot.options) <= PERIOD_TYPE_NAMES
+        else slot
+        for slot in plan.unresolved
+    ]
+    return plan.model_copy(update={"unresolved": slots}) if slots != plan.unresolved else plan
+
+
+def _single_measure(slot: str, options: list[str], plan: InterpretationPlan) -> bool:
+    """A clarification about the measure with one option, which the plan already resolved."""
+    if slot not in {"indicator", "category"} or len(options) != 1 or len(plan.indicators) != 1:
+        return False
+    label = re.sub(r"(?<=[A-Za-z)%])\d+\b", "", plan.indicators[0].label)
+    return options[0] == label
+
+
 def _clarify_options(
     slot: str,
     intent: QueryIntent,
@@ -361,7 +396,11 @@ def inherit_from_prior(
 ) -> InterpretationPlan:
     """A follow-up keeps the slots it neither names nor marks as changed (design Section 5):
     "What was the crime rate that year?" keeps the prior year; "And Maharashtra?" keeps the
-    measure and the period. Places and indicators carry over within the same table only."""
+    measure and the period. Places and indicators carry over within the same table only.
+    Nothing carries over when intent v7 marks the question as a new topic (`follow_up` False).
+    """
+    if intent.follow_up is False:
+        return plan
     changed = set(intent.changed_slots)
     update: dict[str, Any] = {}
     same_table = prior.dataset_id == plan.dataset_id
@@ -436,22 +475,37 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
             }
         if state.prior_plan is not None:
             plan = inherit_from_prior(plan, state.intent, state.prior_plan, table)
+        plan = _period_options(plan, state.intent, table, deps)
         if state.intent.action == "clarify" and not plan.unresolved:
             # The intent asks for a detail the question leaves out; coverage turns an
             # unresolved slot into a clarification.
-            plan = plan.model_copy(
-                update={
-                    "unresolved": [
-                        UnresolvedSlot(
-                            slot=_missing_slot(state.intent),
-                            mention=state.intent.reason or "",
-                            options=_clarify_options(
-                                _missing_slot(state.intent), state.intent, table, deps
+            missing = _missing_slot(state.intent)
+            options = _clarify_options(missing, state.intent, table, deps)
+            if _single_measure(missing, options, plan):
+                # Only one measure fits and the plan already holds it (dev run 3, e2e-047:
+                # "Options: Crime rate, total"): answer with it and say so.
+                plan = plan.model_copy(
+                    update={
+                        "assumptions": [
+                            *plan.assumptions,
+                            Assumption(
+                                code="ONLY_OPTION",
+                                text=f"{options[0]} is the only measure of this kind in the "
+                                "table, so it is used.",
                             ),
-                        )
-                    ]
-                }
-            )
+                        ]
+                    }
+                )
+            else:
+                plan = plan.model_copy(
+                    update={
+                        "unresolved": [
+                            UnresolvedSlot(
+                                slot=missing, mention=state.intent.reason or "", options=options
+                            )
+                        ]
+                    }
+                )
         return {
             "plan": plan,
             "events": stage_event(

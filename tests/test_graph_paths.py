@@ -49,10 +49,12 @@ def test_explain_without_prior_result_is_a_search() -> None:
     assert (state.outcome, state.outcome_cause) == ("searched", None)
 
 
-def test_not_covered_twice_is_declined() -> None:
+def test_not_covered_on_a_named_table_is_declined_without_widening() -> None:
+    # The stub intent names a table; widening is only for a pointer to another table or an
+    # older prompt's none_fit (graph.should_widen).
     state = run(check_coverage=["not_covered", "not_covered"])
     assert (state.outcome, state.outcome_cause) == ("declined", "not_covered")
-    assert state.counters.widened_searches == 1
+    assert state.counters.widened_searches == 0
 
 
 def test_invalid_sql_fails_after_two_repairs() -> None:

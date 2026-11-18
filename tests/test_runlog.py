@@ -173,6 +173,17 @@ def test_earlier_attempts_are_flattened_and_linked() -> None:
     assert rows[0]["parsed_ok"] is False
 
 
+def test_a_call_that_failed_every_attempt_is_logged_as_linked_siblings() -> None:
+    # LlmError.records: every attempt failed, so each arrives at top level with retry_of set
+    # (dev run 3, e2e-060: this raised IndexError and the run went to outputs/runs/failed).
+    earlier = record(purpose="sql")
+    first = record(parsed_ok=False, parse_error="cut off")
+    second = record(parsed_ok=False, parse_error="cut off", retry_of=0)
+    rows = llm_rows([earlier, first, second])
+    assert [r["seq"] for r in rows] == [1, 2, 3]
+    assert [r["retry_of_seq"] for r in rows] == [None, None, 2]
+
+
 @pytest.mark.usefixtures("agent_cwd")
 def test_logging_failure_leaves_a_json_record_and_does_not_raise(tmp_path: Path) -> None:
     logger = RunLogger()

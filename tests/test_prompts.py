@@ -19,9 +19,11 @@ def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert {p.id for p in registry} == EXPECTED
     for prompt_id in EXPECTED:
         assert registry.get(f"{prompt_id}.v1").version == 1  # pinned v1 stays loadable
-    assert registry.get("intent").version == 5  # fixed catalogue block first (implicit caching)
+    assert registry.get("intent").version == 7  # last-3-turn history, follow_up, standalone
     assert registry.get("route").version == 2  # decided cases C7 and search
     assert registry.get("sql").version == 3  # place filters by level, implausible values
+    assert registry.get("narrate").version == 2  # unit once; a long series in one claim
+    assert registry.get("clarify").version == 2  # options shown once, by the template
     for prompt in registry:
         assert prompt.purpose == prompt.id
         assert prompt.system.strip()

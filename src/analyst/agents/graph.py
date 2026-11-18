@@ -142,9 +142,22 @@ def after_coverage(state: AnalystState) -> str:
         return "define_supported_scope_and_caveats"
     if status == "ambiguous":
         return "ask_clarification"
-    if state.counters.widened_searches < limits.max_widened_searches:
+    if state.counters.widened_searches < limits.max_widened_searches and should_widen(state):
         return "retrieve_context_and_examples"
     return "decline_and_log_data_request"
+
+
+def should_widen(state: AnalystState) -> bool:
+    """Widen the search after not_covered only when it can help: the intent points to a table
+    outside the candidates (intent v7, `catalogue_dataset_id`). An intent from an older prompt
+    (`follow_up` None) keeps the earlier rule and widens on `none_fit` only. A named table with a
+    missing period or place is never widened: more tables cannot supply that period."""
+    intent = state.intent
+    if intent is None:
+        return True
+    if intent.catalogue_dataset_id:
+        return True
+    return intent.follow_up is None and intent.dataset_id == "none_fit"
 
 
 def after_sql_validation(state: AnalystState) -> str:

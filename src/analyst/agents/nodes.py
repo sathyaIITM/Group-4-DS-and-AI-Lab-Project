@@ -12,13 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from analyst.agents import templates
+from analyst.agents.clarify_reply import read_reply
 from analyst.agents.context import catalogue_block, published_catalogue, table_context
 from analyst.agents.events import stage_event
 from analyst.agents.limits import budget_exhausted, deadline_exceeded
-from analyst.agents.memory import ConversationMemory
+from analyst.agents.memory import ANSWER_CHARS, ConversationMemory
 from analyst.agents.runlog import RunLogger
 from analyst.agents.state import AnalystState, RunConfig
-from analyst.contracts import Cause, Clarification, InterpretationPlan, ScreenResult
+from analyst.contracts import Cause, Clarification, InterpretationPlan, MissingPart, ScreenResult
 from analyst.data.catalogue import Catalogue, load_catalogue
 from analyst.tools.catalogue_views import describe_table, search_listing
 from analyst.tools.charts import select_chart
@@ -53,13 +54,24 @@ def receive_request(state: AnalystState) -> dict[str, Any]:
     for key in ("prior_sql", "prior_result_ref"):
         if getattr(state, key) is None and saved.get(key) is not None:
             updates[key] = saved[key]
+    if not state.history and saved.get("history"):
+        updates["history"] = saved["history"]
     pending = state.pending_clarification
     if pending is None and saved.get("pending_clarification"):
         pending = Clarification.model_validate(saved["pending_clarification"])
+    reading = None
     if pending is not None and state.question and state.question != pending.original_question:
-        updates["question"] = f"{pending.original_question}\nClarification reply: {state.question}"
+        # Code reads "second one", "yes" or "neither" against the offered options, so the router
+        # and the intent model receive one complete question (clarify_reply module).
+        reading = read_reply(state.question, pending)
+        updates["question"] = reading.question
         updates["pending_clarification"] = None
-    updates["events"] = stage_event(state, "receive_request", event_type="run_started")
+    updates["events"] = stage_event(
+        state,
+        "receive_request",
+        event_type="run_started",
+        **({"clarification_reply": reading.kind, "option": reading.option} if reading else {}),
+    )
     return updates
 
 
@@ -128,21 +140,9 @@ def retrieve_catalogue_candidates(state: AnalystState) -> dict[str, Any]:
         for name, score in ranking
         if name in known
     ][:top_k]
-    prior = state.prior_plan.dataset_id if state.prior_plan else None
-    if prior and all(c["dataset_id"] != prior for c in candidates):
-        try:
-            t = catalogue.get(prior)
-            entry = {
-                "dataset_id": t.name,
-                "name": t.name,
-                "domain": str(t.domain),
-                "score": 1.0,
-                "topic": t.topic,
-                "line": t.line,
-            }
-            candidates = [entry, *candidates][:top_k]
-        except (StopIteration, KeyError):
-            pass
+    # The previous turn's table is not put among the router's candidates: the router sees the
+    # top-k of this question only, built as in training (decision of 2026-11-05). The intent
+    # context adds it (retrieve_context_and_examples), so a follow-up can stay on that table.
     return {
         "catalogue_candidates": candidates,
         "events": stage_event(
@@ -165,7 +165,14 @@ def retrieve_context_and_examples(state: AnalystState) -> dict[str, Any]:
     reads (`tables`, `indicators`, `categories`, `cards`).
     """
     ids = [str(c.get("dataset_id")) for c in state.catalogue_candidates]
-    if state.retrieved:
+    prior = state.prior_plan.dataset_id if state.prior_plan else None
+    if prior and prior != "none_fit" and prior not in ids:
+        ids.append(prior)  # a follow-up may stay on the previous turn's table
+    pointer = state.intent.catalogue_dataset_id if state.intent else None
+    if state.retrieved and pointer:
+        # Widened search after not_covered, intent v7: exactly the table the intent named.
+        ids = [*ids, pointer] if pointer not in ids else ids
+    elif state.retrieved:
         # Widened search after not_covered: the next tables of the ranking join the candidates.
         top_k = state.config.limits.catalogue_top_k
         ranking, _ = rank_catalogue(state.question, top_k)
@@ -320,6 +327,29 @@ def select_chart_type(state: AnalystState) -> dict[str, Any]:
     }
 
 
+def history_turn(state: AnalystState) -> dict[str, Any]:
+    """What intent v7 sees of a finished turn: the question, how it was read, and the answer
+    (cut to ANSWER_CHARS). Plan slots are names and labels, not codes."""
+    plan = state.plan if state.plan and state.plan.dataset_id != "none_fit" else None
+    intent = state.intent
+    pending = state.pending_clarification
+    turn: dict[str, Any] = {
+        "question": state.question,
+        "standalone_question": intent.standalone_question if intent else None,
+        "outcome": state.outcome,
+        "dataset_id": plan.dataset_id if plan else None,
+        "indicators": [i.label for i in plan.indicators] if plan else [],
+        "places": [p.name for p in plan.places] if plan else [],
+        "all_places_level": plan.all_places_level if plan else None,
+        "periods": [w.label for w in plan.periods] if plan else [],
+        "categories": plan.categories if plan else {},
+        "answer": (state.response_text or "")[:ANSWER_CHARS],
+    }
+    if pending is not None:
+        turn["clarification"] = {"question": pending.question, "options": pending.options}
+    return turn
+
+
 def finalize_response(state: AnalystState) -> dict[str, Any]:
     """Persist conversation context and the run log once, without altering the outcome."""
     pending = state.pending_clarification
@@ -330,6 +360,7 @@ def finalize_response(state: AnalystState) -> dict[str, Any]:
         prior_plan=state.plan.model_dump(mode="json") if state.plan else None,
         prior_sql=latest.sql if latest else None,
         prior_result_ref=state.prior_result_ref,
+        turn=history_turn(state),
     )
     done = stage_event(state, "finalize_response", "done")
     if not state.finalized:
@@ -398,8 +429,22 @@ def ask_clarification(state: AnalystState) -> dict[str, Any]:
     }
 
 
+DECLINE_KINDS = {"indicator", "period", "place", "geo_level"}
+
+
 def decline_and_log_data_request(state: AnalystState) -> dict[str, Any]:
     missing = state.coverage.missing if state.coverage else []
+    intent = state.intent
+    if (
+        intent is not None
+        and intent.action == "decline"
+        and intent.reason
+        and all(m.detail.startswith("no table") for m in missing)
+    ):
+        # The intent's reason says what is missing ("the CPI table ends in December 2023");
+        # the generic "no table 'none_fit'" does not (dev run 3, e2e-085).
+        kind = intent.missing_slot if intent.missing_slot in DECLINE_KINDS else "indicator"
+        missing = [MissingPart(kind=kind, detail=intent.reason.rstrip("."))]
     pointers = state.coverage.pointers if state.coverage else []
     return {
         "response_text": templates.decline(missing, pointers),

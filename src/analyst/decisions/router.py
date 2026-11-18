@@ -91,14 +91,27 @@ class RouterConfig:
 
     @classmethod
     def from_files(
-        cls, version: str, inference: Path = INFERENCE_CONFIG, model: Path = MODEL_CONFIG
+        cls,
+        version: str,
+        inference: Path = INFERENCE_CONFIG,
+        model: Path = MODEL_CONFIG,
+        variant: str | None = None,
     ) -> "RouterConfig":
+        """Chains of `version`; a `variant` from `inference.yaml` replaces the chains it names."""
         inf = yaml.safe_load(inference.read_text(encoding="utf-8"))
         mod = yaml.safe_load(model.read_text(encoding="utf-8"))
+        override: dict[str, list[Backend]] = {}
+        if variant is not None:
+            found = (inf.get("variants") or {}).get(variant)
+            if found is None:
+                raise ValueError(f"unknown variant {variant!r} in {inference}")
+            override = dict(found)
         chains: dict[str, list[Backend]] = {}
         for decision in DECISIONS:
             per_version = inf["decisions"][decision]
-            chains[decision] = list(per_version.get(version) or per_version.get("all") or [])
+            chains[decision] = list(
+                override.get(decision) or per_version.get(version) or per_version.get("all") or []
+            )
             if not chains[decision]:
                 raise ValueError(f"no backend chain for {decision} in {version}")
         bands: dict[str, Band] = {

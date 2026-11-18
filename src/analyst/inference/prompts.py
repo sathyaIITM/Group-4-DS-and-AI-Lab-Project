@@ -37,7 +37,7 @@ PROMPT_DIR = ROOT / "configs" / "prompts"
 _HEADER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 _FILE = re.compile(r"^(?P<id>[a-z][a-z0-9_]*)\.v(?P<version>\d+)\.md$")
 _PLACEHOLDER = re.compile(r"\{\{\s*([a-z][a-z0-9_]*)\s*\}\}")
-_DELIMITERS = re.compile(r"</?\s*(user_question|context)\s*>", re.IGNORECASE)
+_DELIMITERS = re.compile(r"</?\s*(user_question|context|history|catalogue)\s*>", re.IGNORECASE)
 _SECTION = re.compile(r"^## (System|User)\s*$", re.MULTILINE)
 REQUIRED_KEYS = ("id", "version", "purpose", "inputs", "output_schema")
 

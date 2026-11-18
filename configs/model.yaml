@@ -24,7 +24,7 @@ hosted_llm:
     intent: 512
     sql: 1024                 # raised from 512 on 2026-11-17: a 30-period query was cut off
     sql_repair: 1024
-    narrate: 1000             # raised from 400 on 2026-11-18: a five-place ranking was cut off
+    narrate: 2000             # 400 -> 1000 -> 2000 on 2026-11-18: 12 monthly values with one claim each were cut at 1000
     clarify: 150
     route: 300
   # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
