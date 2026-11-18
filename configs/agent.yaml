@@ -11,7 +11,7 @@ limits:
   max_clarifications: 2
   max_llm_calls: 8
   catalogue_top_k: 4
-  candidate_min_score: null   # set on e2e_dev; null disables the router decline shortcut
+  candidate_min_score: null   # set on e2e_dev; null disables the router decline shortcut. Scores are fused RRF values (about 0 to 0.035), not word counts
   routing_floor: null
   shortcut_threshold: null
   answer_threshold: null      # unused before v5

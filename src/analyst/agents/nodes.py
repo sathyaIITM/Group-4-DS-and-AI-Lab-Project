@@ -84,32 +84,50 @@ def _catalogue() -> Catalogue:
     return load_catalogue(Path("configs/catalogue.toml"))
 
 
-def retrieve_catalogue_candidates(state: AnalystState) -> dict[str, Any]:
-    """Rank catalogue tables lexically; the domain label never filters candidates."""
-    catalogue = _catalogue()
-    tables = catalogue.real_tables()
-    query_tokens = set(re.findall(r"[a-z0-9]+", state.question.lower()))
+def _lexical_ranking(question: str) -> list[tuple[str, float]]:
+    """Word-overlap ranking over the router catalogue; the fallback when no embedder loads."""
+    tables = _catalogue().real_tables()
+    query_tokens = set(re.findall(r"[a-z0-9]+", question.lower()))
     docs = [
         f"{t.name} {t.topic} {t.line} {t.publisher} {' '.join(t.describe_questions)}"
         for t in tables
     ]
     scores = [
-        sum(token in set(re.findall(r"[a-z0-9]+", doc.lower())) for token in query_tokens)
+        float(sum(token in set(re.findall(r"[a-z0-9]+", doc.lower())) for token in query_tokens))
         for doc in docs
     ]
     ranked = sorted(zip(tables, scores, strict=True), key=lambda pair: pair[1], reverse=True)
+    return [(t.name, score) for t, score in ranked]
+
+
+def rank_catalogue(question: str, k: int) -> tuple[list[tuple[str, float]], str]:
+    """Hybrid ranking (`retrieval.catalogue`), or lexical when the index cannot be built."""
+    try:
+        from analyst.retrieval.catalogue import rank_tables
+
+        return rank_tables(question, k), "hybrid"
+    except Exception as error:  # missing release files or embedding model
+        return _lexical_ranking(question), f"lexical ({type(error).__name__})"
+
+
+def retrieve_catalogue_candidates(state: AnalystState) -> dict[str, Any]:
+    """Rank catalogue tables (hybrid, see `retrieval.catalogue`); the domain never filters."""
+    catalogue = _catalogue()
+    known = {t.name: t for t in catalogue.real_tables()}
     top_k = state.config.limits.catalogue_top_k
+    ranking, method = rank_catalogue(state.question, top_k)
     candidates = [
         {
-            "dataset_id": t.name,
-            "name": t.name,
-            "domain": str(t.domain),
-            "score": float(score),
-            "topic": t.topic,
-            "line": t.line,
+            "dataset_id": name,
+            "name": name,
+            "domain": str(known[name].domain),
+            "score": score,
+            "topic": known[name].topic,
+            "line": known[name].line,
         }
-        for t, score in ranked[:top_k]
-    ]
+        for name, score in ranking
+        if name in known
+    ][:top_k]
     prior = state.prior_plan.dataset_id if state.prior_plan else None
     if prior and all(c["dataset_id"] != prior for c in candidates):
         try:
@@ -127,7 +145,9 @@ def retrieve_catalogue_candidates(state: AnalystState) -> dict[str, Any]:
             pass
     return {
         "catalogue_candidates": candidates,
-        "events": stage_event(state, "retrieve_catalogue_candidates", count=len(candidates)),
+        "events": stage_event(
+            state, "retrieve_catalogue_candidates", count=len(candidates), method=method
+        ),
     }
 
 
@@ -145,6 +165,13 @@ def retrieve_context_and_examples(state: AnalystState) -> dict[str, Any]:
     reads (`tables`, `indicators`, `categories`, `cards`).
     """
     ids = [str(c.get("dataset_id")) for c in state.catalogue_candidates]
+    if state.retrieved:
+        # Widened search after not_covered: the next tables of the ranking join the candidates.
+        top_k = state.config.limits.catalogue_top_k
+        ranking, _ = rank_catalogue(state.question, top_k)
+        known = {t.name for t in _catalogue().real_tables()}
+        more = [name for name, _ in ranking if name in known and name not in ids]
+        ids = [*ids, *more[:top_k]]
     version, rag = state.config.version, state.config.rag
     retrieved: dict[str, Any] = table_context(published_catalogue(), ids)
     cards: list[dict[str, Any]] = []

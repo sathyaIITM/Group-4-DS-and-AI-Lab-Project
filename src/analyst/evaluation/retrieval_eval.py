@@ -1,11 +1,14 @@
 """Retrieval evaluation (E7): recall at k and mean reciprocal rank of the expected tables.
 
-    python -m analyst.evaluation.retrieval_eval --cases <jsonl> [--k 4] [--out <json>]
+    python -m analyst.evaluation.retrieval_eval --cases <jsonl> [--k 4] [--retriever agent]
+        [--out <json>]
 
 A case is one JSON object per line with `id`, `question` and `expected_dataset_ids` (an empty
 list when no catalogue table holds the answer; such cases are reported but not scored), and
-optionally `expected_indicator_ids`. The retriever is the hybrid index of Milestone 3 (BM25 and
-`bge-small-en-v1.5`, on pgvector when `POSTGRES_PASSWORD` is set, otherwise in memory).
+optionally `expected_indicator_ids`; an end-to-end set (`dataset_ids`) is also accepted. The
+default retriever is the one the agent uses (`--retriever agent`); `--retriever hybrid` is the
+hybrid index of Milestone 3 (BM25 and `bge-small-en-v1.5`, on pgvector when `POSTGRES_PASSWORD`
+is set, otherwise in memory).
 
 Recall at k is the share of expected tables found in the top k, averaged over scored cases;
 the reciprocal rank uses the first expected table found (0 when none is in the ranking).
@@ -82,8 +85,18 @@ def evaluate(
 
 
 def load_cases(path: Path) -> list[RetrievalCase]:
-    lines = path.read_text(encoding="utf-8").splitlines()
-    return [RetrievalCase.model_validate_json(x) for x in lines if x.strip()]
+    """Retrieval cases, or an end-to-end set (`dataset_ids`); follow-ups are not scored there,
+    because the agent keeps the prior table for them."""
+    cases = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        if "expected_dataset_ids" not in item:
+            follow_up = bool(item.get("prior_turns"))
+            item["expected_dataset_ids"] = [] if follow_up else item.get("dataset_ids", [])
+        cases.append(RetrievalCase.model_validate(item))
+    return cases
 
 
 def hybrid_retrievers() -> tuple[Callable[[str], list[str]], Callable[[str], list[str]], str]:
@@ -105,14 +118,35 @@ def hybrid_retrievers() -> tuple[Callable[[str], list[str]], Callable[[str], lis
     return tables, indicators, backend
 
 
+def catalogue_retriever(k: int) -> tuple[Callable[[str], list[str]], str]:
+    """The agent's own catalogue retrieval (`agents.nodes.rank_catalogue`)."""
+    from analyst.agents.nodes import rank_catalogue
+
+    def tables(question: str) -> list[str]:
+        ranking, _ = rank_catalogue(question, k)
+        return [name for name, _ in ranking]
+
+    return tables, "agent catalogue retrieval"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--cases", type=Path, required=True)
     parser.add_argument("--k", type=int, default=DEFAULT_K)
     parser.add_argument("--out", type=Path)
+    parser.add_argument(
+        "--retriever",
+        choices=["agent", "hybrid"],
+        default="agent",
+        help="agent: the catalogue retrieval the graph uses; hybrid: the Milestone 3 index",
+    )
     args = parser.parse_args()
-    tables, indicators, backend = hybrid_retrievers()
-    result = {"backend": backend, "cases_file": str(args.cases)}
+    if args.retriever == "agent":
+        tables, backend = catalogue_retriever(args.k)
+        indicators = None
+    else:
+        tables, indicators, backend = hybrid_retrievers()
+    result = {"backend": backend, "retriever": args.retriever, "cases_file": str(args.cases)}
     result |= evaluate(load_cases(args.cases), tables, args.k, indicators)
     text = json.dumps(result, indent=2)
     if args.out:
