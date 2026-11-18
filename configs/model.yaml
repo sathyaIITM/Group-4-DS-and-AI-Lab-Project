@@ -8,6 +8,9 @@ hosted_llm:
   # and has the most capacity. Requests may be processed in any region (public data only).
   location: global
   temperature: 0
+  # Per-request timeout. Calls took 2-3 s (p50) and at most 10.6 s on e2e_dev (18 Nov); one
+  # 32 s spike used up the 30 s run deadline. A timed-out call is retried once as transient.
+  request_timeout_s: 15
   # Reply format: json_schema (the contract's JSON Schema is sent and the model must follow it)
   # or json_object (any JSON, validated by code only). json_schema since 2026-11-17: confirmed
   # on Vertex AI with the QueryIntent contract; replies are still validated by code.

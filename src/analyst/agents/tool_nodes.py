@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -22,6 +23,7 @@ from analyst.tools.calc import (
     share,
 )
 from analyst.tools.checks import NOT_IN_RESULT, run_result_checks, verify_numbers
+from analyst.tools.codelists import codelist
 from analyst.tools.resolve import resolve_plan
 from analyst.tools.sql_runner import ReadOnlyDatabase, SqlRejectedError, SqlTimeoutError, check_sql
 
@@ -312,6 +314,45 @@ def _descriptors(state: AnalystState, catalogue: Mapping[str, Mapping[str, Any]]
     return texts
 
 
+def _clarify_options(
+    slot: str,
+    intent: QueryIntent,
+    table: Mapping[str, Any],
+    deps: ToolNodeDependencies,
+) -> list[str]:
+    """Options a clarification can offer, decided by code from the table (at most 6).
+
+    A missing group or category offers the table's own measure ("... persons aged 15+") and its
+    category values; a missing period offers the latest published periods.
+    """
+    indicators = indicators_of(dict(table))
+    chosen = [i for i in indicators if i["indicator_id"] in intent.indicator_ids] or (
+        indicators if len(indicators) == 1 else []
+    )
+    if slot in {"category", "indicator"}:
+        labels = [re.sub(r"(?<=[A-Za-z)%])\d+\b", "", str(i["label"])) for i in chosen]
+        values = [
+            v for column in (table.get("categories") or {}) for v in codelist_of(table, column)
+        ]
+        return list(dict.fromkeys([*labels, *values]))[:6]
+    if slot == "period":
+        db = deps.database_for(str(table["dataset_id"]))
+        try:
+            rows = db.execute(
+                f"SELECT DISTINCT period_label, period_start FROM {table['obs_table']} "  # noqa: S608 - catalogue identifier
+                "WHERE period_label IS NOT NULL ORDER BY period_start DESC LIMIT 6"
+            ).fetchall()
+        finally:
+            db.close()
+        return [str(r[0]) for r in rows]
+    return []
+
+
+def codelist_of(table: Mapping[str, Any], column: str) -> list[str]:
+    values = codelist(str(table["dataset_id"]), column)
+    return values if len(values) <= 6 else []
+
+
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
     """Return graph node overrides; callers combine these with the T2 and T3 adapters."""
 
@@ -366,7 +407,9 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
                         UnresolvedSlot(
                             slot=_missing_slot(state.intent),
                             mention=state.intent.reason or "",
-                            options=[],
+                            options=_clarify_options(
+                                _missing_slot(state.intent), state.intent, table, deps
+                            ),
                         )
                     ]
                 }

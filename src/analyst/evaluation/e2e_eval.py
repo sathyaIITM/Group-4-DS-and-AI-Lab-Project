@@ -250,7 +250,7 @@ def _narrated_numbers(text: str) -> list[float]:
         "crore_inr": "inr",
     }
     for parsed in parse_numbers(text):
-        if parsed.is_period:
+        if parsed.is_period or parsed.is_reference:
             continue
         values.append(float(parsed.value))
         if parsed.unit_hint in target_by_dimension:

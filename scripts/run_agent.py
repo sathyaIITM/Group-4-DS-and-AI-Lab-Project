@@ -60,6 +60,15 @@ def main() -> int:
     )
     parser.add_argument("--yes", action="store_true", help="confirm that a live run spends credit")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "--save-chart",
+        nargs="?",
+        const=Path("outputs/answers"),
+        type=Path,
+        metavar="DIR",
+        help="write one HTML page per run (answer, chart, rows, SQL) to DIR "
+        "(default outputs/answers)",
+    )
     args = parser.parse_args()
     nodes = None
     if args.llm == "live":
@@ -83,6 +92,10 @@ def main() -> int:
                 "cause": state.outcome_cause,
                 "response": state.response_text,
             }
+            if args.save_chart is not None:
+                from analyst.agents.answer_page import save_answer_page
+
+                record["page"] = str(save_answer_page(state, args.save_chart))
             print(json.dumps(record, default=str))
         except Exception as error:  # a failed run is an evaluation outcome, not a CLI crash
             print(

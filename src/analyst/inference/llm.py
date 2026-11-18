@@ -308,10 +308,12 @@ class LlmClient:
         model = config["tiers"][tier]
         prices = config.get("price_per_mtok", {}).get(tier, {}) or {}
         thinking = config.get("thinking") or {}
+        timeout_s = float(config.get("request_timeout_s", 60))
         common = {
             "provider": config["provider"],
             "temperature": float(config.get("temperature", 0)),
             "max_llm_calls": max_llm_calls,
+            "timeout_s": timeout_s,
             "price_per_mtok": {k: prices.get(k) for k in ("input", "output")},
             "max_output_tokens": dict(config.get("max_output_tokens") or {}),
             "schema_output": config.get("response_format") == "json_schema",
@@ -330,12 +332,15 @@ class LlmClient:
                 raise LlmError(msg)
             model_id = model if model.startswith("google/") else f"google/{model}"
             base = vertex_base_url(project, location)
-            return cls("", model_id, base, transport=http_transport(base, gcloud_token), **common)
+            transport = http_transport(base, gcloud_token, timeout_s)
+            return cls("", model_id, base, transport=transport, **common)
         key = os.environ.get("LLM_API_KEY")
         if not key:
             raise LlmError("set LLM_API_KEY for the ai_studio provider")
         base = config.get("ai_studio_base_url") or GEMINI_OPENAI_BASE
-        return cls(key, model, base, transport=http_transport(base, lambda: key), **common)
+        return cls(
+            key, model, base, transport=http_transport(base, lambda: key, timeout_s), **common
+        )
 
     # ------------------------------------------------------------------ v0 / proof of concept
 

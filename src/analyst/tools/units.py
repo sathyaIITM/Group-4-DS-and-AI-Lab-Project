@@ -19,6 +19,8 @@ class ParsedNumber(Contract):
     value: Decimal
     unit_hint: str | None = None
     is_period: bool = False
+    # A unit denominator ("per 1,000 live births", "per 100000 population"): not a claim.
+    is_reference: bool = False
 
 
 _UNIT_ALIASES = {
@@ -151,7 +153,8 @@ def display_decimals(unit: str, source_decimals: int | None = None) -> int:
 
 
 _NUMBER_RE = re.compile(
-    r"(?<![\w.])(?P<number>[+-]?(?:\d{1,3}(?:,\d{2})*,\d{3}|\d+)(?:\.\d+)?)"
+    r"(?<![\w.])(?P<number>[+-]?(?:\d{1,3}(?:,\d{3})+(?!\d)|\d{1,3}(?:,\d{2})*,\d{3}|\d+)"
+    r"(?:\.\d+)?)"
     r"\s*(?P<unit>%|percent(?:age)?(?:\s+points?)?|pp|crores?|lakhs?|millions?|thousands?|"
     r"tonnes?|quintals?|qtl|kg|kilograms?|(?:lakh|crore)\s+(?:INR|rupees?)|INR|₹)?",
     re.IGNORECASE,
@@ -174,7 +177,9 @@ def parse_numbers(text: str) -> list[ParsedNumber]:
         if any(start < match.end() and match.start() < end for start, end in periods):
             continue
         raw = match.group("number")
-        is_period = False
+        # A bare year ("in 2015", "March 2020") is a period, not a measurement.
+        is_period = re.fullmatch(r"(?:19|20)\d{2}", raw) is not None and not match.group("unit")
+        is_reference = re.search(r"\bper\s*$", text[: match.start()], re.IGNORECASE) is not None
         unit = match.group("unit")
         unit_hint = _unit(unit) if unit else None
         try:
@@ -189,6 +194,7 @@ def parse_numbers(text: str) -> list[ParsedNumber]:
                     value=parsed,
                     unit_hint=unit_hint,
                     is_period=is_period,
+                    is_reference=is_reference,
                 ),
             )
         )

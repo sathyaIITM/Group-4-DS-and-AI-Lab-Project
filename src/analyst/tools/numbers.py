@@ -40,7 +40,7 @@ def verify_numbers(
     matched: list[str] = []
     unmatched: list[str] = []
     for mention in parse_numbers(narration):
-        if mention.is_period:
+        if mention.is_period or mention.is_reference:
             continue
         if mention.unit_hint is None and mention.value in described:
             continue

@@ -465,3 +465,51 @@ def test_execution_accuracy_projects_extra_columns() -> None:
         ("Kerala", "2021-22", "ur", 9.6, "percent"),
     ]
     assert not same_result_projected(gold_sql, wrong, gold)
+
+
+# Fourth batch: findings of the first e2e_dev run (v0, 18 November).
+
+
+def test_number_parser_years_groupings_and_denominators() -> None:
+    from analyst.tools.units import parse_numbers
+
+    parsed = {m.text: m for m in parse_numbers("In 2023, 6,241,569.0 crimes; 448.3 per 100000")}
+    assert parsed["2023"].is_period
+    assert parsed["6,241,569.0"].value == Decimal("6241569.0")
+    assert parsed["100000"].is_reference
+    assert [m.text for m in parse_numbers("62,41,569 and 1,000")] == ["62,41,569", "1,000"]
+    text = "Mizoram had 3.0 per 1,000 live births in 2019, the lowest."
+    assert verify_numbers(text, [3.0]).passed
+    assert not verify_numbers("Mizoram had 3.5 per 1,000 live births.", [3.0]).passed
+
+
+def test_clarification_offers_the_tables_own_group(tmp_path: Path) -> None:
+    from analyst.agents.tool_nodes import _clarify_options
+
+    intent = _intent("clarify", "demo").model_copy(update={"indicator_ids": ["ur"]})
+    table = {
+        "dataset_id": "demo",
+        "obs_table": "obs_demo",
+        "indicator_units": {"ur": "percent"},
+        "categories": {},
+    }
+    deps = ToolNodeDependencies(CATALOGUE, {}, lambda _d: _market_db(tmp_path))  # type: ignore[arg-type]
+    options = _clarify_options("category", intent, table, deps)
+    assert options == ["ur"]  # no observation file here, so the label falls back to the id
+
+
+def test_answer_page_escapes_text_and_embeds_the_chart() -> None:
+    from analyst.agents.answer_page import answer_page
+    from analyst.contracts import ChartSpec
+
+    spec = {"mark": "bar", "data": {"values": [{"a": "</script>"}]}}
+    state = AnalystState(
+        question="<b>Rain</b> in Kerala?",
+        response_text="It rained.",
+        chart=ChartSpec(chart_type="bar", decided_by="rules", reason="r", vega_lite=spec),
+        result=_result([["Kerala", "2017-18", 10.0]]),
+    )
+    page = answer_page(state)
+    assert "&lt;b&gt;Rain&lt;/b&gt;" in page and "<b>Rain" not in page
+    assert "vegaEmbed('#chart'" in page and "<\\/script>" in page
+    assert "Kerala" in page and "SELECT 1" in page
