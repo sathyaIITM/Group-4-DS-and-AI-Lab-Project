@@ -1,0 +1,38 @@
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 2663.05it/s]
+W1117 22:48:13.384000 38845 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+train items 1689, calibration items 187, eval items 187 (calibration_slice), skipped {}, device mps
+optimizer budget: 1689 train item(s), effective batch up to 64 (micro_batch 2 x grad_accum 32), 108 optimizer updates over 4 epoch(s)
+Error: command buffer exited with error status.
+	The Metal Performance Shaders operations encoded on it may not have completed.
+	Error: 
+	(null)
+	Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)
+	<AGXG17GFamilyCommandBuffer: 0x7b611f0380>
+    label = <none> 
+    device = <AGXG17GDevice: 0x101b32a70>
+        name = Apple M5 
+    commandQueue = <AGXG17GFamilyCommandQueue: 0x7b73bf0000>
+        label = <none> 
+        device = <AGXG17GDevice: 0x101b32a70>
+            name = Apple M5 
+    retainedReferences = 1
+laya-train: unexpected error: MPS command buffer execution failed: Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory). This error may have been asynchronously reported, so the stack trace below might be incorrect.
+      251.48 real         5.95 user        37.80 sys
+          2367750144  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              469139  page reclaims
+               79810  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                  80  messages sent
+                 100  messages received
+                   1  signals received
+              893390  voluntary context switches
+              288219  involuntary context switches
+           878027268  instructions retired
+           313503601  cycles elapsed
+            39043768  peak memory footprint
+exit 1

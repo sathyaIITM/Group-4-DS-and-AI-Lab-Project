@@ -1,0 +1,48 @@
+{
+  "wall_seconds": 20.038933038711548,
+  "records_seen": 32,
+  "requested_records": 32,
+  "truncated_records": 0,
+  "rejected_records": 0,
+  "optimizer_steps": 16,
+  "forward_tokens": 13013,
+  "step_seconds": [
+    2.591,
+    0.959,
+    1.199,
+    1.122,
+    1.139,
+    1.117,
+    1.037,
+    1.221,
+    1.403,
+    1.326,
+    1.25,
+    1.236,
+    1.21,
+    1.144,
+    0.966,
+    1.119
+  ],
+  "optimizer_seconds": 0.23755669593811035,
+  "resume_seconds": [],
+  "resume_write_seconds": [],
+  "world_size": 1,
+  "backbone_save_seconds": 0.4,
+  "snapshots": [],
+  "grad_norm": [
+    {
+      "epoch": 0,
+      "steps": 16,
+      "mean": 36.9792876875,
+      "max": 207.914047,
+      "clipped_steps": 15
+    }
+  ],
+  "weights": "lora",
+  "peak_device_bytes": 6600132096,
+  "device": "cuda",
+  "dtype": "fp32",
+  "batch": 1,
+  "peak_rss_bytes": 5706944512
+}

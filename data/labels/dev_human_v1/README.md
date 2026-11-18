@@ -42,5 +42,18 @@ Domains: at least 20 items each for `labour`, `agriculture`, `rainfall`, `prices
 - Agreement: `python scripts/label_agreement.py agree` (Cohen's kappa per decision and block;
   target 0.80). Freeze: `python scripts/label_agreement.py freeze --items <rendered items>`.
 
+## Format corrections
+
+`labels_T2.csv` (submitted 2026-11-18 as commit 0589eba) was corrected for format only, so that
+`label_agreement.py` can read it; no label was re-decided:
+
+- header set to `item_id,tool,domain,rule,undecided,note` (was `Item_ID,...,rule ,...`), byte-order
+  mark and trailing spaces removed, `TRUE`/`FALSE` written as `true`/`false`;
+- `economy` written as the option name `prices_economy` (16 items: dh-002, 006, 008, 016, 028,
+  044, 053, 060, 075, 077, 080, 082, 089, 093, 125, 127);
+- `missing`, which is not an option, replaced by the label of the domain rule the labeller cited
+  in `note`: M8 `unspecified` (dh-067, 081, 085, 087, 101, 103, 113) and M5 `other` (dh-110).
+  To be confirmed by T2.
+
 T3's intended labels are sealed outside the repository; their SHA-256 is posted to the team
 before labelling starts and they are compared with the final labels only after the freeze.

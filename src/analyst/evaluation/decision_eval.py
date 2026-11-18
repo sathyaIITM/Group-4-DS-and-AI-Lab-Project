@@ -42,6 +42,7 @@ from analyst.evaluation.metrics import ece
 
 N_BINS = 10  # reliability-diagram bins; the same equal-width bins as `metrics.ece`
 
+ROOT = Path(__file__).resolve().parents[3]
 N_BOOTSTRAP = 2000
 SEED = 0
 GATE_MARGIN = 0.03
@@ -49,6 +50,12 @@ GATE_ECE_MAX = 0.10
 ERROR_BUDGET = 0.05
 
 Rows = list[dict[str, Any]]
+
+
+def sha256_of(path: Path) -> str:
+    import hashlib
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def labels_of(decision: str) -> tuple[str, ...]:
@@ -103,12 +110,27 @@ def run(
 # ---------------------------------------------------------------------------- arrays
 
 
+PROBABILITY_SUM_TOLERANCE = 0.01
+
+
 def probability_matrix(rows: Rows, labels: tuple[str, ...]) -> np.ndarray:
-    """Option probabilities in a fixed label order, renormalised to sum to 1."""
-    matrix = np.array([[r["probabilities"].get(x, 0.0) for x in labels] for r in rows], float)
+    """Option probabilities in a fixed label order. Every row must give exactly the label set,
+    with finite, non-negative values summing to 1 within a tolerance; a malformed row is an
+    error, not something to repair. Rounding residue is then renormalised away."""
+    expected = set(labels)
+    for r in rows:
+        keys = set(r["probabilities"])
+        if keys != expected:
+            raise ValueError(
+                f"{r.get('id')}: probabilities for {sorted(keys ^ expected)} missing or unexpected"
+            )
+    matrix = np.array([[r["probabilities"][x] for x in labels] for r in rows], float)
+    if not np.isfinite(matrix).all() or (matrix < 0).any():
+        raise ValueError("a prediction has a negative or non-finite probability")
     sums = matrix.sum(axis=1, keepdims=True)
-    if (sums <= 0).any():
-        raise ValueError("a prediction has no probability mass on the label set")
+    off = np.abs(sums[:, 0] - 1.0) > PROBABILITY_SUM_TOLERANCE
+    if off.any():
+        raise ValueError(f"{int(off.sum())} predictions do not sum to 1 (e.g. {sums[off][0]})")
     result: np.ndarray = matrix / sums
     return result
 
@@ -120,12 +142,25 @@ def truth_index(rows: Rows, labels: tuple[str, ...]) -> np.ndarray:
     return np.array([labels.index(r["label"]) for r in rows])
 
 
+def check_ids(rows: Rows, name: str = "predictions") -> set[str]:
+    """The item ids of a prediction file; duplicates are an error."""
+    ids = [r["id"] for r in rows]
+    if len(ids) != len(set(ids)):
+        raise ValueError(f"{name}: duplicated item ids")
+    return set(ids)
+
+
 def align(a: Rows, b: Rows) -> tuple[Rows, Rows]:
-    """The items present in both files, in the order of `a`; labels must agree."""
+    """The same items from both files, in the order of `a`; the id sets must be identical
+    (a comparison on a silent subset is refused) and the labels must agree."""
+    ids_a, ids_b = check_ids(a, "first file"), check_ids(b, "second file")
+    if ids_a != ids_b:
+        raise ValueError(
+            f"the prediction files cover different items: {len(ids_a - ids_b)} only in the "
+            f"first, {len(ids_b - ids_a)} only in the second"
+        )
     by_id = {r["id"]: r for r in b}
-    shared = [r for r in a if r["id"] in by_id]
-    if not shared:
-        raise ValueError("the two prediction files share no item ids")
+    shared = list(a)
     other = [by_id[r["id"]] for r in shared]
     mismatched = [x["id"] for x, y in zip(shared, other, strict=True) if x["label"] != y["label"]]
     if mismatched:
@@ -204,13 +239,16 @@ def score(rows: Rows, labels: tuple[str, ...], temperature: float = 1.0) -> dict
 
 
 def calibrated_report(calibration: Rows, dev: Rows, labels: tuple[str, ...]) -> dict[str, Any]:
-    """Fit one temperature on calibration; score dev raw and with that temperature."""
+    """Fit one temperature on calibration; score dev raw and with that temperature.
+    `calibration_raw` (the held-out split before scaling) is the validation loss of a run:
+    its NLL is on the same scale as the training cross-entropy."""
     fitted = fit_temperature(
         probability_matrix(calibration, labels), truth_index(calibration, labels)
     )
     return {
         "calibration_n": len(calibration),
         "fitted_temperature": fitted,
+        "calibration_raw": score(calibration, labels, 1.0),
         "dev_raw": score(dev, labels, 1.0),
         "dev_calibrated": score(dev, labels, fitted),
     }
@@ -243,6 +281,7 @@ def gate(
     labels: tuple[str, ...],
     margin: float = GATE_MARGIN,
     ece_max: float = GATE_ECE_MAX,
+    decides: str = "point_estimate",
 ) -> dict[str, Any]:
     """The adoption gate: Kev within `margin` of Jev on accuracy, and ECE <= `ece_max` after
     temperature scaling fitted on calibration. Both the point-estimate rule and the stricter
@@ -255,7 +294,7 @@ def gate(
     difference = paired_difference(_correct(jev, labels), _correct(kev, labels, temperature))
     kev_score = score(kev, labels, temperature)
     accuracy_ok = difference["difference"] >= -margin
-    return {
+    result: dict[str, Any] = {
         "n": len(kev),
         "kev_temperature": temperature,
         "kev_accuracy": kev_score["accuracy"],
@@ -269,17 +308,40 @@ def gate(
             difference["ci95"][0] >= -margin and kev_score["ece"] <= ece_max
         ),
     }
+    if decides not in {"point_estimate", "non_inferiority"}:
+        raise ValueError(f"unknown gate rule {decides!r}")
+    result["decides"] = decides
+    result["passes"] = result[f"passes_{decides}"]
+    return result
+
+
+MIN_ACCEPTED = 30
+
+
+def wilson_upper(errors: int, n: int, z: float = 1.645) -> float:
+    """One-sided 95% Wilson upper bound of an error rate."""
+    if n == 0:
+        return 1.0
+    p = errors / n
+    centre = p + z * z / (2 * n)
+    spread = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return float(min(1.0, (centre + spread) / (1 + z * z / n)))
 
 
 def choose_threshold(
-    confidence: np.ndarray, correct: np.ndarray, error_budget: float = ERROR_BUDGET
+    confidence: np.ndarray,
+    correct: np.ndarray,
+    error_budget: float = ERROR_BUDGET,
+    min_accepted: int = MIN_ACCEPTED,
 ) -> float:
-    """The lowest confidence threshold whose accepted items have an error rate within the
-    budget (selective classification). Returns 1.01 (accept nothing) if none qualifies."""
+    """The lowest confidence threshold whose accepted calibration items number at least
+    `min_accepted` and have an error rate within the budget (selective classification).
+    Returns 1.01 (accept nothing) if none qualifies. The point estimate decides; the Wilson
+    upper bound is reported beside it by `cascade`, since the bound is not a guarantee either."""
     best = 1.01
     for t in sorted(set(confidence.tolist()), reverse=True):
         accepted = confidence >= t
-        if 1.0 - correct[accepted].mean() <= error_budget:
+        if accepted.sum() >= min_accepted and 1.0 - correct[accepted].mean() <= error_budget:
             best = t
     return float(best)
 
@@ -305,14 +367,25 @@ def cascade(
     handled = probabilities.max(axis=1) >= threshold
     kev_correct, jev_correct = _correct(kev, labels, temperature), _correct(jev, labels)
     combined = np.where(handled, kev_correct, jev_correct)
-    jev_costs = np.array([r.get("cost_usd") or 0.0 for r in jev], float)
-    kev_costs = np.array([r.get("cost_usd") or 0.0 for r in kev], float)
-    cost = np.where(handled, kev_costs, kev_costs + jev_costs)
+    accepted_cal = scaled.max(axis=1) >= threshold
+    cal_errors = int((scaled.argmax(axis=1)[accepted_cal] != cal_truth[accepted_cal]).sum())
+    costs_known = all(r.get("cost_usd") is not None for r in [*kev, *jev])
+    cost_per_1000: float | None = None
+    if costs_known:  # a missing cost is reported as unknown, never as zero
+        jev_costs = np.array([r["cost_usd"] for r in jev], float)
+        kev_costs = np.array([r["cost_usd"] for r in kev], float)
+        cost_per_1000 = float(np.where(handled, kev_costs, kev_costs + jev_costs).mean() * 1000)
     return {
         "n": len(kev),
         "error_budget": error_budget,
         "kev_temperature": temperature,
         "threshold": threshold,
+        "min_accepted_calibration": MIN_ACCEPTED,
+        "calibration_accepted": int(accepted_cal.sum()),
+        "calibration_error_on_accepted": float(cal_errors / accepted_cal.sum())
+        if accepted_cal.any()
+        else None,
+        "calibration_error_upper95": wilson_upper(cal_errors, int(accepted_cal.sum())),
         "escalation_band": [0.0, threshold],
         "kev_share": float(handled.mean()),
         "kev_error_on_handled": float(1 - kev_correct[handled].mean()) if handled.any() else None,
@@ -320,7 +393,7 @@ def cascade(
         "cascade_accuracy_ci95": bootstrap_ci(combined),
         "kev_only_accuracy": float(kev_correct.mean()),
         "jev_only_accuracy": float(jev_correct.mean()),
-        "cost_usd_per_1000": float(cost.mean() * 1000),
+        "cost_usd_per_1000": cost_per_1000,
         "jev_calls_per_1000": float((~handled).mean() * 1000),
     }
 
@@ -329,9 +402,12 @@ def flip_rate(runs: list[Rows]) -> dict[str, Any]:
     """Share of items whose predicted label changes across option orders."""
     if len(runs) < 2:
         raise ValueError("need at least two runs with different option orders")
-    ids = set.intersection(*({r["id"] for r in rows} for rows in runs))
+    id_sets = [check_ids(rows, f"run {i}") for i, rows in enumerate(runs)]
+    if any(s != id_sets[0] for s in id_sets):
+        raise ValueError("the option-order runs cover different items")
+    ids = id_sets[0]
     if not ids:
-        raise ValueError("the runs share no item ids")
+        raise ValueError("the runs hold no items")
     by_run = [{r["id"]: r["predicted"] for r in rows} for rows in runs]
     flips = sum(len({run[i] for run in by_run}) > 1 for i in ids)
     return {"n": len(ids), "runs": len(runs), "flipped": flips, "flip_rate": flips / len(ids)}
@@ -431,6 +507,10 @@ def main() -> None:
     elif args.command == "score":
         labels = labels_of(args.decision)
         result = calibrated_report(_load(args.calibration), _load(args.dev), labels)
+        result["inputs_sha256"] = {
+            "calibration_predictions": sha256_of(args.calibration),
+            "dev_predictions": sha256_of(args.dev),
+        }
         if args.figure:
             plot_reliability(
                 {"raw": result["dev_raw"], "calibrated": result["dev_calibrated"]},
@@ -440,11 +520,20 @@ def main() -> None:
         _emit(result, args.out)
     elif args.command in {"gate", "cascade"}:
         labels = labels_of(args.decision)
-        fn = gate if args.command == "gate" else cascade
-        _emit(
-            fn(_load(args.kev_calibration), _load(args.kev_dev), _load(args.jev_dev), labels),
-            args.out,
-        )
+        rows = (_load(args.kev_calibration), _load(args.kev_dev), _load(args.jev_dev))
+        if args.command == "gate":
+            import yaml
+
+            rule = yaml.safe_load((ROOT / "configs" / "inference.yaml").read_text())["gate"]
+            result = gate(*rows, labels, decides=rule["decides"])
+        else:
+            result = cascade(*rows, labels)
+        result["inputs_sha256"] = {
+            "kev_calibration": sha256_of(args.kev_calibration),
+            "kev_dev": sha256_of(args.kev_dev),
+            "jev_dev": sha256_of(args.jev_dev),
+        }
+        _emit(result, args.out)
     else:
         _emit(flip_rate([_load(p) for p in args.runs]), args.out)
 

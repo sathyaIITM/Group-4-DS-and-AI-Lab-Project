@@ -1,0 +1,63 @@
+Error in sitecustomize; set PYTHONVERBOSE for traceback:
+ModuleNotFoundError: No module named 'wrapt'
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/320 [00:01<07:42,  1.45s/it]
+Loading weights: 100%|██████████| 320/320 [00:01<00:00, 217.86it/s]
+
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 1303.79it/s]
+delta: warm start from /root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f: 372 lora tensors and the pointer head loaded
+device=cuda world=1 trainable params=11.3M
+1876 training requests (holdout=[]), questions by type {'choice': 1876}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+ep0 step 10/470 loss 0.682 kl 0.000 anchor 0.000 0.538s/rec
+ep0 step 20/470 loss 0.665 kl 0.000 anchor 0.000 0.541s/rec
+ep0 step 30/470 loss 0.655 kl 0.000 anchor 0.000 0.555s/rec
+ep0 step 40/470 loss 0.511 kl 0.000 anchor 0.000 0.562s/rec
+ep0 step 50/470 loss 0.546 kl 0.000 anchor 0.000 0.565s/rec
+ep0 step 60/470 loss 0.522 kl 0.000 anchor 0.000 0.567s/rec
+ep0 step 70/470 loss 0.354 kl 0.000 anchor 0.000 0.570s/rec
+ep0 step 80/470 loss 0.453 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 90/470 loss 0.283 kl 0.000 anchor 0.000 0.570s/rec
+ep0 step 100/470 loss 0.530 kl 0.000 anchor 0.000 0.569s/rec
+ep0 step 110/470 loss 0.422 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 120/470 loss 0.188 kl 0.000 anchor 0.000 0.572s/rec
+ep0 step 130/470 loss 0.274 kl 0.000 anchor 0.000 0.572s/rec
+ep0 step 140/470 loss 0.519 kl 0.000 anchor 0.000 0.572s/rec
+ep0 step 150/470 loss 0.358 kl 0.000 anchor 0.000 0.572s/rec
+ep0 step 160/470 loss 0.221 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 170/470 loss 0.368 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 180/470 loss 0.133 kl 0.000 anchor 0.000 0.572s/rec
+ep0 step 190/470 loss 0.492 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 200/470 loss 0.268 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 210/470 loss 0.174 kl 0.000 anchor 0.000 0.571s/rec
+ep0 step 220/470 loss 0.273 kl 0.000 anchor 0.000 0.570s/rec
+ep0 step 230/470 loss 0.213 kl 0.000 anchor 0.000 0.570s/rec
+ep1 step 240/470 loss 0.066 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 250/470 loss 0.277 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 260/470 loss 0.337 kl 0.000 anchor 0.000 0.570s/rec
+ep1 step 270/470 loss 0.189 kl 0.000 anchor 0.000 0.570s/rec
+ep1 step 280/470 loss 0.164 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 290/470 loss 0.156 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 300/470 loss 0.162 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 310/470 loss 0.264 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 320/470 loss 0.213 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 330/470 loss 0.131 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 340/470 loss 0.026 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 350/470 loss 0.126 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 360/470 loss 0.120 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 370/470 loss 0.031 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 380/470 loss 0.008 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 390/470 loss 0.108 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 400/470 loss 0.088 kl 0.000 anchor 0.000 0.571s/rec
+ep1 step 410/470 loss 0.008 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 420/470 loss 0.011 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 430/470 loss 0.034 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 440/470 loss 0.122 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 450/470 loss 0.049 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 460/470 loss 0.250 kl 0.000 anchor 0.000 0.572s/rec
+ep1 step 470/470 loss 0.153 kl 0.000 anchor 0.000 0.572s/rec
+saved /tmp/kev_work/kev/runs/lr1e-05

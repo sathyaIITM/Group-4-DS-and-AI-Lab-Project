@@ -80,8 +80,38 @@ def test_align_rejects_disagreeing_labels() -> None:
 def test_choose_threshold_respects_the_error_budget() -> None:
     confidence = np.array([0.99, 0.95, 0.9, 0.7, 0.6, 0.5])
     correct = np.array([1, 1, 1, 0, 1, 0], float)
-    assert de.choose_threshold(confidence, correct, 0.05) == 0.9
-    assert de.choose_threshold(np.array([0.9]), np.array([0.0]), 0.05) == 1.01
+    assert de.choose_threshold(confidence, correct, 0.05, min_accepted=1) == 0.9
+    assert de.choose_threshold(np.array([0.9]), np.array([0.0]), 0.05, min_accepted=1) == 1.01
+    # one correct item is not evidence: below the minimum count nothing is accepted
+    assert de.choose_threshold(confidence, correct, 0.05) == 1.01
+
+
+def test_align_refuses_different_item_sets() -> None:
+    row = {"label": "labour", "predicted": "labour", "probabilities": {}}
+    with pytest.raises(ValueError, match="different items"):
+        de.align([{**row, "id": "a"}, {**row, "id": "b"}], [{**row, "id": "a"}])
+    with pytest.raises(ValueError, match="duplicated"):
+        de.align([{**row, "id": "a"}, {**row, "id": "a"}], [{**row, "id": "a"}])
+
+
+def test_probability_matrix_rejects_malformed_rows() -> None:
+    labels = ("labour", "health")
+    with pytest.raises(ValueError, match="missing or unexpected"):
+        de.probability_matrix([{"id": "x", "probabilities": {"labour": 1.0}}], labels)
+    with pytest.raises(ValueError, match="sum to 1"):
+        de.probability_matrix(
+            [{"id": "x", "probabilities": {"labour": 0.5, "health": 0.2}}], labels
+        )
+    ok = de.probability_matrix(
+        [{"id": "x", "probabilities": {"labour": 0.7, "health": 0.3}}], labels
+    )
+    assert ok.shape == (1, 2)
+
+
+def test_wilson_upper_bound() -> None:
+    assert de.wilson_upper(0, 0) == 1.0
+    assert 0.0 < de.wilson_upper(0, 100) < 0.05
+    assert de.wilson_upper(5, 100) > 0.05
 
 
 def test_cascade_beats_kev_alone_when_jev_is_better() -> None:

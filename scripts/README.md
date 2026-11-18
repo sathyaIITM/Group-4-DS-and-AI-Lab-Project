@@ -119,3 +119,16 @@ NCRB (`datafile3.csv`) comes from the catalogue download, not the API.
 | `src/analyst/data/periods.py` | Overlapping and absent periods; years later than the confirmed one |
 | `src/analyst/data/reconcile.py` | Comparison of a new release with the live one; accepted changes |
 | `src/analyst/data/publish.py` | Staging, catalogue, lineage, release check |
+
+## Model training (Kev-0.8B, domain decision)
+
+Protocol and commands: `docs/specs/kev_training_protocol.md`.
+
+```bash
+python scripts/build_domain_phase1.py --version v2 --laya   # domain-only Kev and Laya files
+python -m analyst.models.kev_runs check-data                 # hashes against configs/train.yaml
+python -m analyst.models.kev_runs plan                       # the planned runs and commands
+caffeinate -i .venv/bin/python scripts/run_kev_local.py smoke  # local smoke test (Apple MPS)
+scripts/score_kev_run.sh <run id>                            # calibration and dev_synthetic scores
+python -m analyst.models.kev_report coverage|table|curves|select
+```

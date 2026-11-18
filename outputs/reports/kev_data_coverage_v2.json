@@ -1,0 +1,423 @@
+{
+  "catalogue_tables": 14,
+  "splits": {
+    "train.v2.jsonl": {
+      "file": "data/splits/kev/train.v2.jsonl",
+      "records": 1876,
+      "domain": {
+        "labour": {
+          "n": 597,
+          "share": 0.3182
+        },
+        "rainfall": {
+          "n": 473,
+          "share": 0.2521
+        },
+        "other": {
+          "n": 171,
+          "share": 0.0912
+        },
+        "health": {
+          "n": 166,
+          "share": 0.0885
+        },
+        "prices_economy": {
+          "n": 149,
+          "share": 0.0794
+        },
+        "agriculture": {
+          "n": 125,
+          "share": 0.0666
+        },
+        "unspecified": {
+          "n": 102,
+          "share": 0.0544
+        },
+        "multiple": {
+          "n": 93,
+          "share": 0.0496
+        }
+      },
+      "tool": {
+        "run_sql": 596,
+        "decline_not_covered": 485,
+        "ask_clarification": 283,
+        "search_catalog": 181,
+        "make_chart": 145,
+        "describe_table": 98,
+        "explain_result": 88
+      },
+      "label_source": {
+        "rule": 1287,
+        "paraphrase": 324,
+        "teacher": 265
+      },
+      "tables": {
+        "plfs_state_ur_usual_status": {
+          "domain": "labour",
+          "named_by_template": 244,
+          "top1_candidate": 498,
+          "shown_in_top4": 923
+        },
+        "imd_subdivision_monthly_rainfall": {
+          "domain": "rainfall",
+          "named_by_template": 202,
+          "top1_candidate": 293,
+          "shown_in_top4": 803
+        },
+        "ncrb_violent_crimes_state": {
+          "domain": "other",
+          "named_by_template": 43,
+          "top1_candidate": 40,
+          "shown_in_top4": 130
+        },
+        "ncrb_annual_crime_statistics": {
+          "domain": "other",
+          "named_by_template": 27,
+          "top1_candidate": 29,
+          "shown_in_top4": 97
+        },
+        "cpi_all_india": {
+          "domain": "prices_economy",
+          "named_by_template": 27,
+          "top1_candidate": 106,
+          "shown_in_top4": 430
+        },
+        "gsdp_per_capita_state": {
+          "domain": "prices_economy",
+          "named_by_template": 45,
+          "top1_candidate": 111,
+          "shown_in_top4": 425
+        },
+        "msp_crops": {
+          "domain": "agriculture",
+          "named_by_template": 28,
+          "top1_candidate": 112,
+          "shown_in_top4": 390
+        },
+        "mandi_daily_prices": {
+          "domain": "prices_economy",
+          "named_by_template": 19,
+          "top1_candidate": 27,
+          "shown_in_top4": 136
+        },
+        "srs_imr_state": {
+          "domain": "health",
+          "named_by_template": 41,
+          "top1_candidate": 91,
+          "shown_in_top4": 416
+        },
+        "plfs_lfpr_urban_state": {
+          "domain": "labour",
+          "named_by_template": 37,
+          "top1_candidate": 132,
+          "shown_in_top4": 515
+        },
+        "imd_district_rainfall_normals": {
+          "domain": "rainfall",
+          "named_by_template": 25,
+          "top1_candidate": 75,
+          "shown_in_top4": 314
+        },
+        "nfhs5_district_indicators": {
+          "domain": "health",
+          "named_by_template": 41,
+          "top1_candidate": 65,
+          "shown_in_top4": 258
+        },
+        "nfhs5_state_factsheet": {
+          "domain": "health",
+          "named_by_template": 27,
+          "top1_candidate": 134,
+          "shown_in_top4": 609
+        },
+        "crop_production_district": {
+          "domain": "agriculture",
+          "named_by_template": 38,
+          "top1_candidate": 163,
+          "shown_in_top4": 634
+        }
+      },
+      "tables_not_named": [],
+      "tables_never_top1": []
+    },
+    "calibration.v2.jsonl": {
+      "file": "data/splits/kev/calibration.v2.jsonl",
+      "records": 322,
+      "domain": {
+        "labour": {
+          "n": 93,
+          "share": 0.2888
+        },
+        "rainfall": {
+          "n": 63,
+          "share": 0.1957
+        },
+        "health": {
+          "n": 43,
+          "share": 0.1335
+        },
+        "prices_economy": {
+          "n": 42,
+          "share": 0.1304
+        },
+        "other": {
+          "n": 27,
+          "share": 0.0839
+        },
+        "unspecified": {
+          "n": 21,
+          "share": 0.0652
+        },
+        "agriculture": {
+          "n": 21,
+          "share": 0.0652
+        },
+        "multiple": {
+          "n": 12,
+          "share": 0.0373
+        }
+      },
+      "tool": {
+        "run_sql": 95,
+        "decline_not_covered": 77,
+        "ask_clarification": 52,
+        "search_catalog": 33,
+        "explain_result": 23,
+        "make_chart": 21,
+        "describe_table": 21
+      },
+      "label_source": {
+        "rule": 263,
+        "teacher": 59
+      },
+      "tables": {
+        "plfs_state_ur_usual_status": {
+          "domain": "labour",
+          "named_by_template": 28,
+          "top1_candidate": 68,
+          "shown_in_top4": 129
+        },
+        "imd_subdivision_monthly_rainfall": {
+          "domain": "rainfall",
+          "named_by_template": 11,
+          "top1_candidate": 25,
+          "shown_in_top4": 96
+        },
+        "ncrb_violent_crimes_state": {
+          "domain": "other",
+          "named_by_template": 6,
+          "top1_candidate": 3,
+          "shown_in_top4": 13
+        },
+        "ncrb_annual_crime_statistics": {
+          "domain": "other",
+          "named_by_template": 8,
+          "top1_candidate": 9,
+          "shown_in_top4": 29
+        },
+        "cpi_all_india": {
+          "domain": "prices_economy",
+          "named_by_template": 6,
+          "top1_candidate": 18,
+          "shown_in_top4": 86
+        },
+        "gsdp_per_capita_state": {
+          "domain": "prices_economy",
+          "named_by_template": 12,
+          "top1_candidate": 21,
+          "shown_in_top4": 82
+        },
+        "msp_crops": {
+          "domain": "agriculture",
+          "named_by_template": 1,
+          "top1_candidate": 20,
+          "shown_in_top4": 88
+        },
+        "mandi_daily_prices": {
+          "domain": "prices_economy",
+          "named_by_template": 19,
+          "top1_candidate": 14,
+          "shown_in_top4": 41
+        },
+        "srs_imr_state": {
+          "domain": "health",
+          "named_by_template": 4,
+          "top1_candidate": 22,
+          "shown_in_top4": 87
+        },
+        "plfs_lfpr_urban_state": {
+          "domain": "labour",
+          "named_by_template": 5,
+          "top1_candidate": 17,
+          "shown_in_top4": 86
+        },
+        "imd_district_rainfall_normals": {
+          "domain": "rainfall",
+          "named_by_template": 3,
+          "top1_candidate": 11,
+          "shown_in_top4": 44
+        },
+        "nfhs5_district_indicators": {
+          "domain": "health",
+          "named_by_template": 11,
+          "top1_candidate": 18,
+          "shown_in_top4": 74
+        },
+        "nfhs5_state_factsheet": {
+          "domain": "health",
+          "named_by_template": 15,
+          "top1_candidate": 39,
+          "shown_in_top4": 158
+        },
+        "crop_production_district": {
+          "domain": "agriculture",
+          "named_by_template": 8,
+          "top1_candidate": 37,
+          "shown_in_top4": 129
+        }
+      },
+      "tables_not_named": [],
+      "tables_never_top1": []
+    },
+    "dev_synthetic.v2.jsonl": {
+      "file": "data/splits/kev/dev_synthetic.v2.jsonl",
+      "records": 355,
+      "domain": {
+        "labour": {
+          "n": 102,
+          "share": 0.2873
+        },
+        "rainfall": {
+          "n": 72,
+          "share": 0.2028
+        },
+        "other": {
+          "n": 48,
+          "share": 0.1352
+        },
+        "health": {
+          "n": 45,
+          "share": 0.1268
+        },
+        "agriculture": {
+          "n": 28,
+          "share": 0.0789
+        },
+        "prices_economy": {
+          "n": 26,
+          "share": 0.0732
+        },
+        "multiple": {
+          "n": 21,
+          "share": 0.0592
+        },
+        "unspecified": {
+          "n": 13,
+          "share": 0.0366
+        }
+      },
+      "tool": {
+        "run_sql": 132,
+        "decline_not_covered": 105,
+        "ask_clarification": 35,
+        "search_catalog": 29,
+        "make_chart": 24,
+        "describe_table": 16,
+        "explain_result": 14
+      },
+      "label_source": {
+        "rule": 308,
+        "teacher": 47
+      },
+      "tables": {
+        "plfs_state_ur_usual_status": {
+          "domain": "labour",
+          "named_by_template": 37,
+          "top1_candidate": 61,
+          "shown_in_top4": 142
+        },
+        "imd_subdivision_monthly_rainfall": {
+          "domain": "rainfall",
+          "named_by_template": 20,
+          "top1_candidate": 27,
+          "shown_in_top4": 103
+        },
+        "ncrb_violent_crimes_state": {
+          "domain": "other",
+          "named_by_template": 29,
+          "top1_candidate": 11,
+          "shown_in_top4": 50
+        },
+        "ncrb_annual_crime_statistics": {
+          "domain": "other",
+          "named_by_template": 7,
+          "top1_candidate": 11,
+          "shown_in_top4": 43
+        },
+        "cpi_all_india": {
+          "domain": "prices_economy",
+          "named_by_template": 2,
+          "top1_candidate": 22,
+          "shown_in_top4": 106
+        },
+        "gsdp_per_capita_state": {
+          "domain": "prices_economy",
+          "named_by_template": 4,
+          "top1_candidate": 29,
+          "shown_in_top4": 99
+        },
+        "msp_crops": {
+          "domain": "agriculture",
+          "named_by_template": 12,
+          "top1_candidate": 25,
+          "shown_in_top4": 100
+        },
+        "mandi_daily_prices": {
+          "domain": "prices_economy",
+          "named_by_template": 10,
+          "top1_candidate": 6,
+          "shown_in_top4": 34
+        },
+        "srs_imr_state": {
+          "domain": "health",
+          "named_by_template": 4,
+          "top1_candidate": 27,
+          "shown_in_top4": 104
+        },
+        "plfs_lfpr_urban_state": {
+          "domain": "labour",
+          "named_by_template": 11,
+          "top1_candidate": 32,
+          "shown_in_top4": 117
+        },
+        "imd_district_rainfall_normals": {
+          "domain": "rainfall",
+          "named_by_template": 14,
+          "top1_candidate": 16,
+          "shown_in_top4": 62
+        },
+        "nfhs5_district_indicators": {
+          "domain": "health",
+          "named_by_template": 18,
+          "top1_candidate": 11,
+          "shown_in_top4": 58
+        },
+        "nfhs5_state_factsheet": {
+          "domain": "health",
+          "named_by_template": 13,
+          "top1_candidate": 38,
+          "shown_in_top4": 162
+        },
+        "crop_production_district": {
+          "domain": "agriculture",
+          "named_by_template": 8,
+          "top1_candidate": 39,
+          "shown_in_top4": 129
+        }
+      },
+      "tables_not_named": [],
+      "tables_never_top1": []
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "run_id": "zeroshot_v2",
+  "checkpoint": "released",
+  "weights_sha256": {},
+  "data": "data/splits/kev_domain/calibration.v2.jsonl",
+  "data_sha256": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+  "predictions_sha256": "e3b92fbd9a558e12d564efb106ac33ad65f87526d65f30d2e4e0866981702748",
+  "device": "mps",
+  "created_utc": "2026-11-17T18:56:14+00:00"
+}
