@@ -111,7 +111,9 @@ def _parse_header(block: str, path: Path) -> dict[str, Any]:
 
 def load_prompt(path: Path) -> Prompt:
     raw = path.read_bytes()
-    text = raw.decode("utf-8")
+    # Git may check these templates out with CRLF on Windows; parse a canonical newline view
+    # while hashing the original bytes so run provenance still reflects the exact file.
+    text = raw.decode("utf-8").replace("\r\n", "\n")
     match = _HEADER.match(text)
     if match is None:
         raise PromptError(f"{path.name}: no '---' header")

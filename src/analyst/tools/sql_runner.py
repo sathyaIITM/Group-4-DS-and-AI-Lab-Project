@@ -71,6 +71,8 @@ class ReadOnlyDatabase:
     def __init__(self, tables: dict[str, Path]) -> None:
         self._tables = {name.lower(): path for name, path in tables.items()}
         self._con = duckdb.connect(":memory:")
+        self._con.execute("SET memory_limit = '1GB'")
+        self._con.execute("SET threads = 1")
         for name, path in self._tables.items():
             if not re.fullmatch(r"[a-z_][a-z0-9_]*", name):
                 msg = f"invalid table name: {name}"
@@ -88,6 +90,10 @@ class ReadOnlyDatabase:
     def table_names(self) -> set[str]:
         return set(self._tables)
 
+    def close(self) -> None:
+        """Release the in-memory database and its loaded tables."""
+        self._con.close()
+
     def describe(self, table: str) -> list[tuple[str, str]]:
         """Column names and types of a registered table, for building prompts."""
         if table.lower() not in self._tables:
@@ -96,11 +102,19 @@ class ReadOnlyDatabase:
         rows = self._con.execute(f"DESCRIBE {table}").fetchall()
         return [(str(row[0]), str(row[1])) for row in rows]
 
+    def check_columns(self, sql: str) -> None:
+        """Bind a validated query without executing it, catching unknown columns early."""
+        check_sql(sql, self.table_names)
+        try:
+            self._con.execute(f"EXPLAIN {sql}")
+        except duckdb.Error as error:
+            raise SqlRejectedError(f"column or query validation failed: {error}") from error
+
     def run(
         self, sql: str, timeout_s: float = TIMEOUT_S
     ) -> tuple[list[str], list[tuple[Any, ...]]]:
         """Validate and execute; return column names and at most MAX_ROWS rows."""
-        check_sql(sql, self.table_names)
+        self.check_columns(sql)
         timer = threading.Timer(timeout_s, self._con.interrupt)
         timer.start()
         try:
