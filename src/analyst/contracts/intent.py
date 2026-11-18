@@ -40,3 +40,5 @@ class QueryIntent(Contract):
     derivations: list[DerivationRequest]
     changed_slots: list[str]
     reason: str | None
+    # Added in intent prompt v2: the slot a "clarify" intent asks about (None otherwise).
+    missing_slot: Literal["place", "period", "indicator", "category", "geo_level"] | None = None

@@ -284,8 +284,12 @@ def _no_fit_plan(intent: QueryIntent) -> InterpretationPlan:
     )
 
 
-def _missing_slot(intent: QueryIntent) -> Literal["place", "period", "category"]:
-    """Best guess of the missing slot for a clarify intent (the intent names no slot)."""
+def _missing_slot(
+    intent: QueryIntent,
+) -> Literal["place", "period", "indicator", "category", "geo_level"]:
+    """The slot the intent names (prompt v2), else a guess from the empty mentions."""
+    if intent.missing_slot is not None:
+        return intent.missing_slot
     if not intent.period_mentions:
         return "period"
     if not intent.place_mentions and not intent.all_places_level:

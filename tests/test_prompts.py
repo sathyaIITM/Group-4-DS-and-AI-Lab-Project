@@ -1,4 +1,4 @@
-"""Tests for the prompt registry and the v1 prompt files."""
+"""Tests for the prompt registry and the prompt files (v1, and intent v2)."""
 
 import hashlib
 from pathlib import Path
@@ -17,8 +17,10 @@ def registry() -> PromptRegistry:
 
 def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert {p.id for p in registry} == EXPECTED
+    for prompt_id in EXPECTED:
+        assert registry.get(f"{prompt_id}.v1").version == 1  # pinned v1 stays loadable
+    assert registry.get("intent").version == 2  # latest: missing_slot, carried qualifiers
     for prompt in registry:
-        assert prompt.version == 1
         assert prompt.purpose == prompt.id
         assert prompt.system.strip()
         assert prompt.user.strip()
