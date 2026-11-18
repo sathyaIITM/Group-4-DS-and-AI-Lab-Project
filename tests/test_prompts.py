@@ -19,7 +19,7 @@ def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert {p.id for p in registry} == EXPECTED
     for prompt_id in EXPECTED:
         assert registry.get(f"{prompt_id}.v1").version == 1  # pinned v1 stays loadable
-    assert registry.get("intent").version == 8  # five-turn history; standalone one question
+    assert registry.get("intent").version == 9  # no period clarification when a rule applies
     assert registry.get("route").version == 2  # decided cases C7 and search
     assert registry.get("sql").version == 3  # place filters by level, implausible values
     assert registry.get("narrate").version == 2  # unit once; a long series in one claim

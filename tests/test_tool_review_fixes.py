@@ -780,3 +780,52 @@ def test_a_state_written_without_spaces_resolves(tmp_path: Path) -> None:
 
     found = resolve_filter_place("Uttarpradesh", "mandi", "state", {}, _market_db(tmp_path))
     assert found.place is not None and found.place.name == "Uttar Pradesh"
+
+
+def test_a_period_clarification_is_dropped_when_a_period_rule_applies(tmp_path: Path) -> None:
+    # Dev ladder, 19 Nov: with guidance cards the model asked "which period?" for "2019" on a
+    # survey-year table; the bare-year rule (D7) supplies it, so the agent answers.
+    parquet = tmp_path / "obs_demo.parquet"
+    pd.DataFrame(
+        {
+            "dataset_version": ["v1"],
+            "geo_code": ["state:kerala"],
+            "geo_name": ["Kerala"],
+            "geo_level": ["state"],
+            "geo_vintage": ["2011"],
+            "indicator_id": ["ur"],
+            "indicator_label_source": ["Unemployment rate"],
+            "period_label": ["2019-20"],
+            "period_start": [pd.Timestamp("2019-07-01")],
+        }
+    ).to_parquet(parquet)
+    nodes = make_tool_nodes(
+        ToolNodeDependencies(
+            catalogue=CATALOGUE,
+            refs={},
+            database_for=lambda _d: ReadOnlyDatabase({"obs_demo": parquet}),
+        )
+    )
+    base = {
+        "dataset_id": "demo",
+        "indicator_ids": [],
+        "place_mentions": ["Kerala"],
+        "all_places_level": None,
+        "categories": {},
+        "operation": "lookup",
+        "order": None,
+        "limit": None,
+        "derivations": [],
+        "changed_slots": [],
+        "reason": "Which period?",
+        "missing_slot": "period",
+    }
+    asked = QueryIntent.model_validate({**base, "action": "clarify", "period_mentions": ["2019"]})
+    plan = nodes["resolve_places_periods_units"](AnalystState(intent=asked))["plan"]
+    assert plan.unresolved == [] and plan.periods[0].label == "2019-20"
+    # A named event without dates is still asked: it does not resolve.
+    event = QueryIntent.model_validate(
+        {**base, "action": "clarify", "period_mentions": ["during demonetisation"]}
+    )
+    plan = nodes["resolve_places_periods_units"](AnalystState(intent=event))["plan"]
+    assert [u.slot for u in plan.unresolved] == ["period"]

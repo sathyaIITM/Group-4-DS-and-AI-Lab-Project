@@ -447,9 +447,7 @@ def check_plan_indicators(sql: str, plan: InterpretationPlan) -> None:
             used |= {lit.this for lit in node.find_all(exp.Literal) if lit.is_string}
     unknown = sorted(used - allowed)
     if unknown:
-        raise ValueError(
-            f"indicator_id {unknown} is not in the plan; use only {sorted(allowed)}"
-        )
+        raise ValueError(f"indicator_id {unknown} is not in the plan; use only {sorted(allowed)}")
 
 
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
@@ -514,8 +512,28 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
             # The intent asks for a detail the question leaves out; coverage turns an
             # unresolved slot into a clarification.
             missing = _missing_slot(state.intent)
-            options = _clarify_options(missing, state.intent, table, deps)
-            if _single_measure(missing, options, plan):
+            stated = bool(state.intent.period_mentions)
+            snapshot = table.get("coverage_start") == table.get("coverage_end") is not None
+            if missing == "period" and plan.periods and (stated or snapshot):
+                # A period rule already applies: the period the user stated resolved (a bare
+                # year read as the table's year type), or the table has one period only (a
+                # snapshot). Answer with it and state it. A question without a period on a
+                # table with many periods keeps the clarification, so a named event without
+                # dates is still asked (dev ladder, 19 Nov: with guidance cards the model asked
+                # for periods the rules supply, in v1 and v2).
+                if not any(a.code in {"D1", "D7"} for a in plan.assumptions):
+                    labels = ", ".join(w.label for w in plan.periods)
+                    plan = plan.model_copy(
+                        update={
+                            "assumptions": [
+                                *plan.assumptions,
+                                Assumption(code="PERIOD_RULE", text=f"Period used: {labels}."),
+                            ]
+                        }
+                    )
+            elif _single_measure(
+                missing, options := _clarify_options(missing, state.intent, table, deps), plan
+            ):
                 # Only one measure fits and the plan already holds it (dev run 3, e2e-047:
                 # "Options: Crime rate, total"): answer with it and say so.
                 plan = plan.model_copy(
