@@ -8,6 +8,7 @@ models always receive the same kind of input as a first question.
 Outcomes:
 - `option`: the reply picks one offered option (by position, by its words, or "yes" when only
   one option was offered).
+- `all`: "all", "both", "all of them": every offered option.
 - `none`: the reply rejects every option ("no", "neither", "none of these").
 - `new_question`: the reply is a new, self-contained question; the clarification is dropped.
 - `free`: anything else ("the one for women"); the reply is passed on with the options listed,
@@ -22,7 +23,7 @@ from typing import Literal
 
 from analyst.contracts import Clarification
 
-Kind = Literal["option", "none", "new_question", "free"]
+Kind = Literal["option", "all", "none", "new_question", "free"]
 
 ORDINALS = {
     "first": 0,
@@ -69,6 +70,7 @@ YES_WORDS = {
     "ha",
     "ji",
 }
+ALL_WORDS = {"all", "both", "every", "everything", "each", "sab", "dono"}
 NO_WORDS = {"no", "nope", "neither", "none", "nahi", "nahin", "cancel", "nothing"}
 FILLER = {"the", "a", "an", "option", "one", "please", "i", "mean", "want", "that", "is", "it"}
 QUESTION_START = re.compile(
@@ -135,6 +137,9 @@ def read_reply(reply: str, pending: Clarification) -> ReplyReading:
         chosen = options[0]
     if chosen is not None:
         return ReplyReading("option", chosen, merged(chosen))
+    filler = FILLER | {"of", "these", "them", "options", "the"}
+    if options and words and set(words) & ALL_WORDS and set(words) <= ALL_WORDS | filler:
+        return ReplyReading("all", None, merged(f"all of these ({'; '.join(options)})"))
     if words and set(words) <= NO_WORDS | FILLER | {"of", "these", "them", "both"}:
         offered = "; ".join(options) if options else "the offered reading"
         return ReplyReading("none", None, merged(f"none of these ({offered})"))

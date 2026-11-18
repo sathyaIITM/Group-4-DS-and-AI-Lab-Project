@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-HISTORY_TURNS = 3  # turns kept per conversation for intent v7
+HISTORY_TURNS = 5  # turns kept per conversation (intent v8; three in v7)
 ANSWER_CHARS = 400  # each kept answer is cut to this length
 
 
@@ -58,7 +58,7 @@ class ConversationMemory:
         prior_result_ref: str | None = None,
         turn: dict[str, Any] | None = None,
     ) -> None:
-        """Save the conversation context; `turn` is appended to the history (last 3 kept)."""
+        """Save the conversation context; `turn` is appended to the history (last five kept)."""
         history = self.get(conversation_id).get("history", []) if turn else None
         if turn is not None and history is not None:
             history = [*history, turn][-HISTORY_TURNS:]

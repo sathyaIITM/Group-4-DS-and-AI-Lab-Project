@@ -125,7 +125,7 @@ class AnalystState(BaseModel):
     prior_result_ref: str | None = None
     prior_plan: InterpretationPlan | None = None
     prior_sql: str | None = None
-    # The last turns of the conversation (oldest first, at most HISTORY_TURNS), for intent v7.
+    # The last turns of the conversation (oldest first, at most HISTORY_TURNS), for intent v7+.
     history: list[dict[str, Any]] = Field(default_factory=list)
 
     config: RunConfig = Field(default_factory=RunConfig)

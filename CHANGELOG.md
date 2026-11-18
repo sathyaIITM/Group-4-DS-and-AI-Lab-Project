@@ -74,6 +74,40 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
   identical, SQL differed in 6 of 12). Milestone 3 report and slides: file references are links,
   open items moved to Milestone 4, version 1.2 sign-off recorded.
 
+- Milestone 4 integration (18-19 November 2026, branch `docs/milestone-4`). Each item states the
+  general behaviour; the case that revealed it is given in brackets.
+  - Integration of the T4 tool layer and evaluation tooling with the T2 graph and the T3 model
+    nodes; offline dry-run harness (scripted model replies, gold SQL) and live development runs
+    on `e2e_dev` (success 0.45, 0.80 and 0.875 on successive code versions; see Notes).
+  - Catalogue retrieval covers every table and indicator: place slot (gazetteer of districts,
+    sub-divisions and markets), indicator slots, Hindi and Hinglish query glossary, widened
+    search; audit of 1,148 generated questions (all found) and 60 paraphrases.
+  - Charts: Vega-Lite specification chosen by column role (period, measure, entity, or the
+    indicator, sector or category column when place and period are the same); line for
+    periods, bars for places or groups, ranked bars for rankings; `--save-chart` answer pages.
+  - Conversation memory of the last five turns (question, reading, outcome, start of the
+    answer); intent prompt v8 resolves references to any of them into explicit mentions, marks
+    each question as a follow-up or a new question (a new topic carries nothing over) and
+    writes a standalone question used by narration and logs.
+  - Replies to a clarification read by code against the offered options before any model sees
+    them: by position ("second one", "2", "last"), by words, "yes" when one option was offered,
+    "all" or "both", "none of these", or a new question; the router and decision models
+    receive one complete question. Options are numbered.
+  - Written replies on branches without a query: a decline where no table fits states what the
+    catalogue covers and is classified as a data request (logged), a message outside the scope
+    (not logged) or personal distress (a fixed national helpline line is added by code); a
+    definition question is answered only from the catalogue entries and guidance notes, or
+    states that the term is not documented. Every number in such a reply must appear in its
+    inputs.
+  - Decision-backend variants in `configs/inference.yaml` without changing the version ladder:
+    `jev_routing` puts tool and domain on Jev with the hosted LLM as fallback; recorded in the
+    run configuration and every prediction row.
+  - API service (`app/api/main.py`): `/ask`, `/stream` (server-sent events per graph step),
+    `/conversations/{id}`, `/healthz`; demo page `app/ui/static/index.html` (answer first,
+    options, chart, one collapsed Details section with interpretation, evidence, SQL and steps).
+  - Implicit-caching layout of the intent prompt (fixed catalogue block first); cached input
+    tokens recorded when the provider reports them.
+
 ### Changed
 
 - `.gitignore` (5 November 2026): exception for `configs/reference/*.csv`, which the data
@@ -99,8 +133,71 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
     - Shivanshu Gupta (22f3002985), 27 October 2026.
     - Sathya Prakash (21f1006001), 27 October 2026.
 
+- Milestone 4 integration (18-19 November 2026):
+  - Resolution defaults applied by code and stated in the answer: national mentions resolve to
+    the national row; a category column whose codelist holds a total value (Total, All,
+    Rural+Urban, Persons, Combined) defaults to it; a single-period question without a period
+    uses the latest complete period.
+  - A follow-up inherits the slots it does not name from the previous plan, only when the
+    intent marks it as a follow-up.
+  - Search is widened after a not-covered result only when the intent names a catalogue table
+    outside the candidates, and then only that table (five of six widened searches in a dev run
+    repeated a decline or a period gap).
+  - A chart request reuses the stored result only when it can be plotted; otherwise the values
+    to plot are queried with the conversation history.
+  - Value quality: implausible values are a query fault; suppressed, low-sample and missing
+    values become caveats. Retry hints name each failed check.
+  - Narration states the unit once, a long series in one sentence, and names each yearly
+    period by its start month (fiscal year April to March, survey year July to June).
+  - Prompt versions: intent v8, SQL v3, narrate v2, clarify v2, route v2; new prompts decline v1
+    and describe v1. Earlier versions are kept for provenance.
+  - Evaluation: execution accuracy on the gold columns within a wider result; entity columns
+    and series end points in scoring; `out_of_scope` counts as a correct decline; `e2e-079` and
+    `e2e-092` relabelled as answers with gold SQL (split frozen, files edited in place, hashes
+    in `configs/evaluation.yaml`).
+  - Hosted-model access through an impersonated service account; access token cached for 45
+    minutes with a bounded token fetch; request timeout 12 s; embedding model loaded offline.
+
+### Fixed
+
+- Milestone 4 integration (18-19 November 2026):
+  - Run log: a model call that failed every attempt stopped the run from being logged (it went
+    to `outputs/runs/failed/`); such runs are now logged, and earlier ones were replayed.
+  - Place names match with spaces ignored and suggest close names ("Tamilnadu"); a State or
+    district filters a finer table also when the question names the finer level.
+  - Periods: numeric months (`2020-03`, `3/2020`) on monthly tables; season labels in the
+    table's own form (`2016-JJAS`), with the season codes read from each table's data; an
+    unresolved period offers the table's latest periods, not its period-type names.
+  - A period stated relative to today after the end of the data is declined with the reason.
+  - A clarification with one fitting measure answers with it and states the assumption; a
+    missing population group is always asked.
+  - A model reply placed reasoning in the standalone-question field; such text is dropped.
+  - Narration cut off at the output cap for long series; cap raised and reply shortened.
+  - Number parser: bare years, digit grouping and "per N" denominators.
+  - Charts drawn with zero width in the demo page; explicit width and page-themed colours. A
+    chart of several measures with one unit shows that unit; long category labels are kept.
+  - A definition question that asks for figures ("comment on all the categories" after an
+    answer) continues on the query path; definitions start from the previous turn's table and
+    read the recent history; the fallback summary covers the right table and states coverage as
+    first to last period. Output caps of the decline and describe replies raised (the model's
+    thinking used the whole cap).
+  - Clarification options for a population group leave out columns that already default to a
+    total (an age-group question no longer offers Rural, Total and Urban).
+  - SQL validation checks that every indicator id in the query belongs to the plan; another id
+    (one invented by editing the planned id matched no row and led to a slow regeneration)
+    goes to repair before execution. Regeneration thinking lowered from medium to low (about
+    10 s against a 12 s request timeout had exceeded the run deadline).
+  - Charts: the column that tells rows apart is found from the result (plan category columns,
+    then indicator columns, then any varying text column), and a chart is never drawn when two
+    rows fall on one position (three area values had been stacked into one bar); such results
+    are shown as a table.
+  - Narration states when compared groups are nested (an age range inside a wider one, a total
+    and its parts).
+
 ### Notes
 
-- No model, agent or tool code is implemented yet. Milestone 2 (29 October
-  2026) freezes the table list and delivers the first cleaned tables and
-  catalogue.
+- Milestone 2 (29 October 2026): no model, agent or tool code was implemented yet; the
+  milestone froze the table list and delivered the first cleaned tables and catalogue.
+- Milestone 4 development runs on `e2e_dev` were made while fixing the agent against that set,
+  so they are optimistic; the version comparison is reported from repeated runs on frozen code,
+  and `e2e_test` is never used for tuning.

@@ -100,9 +100,13 @@ def test_ambiguous_coverage_asks_a_clarification() -> None:
     assert state.counters.clarifications == 1
 
 
-def test_chart_request_without_a_stored_result_asks_a_clarification() -> None:
+def test_chart_request_without_a_stored_result_queries_the_values() -> None:
+    # UI test, 19 Nov: a chart request with nothing (or one value) stored fetches the values.
     state = run(route_tool_and_domain=["make_chart"])
-    assert state.outcome == "clarifying"
+    assert state.outcome == "answered"
+    stages = [e.stage for e in state.events]
+    assert "validate_existing_result_for_chart" in stages
+    assert "generate_sql_with_hosted_llm" in stages and "ask_clarification" not in stages
 
 
 def test_every_node_event_is_logged_once() -> None:

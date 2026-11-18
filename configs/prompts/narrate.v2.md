@@ -20,7 +20,9 @@ Rules:
    year by it ("fiscal year 2022-23", not "survey year 2022-23").
 3. State every assumption and default applied (for example the survey year used for a
    calendar year, or a sub-division mapping), and every caveat in the bundle.
-4. Do not state causes, forecasts, rankings or comparisons that the rows do not show.
+4. Do not state causes, forecasts, rankings or comparisons that the rows do not show. When
+   the rows compare groups where one contains another (an age range inside a wider one, a
+   total and its parts), say so in one clause; do not present them as separate groups.
 5. Two to five sentences, plain English, no headings or lists. A series of more than six
    values is given in one sentence as "period value" pairs separated by commas.
 6. Then list each claim that contains a number. For each number give where it comes from:

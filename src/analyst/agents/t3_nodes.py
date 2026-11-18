@@ -22,14 +22,14 @@ from typing import Any
 
 from analyst.agents import nodes as t2
 from analyst.agents import templates
-from analyst.agents.context import published_catalogue
+from analyst.agents.context import indicators_of, published_catalogue
 from analyst.agents.events import stage_event
 from analyst.agents.state import AnalystState, Counters
 from analyst.contracts import InterpretationPlan, SqlAttempt, SqlDraft
 from analyst.decisions import coverage as coverage_rules
 from analyst.decisions import router as router_mod
 from analyst.decisions.router import Backends, BackendUnavailableError, RouterConfig, RouterContext
-from analyst.inference import clarify, intent, narrate, sqlgen
+from analyst.inference import clarify, intent, narrate, replies, sqlgen
 from analyst.inference.llm import BudgetExhaustedError, LlmCallRecord, LlmClient, LlmError
 
 NodeFn = Callable[[AnalystState], dict[str, Any]]
@@ -88,6 +88,33 @@ def _run(
         update["counters"] = update["counters"].model_copy(update={"llm_calls": counters.llm_calls})
     update.setdefault("events", stage_event(state, node))
     return update
+
+
+DESCRIBE_FIELDS = (
+    "dataset_id",
+    "title",
+    "source_table",
+    "publisher",
+    "source_name",
+    "period_conventions",
+    "geo_levels",
+    "coverage_start",
+    "coverage_end",
+    "period_types",
+    "caveats",
+)
+
+
+def _guidance_cards(state: AnalystState) -> list[dict[str, Any]]:
+    """The guidance cards in use (documentation for describe answers, in every version)."""
+    import json
+
+    rag = state.config.rag
+    for name in (rag.cards, rag.cards_fallback):
+        path = Path(name)
+        if path.exists():
+            return list(json.loads(path.read_text(encoding="utf-8")).get("cards", []))
+    return []
 
 
 def _lines(state: AnalystState) -> list[str]:
@@ -267,6 +294,94 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
 
         return _run(state, "narrate_from_result_only", body)
 
+    def decline(state: AnalystState) -> dict[str, Any]:
+        """A decline where no table fits (the router's shortcut, or an intent with `none_fit`):
+        a short written reply that says what is covered instead. A message that is not a data
+        request, or personal distress, ends as `out_of_scope` and is not logged as a data
+        request; distress gets the fixed helpline line. A decline on a named table (a period
+        or place the table lacks) keeps the T2 template with the intent's reason."""
+        if state.intent is not None and state.intent.dataset_id != "none_fit":
+            return t2.decline_and_log_data_request(state)
+        counters = state.counters.model_copy()
+        # Every catalogue table, not only the retrieved candidates: for "What is the weather
+        # today?" the top four held no rainfall table, and the reply named CPI (UI test, 18 Nov).
+        lines = [t.line for t in t2._catalogue().real_tables()]
+        asked = (state.intent.standalone_question if state.intent else None) or state.question
+        try:
+            reply, record = replies.write_decline(asked, lines, llm, counters)
+        except (LlmError, ValueError) as error:  # keep the fixed decline text
+            update = t2.decline_and_log_data_request(state)
+            update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
+            return update
+        if reply.kind == "not_covered":
+            update = t2.decline_and_log_data_request(state)
+            update.update(response_text=reply.reply.strip())
+        else:
+            text = reply.reply.strip()
+            if reply.kind == "personal_distress":
+                text = f"{text} {replies.DISTRESS_HELP}"
+            update = {
+                "response_text": text,
+                "outcome": "out_of_scope",
+                "outcome_cause": None,
+                "events": stage_event(
+                    state, "decline_and_log_data_request", "decline", kind=reply.kind
+                ),
+            }
+        update.update(counters=counters, llm_records=[record])
+        return update
+
+    def describe(state: AnalystState) -> dict[str, Any]:
+        """`describe_table`: an answer from the catalogue entries and guidance cards only
+        ("What is JJAS?"). The previous turn's table comes first, and the recent history is
+        given, so "the categories" refers to the last answer. A message that asks for figures
+        continues on the query path. When the call fails, the T2 summary of the same tables."""
+        prior = state.prior_plan.dataset_id if state.prior_plan else None
+        ids = [str(c.get("dataset_id")) for c in state.catalogue_candidates]
+        if prior and prior != "none_fit":
+            ids = [prior, *[i for i in ids if i != prior]]
+        published = deps.published()
+        tables = [
+            {
+                **{k: published[i].get(k) for k in DESCRIBE_FIELDS if k in published[i]},
+                "indicators": [
+                    f"{x['label']} ({x['unit']})" for x in indicators_of(dict(published[i]))
+                ],
+            }
+            for i in ids
+            if i in published
+        ]
+        cards = [c for c in _guidance_cards(state) if c.get("dataset_id") in {*ids, None}]
+        counters = state.counters.model_copy()
+        ordered = state.model_copy(
+            update={"catalogue_candidates": [{"dataset_id": i} for i in ids]}
+        )
+        try:
+            reply, record = replies.write_description(
+                state.question, tables, cards, llm, counters, state.history[-2:]
+            )
+        except (LlmError, ValueError) as error:
+            update = t2.describe_from_metadata(ordered)
+            update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
+            return update
+        if reply.data_request and state.routing is not None:
+            routing = state.routing.model_copy(update={"final_tool": "run_sql", "branch": "query"})
+            return {
+                "routing": routing,
+                "counters": counters,
+                "llm_records": [record],
+                "events": stage_event(state, "describe_from_metadata", handed_to_query=True),
+            }
+        return {
+            "response_text": reply.answer.strip(),
+            "outcome": "described",
+            "counters": counters,
+            "llm_records": [record],
+            "events": stage_event(
+                state, "describe_from_metadata", documented=reply.documented, tables=len(tables)
+            ),
+        }
+
     def clarification(state: AnalystState) -> dict[str, Any]:
         """The T2 node, with the question text written by the LLM when it can be."""
         update = t2.ask_clarification(state)
@@ -300,6 +415,8 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         "bounded_sql_repair": repair,
         "narrate_from_result_only": narrate_node,
         "ask_clarification": clarification,
+        "decline_and_log_data_request": decline,
+        "describe_from_metadata": describe,
     }
 
 

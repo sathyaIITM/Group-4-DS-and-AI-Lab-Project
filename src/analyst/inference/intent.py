@@ -87,6 +87,20 @@ def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:
         raise ValueError(f"action {intent.action!r} needs a reason")
 
 
+STANDALONE_MAX_CHARS = 300  # a longer "standalone question" is reasoning, not a question
+
+
+def _tidy(intent: QueryIntent, retrieved: Mapping[str, Any]) -> QueryIntent:
+    """Code-side clean-up that never costs a retry: an invalid table pointer is dropped, and so
+    is a standalone question that holds the model's reasoning (UI test, 18 Nov: 856 characters
+    beginning "Now show monsoon rainfall ... Wait, the user asked ...")."""
+    intent = _checked_pointer(intent, retrieved)
+    text = intent.standalone_question
+    if text is not None and (len(text) > STANDALONE_MAX_CHARS or "\n" in text.strip()):
+        intent = intent.model_copy(update={"standalone_question": None})
+    return intent
+
+
 def _checked_pointer(intent: QueryIntent, retrieved: Mapping[str, Any]) -> QueryIntent:
     """Keep `catalogue_dataset_id` only when it names a catalogue dataset that is not already a
     candidate; otherwise drop it. A wrong pointer costs nothing (no retry, no widened search)."""
@@ -128,4 +142,4 @@ def extract_intent(
         validate=lambda intent: check_intent(intent, retrieved),
         node="extract_query_intent",
     )
-    return _checked_pointer(parsed, retrieved), record
+    return _tidy(parsed, retrieved), record

@@ -267,7 +267,10 @@ def describe_from_metadata(state: AnalystState) -> dict[str, Any]:
             "events": stage_event(state, "describe_from_metadata", found=False),
         }
     details = describe_table(catalogue, str(requested))
-    periods = ", ".join(details["periods"]) or "periods not specified"
+    labels = list(details["periods"])
+    periods = (
+        f"{labels[0]} to {labels[-1]}" if len(labels) > 3 else ", ".join(labels)
+    ) or "periods not specified"
     places = ", ".join(details["places"]) or "not specified"
     publisher = details["publisher"] or "not specified"
     text = f"{details['name']} covers {periods} and places {places}. Publisher: {publisher}."
@@ -477,14 +480,21 @@ def report_system_failure(state: AnalystState) -> dict[str, Any]:
 
 
 def validate_existing_result_for_chart(state: AnalystState) -> dict[str, Any]:
-    """Chart request: the stored result must exist and its dataset versions must be current."""
+    """Chart request: the stored result must exist, be current and hold something to plot
+    (more than one value). Otherwise the request is answered as a query for the values to plot,
+    with the conversation history (UI test, 19 Nov: "plot the same metric across the age
+    categories" after a single value asked an unrelated clarification, then printed "one
+    value")."""
     bundle = EvidenceStore().get(state.prior_result_ref) if state.prior_result_ref else None
     live = {k: str(v.get("dataset_version")) for k, v in load_published().items()}
     ok = bundle is not None and (not live or is_current(bundle, live))
-    update: dict[str, Any] = {"chart_result": "verified" if ok else "unverified"}
-    if ok and bundle is not None:
+    plottable = ok and bundle is not None and select_chart(bundle.plan, bundle.result).vega_lite
+    update: dict[str, Any] = {"chart_result": "verified" if plottable else "needs_query"}
+    if plottable and bundle is not None:
         update.update(result=bundle.result, plan=bundle.plan, evidence=bundle)
-    update["events"] = stage_event(state, "validate_existing_result_for_chart", verified=ok)
+    update["events"] = stage_event(
+        state, "validate_existing_result_for_chart", verified=ok, plottable=bool(plottable)
+    )
     return update
 
 
@@ -506,8 +516,18 @@ def render_chart(state: AnalystState) -> dict[str, Any]:
     }
     if state.outcome is None:
         update["outcome"] = "charted"
-        update["response_text"] = state.chart.reason if state.chart else ""
+        kind = CHART_WORDS.get(str(chart_type), "A chart")
+        about = state.evidence.statement if state.evidence else "the previous result"
+        update["response_text"] = f"{kind} of the previous result: {about}."
     return update
+
+
+CHART_WORDS = {
+    "line": "A line chart",
+    "bar": "A bar chart",
+    "horizontal_bar_sorted": "A ranked bar chart",
+    "grouped_bar": "A grouped bar chart",
+}
 
 
 __all__ = [

@@ -137,9 +137,12 @@ def resolve_period(
     dataset_id: str,
     catalogue: Any,
     available_labels: Sequence[str] | None = None,
+    seasons: Mapping[str, tuple[int, int]] | None = None,
 ) -> PeriodResolution:
     """Resolve a year, fiscal year, month, monsoon or survey-round period using published
-    conventions. ``available_labels`` are the table's survey-round labels, read by the caller.
+    conventions. ``available_labels`` are the table's survey-round labels and ``seasons`` its
+    season codes with first and last month (from its own labels, ``season_codes``), both read
+    by the caller; without them the IMD codes are assumed.
     """
     entry = _catalogue_entry(dataset_id, catalogue)
     if entry is None:
@@ -169,6 +172,30 @@ def resolve_period(
             )
         return PeriodResolution(status="unresolved", options=sorted(types))
 
+    known = {k.upper(): v for k, v in (seasons or SEASON_MONTHS).items()}
+    codes = "|".join(sorted((re.escape(k) for k in known), key=len, reverse=True))
+    coded = (
+        re.fullmatch(rf"(?i)(\d{{4}})[\s-]*({codes})|({codes})[\s-]*(\d{{4}})", text)
+        if codes
+        else None
+    )
+    if coded and "season" in types:
+        # A season in the table's own label form ("2016-JJAS"), which the intent model may copy
+        # from the guidance cards (UI test, 18 Nov: it was left unresolved and later months were
+        # offered). The codes come from the table's labels, so any seasonal table works.
+        year = int(coded.group(1) or coded.group(4))
+        code = (coded.group(2) or coded.group(3)).upper()
+        first, last = known[code]
+        return PeriodResolution(
+            status="resolved",
+            window=PeriodWindow(
+                requested=text,
+                type="season",
+                label=f"{year}-{code}",
+                start=date(year, first, 1),
+                end=date(year, last, calendar.monthrange(year, last)[1]),
+            ),
+        )
     season_match = re.fullmatch(
         r"(?i)(?:(?:the\s+)?(?:monsoon|jjas)(?:\s+season)?(?:\s+of)?\s+(\d{4})"
         r"|(\d{4})\s+(?:monsoon|jjas)(?:\s+season)?)",
@@ -179,7 +206,8 @@ def resolve_period(
         window = PeriodWindow(
             requested=text,
             type="season",
-            label=f"{year}-JJAS",  # the label published by the IMD table
+            # The table's code for June to September (JJAS in the IMD table).
+            label=f"{year}-{next((k for k, v in known.items() if v == (6, 9)), 'JJAS')}",
             start=date(year, 6, 1),
             end=date(year, 9, 30),
         )
@@ -295,6 +323,21 @@ def _start_month(kind: str, start_month: int | None) -> int:
     if start_month in {4, 7}:
         return int(start_month)
     return {"survey_year": 7, "fiscal_year": 4, "agri_year": 7}[kind]
+
+
+# Fallback season codes (IMD) when the caller has not read the table's own labels.
+SEASON_MONTHS = {"JF": (1, 2), "MAM": (3, 5), "JJAS": (6, 9), "OND": (10, 12)}
+
+
+def season_codes(rows: Sequence[tuple[Any, Any, Any]]) -> dict[str, tuple[int, int]]:
+    """Season codes of a table from its season rows (label "YYYY-CODE", start, end): the code
+    and its first and last month. Labels in another form are skipped."""
+    found: dict[str, tuple[int, int]] = {}
+    for label, start, end in rows:
+        match = re.fullmatch(r"\d{4}-([A-Za-z]+)", str(label))
+        if match and start is not None and end is not None:
+            found.setdefault(match.group(1).upper(), (start.month, end.month))
+    return found
 
 
 def _year_type(types: set[str], start_month: int | None) -> str | None:

@@ -10,16 +10,25 @@ from analyst.contracts.common import Assumption, IndicatorRef, Place
 from analyst.contracts.intent import QueryIntent
 from analyst.contracts.plan import InterpretationPlan, UnresolvedSlot
 from analyst.tools.codelists import codelist
-from analyst.tools.periods import _year_type, latest_complete_period, resolve_period
+from analyst.tools.periods import (
+    _year_type,
+    latest_complete_period,
+    resolve_period,
+    season_codes,
+)
 from analyst.tools.places import FILTER_LEVELS, is_national, resolve_filter_place, resolve_place
 
 # The total of an area or sector breakdown, used when the question names none (design D1-D8:
 # defaults are applied by code and stated in the answer).
-DEFAULT_TOTALS = {"area": "Total", "sector": "Rural+Urban"}
+# Values that mean "all of this breakdown" in a category column, in order of preference. Any
+# category column whose codelist holds one gets it as the default (not only area and sector).
+TOTAL_VALUES = ("total", "all", "rural+urban", "rural + urban", "combined", "persons", "both")
 
 
-def _has_value(dataset_id: str, column: str, value: str) -> bool:
-    return value in codelist(dataset_id, column)
+def total_value(dataset_id: str, column: str) -> str | None:
+    """The codelist value of `column` that stands for the total, if there is exactly one kind."""
+    values = {str(v).strip().casefold(): str(v) for v in codelist(dataset_id, column)}
+    return next((values[t] for t in TOTAL_VALUES if t in values), None)
 
 
 def resolve_plan(
@@ -125,8 +134,18 @@ def resolve_plan(
                 "WHERE period_label IS NOT NULL ORDER BY period_label"
             ).fetchall()
         ]
+    seasons = None
+    if intent.period_mentions and "season" in dataset.get("period_types", []):
+        if not re.fullmatch(r"obs_[a-z][a-z0-9_]*", obs_table):
+            raise ValueError("invalid observation table name")
+        seasons = season_codes(
+            db.execute(
+                f"SELECT DISTINCT period_label, period_start, period_end FROM {obs_table} "  # noqa: S608 - validated identifier
+                "WHERE period_type = 'season' ORDER BY period_start LIMIT 24"
+            ).fetchall()
+        )
     for mention in intent.period_mentions:
-        resolution = resolve_period(mention, dataset_id, catalogue, round_labels)
+        resolution = resolve_period(mention, dataset_id, catalogue, round_labels, seasons or None)
         if resolution.status != "resolved" or resolution.window is None:
             unresolved.append(
                 UnresolvedSlot(slot="period", mention=mention, options=resolution.options)
@@ -153,13 +172,9 @@ def resolve_plan(
                     Assumption(code="D1", text=f"No period named: the latest, {latest.label}.")
                 )
     categories = dict(intent.categories)
-    for column, total in DEFAULT_TOTALS.items():
-        values = (dataset.get("categories") or {}).get(column)
-        if (
-            values is not None
-            and column not in categories
-            and _has_value(dataset_id, column, total)
-        ):
+    for column in dataset.get("categories") or {}:
+        total = total_value(dataset_id, column) if column not in categories else None
+        if total is not None:
             categories[column] = [total]
             assumptions.append(
                 Assumption(code="TOTAL", text=f"{column} = {total}: no {column} was named.")

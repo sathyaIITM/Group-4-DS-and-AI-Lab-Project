@@ -27,6 +27,8 @@ hosted_llm:
     narrate: 2000             # 400 -> 1000 -> 2000 on 2026-11-18: 12 monthly values with one claim each were cut at 1000
     clarify: 150
     route: 300
+    decline: 800              # 2026-11-19: thinking used about 290 tokens even at minimal
+    describe: 1200            # 2026-11-19: a 300 cap cut the reply after the thinking
   # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
   # on Gemini 3). Starting values, to be tuned on e2e_dev. Thinking tokens are billed as output.
   thinking:
@@ -37,8 +39,10 @@ hosted_llm:
       sql_repair: low
       narrate: minimal
       clarify: minimal
+      decline: minimal
+      describe: minimal
     on_regenerate:              # a query regenerated after a failed result check
-      sql: medium
+      sql: low                  # medium until 19 Nov: about 10 s against a 12 s timeout
     # Tokens added to the purpose's output cap for each level (option (a), 2026-11-17). On a
     # small SQL task, medium used 308-490 thinking tokens and low 0-302; these leave headroom
     # for longer prompts. Worst case for one medium call on Flash-Lite: 2,560 output tokens,

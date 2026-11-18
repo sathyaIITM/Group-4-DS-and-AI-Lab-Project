@@ -363,6 +363,8 @@ def test_a_clarification_with_one_fitting_measure_answers_with_it() -> None:
     assert not _single_measure("indicator", ["Crime rate, total", "IPC"], plan)
     assert not _single_measure("period", ["2023"], plan)
     assert not _single_measure("indicator", ["Other"], plan)
+    # "youth" on a persons-15+ table: the one group is offered, not assumed.
+    assert not _single_measure("category", ["Crime rate, total"], plan)
 
 
 def test_coverage_accepts_a_state_filter_on_a_market_table() -> None:
@@ -770,3 +772,11 @@ def test_a_decline_with_a_named_table_states_the_intent_reason() -> None:
     text = decline_and_log_data_request(state)["response_text"]
     assert "none_fit" not in text
     assert "period (The CPI table ends in December 2023" in text
+
+
+def test_a_state_written_without_spaces_resolves(tmp_path: Path) -> None:
+    # UI test, 18 Nov: "Tamilnadu" did not match "Tamil Nadu"; same lookup path here.
+    from analyst.tools.places import resolve_filter_place
+
+    found = resolve_filter_place("Uttarpradesh", "mandi", "state", {}, _market_db(tmp_path))
+    assert found.place is not None and found.place.name == "Uttar Pradesh"

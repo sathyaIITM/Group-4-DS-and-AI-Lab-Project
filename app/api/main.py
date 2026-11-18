@@ -104,7 +104,9 @@ def reply_payload(state: Any) -> dict[str, Any]:
         "domain": state.routing.final_domain if state.routing else None,
         "tool": state.routing.final_tool if state.routing else None,
         "chart": (
-            {"type": chart.chart_type, "vega_lite": chart.vega_lite} if chart is not None else None
+            {"type": chart.chart_type, "reason": chart.reason, "vega_lite": chart.vega_lite}
+            if chart is not None
+            else None
         ),
         "evidence": None,
         "llm_calls": len(records),
@@ -205,7 +207,7 @@ async def stream(request: AskRequest) -> EventSourceResponse:
 
 @api.get("/conversations/{conversation_id}")
 async def conversation(conversation_id: str) -> dict[str, Any]:
-    """The turns kept for a conversation (at most three, oldest first)."""
+    """The turns kept for a conversation (at most five, oldest first)."""
     from analyst.agents.memory import ConversationMemory
 
     if len(conversation_id) > 64:

@@ -49,6 +49,49 @@ def column_roles(result: QueryResult) -> tuple[str | None, str | None, str | Non
     return period, measure, entity
 
 
+# Columns that never tell rows apart for a chart (identifiers, units, flags, provenance).
+NOT_SPLIT = {
+    "unit",
+    "quality_flag",
+    "geo_code",
+    "geo_level",
+    "period_type",
+    "dataset_version",
+    "source_row",
+    "is_total_row",
+    "geo_vintage",
+    "rule_ids",
+    "value_text",
+}
+INDICATOR_COLUMNS = ("indicator_label", "label", "indicator_id", "indicator")
+
+
+def _split_column(
+    result: QueryResult,
+    period: str | None,
+    entity: str | None,
+    prefer: tuple[str, ...] = (),
+) -> str | None:
+    """The column that tells rows apart when place and period are the same: the plan's category
+    columns first (area, sector, crop season ...), then the indicator columns, then any other
+    text column with more than one value (UI test, 19 Nov: age groups, then area groups)."""
+    if _distinct(result, entity) > 1 or _distinct(result, period) > 1:
+        return None
+    names = [c.name for c in result.columns]
+    _, measure, _ = column_roles(result)
+    others = [n for n in names if n not in NOT_SPLIT and n not in {measure, period, entity}]
+    order = [*prefer, *INDICATOR_COLUMNS, *others]
+    return next((c for c in order if c in names and _distinct(result, c) > 1), None)
+
+
+def _points_are_unique(result: QueryResult, *columns: str | None) -> bool:
+    """True when no two rows fall on the same chart position (Vega-Lite would stack them)."""
+    names = [c.name for c in result.columns]
+    index = [names.index(c) for c in columns if c is not None and c in names]
+    keys = [tuple(row[i] for i in index) for row in result.rows]
+    return len(set(keys)) == len(keys)
+
+
 def _distinct(result: QueryResult, column: str | None) -> int:
     if column is None:
         return 0
@@ -57,8 +100,11 @@ def _distinct(result: QueryResult, column: str | None) -> int:
 
 
 def _title_and_unit(plan: InterpretationPlan | None) -> tuple[str, str]:
-    if plan is None or len(plan.indicators) != 1:
+    if plan is None or not plan.indicators:
         return "", ""
+    if len(plan.indicators) > 1:  # several measures: no title; the unit when they share one
+        units = {i.unit for i in plan.indicators}
+        return "", units.pop() if len(units) == 1 else ""
     indicator = plan.indicators[0]
     label = re.sub(r"(?<=[A-Za-z)%])\d+\b", "", indicator.label)  # footnote markers
     label = re.sub(r"\s*\((?:%|Rs\.?|per cent)\)\s*$", "", label).strip()
@@ -72,7 +118,25 @@ def select_chart(
     title, unit = _title_and_unit(plan)
 
     def spec(kind: ChartType, reason: str, decided_by: str = "rules") -> ChartSpec:
-        vega = vega_lite_spec(result, kind, title, unit) if result is not None else None
+        labels = (
+            {i.indicator_id: re.sub(r"(?<=[A-Za-z)%])\d+\b", "", i.label) for i in plan.indicators}
+            if plan
+            else None
+        )
+        prefer = tuple(plan.categories) if plan else ()
+        vega = (
+            vega_lite_spec(result, kind, title, unit, labels, prefer)
+            if result is not None
+            else None
+        )
+        if vega is None and kind not in {"table_only", "single_value"}:
+            # The rows cannot be drawn without stacking unrelated values: show the table.
+            return ChartSpec(
+                chart_type="table_only",
+                decided_by=decided_by,
+                reason="rows overlap on one chart position; shown as a table",
+                vega_lite=None,
+            )
         return ChartSpec(chart_type=kind, decided_by=decided_by, reason=reason, vega_lite=vega)
 
     if result is None or result.row_count == 0:
@@ -103,7 +167,12 @@ def select_chart(
 
 
 def vega_lite_spec(
-    result: QueryResult, chart_type: ChartType, title: str = "", unit: str = ""
+    result: QueryResult,
+    chart_type: ChartType,
+    title: str = "",
+    unit: str = "",
+    labels: dict[str, str] | None = None,
+    prefer: tuple[str, ...] = (),
 ) -> dict[str, Any] | None:
     """A Vega-Lite v5 specification with data inlined from the stored rows; None for a table."""
     if chart_type in {"table_only", "single_value"}:
@@ -114,7 +183,17 @@ def vega_lite_spec(
     names = [c.name for c in result.columns]
     values = [dict(zip(names, row, strict=True)) for row in result.rows]
     y = {"field": measure, "type": "quantitative", "title": unit or measure}
-    category = entity or period or next((n for n in names if n != measure), measure)
+    split = _split_column(result, period, entity, prefer)
+    if split is not None and labels:
+        values = [{**v, split: labels.get(str(v.get(split)), v.get(split))} for v in values]
+    category = split or entity or period or next((n for n in names if n != measure), measure)
+    coloured = entity if entity is not None and _distinct(result, entity) > 1 else None
+    position = {
+        "line": (period, coloured),
+        "grouped_bar": (entity, period),
+    }.get(chart_type, (category,))
+    if not _points_are_unique(result, *position):
+        return None  # two rows on one point would be stacked into a false total
     if chart_type == "line" and period is not None:
         encoding: dict[str, Any] = {
             "x": {"field": period, "type": "ordinal", "sort": "ascending", "title": None},

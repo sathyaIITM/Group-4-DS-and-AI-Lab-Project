@@ -79,7 +79,12 @@ def intent(period: str = "2010") -> dict[str, Any]:
 
 
 def resolver(state: AnalystState) -> dict[str, Any]:
-    """Stand-in for T4's resolve_plan: one table, one calendar year; 'monsoon' is unresolved."""
+    """Stand-in for T4's resolve_plan: one table, one calendar year; 'monsoon' is unresolved.
+    An intent with no fitting table gets the no-fit plan, as in the real resolver."""
+    if state.intent is not None and state.intent.dataset_id == "none_fit":
+        from analyst.agents.tool_nodes import _no_fit_plan
+
+        return {"plan": _no_fit_plan(state.intent)}
     mention = state.intent.period_mentions[0] if state.intent else "2010"
     unresolved = (
         [UnresolvedSlot(slot="period", mention=mention, options=["JJAS", "OND"])]
@@ -236,3 +241,84 @@ def test_graph_budget_limit_stops_before_the_next_llm_node(workdir: Path) -> Non
     state = invoke_graph(AnalystState(run_id="r1", question="q", config=config), overrides=nodes)
     assert (state.outcome, state.outcome_cause) == ("failed", "budget_exhausted")
     assert state.counters.llm_calls == 2
+
+
+DECLINE_ROUTE = {"tool": "decline_not_covered", "domain": "other"}
+# The decline shortcut is off until its thresholds are set, so the intent declines first.
+NO_FIT = {
+    **intent(),
+    "action": "decline",
+    "dataset_id": "none_fit",
+    "indicator_ids": [],
+    "place_mentions": [],
+    "period_mentions": [],
+    "reason": "No listed dataset holds this.",
+}
+
+
+def test_distress_gets_a_kind_reply_and_the_helpline_and_no_data_request(workdir: Path) -> None:
+    reply = {"kind": "personal_distress", "reply": "I am sorry you are feeling this way."}
+    state, _ = run(DECLINE_ROUTE, NO_FIT, reply, question="I am feeling sad, what can I do now?")
+    assert state.outcome == "out_of_scope"
+    assert state.response_text.startswith("I am sorry you are feeling this way.")
+    assert "Tele-MANAS" in state.response_text and "14416" in state.response_text
+    with sqlite3.connect("outputs/runs/runs.sqlite") as db:
+        assert db.execute("SELECT count(*) FROM data_requests").fetchone()[0] == 0
+
+
+def test_a_non_data_request_is_out_of_scope(workdir: Path) -> None:
+    reply = {
+        "kind": "not_data",
+        "reply": "I answer questions on Indian public data, such as prices or rainfall.",
+    }
+    state, _ = run(DECLINE_ROUTE, NO_FIT, reply, question="Help me write a python code")
+    assert state.outcome == "out_of_scope" and "public data" in state.response_text
+    assert [r.purpose for r in state.llm_records] == ["route", "intent", "decline"]
+
+
+def test_a_data_request_not_covered_is_logged(workdir: Path) -> None:
+    reply = {
+        "kind": "not_covered",
+        "reply": "Today's weather is not in the catalogue, which holds official statistics; "
+        "the request has been noted.",
+    }
+    state, _ = run(DECLINE_ROUTE, NO_FIT, reply, question="What is the weather today?")
+    assert state.outcome == "declined"
+    assert state.response_text.startswith("Today's weather is not in the catalogue")
+    with sqlite3.connect("outputs/runs/runs.sqlite") as db:
+        assert db.execute("SELECT count(*) FROM data_requests").fetchone()[0] == 1
+
+
+def test_a_decline_reply_with_an_invented_number_falls_back_to_the_template(
+    workdir: Path,
+) -> None:
+    bad = {"kind": "not_covered", "reply": "It will be 31 degrees today."}
+    state, _ = run(DECLINE_ROUTE, NO_FIT, bad, bad, question="What is the weather today?")
+    assert state.outcome == "declined"
+    assert state.response_text.startswith("The catalogue does not contain the requested data.")
+
+
+def test_a_definition_is_answered_from_the_documentation(workdir: Path) -> None:
+    route = {"tool": "describe_table", "domain": "rainfall"}
+    reply = {"documented": False, "answer": "The catalogue does not document JJAS."}
+    state, _ = run(route, reply, question="What is JJAS?")
+    assert state.outcome == "described"
+    assert state.response_text == "The catalogue does not document JJAS."
+    assert [r.purpose for r in state.llm_records] == ["route", "describe"]
+
+
+def test_a_describe_request_that_asks_for_figures_continues_as_a_query(workdir: Path) -> None:
+    # UI test, 19 Nov: "Could you comment about all the categories?" after an answer.
+    route = {"tool": "describe_table", "domain": "rainfall"}
+    handover = {"data_request": True, "documented": False, "answer": ""}
+    state, _ = run(
+        route,
+        handover,
+        intent(),
+        SQL,
+        NARRATION,
+        question="Comment on the annual rainfall in Kerala",
+    )
+    assert state.outcome == "answered"
+    purposes = [r.purpose for r in state.llm_records]
+    assert purposes[:3] == ["route", "describe", "intent"] and "narrate" in purposes

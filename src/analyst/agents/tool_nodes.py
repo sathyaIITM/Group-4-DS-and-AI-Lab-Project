@@ -31,7 +31,7 @@ from analyst.tools.calc import (
 )
 from analyst.tools.checks import NOT_IN_RESULT, run_result_checks, verify_numbers
 from analyst.tools.codelists import codelist
-from analyst.tools.resolve import resolve_plan
+from analyst.tools.resolve import resolve_plan, total_value
 from analyst.tools.sql_runner import ReadOnlyDatabase, SqlRejectedError, SqlTimeoutError, check_sql
 
 NodeFn = Callable[[AnalystState], dict[str, Any]]
@@ -342,8 +342,10 @@ def _period_options(
 
 
 def _single_measure(slot: str, options: list[str], plan: InterpretationPlan) -> bool:
-    """A clarification about the measure with one option, which the plan already resolved."""
-    if slot not in {"indicator", "category"} or len(options) != 1 or len(plan.indicators) != 1:
+    """A clarification about the measure with one option, which the plan already resolved.
+    Indicator slot only: a missing group ("youth" on a persons-15+ table, slot `category`) must
+    be asked, never answered with the one group the table has."""
+    if slot != "indicator" or len(options) != 1 or len(plan.indicators) != 1:
         return False
     label = re.sub(r"(?<=[A-Za-z)%])\d+\b", "", plan.indicators[0].label)
     return options[0] == label
@@ -366,8 +368,19 @@ def _clarify_options(
     )
     if slot in {"category", "indicator"}:
         labels = [re.sub(r"(?<=[A-Za-z)%])\d+\b", "", str(i["label"])) for i in chosen]
+        if len(labels) > 1:
+            # The intent named the candidate groups (age groups as NFHS indicators): offer only
+            # those, not the table's area values as well (UI test, 19 Nov).
+            return labels[:6]
+        # A column with a total value (area: Total) is defaulted by code, so it is not a missing
+        # choice; offering its values next to a population group mixed two questions (UI test,
+        # 19 Nov: "youth" offered "Women 15-19; Rural; Total; Urban").
+        dataset_id = str(table.get("dataset_id"))
         values = [
-            v for column in (table.get("categories") or {}) for v in codelist_of(table, column)
+            v
+            for column in (table.get("categories") or {})
+            if total_value(dataset_id, column) is None
+            for v in codelist_of(table, column)
         ]
         return list(dict.fromkeys([*labels, *values]))[:6]
     if slot == "period":
@@ -416,6 +429,27 @@ def inherit_from_prior(
     if same_table and not intent.indicator_ids and "indicator" not in changed:
         update["indicators"] = prior.indicators
     return plan.model_copy(update=update) if update else plan
+
+
+def check_plan_indicators(sql: str, plan: InterpretationPlan) -> None:
+    """Every indicator id the query compares against must be one of the plan's. A query that
+    names another id (UI test, 19 Nov: an id invented by editing the planned one, which matched
+    no row and led to a slow regeneration) is sent to repair before it runs."""
+    allowed = {i.indicator_id for i in plan.indicators}
+    if not allowed:
+        return
+    import sqlglot
+    from sqlglot import exp
+
+    used: set[str] = set()
+    for node in sqlglot.parse_one(sql, read="duckdb").find_all(exp.EQ, exp.In):
+        if any(c.name == "indicator_id" for c in node.find_all(exp.Column)):
+            used |= {lit.this for lit in node.find_all(exp.Literal) if lit.is_string}
+    unknown = sorted(used - allowed)
+    if unknown:
+        raise ValueError(
+            f"indicator_id {unknown} is not in the plan; use only {sorted(allowed)}"
+        )
 
 
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
@@ -527,6 +561,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
             try:
                 check_sql(attempt.sql, db.table_names)
                 db.check_columns(attempt.sql)
+                check_plan_indicators(attempt.sql, state.plan)
             finally:
                 db.close()
         except (SqlRejectedError, ValueError) as error:

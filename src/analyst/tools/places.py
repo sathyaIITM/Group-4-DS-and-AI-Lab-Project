@@ -29,6 +29,11 @@ def normalise(name: str) -> str:
     return re.sub(r"\s+", " ", normalised).strip()
 
 
+def compact(name: str) -> str:
+    """The normalised key without spaces: "Tamilnadu" and "Tamil Nadu" meet (UI test, 18 Nov)."""
+    return normalise(name).replace(" ", "")
+
+
 def alias_lookup(name: str, refs: Mapping[str, Any]) -> str | None:
     """Look up an alias in mappings or tabular reference data, returning its canonical name."""
     key = normalise(name)
@@ -96,9 +101,11 @@ def resolve_place(
     names = {name for _, name, _ in candidates}
     alias = alias_lookup(mention, refs)
     target = alias if alias in names else mention
-    same = [row for row in candidates if row[1] == target] or [
-        row for row in candidates if normalise(row[1]) == normalise(target)
-    ]
+    same = (
+        [row for row in candidates if row[1] == target]
+        or [row for row in candidates if normalise(row[1]) == normalise(target)]
+        or [row for row in candidates if compact(row[1]) == compact(target)]
+    )
     if len(same) > 1:  # one name, several places (Aurangabad, Bihar and Maharashtra)
         return PlaceResolution(
             status="unresolved", options=[f"{name} ({code})" for code, name, _ in same][:6]
@@ -125,8 +132,8 @@ def resolve_place(
                 vintage=str(vintage) if vintage is not None else None,
             ),
         )
-    key = normalise(mention)
-    options = [name for _, name, _ in candidates if normalise(name).startswith(key)][:6]
+    key = compact(mention)
+    options = [name for _, name, _ in candidates if compact(name).startswith(key)][:6]
     return PlaceResolution(status="unresolved", options=options)
 
 
@@ -148,7 +155,9 @@ def resolve_filter_place(
     names = [str(row[0]) for row in rows]
     alias = alias_lookup(mention, refs)
     target = alias if alias in names else mention
-    found = [name for name in names if normalise(name) == normalise(target)]
+    found = [name for name in names if normalise(name) == normalise(target)] or [
+        name for name in names if compact(name) == compact(target)
+    ]
     if len(found) != 1:
         return PlaceResolution(status="unresolved")
     name = found[0]

@@ -70,7 +70,6 @@ LLM_NODES = {
 
 # Nodes whose only edge leads to finalize_response; their edges are not guarded.
 TERMINAL = {
-    "describe_from_metadata",
     "search_catalog_entries",
     "explain_from_evidence",
     "render_chart",
@@ -129,8 +128,19 @@ def after_routing(state: AnalystState) -> str:
     return BRANCH_NODES.get(branch, "retrieve_context_and_examples")
 
 
+def after_describe(state: AnalystState) -> str:
+    """A describe request that turns out to ask for figures ("comment on all the categories"
+    after an answer) continues on the query path; otherwise the description is the reply."""
+    if state.routing is not None and state.routing.branch == "query":
+        return "retrieve_context_and_examples"
+    return "finalize_response"
+
+
 def after_chart_validation(state: AnalystState) -> str:
-    return "select_chart_type" if state.chart_result == "verified" else "ask_clarification"
+    # Nothing stored to plot, or one value: fetch the values to plot on the query path.
+    return (
+        "select_chart_type" if state.chart_result == "verified" else "retrieve_context_and_examples"
+    )
 
 
 def after_coverage(state: AnalystState) -> str:
@@ -149,15 +159,14 @@ def after_coverage(state: AnalystState) -> str:
 
 def should_widen(state: AnalystState) -> bool:
     """Widen the search after not_covered only when it can help: the intent points to a table
-    outside the candidates (intent v7, `catalogue_dataset_id`). An intent from an older prompt
-    (`follow_up` None) keeps the earlier rule and widens on `none_fit` only. A named table with a
-    missing period or place is never widened: more tables cannot supply that period."""
+    outside the candidates (`catalogue_dataset_id`, intent v7 onward). A decline without a
+    pointer, or a named table with a missing period or place, is not widened: more tables
+    cannot supply that measure or period. (UI test, 18 Nov: an intent that left out
+    `follow_up` fell back to the older rule and made a second, useless call.)"""
     intent = state.intent
     if intent is None:
         return True
-    if intent.catalogue_dataset_id:
-        return True
-    return intent.follow_up is None and intent.dataset_id == "none_fit"
+    return bool(intent.catalogue_dataset_id)
 
 
 def after_sql_validation(state: AnalystState) -> str:
@@ -249,6 +258,7 @@ CONDITIONAL: list[tuple[str, Router]] = [
     ("screen_request", after_screen),
     ("resolve_routing_decision", after_routing),
     ("validate_existing_result_for_chart", after_chart_validation),
+    ("describe_from_metadata", after_describe),
     ("check_coverage", after_coverage),
     ("validate_sql_with_sqlglot", after_sql_validation),
     ("execute_read_only_duckdb", after_execution),
@@ -264,7 +274,6 @@ PLAIN: list[tuple[str, str]] = [
     ("retrieve_catalogue_candidates", "route_tool_and_domain"),
     ("route_tool_and_domain", "escalate_to_jev"),
     ("escalate_to_jev", "resolve_routing_decision"),
-    ("describe_from_metadata", "finalize_response"),
     ("search_catalog_entries", "finalize_response"),
     ("explain_from_evidence", "finalize_response"),
     ("retrieve_context_and_examples", "extract_query_intent"),

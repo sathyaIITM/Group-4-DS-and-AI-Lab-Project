@@ -433,7 +433,7 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
         expected = case.get("expected_action")
         outcome = case.get("outcome")
         outcomes[str(outcome)] += 1
-        is_non_answer = outcome in {"declined", "abstained", "clarifying"}
+        is_non_answer = outcome in {"declined", "out_of_scope", "abstained", "clarifying"}
         wants_non_answer = expected in {"decline", "clarify"}
         non_answer.append(is_non_answer)
         gold_non_answer.append(wants_non_answer)
@@ -574,7 +574,9 @@ def _case_success(case: dict[str, Any]) -> bool:
         retrieved = set(case.get("actual_dataset_ids", []))
         correct_outcome = outcome == ("described" if expected == "describe" else "searched")
         return correct_outcome and required.issubset(retrieved)
-    return expected == "decline" and outcome == "declined"
+    # A message outside the assistant's scope ends as out_of_scope (no data request is logged);
+    # for scoring it is a correct decline.
+    return expected == "decline" and outcome in {"declined", "out_of_scope"}
 
 
 def _expected_clarification_slot(notes: str) -> str | None:
