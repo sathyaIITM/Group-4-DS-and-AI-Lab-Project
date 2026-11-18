@@ -44,7 +44,8 @@ def default_schemas(plan: InterpretationPlan) -> Mapping[str, Any] | str:
         return plan.obs_table
     import duckdb
 
-    rows = duckdb.execute(f"DESCRIBE SELECT * FROM read_parquet('{path}')").fetchall()  # noqa: S608
+    with duckdb.connect() as con:  # own connection: questions run in parallel threads
+        rows = con.execute("DESCRIBE SELECT * FROM read_parquet(?)", [str(path)]).fetchall()
     return {plan.obs_table: {r[0]: r[1] for r in rows}}
 
 

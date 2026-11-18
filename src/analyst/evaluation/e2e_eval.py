@@ -369,6 +369,12 @@ def run_evaluation(
             "see verify-gold report"
         )
     out.parent.mkdir(parents=True, exist_ok=True)
+    try:  # build the retrieval index once, outside the timed runs
+        from analyst.retrieval.catalogue import warm_up
+
+        warm_up()
+    except Exception as error:  # the agent falls back to lexical retrieval and logs it
+        print(f"retrieval warm-up failed ({type(error).__name__}); lexical fallback in use")
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [
             pool.submit(
@@ -441,7 +447,7 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "n": len(cases),
         "success_rate": success_rate(successes) if successes else None,
         "success_ci95": list(accuracy_ci(successes)) if successes else None,
-        "execution_accuracy": execution_accuracy(execution) if execution else None,
+        "execution_accuracy": execution_accuracy(execution, projected=True) if execution else None,
         "abstention_precision": _safe_precision(non_answer, gold_non_answer),
         "abstention_recall": _safe_recall(non_answer, gold_non_answer),
         "wrong_answer_rate": wrong_released / answered if answered else None,

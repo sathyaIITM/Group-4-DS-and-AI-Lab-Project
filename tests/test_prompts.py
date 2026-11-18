@@ -19,7 +19,8 @@ def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert {p.id for p in registry} == EXPECTED
     for prompt_id in EXPECTED:
         assert registry.get(f"{prompt_id}.v1").version == 1  # pinned v1 stays loadable
-    assert registry.get("intent").version == 2  # latest: missing_slot, carried qualifiers
+    assert registry.get("intent").version == 3  # missing_slot, qualifiers, groups the table lacks
+    assert registry.get("sql").version == 2  # place filters by level
     for prompt in registry:
         assert prompt.purpose == prompt.id
         assert prompt.system.strip()

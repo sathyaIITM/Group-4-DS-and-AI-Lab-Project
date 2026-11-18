@@ -297,6 +297,21 @@ def _missing_slot(
     return "category"
 
 
+def _descriptors(state: AnalystState, catalogue: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    """Definitional texts whose bare numbers describe the measure ("persons aged 15+")."""
+    plan = state.plan
+    if plan is None:
+        return []
+    texts = [f"{i.label} {i.unit}" for i in plan.indicators]
+    texts += [p.name for p in plan.places] + [a.text for a in plan.assumptions]
+    texts += [value for values in plan.categories.values() for value in values]
+    table = catalogue.get(plan.dataset_id) or {}
+    texts += [str(table.get(k, "")) for k in ("title", "source_name", "publisher", "source_table")]
+    if state.evidence is not None:
+        texts += [str(source.model_dump()) for source in state.evidence.sources]
+    return texts
+
+
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
     """Return graph node overrides; callers combine these with the T2 and T3 adapters."""
 
@@ -504,7 +519,9 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
             if isinstance(value, int | float) and not isinstance(value, bool)
         ]
         numeric.extend(item.output for item in state.derived if item.output is not None)
-        report = verify_numbers(state.narration[-1].text, numeric)
+        report = verify_numbers(
+            state.narration[-1].text, numeric, descriptors=_descriptors(state, deps.catalogue)
+        )
         return {
             "number_check": report,
             "events": stage_event(

@@ -136,6 +136,38 @@ def same_result(
     return a == b if ordered else Counter(a) == Counter(b)
 
 
+def same_result_projected(
+    reference_sql: str, got: list[tuple[Any, ...]], expected: list[tuple[Any, ...]]
+) -> bool:
+    """`same_result` after projecting the returned columns onto the reference columns.
+
+    The agent's SQL prompt requires extra columns (`indicator_id`, `unit`, `quality_flag`), so
+    a correct answer usually returns a superset of the reference columns. Each reference column
+    is matched to a returned column holding the same values; the rows are then compared as in
+    `same_result`. Extra rows are never ignored.
+    """
+    if same_result(reference_sql, got, expected):
+        return True
+    a, b = normalise(got), normalise(expected)
+    if len(a) != len(b) or not b:
+        return False
+    width = len(b[0])
+    columns_a = [Counter(row[k] for row in a) for k in range(len(a[0]) if a else 0)]
+    options = [
+        [k for k, counts in enumerate(columns_a) if counts == Counter(row[j] for row in b)]
+        for j in range(width)
+    ]
+    ordered = sqlglot.parse_one(reference_sql, read="duckdb").find(exp.Order) is not None
+
+    def search(j: int, chosen: list[int]) -> bool:
+        if j == width:
+            projected = [tuple(row[k] for k in chosen) for row in a]
+            return projected == b if ordered else Counter(projected) == Counter(b)
+        return any(search(j + 1, [*chosen, k]) for k in options[j] if k not in chosen)
+
+    return search(0, [])
+
+
 def judge(
     question: Question, reply: str, database: ReadOnlyDatabase
 ) -> tuple[str, str | None, str]:

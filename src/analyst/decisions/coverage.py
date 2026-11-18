@@ -19,6 +19,7 @@ from typing import Any, Literal
 
 from analyst.contracts.coverage import CoverageResult, MissingPart
 from analyst.contracts.plan import InterpretationPlan
+from analyst.tools.codelists import codelist
 from analyst.tools.places import FILTER_LEVELS
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -119,6 +120,8 @@ def check_coverage(
     codelists = table.get("categories", {})
     for column, values in plan.categories.items():
         known = codelists.get(column)
+        if isinstance(known, int):  # a long codelist is stored as its size; read the values
+            known = codelist(plan.dataset_id, column) or None
         bad = values if known is None else [v for v in values if v not in known]
         if bad:
             missing.append(MissingPart(kind="category", detail=f"{column}: {bad}"))

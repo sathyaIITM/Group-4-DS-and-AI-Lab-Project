@@ -24,8 +24,15 @@ def verify_numbers(
     *,
     relative_tolerance: Decimal = Decimal("0.005"),
     absolute_tolerance: Decimal = Decimal("0.01"),
+    descriptors: list[str] | tuple[str, ...] = (),
 ) -> NumberCheck:
-    """Require each non-period numeric claim to match a result or derived evidence value."""
+    """Require each non-period numeric claim to match a result or derived evidence value.
+
+    `descriptors` are definitional texts (indicator labels, source title, places, categories,
+    stated assumptions). A bare number that occurs in them ("persons aged 15+") describes the
+    measure and is not a claim; a number with a unit or a percent sign is always checked.
+    """
+    described = {m.value for text in descriptors for m in parse_numbers(text) if not m.is_period}
     if relative_tolerance < 0 or absolute_tolerance < 0:
         raise ValueError("tolerances must be non-negative")
     raw_values = list(evidence.values()) if isinstance(evidence, dict) else list(evidence)
@@ -34,6 +41,8 @@ def verify_numbers(
     unmatched: list[str] = []
     for mention in parse_numbers(narration):
         if mention.is_period:
+            continue
+        if mention.unit_hint is None and mention.value in described:
             continue
         # A table may store a count in persons or already in lakh (or tonnes as '000 tonnes), so
         # the number as written and its value in base units are both accepted as a match.

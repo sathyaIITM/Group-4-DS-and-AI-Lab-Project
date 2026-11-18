@@ -173,7 +173,7 @@ def retrieve_context_and_examples(state: AnalystState) -> dict[str, Any]:
         more = [name for name, _ in ranking if name in known and name not in ids]
         ids = [*ids, *more[:top_k]]
     version, rag = state.config.version, state.config.rag
-    retrieved: dict[str, Any] = table_context(published_catalogue(), ids)
+    retrieved: dict[str, Any] = table_context(published_catalogue(), ids, state.question)
     cards: list[dict[str, Any]] = []
     examples: list[dict[str, Any]] = []
     if version != "v0":

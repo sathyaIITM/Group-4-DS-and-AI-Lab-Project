@@ -14,6 +14,8 @@ from typing import Any
 import duckdb
 
 from analyst.decisions.coverage import load_published
+from analyst.retrieval.catalogue import expand_query, load_glossary
+from analyst.tools.codelists import codelist, named_values
 
 PUBLISHED = Path("data/processed/catalogue.json")
 TABLE_FIELDS = (
@@ -43,10 +45,11 @@ def indicators_of(table: dict[str, Any]) -> list[dict[str, str]]:
     units: dict[str, str] = table.get("indicator_units", {})
     labels: dict[str, str] = {}
     if _obs(dataset_id).exists():
-        rows = duckdb.execute(
-            "SELECT DISTINCT indicator_id, indicator_label_source "  # noqa: S608
-            f"FROM read_parquet('{_obs(dataset_id)}')"
-        ).fetchall()
+        with duckdb.connect() as con:  # own connection: questions run in parallel threads
+            rows = con.execute(
+                "SELECT DISTINCT indicator_id, indicator_label_source FROM read_parquet(?)",
+                [str(_obs(dataset_id))],
+            ).fetchall()
         labels = {r[0]: r[1] for r in rows}
     return [
         {
@@ -59,26 +62,31 @@ def indicators_of(table: dict[str, Any]) -> list[dict[str, str]]:
     ]
 
 
-def codelists_of(table: dict[str, Any]) -> dict[str, list[str]]:
+def codelists_of(table: dict[str, Any], question: str = "") -> dict[str, list[str]]:
+    """Short codelists in full; a long one only through the values the question names."""
     dataset_id = table["dataset_id"]
     out: dict[str, list[str]] = {}
     if not _obs(dataset_id).exists():
         return out
-    for column, count in (table.get("categories") or {}).items():
-        if isinstance(count, int) and count <= MAX_CODELIST:
-            rows = duckdb.execute(
-                f"SELECT DISTINCT \"{column}\" FROM read_parquet('{_obs(dataset_id)}') "  # noqa: S608
-                f'WHERE "{column}" IS NOT NULL ORDER BY 1'
-            ).fetchall()
-            out[column] = [str(r[0]) for r in rows]
+    asked = expand_query(question, load_glossary()) if question else ""
+    for column in table.get("categories") or {}:
+        values = codelist(dataset_id, column, PUBLISHED.parent)
+        if len(values) <= MAX_CODELIST:
+            out[column] = values
+        else:
+            named = named_values(values, asked)
+            if named:
+                out[column] = named
     return out
 
 
-def table_context(published: dict[str, dict[str, Any]], ids: list[str]) -> dict[str, Any]:
+def table_context(
+    published: dict[str, dict[str, Any]], ids: list[str], question: str = ""
+) -> dict[str, Any]:
     """`tables`, `indicators` and `categories` for the candidate tables, in candidate order."""
     tables = [published[i] for i in ids if i in published]
     return {
         "tables": [{k: t[k] for k in TABLE_FIELDS if k in t} for t in tables],
         "indicators": [ind for t in tables for ind in indicators_of(t)],
-        "categories": {t["dataset_id"]: codelists_of(t) for t in tables},
+        "categories": {t["dataset_id"]: codelists_of(t, question) for t in tables},
     }

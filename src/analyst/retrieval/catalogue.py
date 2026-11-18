@@ -26,6 +26,7 @@ import csv
 import hashlib
 import json
 import re
+import threading
 from functools import lru_cache
 from pathlib import Path
 
@@ -45,6 +46,7 @@ _NOT_PLACES = {"mandi", "market", "central", "city", *_COMPASS} | {
     f"{a} {b}" for a in _COMPASS for b in _COMPASS if a != b
 }  # "north east" and "south west" are monsoon names as well as IMD sub-divisions
 DEPTH = 20
+_BUILD = threading.Lock()  # one index build, even when questions run in parallel threads
 
 
 def load_glossary(path: Path = GLOSSARY) -> list[tuple[str, str]]:
@@ -147,7 +149,9 @@ def rank_tables(
     question: str, k: int, processed: Path = PROCESSED, depth: int = DEPTH
 ) -> list[tuple[str, float]]:
     """Dataset ids with fused scores, best first; the last places may be indicator slots."""
-    index = _index(_release_key(processed), str(processed))
+    with _BUILD:
+        index = _index(_release_key(processed), str(processed))
+        _gazetteer(_release_key(processed), str(processed))
     query = expand_query(question, load_glossary())
     hits = index.search(query, "table", depth)
     ranked = [(str(h.entry.dataset_id), float(h.score)) for h in hits if h.entry.dataset_id]
@@ -187,4 +191,9 @@ def _with_slots(
     return [(d, score.get(d, floor)) for d in head] + rest
 
 
-__all__ = ["expand_query", "load_glossary", "place_ranking", "rank_tables"]
+def warm_up(processed: Path = PROCESSED) -> None:
+    """Load the embedding model and build the index before the first question (cold start)."""
+    rank_tables("warm up", 4, processed)
+
+
+__all__ = ["expand_query", "load_glossary", "place_ranking", "rank_tables", "warm_up"]

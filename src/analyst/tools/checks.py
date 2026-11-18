@@ -117,11 +117,20 @@ def run_result_checks(
         outcomes=outcomes,
         verdict=verdict,
         caveats=caveats,
-        retry_hint="Recheck period/place resolution and query predicates; return the rows "
-        "each derivation needs."
-        if verdict in {"empty_result", "query_fault"}
-        else None,
+        retry_hint=_retry_hint(failures) if verdict in {"empty_result", "query_fault"} else None,
     )
+
+
+def _retry_hint(failures: list[CheckOutcome]) -> str | None:
+    """Name each failed check with what was expected and what the rows held."""
+    faults = [f for f in failures if f.failure_class in {"query_fault", "empty_result"}]
+    if not faults:
+        return None
+    parts = [
+        f"{f.name}: expected {f.expected or 'rows'}; the rows held {f.observed or 'nothing'}"
+        for f in faults
+    ]
+    return "Fix the query so that it returns what the checks need. " + "; ".join(parts)[:600]
 
 
 def run_intent_checks(plan: InterpretationPlan, result: QueryResult) -> list[CheckOutcome]:

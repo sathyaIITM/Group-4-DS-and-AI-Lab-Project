@@ -407,3 +407,61 @@ def test_place_check_reads_entity_alias_and_state_column() -> None:
     )
     places = next(o for o in run_intent_checks(plan, result) if o.name == "requested_places")
     assert places.passed
+
+
+# Third batch: findings of the live smoke test of 18 November.
+
+
+def test_bare_numbers_from_the_definition_are_not_claims() -> None:
+    text = "Persons aged 15+ in Bihar: 5.1 percent in 2019-20."
+    labels = ["Unemployment rate (%), usual status (ps+ss), persons aged 15+"]
+    assert verify_numbers(text, [5.1], descriptors=labels).passed
+    assert not verify_numbers("It was 15 percent.", [5.1], descriptors=labels).passed
+
+
+def test_long_codelists_show_the_values_the_question_names() -> None:
+    from analyst.tools.codelists import named_values
+
+    values = ["Bhindi(Ladies Finger)", "Potato", "Wheat", "Onion"]
+    assert named_values(values, "potato and ladies finger prices") == [
+        "Bhindi(Ladies Finger)",
+        "Potato",
+    ]
+    assert named_values(values, "Onionskin paper") == []
+
+
+def test_coverage_reads_a_long_codelist_stored_as_a_count(tmp_path: Path, monkeypatch) -> None:
+    from analyst.decisions import coverage
+
+    monkeypatch.setattr(coverage, "codelist", lambda d, c: ["Paddy", "Wheat"])
+    plan = stub_plan("msp").model_copy(
+        update={"categories": {"commodity_name": ["Wheat"]}, "periods": [], "indicators": []}
+    )
+    table = {
+        "dataset_id": "msp",
+        "geo_levels": ["national"],
+        "coverage_start": "2013-01-01",
+        "coverage_end": "2025-12-31",
+        "period_types": ["survey_year"],
+        "indicator_units": {},
+        "categories": {"commodity_name": 24},
+    }
+    assert coverage.check_coverage(plan, {"msp": table}).status == "covered"
+    bad = plan.model_copy(update={"categories": {"commodity_name": ["Gold"]}})
+    assert coverage.check_coverage(bad, {"msp": table}).status == "not_covered"
+
+
+def test_execution_accuracy_projects_extra_columns() -> None:
+    from analyst.evaluation.v0_eval import same_result, same_result_projected
+
+    gold_sql = "SELECT geo_name AS entity, value FROM t"
+    gold = [("Kerala", 9.6), ("Bihar", 5.9)]
+    got = [("Bihar", "2021-22", "ur", 5.9, "percent"), ("Kerala", "2021-22", "ur", 9.6, "percent")]
+    assert not same_result(gold_sql, got, gold)
+    assert same_result_projected(gold_sql, got, gold)
+    assert not same_result_projected(gold_sql, got[:1], gold)  # a missing row still fails
+    wrong = [
+        ("Bihar", "2021-22", "ur", 5.8, "percent"),
+        ("Kerala", "2021-22", "ur", 9.6, "percent"),
+    ]
+    assert not same_result_projected(gold_sql, wrong, gold)

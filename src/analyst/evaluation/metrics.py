@@ -164,12 +164,15 @@ def selective_accuracy(
 
 def execution_accuracy(
     results: Iterable[bool | tuple[str, list[tuple[Any, ...]], list[tuple[Any, ...]]]],
+    projected: bool = False,
 ) -> float:
     """Share of correct flags or SQL result triples, using ``v0_eval.same_result`` for triples."""
     rows = list(results)
     if not rows:
         raise ValueError("results must not be empty")
-    from analyst.evaluation.v0_eval import same_result
+    from analyst.evaluation.v0_eval import same_result, same_result_projected
+
+    compare = same_result_projected if projected else same_result
 
     matches = []
     for result in rows:
@@ -178,7 +181,7 @@ def execution_accuracy(
         else:
             sql, actual, expected = result
             try:
-                matches.append(same_result(sql, actual, expected))
+                matches.append(compare(sql, actual, expected))
             except Exception:
                 matches.append(False)
     return float(np.mean(matches))
