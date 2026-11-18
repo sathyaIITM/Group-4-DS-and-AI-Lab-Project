@@ -1,9 +1,312 @@
 <!doctype html>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>India analyst agent</title>
-<h1>A Calibrated Analyst Agent for Indian Public Data</h1>
-<p>
-  Scaffold. The streaming interface, evidence panel and confidence badge are
-  Milestone 3 deliverables. The API is served at <code>/api</code>.
-</p>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>India Data Analyst</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1d1f23; --muted: #626872; --line: #e2e2de;
+  --accent: #1f5fbf; --accent-soft: #e8effa; --ok: #1a7f4b; --warn: #a15c00; --bad: #b42318;
+  --code: #f2f2ef;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a; --panel: #1d2024; --ink: #e8e9eb; --muted: #9aa1ab; --line: #2e3238;
+    --accent: #7aa7ff; --accent-soft: #1f2a3d; --ok: #4cc38a; --warn: #f0b45a; --bad: #ff7b72;
+    --code: #24282d;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+  border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+.pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft);
+  color: var(--accent); }
+.pill.live { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+header .spacer { flex: 1; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); padding: 6px 12px; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: wait; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; padding: 16px 20px;
+  max-width: 1280px; margin: 0 auto; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+#thread { display: flex; flex-direction: column; gap: 14px; min-height: 50vh; }
+.turn-user { align-self: flex-end; max-width: 80%; background: var(--accent); color: #fff;
+  padding: 8px 12px; border-radius: 12px 12px 2px 12px; white-space: pre-wrap; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; }
+.stages { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.stage { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px;
+  padding: 1px 6px; }
+.stage.fail { color: var(--bad); border-color: var(--bad); }
+.meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; }
+.answer { margin: 6px 0 4px; white-space: pre-wrap; }
+.interp { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.outcome { font-weight: 600; text-transform: capitalize; }
+.outcome.answered, .outcome.charted { color: var(--ok); }
+.outcome.clarifying { color: var(--accent); }
+.outcome.declined, .outcome.abstained { color: var(--warn); }
+.outcome.failed { color: var(--bad); }
+.options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.options button { font-size: 13px; }
+details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto;
+  font-size: 12px; white-space: pre-wrap; }
+table { border-collapse: collapse; font-size: 12px; width: 100%; display: block;
+  overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 3px 6px; text-align: left; white-space: nowrap; }
+th { background: var(--code); }
+h3 { font-size: 13px; margin: 12px 0 4px; }
+ul { margin: 4px 0; padding-left: 18px; font-size: 13px; }
+.chart { margin-top: 10px; overflow-x: auto; }
+form { display: flex; gap: 8px; margin-top: 16px; position: sticky; bottom: 0; padding: 10px 0;
+  background: var(--bg); }
+textarea { flex: 1; font: inherit; padding: 8px 10px; border-radius: 10px; resize: vertical;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); min-height: 44px; }
+aside .card { margin-bottom: 12px; }
+aside h2 { font-size: 13px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); }
+.hist { font-size: 12px; border-left: 3px solid var(--line); padding-left: 8px; margin: 8px 0; }
+.hist b { font-weight: 600; }
+.try { display: flex; flex-direction: column; gap: 6px; }
+.try button { text-align: left; font-size: 12px; }
+.try .group { font-size: 11px; color: var(--muted); margin-top: 6px; }
+code { font-size: 12px; }
+.empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>India Data Analyst</h1>
+  <span id="mode" class="pill">connecting</span>
+  <span class="spacer"></span>
+  <button id="new" type="button">New conversation</button>
+</header>
+<main>
+  <section>
+    <div id="thread"><p class="empty">Ask about unemployment, rainfall, prices, crime, health or
+      crops in India. Follow-up questions use the last three turns.</p></div>
+    <form id="ask">
+      <textarea id="q" placeholder="Ask a question, or answer a clarification" required></textarea>
+      <button class="primary" id="send" type="submit">Ask</button>
+    </form>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>Conversation</h2>
+      <div class="meta">id <code id="cid">new</code></div>
+      <div id="history"><p class="empty">No turns yet.</p></div>
+    </div>
+    <div class="card">
+      <h2>Try</h2>
+      <div class="try" id="try"></div>
+    </div>
+  </aside>
+</main>
+<script>
+const API = "api";
+const TRY = [
+  ["Follow-up", ["What was the unemployment rate in Gujarat in 2021-22?",
+                 "And Maharashtra?", "Compare it with the first State."]],
+  ["Clarification", ["What is the unemployment rate in Kerala for youth?", "second one"]],
+  ["Topic switch", ["What was the CPI general index in December 2022?",
+                    "Now show monsoon rainfall in Vidarbha in 2016", "And in 2017?"]],
+  ["Decline", ["How much did consumer prices rise over the past month?"]],
+];
+let conversationId = null;
+let busy = false;
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+};
+
+function renderTry() {
+  const box = $("try");
+  for (const [group, questions] of TRY) {
+    box.append(el("div", "group", group));
+    for (const q of questions) {
+      const b = el("button", "", q);
+      b.type = "button";
+      b.onclick = () => send(q);
+      box.append(b);
+    }
+  }
+}
+
+function renderHistory(history) {
+  const box = $("history");
+  box.replaceChildren();
+  if (!history || !history.length) { box.append(el("p", "empty", "No turns yet.")); return; }
+  history.forEach((t, i) => {
+    const h = el("div", "hist");
+    const q = el("div"); q.append(el("b", "", `${i + 1}. `), document.createTextNode(t.question));
+    h.append(q);
+    const bits = [t.outcome, t.dataset_id, (t.places || []).join(", "),
+                  (t.periods || []).join(", ")].filter(Boolean);
+    h.append(el("div", "meta", bits.join(" · ")));
+    box.append(h);
+  });
+}
+
+function table(columns, rows) {
+  const t = el("table");
+  const head = el("tr");
+  columns.forEach((c) => head.append(el("th", "", c)));
+  t.append(head);
+  rows.forEach((r) => {
+    const tr = el("tr");
+    r.forEach((v) => tr.append(el("td", "", v === null ? "" : String(v))));
+    t.append(tr);
+  });
+  return t;
+}
+
+function list(title, items) {
+  const frag = document.createDocumentFragment();
+  if (!items || !items.length) return frag;
+  frag.append(el("h3", "", title));
+  const ul = el("ul");
+  items.forEach((x) => ul.append(el("li", "", x)));
+  frag.append(ul);
+  return frag;
+}
+
+function renderReply(card, r) {
+  const meta = el("div", "meta");
+  meta.append(el("span", `outcome ${r.outcome || ""}`, r.outcome || "no outcome"));
+  if (r.cause) meta.append(el("span", "", r.cause));
+  if (r.domain) meta.append(el("span", "", `domain: ${r.domain}`));
+  if (r.follow_up !== null && r.follow_up !== undefined)
+    meta.append(el("span", "", r.follow_up ? "follow-up" : "new question"));
+  if (r.badge) meta.append(el("span", "", `badge: ${r.badge}`));
+  meta.append(el("span", "", `${r.llm_calls} LLM calls · $${r.cost_usd_est} (est.)`));
+  card.append(meta);
+  card.append(el("div", "answer", r.text || ""));
+  const asked = r.question.split("\n")[0];
+  if (r.interpreted_as && r.interpreted_as !== asked)
+    card.append(el("div", "interp", `Read as: ${r.interpreted_as}`));
+  if (r.options && r.options.length) {
+    const box = el("div", "options");
+    r.options.forEach((o, i) => {
+      const b = el("button", "", `${i + 1}. ${o}`);
+      b.type = "button";
+      b.onclick = () => send(o);
+      box.append(b);
+    });
+    card.append(box);
+  }
+  if (r.chart && r.chart.vega_lite) {
+    const c = el("div", "chart");
+    card.append(c);
+    const spec = Object.assign({}, r.chart.vega_lite, { width: "container" });
+    vegaEmbed(c, spec, { actions: false }).catch(() => c.remove());
+  }
+  const ev = r.evidence;
+  if (ev) {
+    const d = el("details");
+    d.append(el("summary", "", `Evidence · ${ev.dataset_id} · ${ev.row_count} rows`));
+    (ev.sources || []).forEach((s) => d.append(el("div", "meta",
+      `${s.title} — ${s.publisher} (${s.dataset_version})`)));
+    d.append(list("Assumptions", ev.assumptions));
+    d.append(list("Caveats", ev.caveats));
+    d.append(list("Checks", (ev.checks || []).map((c) => `${c.passed ? "✓" : "✗"} ${c.name}`)));
+    d.append(el("h3", "", "Rows"));
+    d.append(table(ev.columns, ev.rows));
+    d.append(el("h3", "", "SQL"));
+    d.append(el("pre", "", ev.sql));
+    card.append(d);
+  }
+  const trace = el("details");
+  trace.append(el("summary", "", `Trace · run ${r.run_id.slice(0, 8)}`));
+  trace.append(el("pre", "", r.trace.join(" → ")));
+  card.append(trace);
+}
+
+async function send(question) {
+  if (busy || !question.trim()) return;
+  busy = true; $("send").disabled = true;
+  const thread = $("thread");
+  thread.querySelector(".empty")?.remove();
+  thread.append(el("div", "turn-user", question));
+  const card = el("div", "card");
+  const stages = el("div", "stages");
+  card.append(stages);
+  thread.append(card);
+  card.scrollIntoView({ behavior: "smooth", block: "end" });
+  $("q").value = "";
+  try {
+    const res = await fetch(`${API}/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, conversation_id: conversationId }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const blocks = buffer.split(/\r?\n\r?\n/);
+      buffer = blocks.pop();
+      for (const block of blocks) {
+        let name = "message", data = "";
+        for (const line of block.split(/\r?\n/)) {
+          if (line.startsWith("event:")) name = line.slice(6).trim();
+          else if (line.startsWith("data:")) data += line.slice(5).trim();
+        }
+        const payload = data ? JSON.parse(data) : {};
+        if (name === "stage") {
+          const failed = payload.detail && payload.detail.error;
+          stages.append(el("span", failed ? "stage fail" : "stage",
+            payload.node.replaceAll("_", " ")));
+        } else if (name === "answer" && payload) {
+          conversationId = payload.conversation_id;
+          $("cid").textContent = conversationId.slice(0, 8);
+          renderReply(card, payload);
+          renderHistory(payload.history);
+        } else if (name === "error") {
+          card.append(el("div", "outcome failed", `Error: ${payload.error}: ${payload.detail}`));
+        }
+      }
+    }
+  } catch (err) {
+    card.append(el("div", "outcome failed", `Request failed: ${err.message}`));
+  } finally {
+    busy = false; $("send").disabled = false;
+    card.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+}
+
+$("ask").addEventListener("submit", (e) => { e.preventDefault(); send($("q").value); });
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("q").value); }
+});
+$("new").onclick = () => {
+  conversationId = null;
+  $("cid").textContent = "new";
+  $("thread").replaceChildren(el("p", "empty", "New conversation."));
+  renderHistory([]);
+};
+fetch(`${API}/healthz`).then((r) => r.json()).then((h) => {
+  $("mode").textContent = h.llm === "live" ? `live model · ${h.agent}` : `stub (no model) · ${h.agent}`;
+  if (h.llm === "live") $("mode").classList.add("live");
+}).catch(() => { $("mode").textContent = "API not reachable"; });
+renderTry();
+</script>
+</body>
+</html>
