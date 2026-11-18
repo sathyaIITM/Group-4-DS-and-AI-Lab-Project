@@ -2,16 +2,20 @@
 sets:
   source:
     path: data/eval/e2e_v1.jsonl
-    sha256: ada99285bba3b2b8ac61b1e8767b039aa9fd44ec2d3cf5f1d41cc73afc5085aa
+    sha256: 94c697f564ed695da178dbfe138ee6e878821833d2c1c2e49f7f521ccf6fc8e7
     validated_by_t1: false
   dev:
     path: data/eval/e2e_dev.v1.jsonl
-    sha256: b0a4c0bba4626fe31e1079b39d1029d5e95d751357be102328a85f3ca6a7dc62
+    sha256: ea6b91d276f8fafbd7b08b9dd98345f5d597dc291373faaf848a0445f4221242
     size: 40
   test:
     path: data/eval/e2e_test.v1.jsonl
-    sha256: d24ff67ed97e8d3893bdc5bdd06aba543b5d93a6ad0bcb33e2c328961fe4149b
+    sha256: 82b2b5b559f10fc1fa89e44c3006de97346819e89c04df7ddfb97881267f6817
     size: 60
+# Split membership is frozen as made on 2026-11-17 (seed 0). On 2026-11-18 two labels changed
+# (e2e-079 in dev, e2e-092 in test: decline -> answer, value not published); the three files were
+# edited in place. They are not regenerated with `e2e_eval split`, because re-stratifying on the
+# new labels would move items between dev and test.
 split:
   seed: 0
   stratify_by: [expected_action, first_dataset_id]

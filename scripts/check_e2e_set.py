@@ -174,7 +174,10 @@ def check_action_rules(item: dict[str, Any]) -> list[str]:
     if action == "answer":
         if not item["gold_sql"]:
             errors.append("answer item needs gold_sql")
-        if not item["expected_values"]:
+        no_figure = {"missing_value", "suppressed_value"} & set(item.get("conventions", []))
+        if not item["expected_values"] and not no_figure:
+            # A value missing or suppressed in the source is answered by saying so, without a
+            # figure (design Section 4.5); only those items may have no expected values.
             errors.append("answer item needs expected_values")
         if not item["dataset_ids"]:
             errors.append("answer item needs dataset_ids")

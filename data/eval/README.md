@@ -105,7 +105,7 @@ Items whose expected value or label rests on a judgement:
 | e2e-039, e2e-041, e2e-043 | The mandi feed is a one-day snapshot (29 October 2026); "right now" is read as that day; implausible values are excluded |
 | e2e-070 | MSP ranking over commodity and variety rows as published; copra is fixed per calendar year and leads |
 | e2e-073 | Cotton MSP without a variety is a `clarify` item; a default (medium staple) is the alternative |
-| e2e-079, e2e-092 | A value that is missing in the source (Ladakh) or suppressed (Chandigarh infant mortality) is labelled `decline`; `answer` with an empty value is the alternative |
+| e2e-079, e2e-092 | A value that is missing in the source (Ladakh) or suppressed (Chandigarh infant mortality) is labelled `answer` with no expected value: the answer says the value is not published and gives no figure (design Section 4.5). Changed from `decline` on 18 November 2026 (T3) |
 | e2e-095 | The infant-mortality search lists the SRS table and both NFHS-5 tables, although the district table holds no infant-mortality indicator |
 | e2e-098 | A State wheat total as the sum of 22 district figures; the table publishes districts only |
 | e2e-099 | Cotton is published in bales of 170 kg; no conversion to tonnes is applied |

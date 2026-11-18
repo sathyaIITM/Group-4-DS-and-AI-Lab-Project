@@ -141,6 +141,19 @@ def verify_gold(set_path: Path, processed: Path = DEFAULT_PROCESSED) -> dict[str
     }
 
 
+# Result columns that name what a value is about: places, and items such as a crop or commodity.
+ENTITY_COLUMNS = {
+    "entity",
+    "geo_name",
+    "geo_state",
+    "geo_district",
+    "place",
+    "name",
+    "commodity_name",
+    "crop",
+}
+
+
 def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
     evidence = state.evidence
     result = state.result
@@ -156,7 +169,7 @@ def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
     places: list[str] = []
     if result is not None:
         for index, column in enumerate(result.columns):
-            if column.name.casefold() in {"entity", "geo_name", "place", "name"}:
+            if column.name.casefold() in ENTITY_COLUMNS:
                 places.extend(str(row[index]) for row in result.rows if row[index] is not None)
     check = state.number_check
     return {
@@ -194,6 +207,7 @@ def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
         "narration_retries": max(0, len(state.narration) - 1),
         "widened_searches": state.counters.widened_searches,
         "tokens_in": sum(record.tokens_in for record in state.llm_records),
+        "cached_tokens_in": sum(record.cached_tokens or 0 for record in state.llm_records),
         "tokens_out": sum(record.tokens_out for record in state.llm_records),
         "cost_usd_est": sum(record.cost_usd_est or 0.0 for record in state.llm_records),
         "run_id": state.run_id,
@@ -581,12 +595,17 @@ def _case_checks(case: dict[str, Any]) -> dict[str, bool]:
         )
         for expected in expected_values
     )
+    # A long series (more than 3 values) is shown by the chart and the rows; the narration
+    # must state its first and last values only.
+    narrated = (
+        expected_values if len(expected_values) <= 3 else [expected_values[0], expected_values[-1]]
+    )
     narration_match = all(
         any(
             _within_tolerance(float(actual), float(expected), tolerance)
             for actual in case.get("narrated_numbers", [])
         )
-        for expected in expected_values
+        for expected in narrated
     )
     entity_match = all(
         entity in case.get("actual_entities", []) for entity in case.get("expected_entities", [])

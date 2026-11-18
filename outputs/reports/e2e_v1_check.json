@@ -19,9 +19,9 @@
   "summary": {
     "items": 100,
     "by_action": {
-      "answer": 71,
+      "answer": 73,
       "clarify": 8,
-      "decline": 14,
+      "decline": 12,
       "describe": 4,
       "search": 3
     },
@@ -36,16 +36,16 @@
       "ncrb_annual_crime_statistics": 5,
       "ncrb_violent_crimes_state": 6,
       "nfhs5_district_indicators": 7,
-      "nfhs5_state_factsheet": 7,
+      "nfhs5_state_factsheet": 8,
       "plfs_lfpr_urban_state": 5,
-      "plfs_state_ur_usual_status": 8,
+      "plfs_state_ur_usual_status": 9,
       "srs_imr_state": 6
     },
     "by_operation": {
       "aggregate": 3,
       "change": 11,
       "comparison": 8,
-      "lookup": 28,
+      "lookup": 30,
       "ranking": 15,
       "share": 2,
       "trend": 4
