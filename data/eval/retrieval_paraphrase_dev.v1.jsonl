@@ -1,0 +1,60 @@
+{"id": "rp2-001", "question": "How many people were jobless in Kerala in 2020-21?", "expected_dataset_ids": ["plfs_state_ur_usual_status"], "match": "any"}
+{"id": "rp2-002", "question": "What was the unemployment rate among youth in Punjab?", "expected_dataset_ids": ["plfs_state_ur_usual_status"], "match": "any"}
+{"id": "rp2-003", "question": "Bihar mein berojgari kitni hai?", "expected_dataset_ids": ["plfs_state_ur_usual_status"], "match": "any"}
+{"id": "rp2-004", "question": "UR for Goa in the latest PLFS round", "expected_dataset_ids": ["plfs_state_ur_usual_status"], "match": "any"}
+{"id": "rp2-005", "question": "What share of urban adults in Delhi are in the labour force?", "expected_dataset_ids": ["plfs_lfpr_urban_state"], "match": "any"}
+{"id": "rp2-006", "question": "LFPR in cities of Tamil Nadu, 2023-24", "expected_dataset_ids": ["plfs_lfpr_urban_state"], "match": "any"}
+{"id": "rp2-007", "question": "How many women in Kerala are anaemic?", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-008", "question": "Percentage of stunted children under five in Uttar Pradesh", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-009", "question": "Share of households with an improved toilet in Odisha", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-010", "question": "How many homes in Pune district cook with LPG or other clean fuel?", "expected_dataset_ids": ["nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-011", "question": "Child marriage rate among women aged 20-24 in West Bengal", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-012", "question": "How many children in Nashik district were fully vaccinated?", "expected_dataset_ids": ["nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-013", "question": "Institutional births in Rajasthan according to NFHS-5", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-014", "question": "What percentage of women in Assam own a mobile phone?", "expected_dataset_ids": ["nfhs5_state_factsheet"], "match": "any"}
+{"id": "rp2-015", "question": "Obesity among men in Punjab", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-016", "question": "Health insurance coverage of households in Kerala", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-017", "question": "High blood sugar among women in Tamil Nadu", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-018", "question": "Infant deaths per thousand births in Madhya Pradesh", "expected_dataset_ids": ["srs_imr_state", "nfhs5_state_factsheet"], "match": "any"}
+{"id": "rp2-019", "question": "IMR of Kerala in 2020", "expected_dataset_ids": ["srs_imr_state"], "match": "any"}
+{"id": "rp2-020", "question": "Shishu mrityu dar Uttar Pradesh mein", "expected_dataset_ids": ["srs_imr_state", "nfhs5_state_factsheet"], "match": "any"}
+{"id": "rp2-021", "question": "How much did it rain in Vidarbha in July 2016?", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"], "match": "any"}
+{"id": "rp2-022", "question": "Was the 2018 monsoon in Kerala above normal?", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall", "imd_district_rainfall_normals"], "match": "any"}
+{"id": "rp2-023", "question": "Annual rainfall in Marathwada in 2010", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"], "match": "any"}
+{"id": "rp2-024", "question": "Normal June rainfall for Wayanad district", "expected_dataset_ids": ["imd_district_rainfall_normals"], "match": "any"}
+{"id": "rp2-025", "question": "Average monsoon rainfall in Cherrapunji's district", "expected_dataset_ids": ["imd_district_rainfall_normals"], "match": "any"}
+{"id": "rp2-026", "question": "Kitni baarish hui Gujarat region mein 2015 mein?", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"], "match": "any"}
+{"id": "rp2-027", "question": "Retail inflation in March 2024", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-028", "question": "How fast are vegetable prices rising?", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-029", "question": "Food inflation last month", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-030", "question": "CPI for pulses in rural India, 2023", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-031", "question": "Mehngai dar kitni hai?", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-032", "question": "Fuel and light index for urban areas", "expected_dataset_ids": ["cpi_all_india"], "match": "any"}
+{"id": "rp2-033", "question": "What is onion selling for at Lasalgaon?", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}
+{"id": "rp2-034", "question": "Tomato rates in Azadpur market today", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}
+{"id": "rp2-035", "question": "Modal price of potato in Agra mandi", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}
+{"id": "rp2-036", "question": "Aaj gehun ka bhav kya hai mandi mein?", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}
+{"id": "rp2-037", "question": "Cheapest place to buy apples in Himachal markets", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}
+{"id": "rp2-038", "question": "What is the MSP for paddy this kharif?", "expected_dataset_ids": ["msp_crops"], "match": "any"}
+{"id": "rp2-039", "question": "Support price of wheat for 2024-25", "expected_dataset_ids": ["msp_crops"], "match": "any"}
+{"id": "rp2-040", "question": "How much did the government raise the MSP for moong?", "expected_dataset_ids": ["msp_crops"], "match": "any"}
+{"id": "rp2-041", "question": "Rice output in Burdwan district", "expected_dataset_ids": ["crop_production_district"], "match": "any"}
+{"id": "rp2-042", "question": "Which district grows the most sugarcane?", "expected_dataset_ids": ["crop_production_district"], "match": "any"}
+{"id": "rp2-043", "question": "Cotton production in Gujarat districts in 2014-15", "expected_dataset_ids": ["crop_production_district"], "match": "any"}
+{"id": "rp2-044", "question": "Yield of maize in Karnataka districts", "expected_dataset_ids": ["crop_production_district"], "match": "any"}
+{"id": "rp2-045", "question": "Gehun ki paidawar Ludhiana mein", "expected_dataset_ids": ["crop_production_district"], "match": "any"}
+{"id": "rp2-046", "question": "Per capita income of Bihar", "expected_dataset_ids": ["gsdp_per_capita_state"], "match": "any"}
+{"id": "rp2-047", "question": "Which state has the highest income per person?", "expected_dataset_ids": ["gsdp_per_capita_state"], "match": "any"}
+{"id": "rp2-048", "question": "NSDP per head in Karnataka in 2021-22", "expected_dataset_ids": ["gsdp_per_capita_state"], "match": "any"}
+{"id": "rp2-049", "question": "How many murders were recorded in India in 2022?", "expected_dataset_ids": ["ncrb_annual_crime_statistics"], "match": "any"}
+{"id": "rp2-050", "question": "Crime against women nationally in 2021", "expected_dataset_ids": ["ncrb_annual_crime_statistics"], "match": "any"}
+{"id": "rp2-051", "question": "Number of cognizable crimes registered under IPC in 2020", "expected_dataset_ids": ["ncrb_annual_crime_statistics"], "match": "any"}
+{"id": "rp2-052", "question": "Violent crime rate in Uttar Pradesh", "expected_dataset_ids": ["ncrb_violent_crimes_state"], "match": "any"}
+{"id": "rp2-053", "question": "Which state reported the most violent crimes?", "expected_dataset_ids": ["ncrb_violent_crimes_state"], "match": "any"}
+{"id": "rp2-054", "question": "Apradh kitne hue Maharashtra mein?", "expected_dataset_ids": ["ncrb_violent_crimes_state", "ncrb_annual_crime_statistics"], "match": "any"}
+{"id": "rp2-055", "question": "Employment situation in Jharkhand", "expected_dataset_ids": ["plfs_state_ur_usual_status", "plfs_lfpr_urban_state"], "match": "any"}
+{"id": "rp2-056", "question": "How many women in Bihar have completed 10 years of school?", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-057", "question": "Breastfeeding within an hour of birth in Kerala", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-058", "question": "Use of family planning methods in Haryana", "expected_dataset_ids": ["nfhs5_state_factsheet", "nfhs5_district_indicators"], "match": "any"}
+{"id": "rp2-059", "question": "Kitchen gardens rainfall drought in Rayalaseema 2019", "expected_dataset_ids": ["imd_subdivision_monthly_rainfall"], "match": "any"}
+{"id": "rp2-060", "question": "Price of mustard oil seeds at Jaipur market", "expected_dataset_ids": ["mandi_daily_prices"], "match": "any"}

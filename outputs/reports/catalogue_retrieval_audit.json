@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "commodity": {
+      "n": 261,
+      "recall_at_4": 1.0
+    },
+    "crop": {
+      "n": 124,
+      "recall_at_4": 1.0
+    },
+    "indicator": {
+      "n": 302,
+      "recall_at_4": 1.0
+    },
+    "indicator+district": {
+      "n": 126,
+      "recall_at_4": 1.0
+    },
+    "indicator+market": {
+      "n": 3,
+      "recall_at_4": 1.0
+    },
+    "indicator+national": {
+      "n": 171,
+      "recall_at_4": 1.0
+    },
+    "indicator+state": {
+      "n": 136,
+      "recall_at_4": 1.0
+    },
+    "indicator+subdivision": {
+      "n": 1,
+      "recall_at_4": 1.0
+    },
+    "msp": {
+      "n": 24,
+      "recall_at_4": 1.0
+    },
+    "paraphrase": {
+      "n": 60,
+      "recall_at_4": 1.0
+    }
+  },
+  "misses_by_table": {},
+  "misses": []
+}
