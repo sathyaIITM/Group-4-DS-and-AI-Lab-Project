@@ -884,6 +884,6 @@ submission.
 | Member | Track | Sign-off |
 | --- | --- | --- |
 | Shaoni Samanta | T1 | To be confirmed |
-| Shivanshu Gupta | T2 | To be confirmed |
+| Shivanshu Gupta | T2 | Signed off, 19 November 2026 |
 | Sathya Prakash | T3 | Signed off, 19 November 2026 |
 | Ashmit Ghose | T4 | To be confirmed |
