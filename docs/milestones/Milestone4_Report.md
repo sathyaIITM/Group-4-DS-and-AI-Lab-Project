@@ -3,7 +3,8 @@
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
 Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.8.
 
-**Status of this file.** Complete for submission and signed off by the team (Sign-off). Every
+**Status of this file.** Complete for submission; each member's sign-off is recorded in the
+Sign-off section. Every
 result cites the committed file that holds it and the command that produced it (Appendix A and
 Section A6.7).
 
@@ -180,7 +181,7 @@ control nodes, graph, memory and run log (T2,
 before the real nodes existed, without a model call.
 
 Integration followed one branch, `docs/milestone-4`: feature branches per track were reviewed and
-merged into it, and the full suite (440 tests in 53 files), Ruff lint and format and `mypy` were
+merged into it, and the full suite (569 tests in 47 files; no failures, 19 skipped), Ruff lint and format and `mypy` were
 run at integration. A live smoke run
 (`python scripts/run_agent.py --question "Show monthly rainfall in Kerala" --version v0 --llm
 live`) and a demonstration application (FastAPI with a browser interface, [`app/api/main.py`](../../app/api/main.py))
