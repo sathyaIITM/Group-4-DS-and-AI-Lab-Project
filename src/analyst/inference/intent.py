@@ -13,6 +13,7 @@ retried once with the same prompt, then the node fails with `backend_error`.
      "cards": [str, ...]}
 """
 
+import re
 from collections.abc import Mapping
 from datetime import date
 from typing import Any
@@ -58,6 +59,35 @@ def question_payload(retrieved: Mapping[str, Any]) -> dict[str, Any]:
     return payload
 
 
+HASH_SUFFIX = re.compile(r"_([0-9a-f]{8})$")
+
+
+def repair_indicator_ids(intent: QueryIntent, retrieved: Mapping[str, Any]) -> QueryIntent:
+    """Replace a miscopied indicator id by the one valid id of the chosen dataset with the same
+    hash suffix. Catalogue ids end in an 8-character hash of the source label, so the suffix
+    identifies the indicator even when the words before it were copied wrongly (dev ladder,
+    19 Nov: "..._who_received_bcg_4564c661" for "..._who_have_received_bcg_4564c661"). An id
+    without a unique match is left as it is, for validation to reject."""
+    valid = [
+        str(i["indicator_id"])
+        for i in retrieved.get("indicators", [])
+        if i.get("dataset_id") == intent.dataset_id
+    ]
+    if not valid or all(i in valid for i in intent.indicator_ids):
+        return intent
+    by_hash: dict[str, list[str]] = {}
+    for v in valid:
+        match = HASH_SUFFIX.search(v)
+        if match:
+            by_hash.setdefault(match.group(1), []).append(v)
+    fixed = []
+    for given in intent.indicator_ids:
+        match = HASH_SUFFIX.search(given)
+        candidates = by_hash.get(match.group(1), []) if match and given not in valid else []
+        fixed.append(candidates[0] if len(candidates) == 1 else given)
+    return intent.model_copy(update={"indicator_ids": fixed})
+
+
 def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:
     """Raise `ValueError` when the intent uses a value retrieval did not return."""
     datasets = {t["dataset_id"] for t in retrieved["tables"]}
@@ -94,7 +124,7 @@ def _tidy(intent: QueryIntent, retrieved: Mapping[str, Any]) -> QueryIntent:
     """Code-side clean-up that never costs a retry: an invalid table pointer is dropped, and so
     is a standalone question that holds the model's reasoning (UI test, 18 Nov: 856 characters
     beginning "Now show monsoon rainfall ... Wait, the user asked ...")."""
-    intent = _checked_pointer(intent, retrieved)
+    intent = _checked_pointer(repair_indicator_ids(intent, retrieved), retrieved)
     text = intent.standalone_question
     if text is not None and (len(text) > STANDALONE_MAX_CHARS or "\n" in text.strip()):
         intent = intent.model_copy(update={"standalone_question": None})
@@ -139,7 +169,7 @@ def extract_intent(
         variables,
         QueryIntent,
         counters=counters,
-        validate=lambda intent: check_intent(intent, retrieved),
+        validate=lambda intent: check_intent(repair_indicator_ids(intent, retrieved), retrieved),
         node="extract_query_intent",
     )
     return _tidy(parsed, retrieved), record

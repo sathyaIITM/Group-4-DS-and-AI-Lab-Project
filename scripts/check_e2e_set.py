@@ -51,6 +51,10 @@ REQUIRED_CONVENTIONS = (
     "index_vs_rate",
 )
 DERIVATIONS = ("difference", "pct_change", "share_pct")
+# Ids above this are the dev supplement (data/eval/e2e_dev_extra.v1.jsonl, 19 Nov), written by T3
+# from the catalogue and the design rules to cover describe, search, clarify, decline and
+# multi-turn items that e2e_dev lacks; e2e_v1 and its test split are unchanged.
+SUPPLEMENT_FROM = 100
 # Convention classes named in the brief: survey year, monsoon season, sub-division mapping,
 # Orissa, total row, suppressed value, index versus rate (with their close variants).
 SPEC_CONVENTIONS = frozenset(
@@ -150,8 +154,11 @@ def check_shape(item: dict[str, Any]) -> list[str]:
         errors.append("id must look like e2e-001")
     if item["expected_action"] not in ACTIONS:
         errors.append(f"expected_action must be one of {ACTIONS}")
-    if item["author"] != "T1":
-        errors.append("author must be T1")
+    supplement = (
+        int(item["id"][4:]) > SUPPLEMENT_FROM if re.fullmatch(r"e2e-\d{3}", item["id"]) else False
+    )
+    if item["author"] != "T1" and not (supplement and item["author"] == "T3"):
+        errors.append("author must be T1 (T3 only for dev-supplement ids above e2e-100)")
     try:
         date.fromisoformat(item["written_on"])
     except ValueError:

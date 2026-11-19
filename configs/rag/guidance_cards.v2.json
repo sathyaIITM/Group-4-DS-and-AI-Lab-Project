@@ -1,0 +1,366 @@
+{
+  "version": 2,
+  "status": "Milestone 4 content (task D). One fact per card, body at most 60 words. Facts checked against data/processed (obs tables) on 2026-11-17 with scripts/check_rag_content.py.",
+  "changes": [
+    "v2 (19 Nov): plfs_survey_year no longer tells the model to ask which survey year a bare year means; code applies D7. Found in the dev ladder: v1 and v2 asked for periods that the rules supply."
+  ],
+  "cards": [
+    {
+      "id": "plfs_survey_year",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS survey years run July to June",
+      "body": "PLFS reports by survey year, July to June: '2019-20' means July 2019 to June 2020. The table holds 2017-18 to 2021-22 (period_type 'survey_year'). A bare calendar year such as '2019' is read by code as the survey year that starts in it (2019-20, design rule D7), and the answer states it; it is not a reason to ask."
+    },
+    {
+      "id": "plfs_measure",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS unemployment: usual status (ps+ss), age 15 and above, rural and urban combined",
+      "body": "The only indicator, ur_usual_ps_ss, is the unemployment rate in per cent by usual status (principal plus subsidiary), persons aged 15 and above, rural and urban combined. The table has no split by sex, area or age, so questions on female, male, urban, rural or youth unemployment are not covered by it."
+    },
+    {
+      "id": "plfs_geography",
+      "dataset_id": "plfs_state_ur_usual_status",
+      "kind": "convention",
+      "title": "PLFS rows: States and UTs, plus one All-India row",
+      "body": "Rows with geo_level 'state' include Union Territories. The All-India rate is the row with geo_level 'national' (geo_name 'India', is_total_row true). Filter geo_level = 'state' when ranking or comparing, and say in the answer that Union Territories are included."
+    },
+    {
+      "id": "plfs_ur_vs_lfpr",
+      "dataset_id": "plfs_lfpr_urban_state",
+      "kind": "convention",
+      "title": "Unemployment rate and labour force participation rate are different tables and measures",
+      "body": "The unemployment rate (ur_usual_ps_ss, usual status, rural and urban combined, 2017-18 to 2021-22) is in plfs_state_ur_usual_status. The labour force participation rate (lfpr_cws_urban, current weekly status, urban only, 2023-24) is in plfs_lfpr_urban_state. Never answer one with the other, and never compare them as a change over time."
+    },
+    {
+      "id": "lfpr_cws_urban",
+      "dataset_id": "plfs_lfpr_urban_state",
+      "kind": "convention",
+      "title": "Urban LFPR: current weekly status, one survey year (2023-24)",
+      "body": "lfpr_cws_urban is the share of people in the labour force, in per cent, by current weekly status, urban areas only, for survey year 2023-24 (July 2023 to June 2024). The table has no rural or combined figure and no other year, so rural, overall or trend questions are not covered by it."
+    },
+    {
+      "id": "lfpr_geography",
+      "dataset_id": "plfs_lfpr_urban_state",
+      "kind": "convention",
+      "title": "Urban LFPR rows: 36 States and UTs plus a published All-India row",
+      "body": "Rows with geo_level 'state' cover 36 States and Union Territories. The All-India figure is the published row with geo_level 'national' (geo_name 'India'); it is not the average of the States. Filter geo_level = 'state' when ranking."
+    },
+    {
+      "id": "imd_subdivisions",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "IMD rainfall is by meteorological sub-division, not by State",
+      "body": "The 36 sub-divisions are not States and keep IMD spellings: Odisha is 'Orissa', Marathwada is 'Matathwada', Rayalaseema is 'Rayalseema'. Karnataka is split into Coastal, North Interior and South Interior Karnataka; Uttar Pradesh into East and West Uttar Pradesh. Use the IMD name in SQL and the familiar name in the answer."
+    },
+    {
+      "id": "imd_multi_subdivision",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "A State with several sub-divisions: report each one",
+      "body": "When a State maps to several sub-divisions (for example Karnataka, Uttar Pradesh, Madhya Pradesh, Rajasthan, Maharashtra), report each sub-division and name it. Do not add or average sub-division rainfall unless the user asks; then call the result a simple average of sub-divisions, not the State's rainfall."
+    },
+    {
+      "id": "imd_periods",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "IMD period labels: months, seasons and years",
+      "body": "Months are 'YYYY-MM' (period_type 'month'); seasons 'YYYY-JF', 'YYYY-MAM', 'YYYY-JJAS', 'YYYY-OND' (period_type 'season'); years 'YYYY' (period_type 'calendar_year'). JJAS is the south-west monsoon, June to September; OND is the north-east or post-monsoon season, October to December."
+    },
+    {
+      "id": "imd_published_totals",
+      "dataset_id": "imd_subdivision_monthly_rainfall",
+      "kind": "convention",
+      "title": "IMD seasonal and annual totals are published values, 1901 to 2017",
+      "body": "Seasonal and annual totals are published rows: select the season or year directly instead of summing months. Values are millimetres of actual rainfall. Coverage is 1901 to 2017; a later year is not covered."
+    },
+    {
+      "id": "imd_actual_vs_normal",
+      "dataset_id": "imd_district_rainfall_normals",
+      "kind": "convention",
+      "title": "Actual rainfall and normal rainfall come from different tables",
+      "body": "Actual rainfall for a given year is only in imd_subdivision_monthly_rainfall (sub-divisions, 1901-2017). imd_district_rainfall_normals holds 1951-2000 averages by district and no actual year. The two tables use different geographies, so a departure from normal cannot be computed by joining them."
+    },
+    {
+      "id": "imd_normals_not_actual",
+      "dataset_id": "imd_district_rainfall_normals",
+      "kind": "convention",
+      "title": "District rainfall normals are 1951-2000 averages, in millimetres",
+      "body": "Each value is the average rainfall over 1951-2000 (period_label '1951-2000'). Indicators: rainfall_normal_jan to rainfall_normal_dec for months; rainfall_normal_jf, _mam, _jjas (south-west monsoon) and _ond for seasons; rainfall_normal_annual for the year. Use them for 'normal' or 'average' rainfall, never for the rainfall of a particular year."
+    },
+    {
+      "id": "imd_normals_names",
+      "dataset_id": "imd_district_rainfall_normals",
+      "kind": "convention",
+      "title": "District normals: upper-case district names, pre-2014 boundaries",
+      "body": "District names are upper case as IMD spells them (geo_name 'BILASPUR'); State names are title case (geo_state). Aurangabad, Bijapur, Bilaspur and Hamirpur each occur in two States, so always filter on geo_state too. Boundaries are pre-2014: Telangana districts are under Andhra Pradesh, Leh under Jammu and Kashmir."
+    },
+    {
+      "id": "nfhs_round",
+      "dataset_id": "nfhs5_district_indicators",
+      "kind": "convention",
+      "title": "NFHS-5 district indicators: one survey round, 2019-2021",
+      "body": "NFHS-5 district values come from one round, fieldwork 2019-2021 (period_label '2019-2021'). The table holds no NFHS-4 or earlier round, so trends or comparisons with an earlier survey are not covered."
+    },
+    {
+      "id": "nfhs_percent_not_counts",
+      "dataset_id": "nfhs5_district_indicators",
+      "kind": "convention",
+      "title": "NFHS-5 values are percentages of a defined group, not counts",
+      "body": "Most NFHS-5 indicators are percentages of the group named in the indicator, such as women aged 15-49 or children aged 12-23 months. They are not counts and cannot be converted into numbers of people or households, because the tables hold no population totals."
+    },
+    {
+      "id": "nfhs_quality_flags",
+      "dataset_id": "nfhs5_district_indicators",
+      "kind": "convention",
+      "title": "NFHS-5 quality flags: suppressed and low-sample values",
+      "body": "quality_flag 'suppressed' means NFHS shows no value (fewer than 25 cases); say so and do not estimate one. 'low_sample_estimate' marks a value based on 25-49 cases: report it with that caveat, and do not rank it as if it were as precise as other values. Return quality_flag in the query."
+    },
+    {
+      "id": "nfhs_state_area",
+      "dataset_id": "nfhs5_state_factsheet",
+      "kind": "convention",
+      "title": "NFHS-5 State factsheet: Total, Urban and Rural rows per indicator",
+      "body": "Each indicator has three rows per State, with area 'Total', 'Urban' or 'Rural'. Use area = 'Total' unless the question names urban or rural, and never compare an urban value with a total value. The India rows have geo_level 'national' and is_total_row true; they are published, not averages of States."
+    },
+    {
+      "id": "nfhs_state_vs_district",
+      "dataset_id": "nfhs5_state_factsheet",
+      "kind": "convention",
+      "title": "State NFHS-5 figures come from the State factsheet, not from districts",
+      "body": "For a State or All-India NFHS-5 figure use nfhs5_state_factsheet, which publishes it. Do not average the districts of nfhs5_district_indicators: a simple average of district percentages is not the State percentage. Use the district table only for questions about districts."
+    },
+    {
+      "id": "nfhs_state_units",
+      "dataset_id": "nfhs5_state_factsheet",
+      "kind": "convention",
+      "title": "NFHS-5 State units differ by indicator",
+      "body": "Read the unit column: most indicators are 'percent', but total fertility rate is children per woman, sex ratios are females per 1,000 males, mortality rates are per 1,000 live births, adolescent fertility is births per 1,000 women, and out-of-pocket delivery cost is in rupees. Never report these as percentages."
+    },
+    {
+      "id": "imr_two_sources",
+      "dataset_id": "srs_imr_state",
+      "kind": "convention",
+      "title": "Infant mortality has two sources that differ by design",
+      "body": "srs_imr_state gives the Sample Registration System rate for each calendar year 2015-2019. nfhs5_state_factsheet gives an NFHS-5 survey estimate for 2019-21. Use the source that matches the period asked and name it. Never present an SRS value and an NFHS value as a change over time."
+    },
+    {
+      "id": "srs_imr_definition",
+      "dataset_id": "srs_imr_state",
+      "kind": "convention",
+      "title": "SRS infant mortality rate: deaths per 1,000 live births, 2015-2019",
+      "body": "imr_srs is deaths of infants under one year per 1,000 live births in the calendar year. It is a rate, not a percentage or a count. For smaller States and UTs, a year's value is the average of three years ending in that year. 'Jammu and Kashmir Including Ladakh' is one row."
+    },
+    {
+      "id": "gsdp_nominal",
+      "dataset_id": "gsdp_per_capita_state",
+      "kind": "convention",
+      "title": "Per capita GSDP is in rupees at current prices, by fiscal year",
+      "body": "gsdp_per_capita_current is gross State domestic product per person in rupees at current prices, by fiscal year April to March ('2022-23' is April 2022 to March 2023). Values are not adjusted for inflation, so a rise between years is a nominal increase, not real growth."
+    },
+    {
+      "id": "gsdp_coverage",
+      "dataset_id": "gsdp_per_capita_state",
+      "kind": "convention",
+      "title": "Per capita GSDP: 28 States, no UTs, no All-India figure",
+      "body": "The table has 28 States only: no Union Territory (Delhi included) and no All-India figure. 2023-24 is missing for Arunachal Pradesh, Goa, Gujarat, Manipur, Mizoram and Nagaland; leave them out of 2023-24 rankings and say so, rather than using their 2022-23 value."
+    },
+    {
+      "id": "msp_definition",
+      "dataset_id": "msp_crops",
+      "kind": "convention",
+      "title": "MSP is a national support price in rupees per quintal, by crop year",
+      "body": "msp is the minimum support price fixed by the Government for the whole country, in rupees per quintal (100 kg). It is not a market price and has no State rows. Years are crop years, July to June, 2013-14 to 2024-25. For sugarcane the value is the fair and remunerative price (FRP)."
+    },
+    {
+      "id": "msp_varieties",
+      "dataset_id": "msp_crops",
+      "kind": "convention",
+      "title": "MSP varieties: filter on variety, never average them",
+      "body": "Paddy (Common, Grade A), jowar (Hybrid, Maldandi), cotton (Medium Staple, Long Staple), soyabean (Yellow, Black) and copra (Milling, Ball) have one row per variety; other crops have variety 'NA'. Filter on the variety asked, or report each. Black soyabean has no MSP from 2014-15: empty means no price was fixed."
+    },
+    {
+      "id": "msp_crop_names",
+      "dataset_id": "msp_crops",
+      "kind": "convention",
+      "title": "MSP crop names as stored",
+      "body": "commodity_name uses the source spelling: 'Tur (Arhar)', 'Masur (Lentil)', 'Rapeseed And Mustard', 'Sunflower Seed', 'Soyabean', 'Copra (Calender Year)' and 'De-husked Coconut (Calender Year)'. Copra and de-husked coconut are fixed per calendar year: their '2024-25' value is the price for January to December 2024."
+    },
+    {
+      "id": "crop_units_by_indicator",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Crop production units differ by indicator",
+      "body": "crop_production is in tonnes for most crops. Cotton (lint) is in bales of 170 kg (crop_production_bales_170kg); jute, mesta and sunn hemp are in bales of 180 kg (crop_production_bales_180kg). Never add or compare production across these indicators, or report bales as tonnes. crop_area is in hectares for every crop."
+    },
+    {
+      "id": "crop_year_season",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Crop years run July to June; a crop's annual figure is the sum over its seasons",
+      "body": "Crop year '2010-11' starts in July 2010 (period_type 'survey_year'); coverage is 1997-98 to 2015-16. Seasons are Kharif, Rabi, Autumn, Summer, Winter and Whole Year. A crop's annual total sums its seasons within one crop year; filter on season only when the question names one."
+    },
+    {
+      "id": "crop_member_totals",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Group totals are in the table beside their member crops",
+      "body": "Total foodgrain, Pulses total, Oilseeds total and Jute & mesta are totals of other crops in the same table. Never add them to their member crops, and exclude them when ranking or counting crops. For a group figure, select the total row, not a sum of crops."
+    },
+    {
+      "id": "crop_missing_and_zero",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Empty production is not zero; a recorded zero may mean not reported",
+      "body": "Some rows have area but no production (quality_flag 'missing_in_source'), and many rows record 0, mostly vegetables and fruit in a few States, which may mean not reported rather than no harvest. Exclude empty values from sums and rankings, never read them as zero, and say so in the answer."
+    },
+    {
+      "id": "crop_geography",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Crop districts: upper-case names, no State rows, boundaries by year",
+      "body": "District names are upper case (geo_name 'FIROZEPUR') and State names title case (geo_state). The table has no State or All-India total row: sum the districts for a State figure. Districts created after 1997 appear only from their first year. Telangana is separate in every year; Andhra Pradesh is the residual State."
+    },
+    {
+      "id": "crop_late_years_incomplete",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Crop years 2014-15 and 2015-16 are incomplete",
+      "body": "Crop year 2014-15 has 22 States against 24 in 2013-14, and 2015-16 has 2 States only. State totals and rankings for these years are not comparable with earlier years: say so, or use 2013-14 and earlier for complete coverage."
+    },
+    {
+      "id": "crop_coconut_mixed_unit",
+      "dataset_id": "crop_production_district",
+      "kind": "convention",
+      "title": "Coconut production has a mixed unit",
+      "body": "crop_production_coconut (unit 'mixed_nuts_or_tonne') is in nuts for some States, such as Kerala, and appears to be in tonnes for others, such as Karnataka; the source does not say which. Compare a State only with itself over time, never across States, and never convert it."
+    },
+    {
+      "id": "mandi_snapshot",
+      "dataset_id": "mandi_daily_prices",
+      "kind": "convention",
+      "title": "Mandi prices: one-day Agmarknet snapshot, rupees per quintal",
+      "body": "The table is a single-day snapshot (2026-10-29) of minimum, maximum and modal prices in rupees per quintal, by market, commodity, variety and grade. It has no time series, so price trends are not covered. Modal price is the most common transaction price in a market."
+    },
+    {
+      "id": "mandi_average",
+      "dataset_id": "mandi_daily_prices",
+      "kind": "convention",
+      "title": "Averages across markets are unweighted",
+      "body": "The table has no arrival quantities, so an average across markets is unweighted. Call it a simple average of market modal prices, never 'the price' of the commodity in a State or in India."
+    },
+    {
+      "id": "mandi_vs_msp",
+      "dataset_id": "mandi_daily_prices",
+      "kind": "convention",
+      "title": "Market prices and MSP answer different questions",
+      "body": "Mandi modal prices are market transaction prices on one day; msp_crops holds the minimum support price fixed by the Government for a crop year. Both are in rupees per quintal. Never report an MSP as a market price or a modal price as the MSP; compare them only when the user asks, naming both."
+    },
+    {
+      "id": "ncrb_national",
+      "dataset_id": "ncrb_annual_crime_statistics",
+      "kind": "convention",
+      "title": "NCRB table: national figures only, 2022 to 2024",
+      "body": "ncrb_annual_crime_statistics holds All-India figures for 2022, 2023 and 2024: crime counts (total, IPC/BNS, SLL), crime rates per 100,000 population, the IPC/BNS share and mid-year population in lakh. It has no State rows; State questions on violent crime use ncrb_violent_crimes_state, and other State crime questions are not covered."
+    },
+    {
+      "id": "ncrb_state_violent_counts",
+      "dataset_id": "ncrb_violent_crimes_state",
+      "kind": "convention",
+      "title": "NCRB State table: registered violent crimes, counts only, 2021-2023",
+      "body": "violent_crime_count is the number of violent crime cases registered in a calendar year, 2021 to 2023, by State/UT. It is a count, not a rate: the table has no population, so crime rates and per-capita comparisons are not covered. A ranking by count largely reflects population size; say so in the answer."
+    },
+    {
+      "id": "ncrb_state_vs_national",
+      "dataset_id": "ncrb_violent_crimes_state",
+      "kind": "convention",
+      "title": "Violent crimes are a subset of total crime; the two NCRB tables differ",
+      "body": "ncrb_violent_crimes_state covers violent crimes only (2021-2023, States/UTs). ncrb_annual_crime_statistics covers all cognizable crimes (2022-2024, All-India only). Never present a violent-crime count as total crime, never compare the two as a change over time, and treat State figures for 2024 as not covered."
+    },
+    {
+      "id": "ncrb_state_geography",
+      "dataset_id": "ncrb_violent_crimes_state",
+      "kind": "convention",
+      "title": "NCRB State rows: 36 States/UTs plus an All-India total row",
+      "body": "Rows with geo_level 'state' cover 28 States and 8 Union Territories, with Ladakh separate from Jammu and Kashmir and 'Dadra and Nagar Haveli and Daman and Diu' as one UT. The All-India figure is the row with geo_level 'national' and is_total_row true. Filter geo_level = 'state' when ranking."
+    },
+    {
+      "id": "cpi_index_not_rate",
+      "dataset_id": "cpi_all_india",
+      "kind": "convention",
+      "title": "CPI values are index numbers (base 2012 = 100), not inflation rates",
+      "body": "Every CPI value is an index number with base 2012 = 100, not a price and not an inflation rate. Never present an index value as a percentage or as inflation; an index of 170 means prices are 70 per cent above the 2012 level, not 170 per cent inflation."
+    },
+    {
+      "id": "cpi_inflation_formula",
+      "dataset_id": "cpi_all_india",
+      "kind": "convention",
+      "title": "Year-on-year inflation is computed from two index values",
+      "body": "Inflation for a month is (I_t - I_t-12) / I_t-12 x 100: the same indicator and sector, this month against the same month a year earlier. Compute it in SQL from the two index rows and report per cent with one decimal. If either month is missing, decline rather than use a neighbouring month."
+    },
+    {
+      "id": "cpi_sector_headline",
+      "dataset_id": "cpi_all_india",
+      "kind": "convention",
+      "title": "CPI sectors: Rural, Urban and Rural+Urban; the headline is the combined general index",
+      "body": "Each month has three sector rows: 'Rural', 'Urban' and 'Rural+Urban'. Headline CPI is indicator cpi_general_index with sector 'Rural+Urban'. When the question names no sector, use 'Rural+Urban' and say so; never mix sectors within one comparison."
+    },
+    {
+      "id": "cpi_series_gaps",
+      "dataset_id": "cpi_all_india",
+      "kind": "convention",
+      "title": "CPI coverage: January 2013 to December 2023, with known gaps",
+      "body": "The table runs from 2013-01 to 2023-12 (period_type 'month'). April 2019 is missing for all groups, and April-May 2020 for most groups (COVID-19 lockdown). Months after 2023 belong to MoSPI's new base 2024 series and are not covered; values from the two series cannot be compared."
+    },
+    {
+      "id": "cpi_housing_urban",
+      "dataset_id": "cpi_all_india",
+      "kind": "convention",
+      "title": "CPI housing is compiled for urban areas only",
+      "body": "cpi_housing is compiled for urban areas only: its Rural rows are empty, and its Rural+Urban value is nearly always the Urban value. Answer housing questions from the Urban sector and say that no rural housing index exists."
+    },
+    {
+      "id": "sop_no_nearest_period",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: a missing period is declined, never substituted",
+      "body": "When the requested period is not in the table, decline for that period and state the periods the table covers. Never answer with the nearest available period, an adjacent year, another survey round or another series, even when the user seems flexible."
+    },
+    {
+      "id": "sop_ranking",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: ranking places (highest, lowest, top N)",
+      "body": "Filter to one indicator, one period and one geographic level; exclude total rows and null values. Order by value and keep ties with RANK() rather than LIMIT. Return geo_name, period_label, value and unit. The narration names each place with its value, unit, period and measure definition."
+    },
+    {
+      "id": "sop_change",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: change between two periods",
+      "body": "Select both periods explicitly and compute the change in SQL. For rates and percentages report the absolute change in percentage points; report a relative change in per cent only when asked, and name it as such. If either period is missing, decline rather than substitute."
+    },
+    {
+      "id": "sop_trend",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: trend over time",
+      "body": "Return one row per period in period order, with period_label, value and unit. Do not fill gaps. The narration states the first and last values and the direction; it does not claim a cause."
+    },
+    {
+      "id": "sop_aggregate",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: aggregating rates and percentages",
+      "body": "Rates and percentages cannot be added, and their simple average across places is not the overall rate. Use a published total row (such as All-India) for an overall figure. When asked for an average across places, compute the simple average and call it that. Counts may be summed only across non-overlapping places in one period."
+    },
+    {
+      "id": "sop_lookup",
+      "dataset_id": null,
+      "kind": "analysis_sop",
+      "title": "Analysis SOP: single value lookup",
+      "body": "Filter to one place, one period and one indicator, and return geo_name, period_label, value, unit and quality_flag. The narration gives the value with its unit, period and definition, and any quality caveat."
+    }
+  ]
+}

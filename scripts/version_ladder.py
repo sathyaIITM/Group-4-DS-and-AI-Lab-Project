@@ -43,6 +43,29 @@ def _value(run: dict[str, Any], key: str) -> float | None:
     return value / 1000 if key.startswith("latency_ms") else value
 
 
+ACTIONS = ("answer", "clarify", "decline", "describe", "search")
+
+
+def by_action(report: dict[str, Any]) -> dict[str, dict[str, float | int]]:
+    """Success per expected action over all runs, read from each run's predictions with the
+    scorer's own success rule (so a version can be compared where it differs, not only in
+    total)."""
+    from analyst.evaluation.e2e_eval import _case_success
+
+    counts: dict[str, list[int]] = {}
+    for run in report["runs"]:
+        path = Path(run["path"])
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                case = json.loads(line)
+                cell = counts.setdefault(case.get("expected_action", "?"), [0, 0])
+                cell[0] += int(_case_success(case))
+                cell[1] += 1
+    return {k: {"success": v[0] / v[1], "cases": v[1]} for k, v in counts.items() if v[1]}
+
+
 def summarise(report: dict[str, Any]) -> dict[str, Any]:
     runs = report["runs"]
     row: dict[str, Any] = {
@@ -50,6 +73,7 @@ def summarise(report: dict[str, Any]) -> dict[str, Any]:
         "questions": runs[0]["n"] if runs else 0,
         "instability": report.get("run_to_run_instability"),
         "success_ci95_first_run": runs[0].get("success_ci95") if runs else None,
+        "by_action": by_action(report),
     }
     for label, key, _ in METRICS:
         values = [v for v in (_value(r, key) for r in runs) if v is not None]
@@ -92,6 +116,16 @@ def markdown(rows: dict[str, dict[str, Any]], set_name: str) -> str:
         )
         + " |"
     )
+    lines += ["", "Success by expected action (all runs pooled; cases in brackets).", ""]
+    lines.append("| Expected action | " + " | ".join(names) + " |")
+    lines.append("| --- | " + " | ".join("---" for _ in names) + " |")
+    for action in ACTIONS:
+        cells = []
+        for name in names:
+            cell = rows[name].get("by_action", {}).get(action)
+            cells.append("n/a" if cell is None else f"{cell['success']:.3f} ({cell['cases']})")
+        if any(c != "n/a" for c in cells):
+            lines.append(f"| {action} | " + " | ".join(cells) + " |")
     return "\n".join(lines) + "\n"
 
 

@@ -83,8 +83,8 @@ class Limits(BaseModel):
 class RagPaths(BaseModel):
     """Guidance cards and verified examples; the v0 files are the fallback."""
 
-    cards: str = "configs/rag/guidance_cards.v1.json"
-    examples: str = "data/sample/rag_verified_examples.v1.jsonl"
+    cards: str = "configs/rag/guidance_cards.v2.json"
+    examples: str = "data/sample/rag_verified_examples.v2.jsonl"
     cards_fallback: str = "configs/rag/guidance_cards.v0.json"
     examples_fallback: str = "data/sample/rag_verified_examples.v0.jsonl"
 

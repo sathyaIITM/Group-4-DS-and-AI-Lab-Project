@@ -6,16 +6,16 @@ decisions:
   tool:
     v0: [llm]
     v1: [llm]
-    v2: [llm]
-    v3: [llm]
+    v2: [jev, llm]             # 19 Nov: v2 adds verified examples and moves routing to Jev
+    v3: [jev, llm]
     v4: [jev, kev, llm]        # phase 1: tool selection stays on Jev; Kev only if Jev is down
     v5: [jev, kev, llm]
     v6: [jev, kev, llm]
   domain:
     v0: [llm]
     v1: [llm]
-    v2: [llm]
-    v3: [llm]
+    v2: [jev, llm]             # with the LLM as fallback; the routing ablation (v2 with LLM vs
+    v3: [jev, llm]             # Jev routing) is in the dev ladders of 19 Nov (fdedcca, a1e87e8)
     v4: [kev, jev, llm]        # phase 1: domain on Kev, escalated to Jev inside the band
     v5: [kev, jev, llm]
     v6: [kev, jev, llm]
@@ -34,7 +34,7 @@ decisions:
 
 # Variants change backend chains for one experiment row without changing the version ladder.
 # `jev_routing` ("v2 + Jev routing", 18 Nov): tool and domain on Jev, the hosted LLM only as the
-# fallback. Measures cost and latency of moving the routing decision off the LLM before v4.
+# fallback. Since 19 Nov this is v2 itself; the variant is kept for the earlier runs' records.
 variants:
   jev_routing:
     tool: [jev, llm]

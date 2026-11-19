@@ -225,6 +225,19 @@ class TransientError(LlmError):
     """A timeout, a network error or a retryable HTTP status."""
 
 
+class RateLimitedError(TransientError):
+    """HTTP 429: retried after a longer pause (test ladder, 19 Nov: up to 82 per run)."""
+
+
+RATE_LIMIT_PAUSE_S = 8.0  # first pause after a 429; doubled on the next attempt
+
+
+def clear_token() -> None:
+    """Forget the cached access token, so the next call fetches a new one."""
+    with _TOKEN_LOCK:
+        _TOKEN["value"] = None
+
+
 _TOKEN: dict[str, Any] = {"value": None, "at": 0.0}
 _TOKEN_LOCK = threading.Lock()
 TOKEN_TTL_S = 45 * 60  # access tokens last about an hour
@@ -257,7 +270,9 @@ def gcloud_token() -> str:
     """An application-default access token, cached for 45 minutes (one gcloud run per hour,
     not one per call); questions run in parallel threads, so the cache is locked."""
     with _TOKEN_LOCK:
-        now = time.monotonic()
+        # Wall-clock time: the monotonic clock stops while a Mac sleeps, so a token cached
+        # before a sleep was used after it had expired (test ladder, 19 Nov: 401 on every call).
+        now = time.time()
         if _TOKEN["value"] is None or now - float(_TOKEN["at"]) > TOKEN_TTL_S:
             try:
                 _TOKEN["value"] = _fetch_gcloud_token()
@@ -283,15 +298,22 @@ def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 6
     def send(request: ChatRequest) -> ChatReply:
         body = request_body(request)
         started = time.perf_counter()
-        try:
-            response = httpx.post(
-                f"{base_url.rstrip('/')}/chat/completions",
-                headers={"Authorization": f"Bearer {token()}", "User-Agent": USER_AGENT},
-                json=body,
-                timeout=timeout_s,
-            )
-        except httpx.HTTPError as error:
-            raise TransientError(type(error).__name__) from error
+        for refreshed in (False, True):
+            try:
+                response = httpx.post(
+                    f"{base_url.rstrip('/')}/chat/completions",
+                    headers={"Authorization": f"Bearer {token()}", "User-Agent": USER_AGENT},
+                    json=body,
+                    timeout=timeout_s,
+                )
+            except httpx.HTTPError as error:
+                raise TransientError(type(error).__name__) from error
+            if response.status_code in {401, 403} and not refreshed:
+                clear_token()  # an expired or revoked token: fetch a new one and retry once
+                continue
+            break
+        if response.status_code == 429:
+            raise RateLimitedError("HTTP 429")
         if response.status_code in TRANSIENT_STATUS:
             raise TransientError(f"HTTP {response.status_code}")
         if response.status_code != 200:
@@ -520,7 +542,9 @@ class LlmClient:
                     return parsed, record
             attempts.append(record)
             if attempt + 1 < max_attempts:
-                time.sleep(self.backoff_s * (2**attempt))
+                limited = "HTTP 429" in (record.parse_error or "")
+                pause = RATE_LIMIT_PAUSE_S if limited and self.backoff_s > 0 else self.backoff_s
+                time.sleep(pause * (2**attempt))
         raise LlmError(f"{purpose}: no valid reply after {max_attempts} attempts", attempts)
 
     def _attempt(

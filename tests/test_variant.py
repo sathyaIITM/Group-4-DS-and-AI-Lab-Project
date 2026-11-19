@@ -11,11 +11,18 @@ from analyst.decisions.router import Backends, RouterConfig, RouterContext, rout
 from analyst.decisions.system_one import ChoiceAnswer, TimedChoice
 
 
-def test_the_variant_replaces_the_routing_chains_of_v2() -> None:
-    plain = RouterConfig.from_files("v2")
-    jev = RouterConfig.from_files("v2", variant="jev_routing")
+def test_the_variant_replaces_the_routing_chains_of_v1() -> None:
+    plain = RouterConfig.from_files("v1")
+    jev = RouterConfig.from_files("v1", variant="jev_routing")
     assert plain.chains["tool"] == ["llm"] and plain.chains["domain"] == ["llm"]
     assert jev.chains["tool"] == ["jev", "llm"] and jev.chains["domain"] == ["jev", "llm"]
+
+
+def test_v2_routes_on_jev_with_the_llm_as_fallback() -> None:
+    # 19 Nov: v2 adds verified examples and moves tool and domain to Jev.
+    for version in ("v2", "v3"):
+        chains = RouterConfig.from_files(version).chains
+        assert chains["tool"] == ["jev", "llm"] and chains["domain"] == ["jev", "llm"]
 
 
 def test_an_unknown_variant_is_refused() -> None:
@@ -26,8 +33,8 @@ def test_an_unknown_variant_is_refused() -> None:
 
 
 def test_the_run_config_records_the_variant() -> None:
-    assert RunConfig.from_files("v2", variant="jev_routing").variant == "jev_routing"
-    assert RunConfig.from_files("v2").variant is None
+    assert RunConfig.from_files("v1", variant="jev_routing").variant == "jev_routing"
+    assert RunConfig.from_files("v1").variant is None
 
 
 def test_jev_needs_its_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -58,7 +65,7 @@ class FakeJev:
 def test_routing_on_jev_makes_no_llm_call() -> None:
     from analyst.agents.state import Counters
 
-    config = RouterConfig.from_files("v2", variant="jev_routing")
+    config = RouterConfig.from_files("v2")
     jev = FakeJev({"tool": "run_sql", "domain": "labour"})
     counters = Counters()
     result = route(

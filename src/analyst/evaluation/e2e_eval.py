@@ -363,7 +363,7 @@ def _run_case(
 
 
 def run_evaluation(
-    set_path: Path,
+    set_path: Path | list[Path],
     out: Path,
     *,
     version: str,
@@ -378,18 +378,21 @@ def run_evaluation(
     """Run with at most two workers, preserving follow-ups and provider retries."""
     if workers < 1 or workers > DEFAULT_WORKERS:
         raise ValueError("workers must be 1 or 2; at most two questions may run in parallel")
-    items = load_set(set_path)
-    resolved_eval_set = eval_set or ("e2e_test" if "test" in set_path.stem else "e2e_dev")
+    paths = set_path if isinstance(set_path, list) else [set_path]
+    items = [item for path in paths for item in load_set(path)]
+    if len({item["id"] for item in items}) != len(items):
+        raise ValueError("the evaluation sets share item ids")
+    test = any("test" in path.stem for path in paths)
+    resolved_eval_set = eval_set or ("e2e_test" if test else "e2e_dev")
     items = [{**item, "eval_set": resolved_eval_set} for item in items]
     if not allow_unvalidated and any(not item.get("validated", False) for item in items):
         raise ValueError(
             "evaluation set includes unvalidated gold; T1 must validate it before runs"
         )
-    gold_report = verify_gold(set_path)
-    if gold_report["errors"]:
+    gold_errors = [error for path in paths for error in verify_gold(path)["errors"]]
+    if gold_errors:
         raise ValueError(
-            f"gold verification failed ({len(gold_report['errors'])} errors); "
-            "see verify-gold report"
+            f"gold verification failed ({len(gold_errors)} errors); see verify-gold report"
         )
     out.parent.mkdir(parents=True, exist_ok=True)
     try:  # build the retrieval index once, outside the timed runs
@@ -680,7 +683,9 @@ def main() -> int:
         "--out", type=Path, default=ROOT / "outputs/reports/e2e_gold_check.json"
     )
     run_parser = sub.add_parser("run")
-    run_parser.add_argument("--set", type=Path, required=True)
+    run_parser.add_argument(
+        "--set", type=Path, nargs="+", required=True, help="one or more set files, run together"
+    )
     run_parser.add_argument("--version", choices=[f"v{i}" for i in range(7)], required=True)
     run_parser.add_argument("--experiment", required=True)
     run_parser.add_argument(

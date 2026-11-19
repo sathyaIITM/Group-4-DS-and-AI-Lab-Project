@@ -1,7 +1,7 @@
 catalogue_contract_version: "1"
 # The hosted model is set only in configs/model.yaml; prompt hashes come from the prompt registry.
 limits:
-  run_deadline_s: 30
+  run_deadline_s: 45            # 30 until 19 Nov, with the request timeout raised to 20 s
   max_sql_generations: 3
   max_sql_repairs: 2
   max_narrations: 2
@@ -16,7 +16,7 @@ limits:
   shortcut_threshold: null
   answer_threshold: null      # unused before v5
 rag:
-  cards: configs/rag/guidance_cards.v1.json
-  examples: data/sample/rag_verified_examples.v1.jsonl
-  cards_fallback: configs/rag/guidance_cards.v0.json
-  examples_fallback: data/sample/rag_verified_examples.v0.jsonl
+  cards: configs/rag/guidance_cards.v2.json      # v2 (19 Nov): no card asks the user what code decides
+  examples: data/sample/rag_verified_examples.v2.jsonl   # v2 (19 Nov): follow the SQL prompt rules
+  cards_fallback: configs/rag/guidance_cards.v1.json
+  examples_fallback: data/sample/rag_verified_examples.v1.jsonl

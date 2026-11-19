@@ -11,7 +11,7 @@ hosted_llm:
   # Per-request timeout. Calls took 2-3 s (p50) and at most 10.6 s on e2e_dev (18 Nov); one
   # 32 s spike used up the 30 s run deadline. A timed-out call is retried once as transient;
   # 12 s keeps one stalled call plus its retry inside the deadline.
-  request_timeout_s: 12
+  request_timeout_s: 20         # 12 until 19 Nov: replies near 10 s timed out under load
   # Reply format: json_schema (the contract's JSON Schema is sent and the model must follow it)
   # or json_object (any JSON, validated by code only). json_schema since 2026-11-17: confirmed
   # on Vertex AI with the QueryIntent contract; replies are still validated by code.
@@ -21,7 +21,7 @@ hosted_llm:
   # thinking tokens count against the cap (checked 2026-11-17: at medium, 490 of 512 tokens went
   # to thinking and the reply was cut). A reply cut at the cap fails validation and is retried.
   max_output_tokens:
-    intent: 512
+    intent: 1024              # 512 until 19 Nov: v7-v9 replies (follow-up, standalone, pointer) were cut off
     sql: 1024                 # raised from 512 on 2026-11-17: a 30-period query was cut off
     sql_repair: 1024
     narrate: 2000             # 400 -> 1000 -> 2000 on 2026-11-18: 12 monthly values with one claim each were cut at 1000
