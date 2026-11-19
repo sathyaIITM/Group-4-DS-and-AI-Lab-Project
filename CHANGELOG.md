@@ -216,3 +216,14 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
 - Milestone 4 development runs on `e2e_dev` were made while fixing the agent against that set,
   so they are optimistic; the version comparison is reported from repeated runs on frozen code,
   and `e2e_test` is never used for tuning.
+- Milestone 4 version ladder (19 November 2026), frozen commit `a2c8c7d`: dev confirmation of
+  1 run per version on `e2e_dev` plus `e2e_dev_extra` (60 questions) and a test ladder of 3 runs
+  per version on `e2e_test` (60 questions), versions v0, v1 and v2 (v2 routes with Jev). Inputs:
+  `outputs/predictions/final_{dev,test}_*`; tables: `outputs/reports/version_ladder_{dev,test}.md`
+  (scorer rules v1, as run). Gold is checked by T3; T1 validation is pending.
+- Scorer rules v2 (`e2e_eval score --scorer v2`, now the default), added after the test ladder:
+  an expected entity may be a category value of a result row, or a place plus a category value
+  ("Bihar Rural"), and tables named in a search or describe reply count as found. The saved
+  predictions were re-scored without new runs (`outputs/reports/version_ladder_{dev,test}_scorer_v2.md`);
+  this is a post-hoc scorer change, reported beside the as-run v1 figures, and no agent change
+  was made from test items. `--scorer v1` reproduces the as-run tables.

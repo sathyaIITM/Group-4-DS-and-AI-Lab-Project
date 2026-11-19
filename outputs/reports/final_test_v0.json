@@ -1,0 +1,701 @@
+{
+  "repeats": 3,
+  "runs": [
+    {
+      "path": "outputs/predictions/final_test_v0_r1.jsonl",
+      "n": 60,
+      "success_rate": 0.6333333333333333,
+      "success_ci95": [
+        0.5,
+        0.75
+      ],
+      "execution_accuracy": 0.425,
+      "abstention_precision": 0.6190476190476191,
+      "abstention_recall": 1.0,
+      "wrong_answer_rate": 0.1111111111111111,
+      "outcome_counts": {
+        "answered": 27,
+        "declined": 11,
+        "clarifying": 10,
+        "searched": 5,
+        "described": 2,
+        "failed": 5
+      },
+      "failure_rate": 0.08333333333333333,
+      "failure_causes": {
+        "result_check_failed": 3,
+        "backend_error": 1,
+        "budget_exhausted": 1
+      },
+      "latency_ms": {
+        "p50": 6907.0,
+        "p95": 17053.0,
+        "max": 30095.0
+      },
+      "first_event_ms": {
+        "p50": 30.0,
+        "p95": 33.6,
+        "max": 107.0
+      },
+      "calls_per_answered": 8.703703703703704,
+      "tokens_in": 2286378,
+      "tokens_out": 46836,
+      "cost_usd_est": 0.7558359299999999,
+      "cost_per_answered_usd_est": 0.02799392333333333,
+      "sql_repairs": 0,
+      "sql_attempts": 129,
+      "narration_retries": 0,
+      "widened_searches": 1,
+      "sql_repairs_per_run": 0.0,
+      "narration_retries_per_run": 0.0,
+      "widened_searches_per_run": 0.016666666666666666,
+      "review_cases": [
+        {
+          "id": "e2e-006",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-008",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-015",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-016",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-020",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-026",
+          "expected": "describe",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-029",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-031",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-035",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-039",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-040",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-041",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-044",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-049",
+          "expected": "describe",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-055",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-092",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-097",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-098",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-099",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        }
+      ]
+    },
+    {
+      "path": "outputs/predictions/final_test_v0_r2.jsonl",
+      "n": 60,
+      "success_rate": 0.65,
+      "success_ci95": [
+        0.5166666666666667,
+        0.7666666666666667
+      ],
+      "execution_accuracy": 0.45,
+      "abstention_precision": 0.5909090909090909,
+      "abstention_recall": 1.0,
+      "wrong_answer_rate": 0.1111111111111111,
+      "outcome_counts": {
+        "answered": 27,
+        "declined": 11,
+        "clarifying": 10,
+        "described": 3,
+        "failed": 4,
+        "searched": 4,
+        "abstained": 1
+      },
+      "failure_rate": 0.06666666666666667,
+      "failure_causes": {
+        "result_check_failed": 3,
+        "backend_error": 1
+      },
+      "latency_ms": {
+        "p50": 7105.5,
+        "p95": 10471.15,
+        "max": 11350.0
+      },
+      "first_event_ms": {
+        "p50": 29.0,
+        "p95": 31.05,
+        "max": 36.0
+      },
+      "calls_per_answered": 8.592592592592593,
+      "tokens_in": 2259981,
+      "tokens_out": 44197,
+      "cost_usd_est": 0.70583628,
+      "cost_per_answered_usd_est": 0.026142084444444443,
+      "sql_repairs": 0,
+      "sql_attempts": 114,
+      "narration_retries": 1,
+      "widened_searches": 0,
+      "sql_repairs_per_run": 0.0,
+      "narration_retries_per_run": 0.016666666666666666,
+      "widened_searches_per_run": 0.0,
+      "review_cases": [
+        {
+          "id": "e2e-006",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-008",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-015",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-016",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-020",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-029",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-031",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-035",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-039",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-040",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-041",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-044",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-049",
+          "expected": "describe",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-055",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-092",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-097",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-098",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-099",
+          "expected": "answer",
+          "outcome": "abstained",
+          "values_match": true,
+          "narration_match": false,
+          "entity_match": true
+        }
+      ]
+    },
+    {
+      "path": "outputs/predictions/final_test_v0_r3.jsonl",
+      "n": 60,
+      "success_rate": 0.6166666666666667,
+      "success_ci95": [
+        0.5,
+        0.7333333333333333
+      ],
+      "execution_accuracy": 0.425,
+      "abstention_precision": 0.6190476190476191,
+      "abstention_recall": 1.0,
+      "wrong_answer_rate": 0.11538461538461539,
+      "outcome_counts": {
+        "answered": 26,
+        "declined": 12,
+        "clarifying": 9,
+        "described": 3,
+        "failed": 6,
+        "searched": 4
+      },
+      "failure_rate": 0.1,
+      "failure_causes": {
+        "result_check_failed": 3,
+        "backend_error": 1,
+        "runner_exception": 1,
+        "budget_exhausted": 1
+      },
+      "latency_ms": {
+        "p50": 6658.5,
+        "p95": 11416.95,
+        "max": 18097.0
+      },
+      "first_event_ms": {
+        "p50": 30.0,
+        "p95": 42.3,
+        "max": 113.0
+      },
+      "calls_per_answered": 8.961538461538462,
+      "tokens_in": 2325292,
+      "tokens_out": 43557,
+      "cost_usd_est": 0.6918450899999999,
+      "cost_per_answered_usd_est": 0.026609426538461538,
+      "sql_repairs": 0,
+      "sql_attempts": 126,
+      "narration_retries": 0,
+      "widened_searches": 2,
+      "sql_repairs_per_run": 0.0,
+      "narration_retries_per_run": 0.0,
+      "widened_searches_per_run": 0.03333333333333333,
+      "review_cases": [
+        {
+          "id": "e2e-006",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-008",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-013",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-015",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-016",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-020",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-029",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-031",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-035",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-039",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-040",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-041",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-044",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-049",
+          "expected": "describe",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-055",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-056",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-092",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-097",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-098",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-099",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        }
+      ]
+    }
+  ],
+  "success_rate_mean": 0.6333333333333333,
+  "success_rate_min": 0.6166666666666667,
+  "success_rate_max": 0.65,
+  "success_rate_range": 0.033333333333333326,
+  "items_compared": 60,
+  "items_changed_correctness": [
+    "e2e-013",
+    "e2e-026",
+    "e2e-056"
+  ],
+  "run_to_run_instability": 0.05,
+  "scorer_rules": "v1",
+  "experiment": null,
+  "scored_at": "2026-11-19T10:12:26.452081+00:00"
+}

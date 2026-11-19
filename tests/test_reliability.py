@@ -232,3 +232,41 @@ def test_a_value_copied_from_another_column_is_not_a_filter(
     assert real == {"commodity_name": ["Potato"], "variety": ["Jyoti"]}
     unknown = resolve._known_values("t", {"variety": ["Purple"]})
     assert unknown == {}
+
+
+def test_scorer_v2_finds_a_place_and_category_entity_and_named_tables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Test ladder, 19 Nov: a rural/urban split sits in a category column ("Bihar" + "Rural"), and
+    # a search reply names the tables it found; scorer v1 missed both. v1 stays for the as-run M4
+    # figures.
+    from analyst.evaluation import e2e_eval
+
+    case = {
+        "expected_action": "answer",
+        "outcome": "answered",
+        "expected_values": [43.9],
+        "expected_entities": ["Bihar Rural", "Urban"],
+        "actual_numbers": [43.9],
+        "narrated_numbers": [43.9],
+        "actual_entities": ["Bihar"],
+        "result_columns": ["geo_name", "period_label", "value", "area"],
+        "result_rows": [
+            ["Bihar", "2019-2021", 43.9, "Rural"],
+            ["Bihar", "2019-2021", 36.8, "Urban"],
+        ],
+        "number_check_passed": True,
+    }
+    search = {
+        "expected_action": "search",
+        "outcome": "searched",
+        "dataset_ids": ["cpi_all_india"],
+        "actual_dataset_ids": ["msp_crops"],
+        "response": "Catalogue matches: cpi_all_india (consumer prices); msp_crops (MSP)",
+    }
+    monkeypatch.setattr(e2e_eval, "SCORER_RULES", "v1")
+    assert not e2e_eval._case_success(case) and not e2e_eval._case_success(search)
+    monkeypatch.setattr(e2e_eval, "SCORER_RULES", "v2")
+    assert e2e_eval._case_success(case) and e2e_eval._case_success(search)
+    wrong = dict(case, expected_entities=["Bihar Total"])
+    assert not e2e_eval._case_success(wrong)

@@ -85,10 +85,11 @@ def summarise(report: dict[str, Any]) -> dict[str, Any]:
     return row
 
 
-def markdown(rows: dict[str, dict[str, Any]], set_name: str) -> str:
+def markdown(rows: dict[str, dict[str, Any]], set_name: str, scorer: str = "v2") -> str:
     names = list(rows)
     lines = [
-        f"Version ladder on `e2e_{set_name}`: mean over runs (minimum to maximum).",
+        f"Version ladder on `e2e_{set_name}` (scorer rules {scorer}): mean over runs"
+        " (minimum to maximum).",
         "",
         "| Measure | " + " | ".join(names) + " |",
         "| --- | " + " | ".join("---" for _ in names) + " |",
@@ -134,16 +135,25 @@ def main() -> int:
     parser.add_argument("--set", required=True, help="dev or test")
     parser.add_argument("--rows", nargs="+", required=True, help="NAME=report.json")
     parser.add_argument("--out", type=Path, required=True, help="output path without suffix")
+    parser.add_argument("--scorer", choices=["v1", "v2"], default="v2", help="scorer rules")
     args = parser.parse_args()
+    from analyst.evaluation import e2e_eval
+
+    e2e_eval.SCORER_RULES = args.scorer
     rows = {}
     for item in args.rows:
         name, path = item.split("=", 1)
         rows[name] = summarise(json.loads(Path(path).read_text(encoding="utf-8")))
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"set": args.set, "rows": rows, "sources": dict(r.split("=", 1) for r in args.rows)}
+    payload = {
+        "set": args.set,
+        "scorer_rules": args.scorer,
+        "rows": rows,
+        "sources": dict(r.split("=", 1) for r in args.rows),
+    }
     args.out.with_suffix(".json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    args.out.with_suffix(".md").write_text(markdown(rows, args.set), encoding="utf-8")
-    print(markdown(rows, args.set))
+    args.out.with_suffix(".md").write_text(markdown(rows, args.set, args.scorer), encoding="utf-8")
+    print(markdown(rows, args.set, args.scorer))
     return 0
 
 

@@ -575,11 +575,43 @@ def _case_success(case: dict[str, Any]) -> bool:
     if expected in {"describe", "search"}:
         required = set(case.get("dataset_ids", []))
         retrieved = set(case.get("actual_dataset_ids", []))
+        if SCORER_RULES == "v2":
+            retrieved |= _tables_named(case.get("response") or "")
         correct_outcome = outcome == ("described" if expected == "describe" else "searched")
         return correct_outcome and required.issubset(retrieved)
     # A message outside the assistant's scope ends as out_of_scope (no data request is logged);
     # for scoring it is a correct decline.
     return expected == "decline" and outcome in {"declined", "out_of_scope"}
+
+
+# Scorer rules. v1: an expected entity must equal a value of an entity column, and a search or
+# describe case must retrieve the gold tables. v2 (default, 19 Nov, after the M4 test ladder): an
+# expected entity may also be a category value of a result row or a place plus a category value
+# ("Bihar Rural" from geo_name "Bihar" and area "Rural"), and tables named in a search or describe
+# reply count as retrieved. v1 is kept so the as-run M4 figures can be reproduced.
+SCORER_RULES = "v2"
+NON_ENTITY_COLUMNS = {"period_label", "indicator_id", "unit", "quality_flag"}
+
+
+def _entity_in_rows(entity: str, case: dict[str, Any]) -> bool:
+    columns = [str(c).casefold() for c in case.get("result_columns", [])]
+    wanted = " ".join(entity.casefold().split())
+    for row in case.get("result_rows", []):
+        cells = [
+            " ".join(str(value).casefold().split())
+            for column, value in zip(columns, row, strict=False)
+            if isinstance(value, str) and column not in NON_ENTITY_COLUMNS
+        ]
+        if wanted in cells or any(f"{a} {b}" == wanted for a in cells for b in cells if a != b):
+            return True
+    return False
+
+
+def _tables_named(text: str) -> set[str]:
+    import re
+
+    known = {p.stem.removeprefix("obs_") for p in DEFAULT_PROCESSED.glob("obs_*.parquet")}
+    return {name for name in re.findall(r"\b[a-z0-9]+(?:_[a-z0-9]+)+\b", text) if name in known}
 
 
 def _expected_clarification_slot(notes: str) -> str | None:
@@ -623,7 +655,9 @@ def _case_checks(case: dict[str, Any]) -> dict[str, bool]:
         for expected in narrated
     )
     entity_match = all(
-        entity in case.get("actual_entities", []) for entity in case.get("expected_entities", [])
+        entity in case.get("actual_entities", [])
+        or (SCORER_RULES == "v2" and _entity_in_rows(entity, case))
+        for entity in case.get("expected_entities", [])
     )
     return {
         "values_match": values_match,
@@ -702,6 +736,9 @@ def main() -> int:
     score_parser = sub.add_parser("score")
     score_parser.add_argument("--predictions", type=Path, nargs="+", required=True)
     score_parser.add_argument("--out", type=Path, required=True)
+    score_parser.add_argument(
+        "--scorer", choices=["v1", "v2"], default="v2", help="scorer rules (v1: as-run M4)"
+    )
     args = parser.parse_args()
     if args.command == "split":
         report = write_split(args.set, dev_size=args.dev_size, seed=args.seed)
@@ -731,7 +768,10 @@ def main() -> int:
         )
         print(f"{len(rows)} questions written to {args.out}")
         return 0
+    global SCORER_RULES
+    SCORER_RULES = args.scorer
     report = score_repeats(args.predictions)
+    report["scorer_rules"] = args.scorer
     report["experiment"] = report["runs"][0].get("experiment") if report["runs"] else None
     report["scored_at"] = datetime.now(UTC).isoformat()
     _write_json(args.out, report)
