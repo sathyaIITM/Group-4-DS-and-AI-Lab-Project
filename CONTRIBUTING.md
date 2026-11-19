@@ -38,8 +38,8 @@ rather than restating it.
 | Corrections | `fix/<name>` | `fix/unit-normalisation` |
 | Documentation | `docs/<name>` | `docs/milestone-2-report` |
 
-`main` is the integration branch. Commit directly to `main` only for the initial
-scaffold.
+`main` holds the latest submitted milestone. Work is integrated on the milestone branch
+(`docs/milestone-<n>`) and reaches `main` through a reviewed pull request.
 
 ## Code standards
 

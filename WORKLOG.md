@@ -34,7 +34,7 @@ T1 Data and Tools (Shaoni Samanta, 21f1003157), T2 Agent (Shivanshu Gupta,
 ## How to fill this in
 
 - Add a row per person, per week, even for a week with no progress (state
-  "no progress" and why — blocked, exam clash, reassigned).
+  "no progress" and why: blocked, exam clash, reassigned).
 - Keep entries to one or two lines: what was done, not how it felt to do it.
 - Link to the evidence (a commit range, a PR, a file added, a notebook run) so
   a reviewer can verify the row without asking.

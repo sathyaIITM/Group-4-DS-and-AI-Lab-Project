@@ -1,7 +1,7 @@
 # Milestone 4: Model Training, Configuration and Evaluation
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.9.
+Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 1.0.
 
 **Status of this file.** Complete for submission; each member's sign-off is recorded in the
 Sign-off section. Every
@@ -31,6 +31,7 @@ Section A6.7).
 | 0.7 | 19 Nov 2026 | Two-tier comparison (E2) closed; Laya plan; calibration wording in B8 and Section 4 corrected; slides |
 | 0.8 | 19 Nov 2026 | Sections 2.1, 2.2, A1 and A2 written; hosted LLM configuration (A2.x) brought up to the evaluated configuration; A3 and A4 updated; contribution log and sign-off |
 | 0.9 | 19 Nov 2026 | Status wording and test count corrected; two sample conversations in A6.5; slide edits |
+| 1.0 | 19 Nov 2026 | Section 1.4, model selection and justification; slide on design decisions and trade-offs; risks and limitations added to the challenges slide |
 
 ## 1. Introduction
 
@@ -48,6 +49,7 @@ development set, and measuring it end to end.
 | Generalisation and stability | Section A5 | Sections B6, B8 and B12 (seeds, horizon, option order) |
 | Results and sample outputs | Section A6 | Sections B9, B10 and B12 |
 | Training artifacts | Appendix A | Appendix A; [`models/registry.json`](../../models/registry.json) |
+| Model selection and justification | Section 1.4 | Section 1.4 |
 | Key findings | Section 4 | Section 4 |
 
 ### 1.2 Response to the Milestone 3 review
@@ -75,6 +77,30 @@ The Milestone 3 report moved eight items to Milestone 4. Their state on 19 Novem
 | Kev inside the agent (v4) | Not yet: routing in the ladder is done by the hosted LLM (v0, v1) or by Jev (v2); Kev takes over the domain decision in v4 | Sections A6.1 and 4 |
 | Calibrated verification by Jev (v5), prompt optimisation (v3) | Not started; next milestone | - |
 | Drift baseline and log collation | **Built**; no real baseline yet | Section 3 |
+
+### 1.4 Model selection and justification
+
+The Milestone 3 report (Sections 4 and 5) chose each model before training and called the choice
+of Kev provisional. This section restates the selection with the evidence measured in Milestone 4.
+No model is trained from scratch, and no model is fine-tuned to write SQL: query generation is
+bought from a hosted model, and the fine-tuning effort goes to the decision layer, where
+calibrated probabilities are needed for the gate, the cascade and the confidence badge.
+
+| Role in the agent | Selected | Alternatives considered | Reason, with the Milestone 4 evidence |
+| --- | --- | --- | --- |
+| Intent extraction, SQL writing and repair, narration, clarification, decline and description | `gemini-3.5-flash-lite` on Vertex AI, temperature 0, thinking level set per purpose | `gemini-3.5-flash`, `gemini-3.8-flash` (the larger tier); fine-tuning a SQL model | Text generation is the only task left to the LLM, and every reply is checked by code (schema, identifiers, single SELECT, narrated numbers), so the lower-priced tier was kept as the default. In the access check (Section A2) Flash-Lite returned valid JSON at the minimal thinking level in 3.0 s. It is the lower-priced tier in [`configs/model.yaml`](../../configs/model.yaml) (USD 0.30 and 2.50 per million input and output tokens against 0.75 and 3.75; the Flash-Lite price is introductory until 31 December 2026). The Vertex calls are paid from the Google Cloud trial credit. The two-tier comparison (E2) was closed as not required. Fine-tuning a SQL model was ruled out in Milestone 3 (Section 5.1): the research question is reliability, not query writing |
+| Domain decision (phase 1) | Kev-0.8B, fine-tuned (`ep3`), one fitted temperature | Jev only; Laya; Kev-4B; the hosted LLM as router | Kev is open (Apache-2.0), runs on the team's own hardware with no charge per call (median 0.57 s on the local machine), and can be fine-tuned and recalibrated on the project's labels. On the 198 human-labelled items, fine-tuned Kev scores 0.980 against 0.970 for Jev and 0.783 for zero-shot Kev, with ECE 0.040 after calibration; the gate fixed in advance passes (Section B12). Laya was not taken forward: zero-shot on `dev_synthetic` it scored 0.473 against 0.823 for Kev, and its fine-tuning ran out of memory on the local machine (Section B11); a fine-tuned Laya row is planned. Kev-4B stays parked: about 8.4 GB in bf16, and the T4 has no bf16 (Milestone 3, Section 13). The hosted LLM as router costs a model call per question: replacing it with a decision model (v2, Jev) removed 2.7 calls per answered question and cut the estimated cost per answer by about 30% (Section 4) |
+| Tool selection | Jev, zero-shot | Kev-0.8B | Zero-shot Kev scored 0.42 against 0.815 for Jev on tool selection (Milestone 3, Section 5.3), and human agreement on this decision is lower (Cohen's kappa 0.70 against 0.88 for the domain). Tool selection moves to Kev only in phase 2, through a joint retrain once the labels are settled, and only if it passes the same gate |
+| Catalogue and context retrieval | BM25 fused with `BAAI/bge-small-en-v1.5` (384 dimensions, CPU), plus place and indicator slots | A larger embedding model; fine-tuning the embedding model (E7) | The small model runs on CPU, so the application needs no GPU. Recall at 4 is 1.0 on every category of the 1,148-question catalogue audit and on 60 hand-written paraphrases ([`catalogue_retrieval_audit.json`](../../outputs/reports/catalogue_retrieval_audit.json)), and 1.0 with MRR 0.86 on the 31 scored `e2e_dev` cases ([`retrieval_agent_e2e_dev.v1.json`](../../outputs/reports/retrieval_agent_e2e_dev.v1.json)). A larger model cannot raise recall at 4, so no alternative was trained; the remaining room is in ranking (MRR) |
+| Calibration of a decision model | One temperature per model, fitted on `calibration` by NLL | Isotonic or Platt scaling | One parameter is stable on 322 items and leaves the predicted label unchanged, so accuracy is unaffected. On `dev_human` it lowered the NLL of `ep3` (0.081 to 0.070) but raised its ECE (0.017 to 0.040), both within the 0.10 limit (Section B8) |
+
+**What the evidence changed.** In Milestone 3, Kev trailed Jev by 5 points on rule-generated
+labels, and the choice of Kev was provisional. In Milestone 4, on human labels, fine-tuned Kev
+matches Jev within the pre-set margin, so the domain decision moves to Kev under the adoption
+rule, with the cascade to Jev kept for items below the confidence threshold. The comparison with
+Laya remains incomplete until Laya is fine-tuned on the same split; until then, Laya's speed
+(about five times faster than Kev on the local machine, Milestone 3, Section 5.4) remains a reason
+to revisit the choice.
 
 ## 2. Data and evaluation sets
 

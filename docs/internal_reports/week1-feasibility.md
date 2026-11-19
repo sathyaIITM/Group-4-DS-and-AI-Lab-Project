@@ -132,7 +132,7 @@ accumulation 4, checkpointing on, `--max_steps 4`.
 
 1. Rule for `search_catalog` against `decline_not_covered` for topics outside the catalogue.
 2. Human validation of the 200 routing labels and of the 20 v0 reference answers' assumptions
-   (notably `v0-16`, Karnataka has three sub-divisions); then repeat the routing evaluation.
+   (for example `v0-16`, Karnataka has three sub-divisions); then repeat the routing evaluation.
 3. LLM provider, model and key for the v0 run; Jev unit price for the cost figures.
 4. Compare the served calibrated probabilities (default) with the raw ones used here.
 5. Fine-tuned Kev on the validated routing set (Colab T4, fp32).

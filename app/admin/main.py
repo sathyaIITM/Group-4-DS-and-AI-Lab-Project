@@ -1,6 +1,6 @@
 """Admin service: dataset onboarding review, data requests and retraining approval.
 
-Scaffold only.
+Only the health check is implemented; the review and approval screens are planned.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from fastapi import FastAPI
 
 from analyst import __version__
 
-app = FastAPI(title="India analyst agent — admin", version=__version__)
+app = FastAPI(title="India analyst agent: admin", version=__version__)
 
 
 @app.get("/healthz")

@@ -7,10 +7,13 @@ scripts below. Row counts and SHA-256 of every prepared file are in
 | Directory | Contents | Tracked |
 | --- | --- | --- |
 | `raw/` | Unmodified downloads from data.gov.in | No |
-| `processed/` | Cleaned, versioned Parquet tables that DuckDB reads read-only | No |
+| `processed/` | Cleaned, versioned Parquet tables (14 published) that DuckDB reads read-only, and `catalogue.json` | No |
 | `sample/` | Small extracts committed so that tests and reviews run without downloads | Yes |
-| `splits/kev/` | Routing splits v1 (train, calibration, dev-synthetic) | Yes |
-| `ground_truths/` | Text-to-SQL reference pairs and their dev and test splits | Yes |
+| `eval/` | End-to-end evaluation set `e2e_v1` (100 questions) and its development and test splits; see [eval/README.md](eval/README.md) | Yes |
+| `labels/dev_human_v1/` | Human labels of the routing test set `dev_human`: two labellers per item, adjudication, agreement and freeze records | Yes |
+| `splits/kev/` | Routing data for the decision models: v1 and v2 (train, calibration, dev-synthetic) and the frozen `dev_human.v1` | Yes |
+| `splits/kev_domain/`, `splits/laya_domain/` | Domain-only copies built from `splits/kev/` by `scripts/build_domain_phase1.py` | No |
+| `ground_truths/` | Question and reference-SQL pairs of Milestone 2, with their dev and test splits | Yes |
 
 The test split is never used for training or tuning. Splits are separated by
 question template, and leakage checks are run before use.
@@ -21,7 +24,7 @@ From the repository root, with `DATA_GOV_IN_API_KEY` set:
 
 ```bash
 python scripts/download_raw.py       # every API resource into data/raw (or name the files)
-python scripts/run_pipeline.py       # all five tables into data/processed (see scripts/README.md)
+python scripts/run_pipeline.py       # every table in configs/sources into data/processed (see scripts/README.md)
 python scripts/build_manifest.py     # compare hashes with MANIFEST.md
 ```
 
