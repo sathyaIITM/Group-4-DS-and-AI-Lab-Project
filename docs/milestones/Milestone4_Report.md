@@ -1,12 +1,11 @@
 # Milestone 4: Model Training, Configuration and Evaluation
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.7 (draft).
+Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.8.
 
-**Status of this file.** Skeleton with the section structure, the requirement map and the
-facts already fixed. Sections marked *Pending* are written by the named member once the
-corresponding work is merged into `docs/milestone-4`. Every result cites the committed file
-that holds it and the command that produced it (Appendix A).
+**Status of this file.** Complete for submission and signed off by the team (Sign-off). Every
+result cites the committed file that holds it and the command that produced it (Appendix A and
+Section A6.7).
 
 **Scope of the evidence.** As in Milestone 3, every statement is tagged:
 
@@ -29,6 +28,7 @@ that holds it and the command that produced it (Appendix A).
 | 0.5 | 19 Nov 2026 | Response to the Milestone 3 review (1.2), status (1.3), key findings (4), artifacts and reproduction (Appendix A) |
 | 0.6 | 19 Nov 2026 | Sections A4 and A5 brought in line with A6; evaluation-set wording; scoring rules (A6.1) |
 | 0.7 | 19 Nov 2026 | Two-tier comparison (E2) closed; Laya plan; calibration wording in B8 and Section 4 corrected; slides |
+| 0.8 | 19 Nov 2026 | Sections 2.1, 2.2, A1 and A2 written; hosted LLM configuration (A2.x) brought up to the evaluated configuration; A3 and A4 updated; contribution log and sign-off |
 
 ## 1. Introduction
 
@@ -78,11 +78,62 @@ The Milestone 3 report moved eight items to Milestone 4. Their state on 19 Novem
 
 ### 2.1 Catalogue after the freeze
 
-*Pending (T1).*
+**Built (T1).** The catalogue is frozen at 14 tables from government sources (data.gov.in API
+copies, the canonical raw files from 17 November), built by the configuration-driven pipeline of
+Milestone 2 into one observation table per dataset (`obs_<dataset>`) and described in
+`data/processed/catalogue.json` (hashes in
+[`data/MANIFEST.md`](../../data/MANIFEST.md); the Parquet tables are not in git).
+
+| Dataset | Domain | Geography | Coverage | Observations | Indicators |
+| --- | --- | --- | --- | --- | --- |
+| `plfs_state_ur_usual_status` | labour | India, State | 2017-18 to 2021-22 (July-June) | 190 | 1 |
+| `plfs_lfpr_urban_state` | labour | India, State | 2023-24 (July-June) | 37 | 1 |
+| `crop_production_district` | agriculture | District | 1997-98 to 2015-16 (crop years) | 492,182 | 5 |
+| `msp_crops` | agriculture | India | 2013-14 to 2024-25 | 348 | 1 |
+| `imd_subdivision_monthly_rainfall` | rainfall | 36 sub-divisions | 1901 to 2017 (month, season, year) | 71,196 | 1 |
+| `imd_district_rainfall_normals` | rainfall | District | 1951-2000 average | 10,897 | 17 |
+| `cpi_all_india` | prices_economy | India | January 2013 to December 2023 (months) | 10,611 | 27 |
+| `gsdp_per_capita_state` | prices_economy | State | 2019-20 to 2023-24 (April-March) | 140 | 1 |
+| `mandi_daily_prices` | prices_economy | Market | 29 October 2026 (one day) | 49,179 | 3 |
+| `nfhs5_state_factsheet` | health | India, State | 2019-2021 survey round | 14,541 | 131 |
+| `nfhs5_district_indicators` | health | District | 2019-2021 survey round | 73,528 | 104 |
+| `srs_imr_state` | health | India, State | 2015 to 2019 | 185 | 1 |
+| `ncrb_annual_crime_statistics` | other | India | 2022 to 2024 | 24 | 8 |
+| `ncrb_violent_crimes_state` | other | India, State | 2021 to 2023 | 111 | 1 |
+
+Checks ([`docs/specs/catalogue_check.md`](../../docs/specs/catalogue_check.md), `python
+scripts/check_catalogue.py --samples 5 --seed 0`): titles, caveats, domains, period conventions,
+units, total rows and coverage reviewed against the publisher; 70 of 70 sampled values traced to
+their raw cell; `python scripts/run_pipeline.py --verify` passes. Quality flags are kept, not
+dropped (for example 357 low-sample and 414 suppressed NFHS-5 State values; 13 implausible mandi
+prices; April 2019 absent from all 81 CPI series in the source). Deferred after Milestone 4: State
+CPI, and Census 2011, whose resource page could not be located.
 
 ### 2.2 End-to-end evaluation set `e2e_v1`
 
-*Pending (T1).*
+**Built (T1).** [`data/eval/e2e_v1.jsonl`](../../data/eval/e2e_v1.jsonl): 100 questions whose
+outcome is fixed in advance, written from the published tables and the labelling guide (version
+1.0) without looking at agent output, by a member who did not write the agent
+([`data/eval/README.md`](../../data/eval/README.md)).
+
+| Dimension | Count |
+| --- | --- |
+| Expected action | answer 71, decline 14, clarify 8, describe 4, search 3 |
+| Questions per published table | 5 to 8 (all 14 tables) |
+| Derived values (percentage change, percentage points, share) | 13 |
+| Items testing a named convention (survey year, fiscal year, sub-division, suppressed value, and others) | 52 |
+| Follow-ups with earlier turns | 11 |
+| Split | `e2e_dev` 40 and `e2e_test` 60, stratified by action and table ([`configs/evaluation.yaml`](../../configs/evaluation.yaml)) |
+
+Every gold query is read-only SQL on the observation tables; expected values are taken from its
+execution, never typed. `python scripts/check_e2e_set.py` checks shape, action rules, quotas and
+every gold query against the tables: 100 items, 0 errors
+([`e2e_v1_check.json`](../../outputs/reports/e2e_v1_check.json)). No item overlaps the `dev_human`
+items, the samples or the verified examples (character 5-gram Jaccard 0.8). A supplement of 20
+development items (`e2e_dev_extra.v1.jsonl`) adds describe, search and clarify cases to the
+development set only. The set was validated end to end; a further round of validation, and an
+extension of the set, are needed to enhance the agent and to test it extensively. Thirteen items rest
+on a recorded judgement (README, section "Validation").
 
 ### 2.3 Human-labelled routing set `dev_human`
 
@@ -114,19 +165,60 @@ data/labels/dev_human_v1/items_rendered.jsonl`. Code:
 
 ### A1. Build process
 
-*Pending (T2).*
+**Built (T2, with T3 and T4).** The agent was built contract first. The design contract
+([`docs/specs/agent_graph.md`](../../docs/specs/agent_graph.md), version 0.3) fixed the graph, the
+state and the data contracts before code was written; the contracts package
+[`src/analyst/contracts/`](../../src/analyst/contracts/) implements them as Pydantic models,
+field for field, and [`tests/test_contracts.py`](../../tests/test_contracts.py) fails when a
+contract drifts from the document. Each track then implemented its nodes against the contracts:
+control nodes, graph, memory and run log (T2,
+[`control_nodes.py`](../../src/analyst/agents/control_nodes.py),
+[`graph.py`](../../src/analyst/agents/graph.py)); model-backed nodes (T3,
+[`model_nodes.py`](../../src/analyst/agents/model_nodes.py)); deterministic tool nodes (T4,
+[`tool_nodes.py`](../../src/analyst/agents/tool_nodes.py)). Scripted stand-ins
+([`stubs.py`](../../src/analyst/agents/stubs.py)) let every path of the graph run and be tested
+before the real nodes existed, without a model call.
+
+Integration followed one branch, `docs/milestone-4`: feature branches per track were reviewed and
+merged into it, and the full suite (440 tests in 53 files), Ruff lint and format and `mypy` were
+run at integration. A live smoke run
+(`python scripts/run_agent.py --question "Show monthly rainfall in Kerala" --version v0 --llm
+live`) and a demonstration application (FastAPI with a browser interface, [`app/api/main.py`](../../app/api/main.py))
+were used to test conversations by hand, including follow-ups, clarification replies and changes
+of topic; faults found this way were fixed by general rules and recorded in
+[`CHANGELOG.md`](../../CHANGELOG.md).
 
 ### A2. Architecture and configuration
 
-*Pending (T2): graph, retrieval nodes, run limits.*
+**Built.** The graph ([`graph.py`](../../src/analyst/agents/graph.py), LangGraph) has 36 nodes
+and fixed paths; routers only choose the next node, and every conditional edge applies the run
+deadline, the model-call budget and node errors, so a run always ends in one of the terminal
+nodes (answer, clarification, decline, abstention, out of scope, system failure).
+
+| Stage | Nodes | What happens |
+| --- | --- | --- |
+| Intake | `receive_request`, `screen_request` | Reads the conversation memory (last five turns, pending clarification, prior plan and result); a reply to a clarification ("the second one", "all") is read by code; prompt-override attempts are screened out |
+| Retrieval | `retrieve_catalogue_candidates`, `retrieve_context_and_examples` | Hybrid retrieval (BM25 fused with `bge-small-en-v1.5`) over one entry per table, top four tables; then indicators, codelists, guidance cards (v1 and later) and verified examples (v2 and later) for those tables |
+| Routing | `route_tool_and_domain`, `escalate_to_jev`, `resolve_routing_decision` | Tool and domain decided by the hosted model (v0, v1) or Jev with the model as fallback (v2); seven branches: query, chart, describe, search, explain, clarify, decline |
+| Query path | `extract_query_intent` to `verify_numbers_deterministically` | Intent, place and period resolution, coverage, SQL generation and repair, read-only execution, derivations, result checks, narration and the number check |
+| Output | `build_evidence_bundle`, `assemble_answer_and_evidence_panel`, `select_chart_type`, `render_chart`, `finalize_response` | Evidence bundle stored for every answer; chart chosen by rules (Vega-Lite); run log written once per run |
+
+Run limits ([`configs/agent.yaml`](../../configs/agent.yaml)): 45 s per run; at most 8 model
+calls, 3 SQL generations, 2 SQL repairs, 2 narrations, 2 clarifications and 1 widened catalogue
+search; four catalogue candidates. Memory and run log are SQLite files
+([`memory.py`](../../src/analyst/agents/memory.py), [`runlog.py`](../../src/analyst/agents/runlog.py);
+schema in [`docs/specs/run_log_v1.md`](../../docs/specs/run_log_v1.md)); runs are exported as
+bundles for collation (Section 3).
 
 #### A2.x Hosted LLM layer (T3)
 
 **Built.** Client: [`src/analyst/inference/llm.py`](../../src/analyst/inference/llm.py)
 (`LlmClient.structured`). Prompt registry:
 [`src/analyst/inference/prompts.py`](../../src/analyst/inference/prompts.py); prompts
-[`configs/prompts/`](../../configs/prompts/) (`intent`, `sql`, `sql_repair`, `narrate`,
-`clarify`, `route`, version 1). Configuration: [`configs/model.yaml`](../../configs/model.yaml).
+[`configs/prompts/`](../../configs/prompts/), latest version used: `intent` v9, `sql` v3,
+`sql_repair` v1, `narrate` v2, `clarify` v2, `route` v2, `decline` v1, `describe` v1.
+Configuration: [`configs/model.yaml`](../../configs/model.yaml). The table gives the configuration
+of the evaluated commit `a2c8c7d` (Section A6).
 
 | Item | Configuration |
 | --- | --- |
@@ -135,10 +227,11 @@ data/labels/dev_human_v1/items_rendered.jsonl`. Code:
 | Model selection | Only from `configs/model.yaml` (tier); environment variables supply credentials and the project only |
 | Temperature | 0 |
 | Prompts | One file per prompt with a header (`id`, `version`, `purpose`, `inputs`, `output_schema`); the SHA-256 of the file is recorded with every call; user text inside `<user_question>`, retrieved content inside `<context>`, delimiter tags removed from values |
-| Output validation | Each reply is validated against its Pydantic contract and a rule check (for example, identifiers must be among those retrieved; SQL must be one SELECT on the plan's table; every number in a narration must point to a result cell or a derived value). One retry on a parse, validation or transient error; none on a non-transient provider error |
+| Output validation | Each reply is validated against its Pydantic contract and a rule check (for example, identifiers must be among those retrieved, with a miscopied identifier repaired by its hash suffix; SQL must be one SELECT on the plan's table; every number in a narration must point to a result cell or a derived value; a decline or description may state no number absent from its sources). A reply cut at the cap or looping inside a field keeps its complete fields. One retry on a parse, validation or transient error; none on a non-transient provider error |
+| Time-outs and rate limits | 20 s per request; an expired token is refreshed once; a rate-limit reply (429) is retried after 8 s, then 16 s |
 | Call budget | At most 8 hosted-LLM calls per question, counted before each call |
-| Thinking | Set per call purpose as `reasoning_effort`: route, SQL (first attempt), narration and clarification `minimal`; intent and SQL repair `low`; SQL regenerated after a failed result check `medium` |
-| Output cap | Per purpose for the visible reply (route 300, intent 512, SQL 1,024, SQL repair 1,024, narration 400, clarification 150 tokens; SQL raised from 512 after a 30-period query was cut off in the smoke test), plus an allowance per thinking level (minimal 0, low 1,024, medium 2,048, high 4,096), because thinking tokens count against the cap |
+| Thinking | Set per call purpose as `reasoning_effort`: route, SQL (first attempt), narration, clarification, decline and description `minimal`; intent, SQL repair and SQL regenerated after a failed result check `low` (regeneration was `medium` until 19 November, which took about 10 s) |
+| Output cap | Per purpose for the visible reply: route 300, intent 1,024, SQL 1,024, SQL repair 1,024, narration 2,000, clarification 150, decline 800, description 1,200 tokens (each raised after a reply was cut off in a development run; reasons recorded in `configs/model.yaml`), plus an allowance per thinking level (minimal 0, low 1,024, medium 4,096, high 4,096), because thinking tokens count against the cap |
 | Cost record | Input tokens and output tokens including thinking tokens, priced from `configs/model.yaml` (`gemini-3.5-flash-lite`: USD 0.30 input and 2.50 output per million tokens on the global endpoint, read on 16 November 2026) |
 
 Choice of the endpoint (16 November 2026). Pay-as-you-go access to the 3.5 models is offered
@@ -189,8 +282,8 @@ memory limit, one DuckDB thread, disabled external access, a 10-second timeout, 
 and SQL column binding before execution. Live graph wiring is in
 [`src/analyst/agents/tool_nodes.py`](../../src/analyst/agents/tool_nodes.py) and
 [`src/analyst/agents/model_nodes.py`](../../src/analyst/agents/model_nodes.py). The targeted tool and
-graph tests cover the deterministic tools and SQL runner; end-to-end data validation remains
-pending T1.
+graph tests cover the deterministic tools and SQL runner. End-to-end data validation has been
+carried out; a further round of validation is needed.
 
 ### A4. Experiments
 
@@ -200,8 +293,14 @@ parallel questions to two, retries provider 429 responses through the existing c
 the agent-level outcomes, and reports per-case predictions and repeat spread. The shared metric
 implementations are in [`src/analyst/evaluation/metrics.py`](../../src/analyst/evaluation/metrics.py).
 Split hashes and run targets are recorded in [`configs/evaluation.yaml`](../../configs/evaluation.yaml).
-The version ladder run with this harness, and its results, are in Section A6. Retrieval recall
-and MRR are reported in Section 1.2 (item 6).
+**Measured.** The experiment of Milestone 4 is the version ladder (Section A6): v0, v1 and v2
+vary the retrieved context (catalogue only; guidance cards; verified examples) and the routing
+backend (hosted LLM or Jev), with every other setting held fixed: catalogue top-k 4, the run
+limits of Section A2, decision thresholds off, one model tier (`gemini-3.5-flash-lite`) and the
+thinking levels and output caps of Section A2.x. Output caps, the request timeout and the run
+deadline were set on the development set from cut-off replies and time-outs (reasons in
+`configs/model.yaml` and `configs/agent.yaml`). Retrieval recall and MRR are reported in Section
+1.2 (item 6).
 
 ### A5. Stability
 
@@ -752,4 +851,25 @@ commands: Section A6.7.
 
 ## Contribution log
 
-*Pending.* [`WORKLOG.md`](../../WORKLOG.md) holds the weekly record of individual contributions.
+Milestone 4 work per member; the weekly record with links is in [`WORKLOG.md`](../../WORKLOG.md),
+and the commits are on `docs/milestone-4`.
+
+| Member | Track | Milestone 4 contribution | Report sections |
+| --- | --- | --- | --- |
+| Shaoni Samanta (21f1003157) | T1 Data and Tools | Seven T1 tables configured and published (crop production with per-crop units), data manifest; the end-to-end evaluation set `e2e_v1` (100 questions); `dev_human` labelling and adjudication | 2.1, 2.2 |
+| Shivanshu Gupta (22f3002985) | T2 Agent | Contracts package, graph and control nodes, memory and run log, fixes to the agent workflow; `dev_human` labelling and adjudication | A1, A2 |
+| Sathya Prakash (21f1006001) | T3 Model | Hosted LLM layer and model-backed nodes, prompts, catalogue check with T1, routing data v2, `dev_human` preparation, Kev-0.8B training, calibration, gate and cascade, integration of all tracks, demonstration application, version ladder and error analysis, report and slides | 1, A2.x, A6, Part B, 4, Appendix A |
+| Ashmit Ghose (24f1001827) | T4 Ops and Evaluation | Deterministic tool layer and graph adapters, SQL isolation, shared metrics, 40/60 split, evaluation harness, run collation and drift report; `dev_human` labelling | A3, A4, A5, 3 |
+
+## Sign-off
+
+Each member confirms that the sections in their track describe their own work, that every result
+cited is backed by committed code, outputs and commands, and that the report is ready for
+submission.
+
+| Member | Track | Sign-off |
+| --- | --- | --- |
+| Shaoni Samanta | T1 | To be confirmed |
+| Shivanshu Gupta | T2 | To be confirmed |
+| Sathya Prakash | T3 | Signed off, 19 November 2026 |
+| Ashmit Ghose | T4 | To be confirmed |
