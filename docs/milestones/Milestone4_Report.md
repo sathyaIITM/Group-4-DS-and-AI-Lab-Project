@@ -886,4 +886,4 @@ submission.
 | Shaoni Samanta | T1 | Signed off, 19 November 2026 |
 | Shivanshu Gupta | T2 | Signed off, 19 November 2026 |
 | Sathya Prakash | T3 | Signed off, 19 November 2026 |
-| Ashmit Ghose | T4 | To be confirmed |
+| Ashmit Ghose | T4 | Signed off, 19 November 2026 |
