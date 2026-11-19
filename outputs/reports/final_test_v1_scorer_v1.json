@@ -4,15 +4,15 @@
     {
       "path": "outputs/predictions/final_test_v1_r1.jsonl",
       "n": 60,
-      "success_rate": 0.7,
+      "success_rate": 0.65,
       "success_ci95": [
-        0.5833333333333334,
-        0.8166666666666667
+        0.5166666666666667,
+        0.7666666666666667
       ],
       "execution_accuracy": 0.525,
       "abstention_precision": 0.5454545454545454,
       "abstention_recall": 0.9230769230769231,
-      "wrong_answer_rate": 0.0,
+      "wrong_answer_rate": 0.07407407407407407,
       "outcome_counts": {
         "answered": 27,
         "clarifying": 11,
@@ -107,12 +107,20 @@
           "entity_match": true
         },
         {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "failed",
           "values_match": false,
           "narration_match": false,
-          "entity_match": true
+          "entity_match": false
         },
         {
           "id": "e2e-039",
@@ -163,12 +171,28 @@
           "entity_match": true
         },
         {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
           "id": "e2e-092",
           "expected": "answer",
           "outcome": "clarifying",
           "values_match": true,
           "narration_match": true,
           "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
         },
         {
           "id": "e2e-097",
@@ -199,15 +223,15 @@
     {
       "path": "outputs/predictions/final_test_v1_r2.jsonl",
       "n": 60,
-      "success_rate": 0.7,
+      "success_rate": 0.65,
       "success_ci95": [
-        0.5833333333333334,
-        0.8166666666666667
+        0.5166666666666667,
+        0.7666666666666667
       ],
       "execution_accuracy": 0.525,
       "abstention_precision": 0.5416666666666666,
       "abstention_recall": 1.0,
-      "wrong_answer_rate": 0.0,
+      "wrong_answer_rate": 0.07407407407407407,
       "outcome_counts": {
         "answered": 27,
         "clarifying": 12,
@@ -310,6 +334,14 @@
           "entity_match": true
         },
         {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "clarifying",
@@ -366,6 +398,22 @@
           "entity_match": true
         },
         {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
           "id": "e2e-097",
           "expected": "answer",
           "outcome": "clarifying",
@@ -394,15 +442,15 @@
     {
       "path": "outputs/predictions/final_test_v1_r3.jsonl",
       "n": 60,
-      "success_rate": 0.6666666666666666,
+      "success_rate": 0.6166666666666667,
       "success_ci95": [
-        0.5333333333333333,
-        0.7833333333333333
+        0.48333333333333334,
+        0.7333333333333333
       ],
       "execution_accuracy": 0.525,
       "abstention_precision": 0.5454545454545454,
       "abstention_recall": 0.9230769230769231,
-      "wrong_answer_rate": 0.037037037037037035,
+      "wrong_answer_rate": 0.1111111111111111,
       "outcome_counts": {
         "answered": 27,
         "clarifying": 10,
@@ -505,12 +553,20 @@
           "entity_match": true
         },
         {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "failed",
           "values_match": false,
           "narration_match": false,
-          "entity_match": true
+          "entity_match": false
         },
         {
           "id": "e2e-039",
@@ -561,6 +617,14 @@
           "entity_match": true
         },
         {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false
+        },
+        {
           "id": "e2e-071",
           "expected": "answer",
           "outcome": "answered",
@@ -575,6 +639,14 @@
           "values_match": true,
           "narration_match": true,
           "entity_match": false
+        },
+        {
+          "id": "e2e-093",
+          "expected": "search",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
         },
         {
           "id": "e2e-097",
@@ -603,9 +675,9 @@
       ]
     }
   ],
-  "success_rate_mean": 0.6888888888888888,
-  "success_rate_min": 0.6666666666666666,
-  "success_rate_max": 0.7,
+  "success_rate_mean": 0.638888888888889,
+  "success_rate_min": 0.6166666666666667,
+  "success_rate_max": 0.65,
   "success_rate_range": 0.033333333333333326,
   "items_compared": 60,
   "items_changed_correctness": [
@@ -616,7 +688,7 @@
     "e2e-092"
   ],
   "run_to_run_instability": 0.08333333333333333,
-  "scorer_rules": "v2",
+  "scorer_rules": "v1",
   "experiment": null,
-  "scored_at": "2026-11-19T10:12:35.327577+00:00"
+  "scored_at": "2026-11-19T10:49:15.214904+00:00"
 }

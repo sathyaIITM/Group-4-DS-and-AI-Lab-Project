@@ -1,4 +1,4 @@
-Version ladder on `e2e_dev` (scorer rules v2): mean over runs (minimum to maximum).
+Version ladder on `e2e_dev` (scorer rules v1): mean over runs (minimum to maximum).
 
 | Measure | v0 | v1 | v2 |
 | --- | --- | --- | --- |

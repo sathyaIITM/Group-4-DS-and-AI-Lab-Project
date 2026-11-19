@@ -1,6 +1,6 @@
 {
   "set": "dev",
-  "scorer_rules": "v2",
+  "scorer_rules": "v1",
   "rows": {
     "v0": {
       "runs": 1,
@@ -232,8 +232,8 @@
     }
   },
   "sources": {
-    "v0": "outputs/reports/final_dev_v0_scorer_v2.json",
-    "v1": "outputs/reports/final_dev_v1_scorer_v2.json",
-    "v2": "outputs/reports/final_dev_v2_scorer_v2.json"
+    "v0": "outputs/reports/final_dev_v0_scorer_v1.json",
+    "v1": "outputs/reports/final_dev_v1_scorer_v1.json",
+    "v2": "outputs/reports/final_dev_v2_scorer_v1.json"
   }
 }

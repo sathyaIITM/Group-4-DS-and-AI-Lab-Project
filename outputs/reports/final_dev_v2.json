@@ -75,7 +75,7 @@
   "items_compared": 60,
   "items_changed_correctness": [],
   "run_to_run_instability": 0.0,
-  "scorer_rules": "v1",
+  "scorer_rules": "v2",
   "experiment": null,
-  "scored_at": "2026-11-19T10:12:29.132835+00:00"
+  "scored_at": "2026-11-19T10:49:21.968950+00:00"
 }

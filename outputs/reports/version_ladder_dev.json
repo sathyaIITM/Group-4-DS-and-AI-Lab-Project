@@ -1,6 +1,6 @@
 {
   "set": "dev",
-  "scorer_rules": "v1",
+  "scorer_rules": "v2",
   "rows": {
     "v0": {
       "runs": 1,

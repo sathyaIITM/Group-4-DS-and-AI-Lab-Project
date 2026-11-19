@@ -4,15 +4,15 @@
     {
       "path": "outputs/predictions/final_test_v2_r1.jsonl",
       "n": 60,
-      "success_rate": 0.6666666666666666,
+      "success_rate": 0.7166666666666667,
       "success_ci95": [
-        0.55,
-        0.7833333333333333
+        0.6,
+        0.8166666666666667
       ],
       "execution_accuracy": 0.625,
       "abstention_precision": 0.5909090909090909,
       "abstention_recall": 1.0,
-      "wrong_answer_rate": 0.13793103448275862,
+      "wrong_answer_rate": 0.06896551724137931,
       "outcome_counts": {
         "answered": 29,
         "declined": 11,
@@ -115,14 +115,6 @@
           "entity_match": true
         },
         {
-          "id": "e2e-034",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "clarifying",
@@ -171,26 +163,10 @@
           "entity_match": true
         },
         {
-          "id": "e2e-059",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-076",
           "expected": "answer",
           "outcome": "answered",
           "values_match": false,
-          "narration_match": true,
-          "entity_match": true
-        },
-        {
-          "id": "e2e-093",
-          "expected": "search",
-          "outcome": "searched",
-          "values_match": true,
           "narration_match": true,
           "entity_match": true
         },
@@ -215,15 +191,15 @@
     {
       "path": "outputs/predictions/final_test_v2_r2.jsonl",
       "n": 60,
-      "success_rate": 0.6166666666666667,
+      "success_rate": 0.6666666666666666,
       "success_ci95": [
-        0.48333333333333334,
-        0.7333333333333333
+        0.5495833333333334,
+        0.7833333333333333
       ],
       "execution_accuracy": 0.625,
       "abstention_precision": 0.5217391304347826,
       "abstention_recall": 0.9230769230769231,
-      "wrong_answer_rate": 0.17857142857142858,
+      "wrong_answer_rate": 0.10714285714285714,
       "outcome_counts": {
         "answered": 28,
         "declined": 11,
@@ -342,14 +318,6 @@
           "entity_match": true
         },
         {
-          "id": "e2e-034",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "clarifying",
@@ -398,14 +366,6 @@
           "entity_match": true
         },
         {
-          "id": "e2e-059",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-076",
           "expected": "answer",
           "outcome": "answered",
@@ -417,14 +377,6 @@
           "id": "e2e-092",
           "expected": "answer",
           "outcome": "abstained",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": true
-        },
-        {
-          "id": "e2e-093",
-          "expected": "search",
-          "outcome": "searched",
           "values_match": true,
           "narration_match": true,
           "entity_match": true
@@ -450,15 +402,15 @@
     {
       "path": "outputs/predictions/final_test_v2_r3.jsonl",
       "n": 60,
-      "success_rate": 0.65,
+      "success_rate": 0.7,
       "success_ci95": [
-        0.5166666666666667,
-        0.7666666666666667
+        0.5666666666666667,
+        0.8166666666666667
       ],
       "execution_accuracy": 0.65,
       "abstention_precision": 0.5909090909090909,
       "abstention_recall": 1.0,
-      "wrong_answer_rate": 0.14285714285714285,
+      "wrong_answer_rate": 0.07142857142857142,
       "outcome_counts": {
         "answered": 28,
         "declined": 11,
@@ -553,20 +505,12 @@
           "entity_match": true
         },
         {
-          "id": "e2e-034",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-035",
           "expected": "answer",
           "outcome": "failed",
           "values_match": false,
           "narration_match": false,
-          "entity_match": false
+          "entity_match": true
         },
         {
           "id": "e2e-037",
@@ -617,14 +561,6 @@
           "entity_match": true
         },
         {
-          "id": "e2e-059",
-          "expected": "answer",
-          "outcome": "answered",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": false
-        },
-        {
           "id": "e2e-076",
           "expected": "answer",
           "outcome": "answered",
@@ -636,14 +572,6 @@
           "id": "e2e-092",
           "expected": "answer",
           "outcome": "abstained",
-          "values_match": true,
-          "narration_match": true,
-          "entity_match": true
-        },
-        {
-          "id": "e2e-093",
-          "expected": "search",
-          "outcome": "searched",
           "values_match": true,
           "narration_match": true,
           "entity_match": true
@@ -667,10 +595,10 @@
       ]
     }
   ],
-  "success_rate_mean": 0.6444444444444445,
-  "success_rate_min": 0.6166666666666667,
-  "success_rate_max": 0.6666666666666666,
-  "success_rate_range": 0.04999999999999993,
+  "success_rate_mean": 0.6944444444444443,
+  "success_rate_min": 0.6666666666666666,
+  "success_rate_max": 0.7166666666666667,
+  "success_rate_range": 0.050000000000000044,
   "items_compared": 60,
   "items_changed_correctness": [
     "e2e-004",
@@ -680,7 +608,7 @@
     "e2e-092"
   ],
   "run_to_run_instability": 0.08333333333333333,
-  "scorer_rules": "v1",
+  "scorer_rules": "v2",
   "experiment": null,
-  "scored_at": "2026-11-19T10:12:30.040951+00:00"
+  "scored_at": "2026-11-19T10:49:22.781699+00:00"
 }

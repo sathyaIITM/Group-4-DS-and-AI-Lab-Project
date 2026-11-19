@@ -1,18 +1,18 @@
 {
   "set": "test",
-  "scorer_rules": "v2",
+  "scorer_rules": "v1",
   "rows": {
     "v0": {
       "runs": 3,
       "questions": 60,
       "instability": 0.05,
       "success_ci95_first_run": [
-        0.55,
-        0.8
+        0.5,
+        0.75
       ],
       "by_action": {
         "answer": {
-          "success": 0.6416666666666667,
+          "success": 0.5916666666666667,
           "cases": 120
         },
         "clarify": {
@@ -28,14 +28,14 @@
           "cases": 21
         },
         "search": {
-          "success": 1.0,
+          "success": 0.6666666666666666,
           "cases": 9
         }
       },
       "Success": {
-        "mean": 0.6833333333333332,
-        "min": 0.6666666666666666,
-        "max": 0.7
+        "mean": 0.6333333333333333,
+        "min": 0.6166666666666667,
+        "max": 0.65
       },
       "Execution accuracy": {
         "mean": 0.43333333333333335,
@@ -43,9 +43,9 @@
         "max": 0.45
       },
       "Wrong-answer rate": {
-        "mean": 0.03751187084520418,
-        "min": 0.037037037037037035,
-        "max": 0.038461538461538464
+        "mean": 0.11253561253561255,
+        "min": 0.1111111111111111,
+        "max": 0.11538461538461539
       },
       "Abstention precision": {
         "mean": 0.6096681096681097,
@@ -83,12 +83,12 @@
       "questions": 60,
       "instability": 0.08333333333333333,
       "success_ci95_first_run": [
-        0.5833333333333334,
-        0.8166666666666667
+        0.5166666666666667,
+        0.7666666666666667
       ],
       "by_action": {
         "answer": {
-          "success": 0.6666666666666666,
+          "success": 0.6166666666666667,
           "cases": 120
         },
         "clarify": {
@@ -104,14 +104,14 @@
           "cases": 21
         },
         "search": {
-          "success": 1.0,
+          "success": 0.6666666666666666,
           "cases": 9
         }
       },
       "Success": {
-        "mean": 0.6888888888888888,
-        "min": 0.6666666666666666,
-        "max": 0.7
+        "mean": 0.638888888888889,
+        "min": 0.6166666666666667,
+        "max": 0.65
       },
       "Execution accuracy": {
         "mean": 0.525,
@@ -119,9 +119,9 @@
         "max": 0.525
       },
       "Wrong-answer rate": {
-        "mean": 0.012345679012345678,
-        "min": 0.0,
-        "max": 0.037037037037037035
+        "mean": 0.08641975308641975,
+        "min": 0.07407407407407407,
+        "max": 0.1111111111111111
       },
       "Abstention precision": {
         "mean": 0.5441919191919191,
@@ -159,12 +159,12 @@
       "questions": 60,
       "instability": 0.08333333333333333,
       "success_ci95_first_run": [
-        0.6,
-        0.8166666666666667
+        0.55,
+        0.7833333333333333
       ],
       "by_action": {
         "answer": {
-          "success": 0.65,
+          "success": 0.6,
           "cases": 120
         },
         "clarify": {
@@ -180,14 +180,14 @@
           "cases": 21
         },
         "search": {
-          "success": 1.0,
+          "success": 0.6666666666666666,
           "cases": 9
         }
       },
       "Success": {
-        "mean": 0.6944444444444443,
-        "min": 0.6666666666666666,
-        "max": 0.7166666666666667
+        "mean": 0.6444444444444445,
+        "min": 0.6166666666666667,
+        "max": 0.6666666666666666
       },
       "Execution accuracy": {
         "mean": 0.6333333333333333,
@@ -195,9 +195,9 @@
         "max": 0.65
       },
       "Wrong-answer rate": {
-        "mean": 0.08251231527093596,
-        "min": 0.06896551724137931,
-        "max": 0.10714285714285714
+        "mean": 0.15311986863711002,
+        "min": 0.13793103448275862,
+        "max": 0.17857142857142858
       },
       "Abstention precision": {
         "mean": 0.5678524374176548,
@@ -232,8 +232,8 @@
     }
   },
   "sources": {
-    "v0": "outputs/reports/final_test_v0_scorer_v2.json",
-    "v1": "outputs/reports/final_test_v1_scorer_v2.json",
-    "v2": "outputs/reports/final_test_v2_scorer_v2.json"
+    "v0": "outputs/reports/final_test_v0_scorer_v1.json",
+    "v1": "outputs/reports/final_test_v1_scorer_v1.json",
+    "v2": "outputs/reports/final_test_v2_scorer_v1.json"
   }
 }
