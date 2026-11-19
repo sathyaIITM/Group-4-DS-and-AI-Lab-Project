@@ -1,0 +1,75 @@
+{
+  "target": 0.8,
+  "blocks": {
+    "A": {
+      "labellers": [
+        "T1",
+        "T2"
+      ],
+      "adjudicator": "T4",
+      "items_labelled_by_both": 67,
+      "undecided": 1,
+      "tool": {
+        "n": 66,
+        "agreement": 0.7424,
+        "kappa": 0.6787
+      },
+      "domain": {
+        "n": 66,
+        "agreement": 0.8788,
+        "kappa": 0.8589
+      }
+    },
+    "B": {
+      "labellers": [
+        "T2",
+        "T4"
+      ],
+      "adjudicator": "T1",
+      "items_labelled_by_both": 67,
+      "undecided": 1,
+      "tool": {
+        "n": 66,
+        "agreement": 0.7424,
+        "kappa": 0.6807
+      },
+      "domain": {
+        "n": 66,
+        "agreement": 0.8636,
+        "kappa": 0.8409
+      }
+    },
+    "C": {
+      "labellers": [
+        "T4",
+        "T1"
+      ],
+      "adjudicator": "T2",
+      "items_labelled_by_both": 66,
+      "undecided": 0,
+      "tool": {
+        "n": 66,
+        "agreement": 0.7879,
+        "kappa": 0.7306
+      },
+      "domain": {
+        "n": 66,
+        "agreement": 0.9545,
+        "kappa": 0.9471
+      }
+    }
+  },
+  "overall": {
+    "tool": {
+      "n": 198,
+      "agreement": 0.7576,
+      "kappa": 0.6958
+    },
+    "domain": {
+      "n": 198,
+      "agreement": 0.899,
+      "kappa": 0.8825
+    }
+  },
+  "meets_target": false
+}
