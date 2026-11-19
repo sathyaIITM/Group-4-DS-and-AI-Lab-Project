@@ -1,132 +1,60 @@
 # Analyst Agent for Indian Public Data with Calibrated Decision Models
 
-DS & AI Lab course project, Generative AI track. Group 4.
+DS & AI Lab course project, Generative AI track, Group 4. Working title.
 
-*Title not final.*
+The agent answers questions in plain English about a curated catalogue of 14 Indian public
+statistics tables. Every figure in an answer comes from a read-only SQL query on a versioned
+table, and every answer carries its evidence: the table, the filters, the query and the result.
+When the catalogue cannot answer, the agent says so instead of guessing.
 
-## Project overview
+The research contribution is the control layer. Small decision models, fine-tuned and calibrated
+on the project's own labels, take the agent's routing decisions; a hosted LLM is used only where
+text must be written (query intent, SQL, narration, clarifying questions).
 
-A trustworthy natural-language interface to a curated set of Indian public
-statistics. The agent shows its evidence, reports a calibrated confidence, and
-declines when the catalogue cannot support an answer.
+## Contents
 
-- **Milestone 1 report:** [docs/milestones/Milestone1_Report.md](docs/milestones/Milestone1_Report.md)
-- **Contributing, branches and working agreements:** [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Worklog (individual contributions, updated weekly):** [WORKLOG.md](WORKLOG.md)
+- [Status](#status)
+- [Problem and users](#problem-and-users)
+- [Architecture](#architecture)
+- [Models](#models)
+- [Data](#data)
+- [Results](#results)
+- [Setup](#setup)
+- [Running](#running)
+- [Repository layout](#repository-layout)
+- [Documents](#documents)
+- [Team](#team)
 
-## Problem statement
+## Status
 
-Indian public data from data.gov.in, MoSPI and the PLFS, the RBI, the IMD, the
-agriculture ministry, NFHS and the Census is open but hard to use: messy
-formats (years as columns, footnotes, lakh and crore, Orissa and Odisha),
-domain conventions (usual against weekly status, agricultural against fiscal
-year) and no way to verify a figure a chatbot produces. The goal is a correct,
-explained and verifiable answer for a non-expert in about 30 seconds.
+Milestone 4 (training, configuration and evaluation) was submitted on 19 November 2026.
 
-Primary users are journalists and fact-checkers. Secondary users are students
-and researchers, NGO staff and local administrators. The admin team operates
-the system and is not a user.
-
-Cross-portal dataset discovery is out of scope for the question-answering
-claim: the agent works over an admin-curated catalogue of 8–12 tables, and new
-tables enter through a separate, admin-approved onboarding path. The full
-problem statement, stakeholder analysis, scope table and literature review are
-in the [Milestone 1 report](docs/milestones/Milestone1_Report.md).
-
-## Features
-
-Core features (target: 26 November, per the scope table in the Milestone 1
-report); none are implemented yet — see [Status](#status).
-
-- Natural-language questions answered over a fixed catalogue of Indian public
-  tables, with place, time and unit resolvers for government geography codes,
-  fiscal-versus-agricultural years, and lakh/crore normalisation.
-- Read-only, checked SQL execution (sqlglot, DuckDB over versioned Parquet, a
-  10-second timeout) with an evidence panel showing the executed query, its
-  sources and the data version.
-- A calibrated confidence badge on every answer, and a decision to decline
-  with the reason when the catalogue cannot cover the question.
-- A decision-model control layer (Kev, Jev) in place of per-step LLM calls,
-  for lower latency and cost.
-- A frozen 200-question evaluation suite tracked across six versions (v0–v6).
-
-## Architecture
-
-A fixed LangGraph workflow, not an open-ended ReAct loop. Decision models make
-the agent's control decisions; a hosted LLM is used only where text must be
-generated, namely queries, plans, narration and clarifying questions. SQL is
-the execution layer, not the research contribution.
-
-| Layer | Component |
+| Area | State |
 | --- | --- |
-| Query generation | Hosted LLM, chosen by a dev-set comparison, with retrieval, verified-example memory and prompt optimisation (DSPy, GEPA) |
-| Control decisions | A fine-tuned open decision model (Kev) behind accuracy and calibration gates, with uncertain calls escalating to a hosted decision model (Jev); Jev takes coverage and every decision Kev does not pass |
-| Verification | Jev zero-shot, calibrated on the team's human labels, producing the claim-support check and the confidence badge |
-| Execution | sqlglot check, read-only DuckDB over versioned Parquet, 10-second timeout |
-| Abstention | A coverage check: the agent declines and logs a data request when the catalogue cannot answer |
+| Data catalogue | 14 tables frozen, 723,169 observations, built by a configuration-driven pipeline |
+| Agent | LangGraph graph of 36 nodes, built and tested (569 tests); runs end to end with Gemini on Vertex AI |
+| Versions measured | v0, v1, v2 on the held-out test set, 3 runs x 60 questions |
+| Decision model | Kev-0.8B fine-tuned for the domain decision; passes the gate against Jev on 198 human labels |
+| Demonstration app | FastAPI service with a streaming browser page (`app/api`, `app/ui`) |
+| Next (Milestones 5 and 6) | Optimised prompts (v3), Kev inside the agent (v4), calibrated verification and the confidence badge (v5), deployment, evidence and data provenance report |
 
-The retraining and recalibration procedure is human-approved; an admin
-approves each run. The project makes no self-improvement claim.
+## Problem and users
 
-![Core architecture of the agent: a fixed LangGraph workflow with a two-tier decision layer, read-only DuckDB execution over versioned Parquet, and an evidence panel with a calibrated confidence badge](docs/milestones/figures/Architecture_Diagram.svg)
+Indian public data from data.gov.in, MoSPI (PLFS, CPI), IMD, the agriculture ministry, NFHS and
+NCRB is open but hard to use: tables arrive in different shapes (years as columns, footnotes,
+lakh and crore), names change (Orissa and Odisha), and domain conventions matter (usual against
+weekly status, agricultural against fiscal year). A chatbot figure cannot be checked against the
+source. The goal is a correct, explained and verifiable answer for a non-expert in about 30
+seconds.
 
-*Figure 1. Core architecture, reproduced from the Milestone 1 report. The
-admin-operated onboarding path (foot of the diagram) is outside the
-question-answering claim.*
+Primary users are journalists and fact-checkers. Secondary users are students and researchers,
+NGO staff and local administrators.
 
-### Version ladder
-
-| Version | Change |
-| --- | --- |
-| v0 | Baseline: fixed workflow, a hosted LLM writes queries and makes every decision, generic prompts |
-| v1 | Catalogue descriptions, domain guidance cards, retrieval with reranking |
-| v2 | Retrieved verified examples |
-| v3 | Optimised prompts (run manually) |
-| v4 | Fine-tuned Kev replaces the LLM calls for its gated decisions |
-| v5 | Calibrated verification by Jev and the confidence badge |
-| v6 | Retraining and recalibration after drift |
-
-## Dataset details
-
-The initial catalogue is 8–12 core tables across labour, agriculture,
-rainfall, prices/economy and health, drawn from data.gov.in, MoSPI/PLFS/CPI/WPI
-(eSankhyiki), the IMD, the agriculture ministry (DES), the RBI (DBIE) and NFHS
-(IIPS). Specific tables are not named yet: candidates are profiled and the
-list is frozen in Milestone 2 (29 October 2026). See
-[data/README.md](data/README.md) for the directory layout and tracking rules,
-and section 10 of the [Milestone 1 report](docs/milestones/Milestone1_Report.md) for
-sourcing, licensing and the full data plan.
-
-| Material | Planned size |
-| --- | --- |
-| Question–reference-query pairs | 1,000+ execution-verified pairs |
-| Routing examples per Kev decision | 1,000–2,000 (core: tool selection, domain) |
-| Verification calibration set | 150–200 human-labelled instances |
-| Evaluation sets | Frozen test (200, 20+ unanswerable), dev (150) |
-
-No dataset or model file is committed to this repository; `data/sample`
-carries small tracked extracts only.
-
-## Model(s) used
-
-| Model | Role |
-| --- | --- |
-| A hosted LLM (chosen by a dev-set comparison, E2) | Writes SQL queries, plans and narration; the only generation step |
-| Kev-0.8B (open, fine-tuned; Kev-4B as a stretch comparison) | Core decision model: tool selection and domain, behind an accuracy/calibration gate |
-| Jev (hosted decision model, TypeSafe AI) | Coverage, verification and every decision Kev does not pass; calibrated on human labels |
-
-No model is fine-tuned to write SQL; query generation is bought from a hosted
-LLM rather than trained. See section 5.1 and section 8 of the
-[Milestone 1 report](docs/milestones/Milestone1_Report.md) for the reasoning.
-
-## Objectives
-
-Targets are initial; the execution-accuracy target is fixed after v0 is
-measured.
+### Objectives
 
 | | Objective | Target |
 | --- | --- | --- |
-| O1 | Execution accuracy on a frozen 200-question test set | Exceed v0, paired difference with a 95% interval |
+| O1 | Execution accuracy on the held-out test set | Above v0, with a 95% interval |
 | O2 | Claim support | At least 0.95 |
 | O3 | ECE of the confidence badge | At most 0.10 |
 | O4 | Abstention precision | At least 0.85 |
@@ -135,125 +63,241 @@ measured.
 | O7 | Improvement across versions | Measurable |
 | O8 | Chart appropriateness | At least 0.90 |
 
-## Installation
+## Architecture
 
-Python 3.12 or 3.13 is required; Kev's serving stack supports only these.
+A fixed LangGraph workflow, not an open-ended agent loop. Every path ends in one of six
+terminal outcomes (answer, clarification, decline, abstention, out of scope, system failure),
+and every edge enforces a 45 s deadline and a budget of 8 model calls.
 
-```bash
-python -m pip install -e ".[dev]"
-pre-commit install
+```mermaid
+flowchart LR
+    Q[Question] --> I[Intake<br/>memory, screening]
+    I --> R[Retrieval<br/>top 4 tables:<br/>BM25 + bge-small]
+    R --> D{Routing<br/>tool and domain<br/>LLM, Jev or Kev}
+    D -->|query or chart| P[Query path<br/>intent, place and period<br/>resolution, coverage]
+    P --> S[SQL by Gemini<br/>read-only DuckDB<br/>checks and repair]
+    S --> N[Narration<br/>number check<br/>against the result]
+    N --> O[Answer, evidence,<br/>Vega-Lite chart]
+    D -->|describe, search,<br/>explain| O
+    D -->|clarify or decline| O
 ```
 
-## Running instructions
+| Stage | What happens |
+| --- | --- |
+| Intake | Reads the last five turns, a pending clarification and the prior result; screens prompt-override attempts |
+| Retrieval | Ranks the catalogue (BM25 fused with `bge-small-en-v1.5`, plus place and indicator slots), then retrieves indicators, guidance cards and verified examples for the top four tables |
+| Routing | Chooses one of seven branches (query, chart, describe, search, explain, clarify, decline) and the domain |
+| Query path | Extracts the query intent, resolves places, periods and units, checks coverage, writes SQL, executes it read-only, derives values in code and checks the result against the intent |
+| Output | Narrates the result, checks that every narrated number is in the result, stores the evidence bundle and draws the chart |
 
-Tests:
+Full design contract: [docs/specs/agent_graph.md](docs/specs/agent_graph.md). Built system and
+its configuration: [Milestone 4 report](docs/milestones/Milestone4_Report.md), Section A2.
 
-```bash
-pytest
-```
+### Version ladder
 
-The full stack with Docker Compose:
+| Version | Change | State |
+| --- | --- | --- |
+| v0 | Hosted LLM routes and writes SQL; catalogue only | Measured |
+| v1 | v0 plus guidance cards in the retrieved context | Measured |
+| v2 | v1 plus verified question and SQL examples; Jev routes | Measured |
+| v3 | Optimised prompts (DSPy, GEPA) | Milestone 5 |
+| v4 | Fine-tuned Kev takes the domain decision | Kev trained and gated; not yet in the agent |
+| v5 | Calibrated answer verification and the confidence badge | Milestone 5 |
+| v6 | Recalibration and human-approved retraining after drift | Milestone 6 |
 
-```bash
-cp .env.example .env   # fill in POSTGRES_PASSWORD and any keys needed
-docker compose up --build
-```
+## Models
 
-See [infra/README.md](infra/README.md) for deployment, for serving Kev, and for
-the budget estimate.
+No model is trained from scratch, and no model is fine-tuned to write SQL. Reasons and
+alternatives: [Milestone 4 report](docs/milestones/Milestone4_Report.md), Section 1.4.
 
-The RAG proof of concept (needs the processed tables, Docker and a Gemini key
-in `.env`; full steps in Appendix A of the Milestone 3 report):
+| Role | Model | How it is used |
+| --- | --- | --- |
+| Query intent, SQL, narration, clarification | `gemini-3.5-flash-lite` on Vertex AI | Temperature 0, JSON-schema replies validated by code, thinking level set per purpose ([configs/model.yaml](configs/model.yaml)) |
+| Domain decision | Kev-0.8B (Qwen3.5-0.8B base, LoRA rank 16, pointer head) | Fine-tuned on 1,876 routing records; one temperature fitted for calibration ([configs/train.yaml](configs/train.yaml)) |
+| Tool selection, reference decision model | Jev (hosted, TypeSafe AI) | Zero-shot; routes in v2; reference for the Kev gate and the fallback of the cascade |
+| Retrieval embeddings | `BAAI/bge-small-en-v1.5` | CPU, fused with BM25 |
 
-```bash
-python -m pip install -e ".[dev,retrieval]"
-scripts/rag_poc_db.sh
-set -a; . ./.env; set +a
-python -m analyst.pipelines.rag_poc --only rp-01
-```
+## Data
+
+Fourteen tables from government sources, each published as one observation table
+(`obs_<dataset>`) under a fixed [data contract](docs/specs/data_contract_v1.md). Raw and
+processed files are not in git; the download and pipeline scripts rebuild them, and
+[data/MANIFEST.md](data/MANIFEST.md) holds their hashes.
+
+| Domain | Tables |
+| --- | --- |
+| Labour | PLFS unemployment rate by State (2017-18 to 2021-22); PLFS urban labour force participation rate by State (2023-24) |
+| Agriculture | Crop area and production by district and season (1997-98 to 2015-16); minimum support prices of 24 crops (2013-14 to 2024-25) |
+| Rainfall | IMD monthly rainfall for 36 sub-divisions (1901-2017); IMD district rainfall normals (1951-2000) |
+| Prices and economy | CPI All India, rural, urban and combined (2013-2023); Mandi daily commodity prices; per capita GSDP by State (2019-20 to 2023-24) |
+| Health | NFHS-5 district indicators; NFHS-5 State factsheets; SRS infant mortality rate by State (2015-2019) |
+| Other | NCRB crime incidence and rates (2022-2024); NCRB violent crimes by State (2021-2023) |
+
+Sources, units and quirks of each table: [docs/specs/candidate_tables.md](docs/specs/candidate_tables.md).
+
+| Evaluation material | Size | Use |
+| --- | --- | --- |
+| `e2e_v1` ([data/eval/](data/eval/)) | 100 questions: 40 development, 60 test (+20 development only) | End-to-end evaluation of the agent; outcomes fixed in advance |
+| Routing data v2 ([data/splits/kev/](data/splits/kev/)) | 1,876 train, 322 calibration, 355 validation | Kev training, calibration and checkpoint selection |
+| `dev_human` ([data/labels/dev_human_v1/](data/labels/dev_human_v1/)) | 198 items, two labellers and an adjudicator | Test set for the decision models, scored once |
 
 ## Results
 
-Development results, not yet on a held-out test set (details and caveats in
-[Milestone 3 report](docs/milestones/Milestone3_Report.md), version 1.2):
+Milestone 4 results. All figures come from committed files under [outputs/](outputs/); costs
+are estimates from token counts.
 
-| Result | Figure | Evidence |
-| --- | --- | --- |
-| End-to-end proof of concept (retrieval, Gemini, guarded SQL, release check), 12 questions | 10 and 11 of 12 handled correctly in two runs; median 15.4 s and 17.6 s | `outputs/predictions/rag_poc_flash_lite.jsonl`, `outputs/predictions/rag_poc_flash_lite_run2.jsonl` (report Section 8.5) |
-| Kev-0.8B domain decision, rule-generated labels, 338 items | 0.828 zero-shot, 0.879 after a 250-record fine-tune; ECE 0.040 after calibration | `outputs/reports/domain_*_score.json` (report Section 7.5) |
+**Agent, held-out test set** (`e2e_test`, 3 runs x 60 questions;
+[version_ladder_test.md](outputs/reports/version_ladder_test.md)):
 
-The v0 baseline and the version ladder (execution accuracy, claim support,
-ECE, abstention precision, latency, cost) start in Milestone 4.
+| Measure | v0 | v1 | v2 |
+| --- | --- | --- | --- |
+| End-to-end success | 0.683 | 0.689 | 0.694 |
+| Execution accuracy | 0.433 | 0.525 | 0.633 |
+| Wrong-answer rate | 0.038 | 0.012 | 0.083 |
+| Latency p95 (s) | 13.0 | 11.9 | 10.0 |
+| Model calls per answer | 8.75 | 8.56 | 6.05 |
+| Cost per answer (USD, estimate) | 0.0269 | 0.0296 | 0.0190 |
 
-## Demo screenshots
+Execution accuracy rises with each version; end-to-end success stays flat because most failures
+occur before the query is written, mainly in place resolution (report Section A6.4). Declines and
+searches succeed in every run; clarification is the weakest action.
 
-None yet. A streaming UI with an evidence panel and confidence badge is a core
-deliverable targeted for 26 November 2026 (Milestone 5); screenshots are added
-once it exists.
+**Domain decision, human-labelled test set** (`dev_human`, 198 items; report Section B12):
+
+| Model | Accuracy (95% CI) | Macro-F1 | ECE after calibration |
+| --- | --- | --- | --- |
+| Kev-0.8B zero-shot | 0.783 (0.727-0.838) | 0.625 | 0.081 |
+| Kev-0.8B fine-tuned (`ep3`) | 0.980 (0.960-0.995) | 0.973 | 0.040 |
+| Jev (reference) | 0.970 (0.944-0.990) | 0.962 | 0.034 |
+
+The gate (accuracy within 3 points of Jev, ECE at most 0.10) passes. At a 5% error budget the
+Kev-to-Jev cascade keeps every item on Kev.
+
+## Setup
+
+Python 3.12 or 3.13.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+python -m pip install -e ".[dev,retrieval,eval]"
+cp .env.example .env        # fill in the keys you need; never commit .env
+```
+
+The exact versions behind the reported results are in
+[requirements.lock.txt](requirements.lock.txt).
+
+Build the data (needs a free `DATA_GOV_IN_API_KEY` from data.gov.in):
+
+```bash
+python scripts/download_raw.py
+python scripts/run_pipeline.py
+python scripts/build_manifest.py      # compare hashes with data/MANIFEST.md
+```
+
+Details and the handling of blocked runs: [scripts/README.md](scripts/README.md).
+
+## Running
+
+**Tests** (after the data build):
+
+```bash
+python -m pytest
+```
+
+**Agent from the command line.** The default `stub` mode runs every node with scripted model
+replies and spends nothing; `live` calls Gemini on Vertex AI and spends cloud credit.
+
+```bash
+python scripts/run_agent.py --question "Show monthly rainfall in Kerala"
+GOOGLE_CLOUD_PROJECT=<project> python scripts/run_agent.py --llm live --yes \
+    --version v2 --question "What was the unemployment rate in Gujarat in 2021-22?" --save-chart
+```
+
+Live mode authenticates with Google Application Default Credentials
+(`gcloud auth application-default login`); v2 also needs `TYPESAFE_API_KEY` for Jev.
+
+**Demonstration app** (streams each stage, then the answer, evidence and chart):
+
+```bash
+AGENT_LLM=stub uvicorn app.api.main:app --port 8000
+# open http://localhost:8000/ ; AGENT_LLM=live uses the hosted model
+```
+
+The full stack (UI, API, admin, Postgres with pgvector, Caddy) runs with `docker compose up --build`;
+see [infra/README.md](infra/README.md).
+
+**Evaluation of the agent** (report Section A6.7):
+
+```bash
+python -m analyst.evaluation.e2e_eval run --live --yes --allow-unvalidated --version v2 \
+    --experiment test_v2_r1 --set data/eval/e2e_test.v1.jsonl \
+    --out outputs/predictions/test_v2_r1.jsonl
+python -m analyst.evaluation.e2e_eval score \
+    --predictions outputs/predictions/test_v2_r1.jsonl --out outputs/reports/test_v2.json
+```
+
+Scoring is deterministic: saved predictions are compared with the gold records, so re-scoring
+gives the same figures and calls no model.
+
+**Kev training and scoring.** Training runs in
+[notebooks/kev_train_t4.ipynb](notebooks/kev_train_t4.ipynb) on a Colab or Kaggle T4 (fp32);
+serving uses [scripts/serve_kev.sh](scripts/serve_kev.sh) and scoring
+`scripts/score_kev_run.sh <run>`. The protocol is
+[docs/specs/kev_training_protocol.md](docs/specs/kev_training_protocol.md), and every command
+with its output is listed in report Appendix A. Weights are not in git; run records are in
+[outputs/reports/kev_runs/](outputs/reports/kev_runs/) and [models/registry.json](models/registry.json).
 
 ## Repository layout
 
 ```
-docs/          Milestone reports, architecture diagram, TA presentation decks
-data/          raw, processed, sample (tracked), splits — see data/README.md
-notebooks/     01_EDA, 02_Preprocessing, 03_Model_Experiments, 04_Evaluation
-src/analyst/
-  data/        Acquisition, cleaning, catalogue construction
-  models/      Decision-model training, calibration, checkpoints
-  inference/   Decision-model and hosted-LLM clients
-  retrieval/   Verified examples, guidance cards, column descriptions
-  agents/      The fixed LangGraph workflow
-  tools/       Typed tools: resolvers, query runner, statistics, chart
-  decisions/   Decision contracts and the Kev-to-Jev cascade
-  evaluation/  Version ladder, gates, ablations
-  pipelines/   Ingestion, example generation, retraining, recalibration
-  utils/       Configuration, logging, tracing
-app/           api (API and agent), ui, admin
-configs/       Catalogue, model, train, inference, evaluation, prompts
-models/        Local checkpoints (not tracked)
-outputs/       predictions, reports, figures, logs (not tracked)
+app/           api (FastAPI service, /ask and /stream), ui (browser page), admin (health check only)
+configs/       agent, model, train, inference and evaluation settings; prompts; table sources
+data/          eval sets, routing splits, human labels, samples (raw and processed not tracked)
+docs/          milestone reports and slides, specifications
 infra/         Caddy, database initialisation, deployment notes
-tests/         Mirrors src/analyst
+models/        run registry (checkpoints not tracked)
+notebooks/     EDA, Kev and Laya training notebooks
+outputs/       committed predictions, reports, figures and logs cited by the reports
+scripts/       data pipeline, agent runner, evaluation and Kev tooling
+src/analyst/
+  agents/      LangGraph graph, control, model and tool nodes, memory, run log
+  contracts/   Pydantic contracts shared by every node
+  data/        acquisition, cleaning, catalogue
+  decisions/   routing and coverage decisions; System One client for Kev and Jev
+  evaluation/  end-to-end scoring; decision-model scoring, gate and cascade; retrieval evaluation
+  inference/   hosted LLM client and prompt registry
+  models/      Kev run planning, registry and reports
+  ops/         run export and collation for the drift baseline
+  pipelines/   RAG proof of concept of Milestone 3
+  retrieval/   hybrid catalogue retrieval, guidance cards, verified examples
+  tools/       read-only SQL, resolvers, derivations, checks, charts
+tests/         569 tests
 ```
 
-## Status
+## Documents
 
-Milestone 1 is complete. No agent, model or tool code is implemented yet; this
-repository currently holds the report, the architecture diagram and the
-scaffold.
+| Document | Content |
+| --- | --- |
+| [Milestone 4 report](docs/milestones/Milestone4_Report.md), [slides](docs/milestones/Milestone4_TA_Presentation.pptx) | Training, configuration and evaluation (current) |
+| [Milestone 3 report](docs/milestones/Milestone3_Report.md) | Architecture and end-to-end pipeline design |
+| [Milestone 2 report](docs/milestones/Milestone2_Report.md) | Dataset identification and preparation |
+| [Milestone 1 report](docs/milestones/Milestone1_Report.md) | Problem definition and literature review |
+| [docs/README.md](docs/README.md) | Index of every report, slide deck and specification |
+| [CHANGELOG.md](CHANGELOG.md), [WORKLOG.md](WORKLOG.md) | Changes by milestone; individual contributions by week |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, code standards and working agreements |
 
-| Milestone | Deliverable | Date (2026) |
+## Team
+
+| Track (Milestone 4) | Member | Roll number |
 | --- | --- | --- |
-| M1 | Problem definition and literature review | 22 October |
-| M2 | Data: freeze the table list, first cleaned tables and catalogue, week-1 feasibility results, first question–reference pairs | 29 October |
-| M3 | Architecture | 5 November |
-| M4 | Training | 19 November |
-| M5 | Evaluation | 26 November |
-| M6 | Deployment and documentation | 10 December |
-| | Final presentation | about 21 December |
+| T1 Data and Tools | Shaoni Samanta | 21f1003157 |
+| T2 Agent | Shivanshu Gupta | 22f3002985 |
+| T3 Model | Sathya Prakash | 21f1006001 |
+| T4 Ops and Evaluation | Ashmit Ghose | 24f1001827 |
 
-## Team members
-
-| Track | Member | Roll number | Scope |
-| --- | --- | --- | --- |
-| T1 Data and Tools | Shaoni Samanta | 21f1003157 | Sourcing, profiling, cleaning steps, validation, catalogue, guidance cards, onboarding pipeline, typed tools |
-| T2 Agent | Shivanshu Gupta | 22f3002985 | LangGraph workflow, resolvers, query generation, execution, evidence panel, streaming UI |
-| T3 Model | Sathya Prakash | 21f1006001 | Kev fine-tuning, calibration fits, gates, retrieval, Jev integration |
-| T4 Ops and Evaluation | Ashmit Ghose | 24f1001827 | Question–reference pairs, splits, leakage checks, evaluation, Compose stack, VM, tracing, admin portal |
-
-Tracks rotate
-between milestones; see [CONTRIBUTING.md](CONTRIBUTING.md). Weekly individual
-contributions are logged in [WORKLOG.md](WORKLOG.md).
-
-## References
-
-36 references, verified against source, are listed in section 12 of the
-[Milestone 1 report](docs/milestones/Milestone1_Report.md): decision models and routing,
-calibration, verification and abstention, grounded data analysis and
-query-generation benchmarks, prompt optimisation, and the commercial and
-public tools reviewed in section 5.
+Tracks rotate between milestones; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licence
 
-Code and documentation: MIT, see [LICENSE](LICENSE). The referenced datasets
-are published by Indian government bodies under their own terms.
+Code and documentation: MIT, see [LICENSE](LICENSE). The datasets are published by Indian
+government bodies under their own terms.

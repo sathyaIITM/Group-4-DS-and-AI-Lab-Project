@@ -166,6 +166,17 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
     in `configs/evaluation.yaml`).
   - Hosted-model access through an impersonated service account; access token cached for 45
     minutes with a bounded token fetch; request timeout 12 s; embedding model loaded offline.
+- Milestone 4 review preparation (19 November 2026):
+  - `README.md` rewritten for the current state: status, architecture, models, the 14 tables,
+    Milestone 4 results, setup, run commands and repository layout.
+  - Milestone 4 report 1.0: Section 1.4, model selection and justification. Slides: a slide on
+    design decisions and trade-offs; risks and limitations added to the challenges slide.
+  - `docs/README.md` lists every report, deck and specification; `data/README.md` lists the
+    evaluation sets, human labels and routing data v2; stale comments in `app/ui/Dockerfile`
+    and `app/admin/main.py` corrected; `CONTRIBUTING.md` states that `main` holds the latest
+    submitted milestone.
+  - Removed `docs/milestones/Milestone_1_TA_Presentation.pptx`, superseded by
+    `Milestone1_TA_Presentation_revised.pptx` (the original remains in the git history).
 
 ### Fixed
 
