@@ -193,6 +193,21 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
     are shown as a table.
   - Narration states when compared groups are nested (an age range inside a wider one, a total
     and its parts).
+  - Version ladder (19 November): retrieved content contradicted the rules code enforces, which
+    lowered v1 and v2 below v0. Guidance cards (v2, v3) state facts and never tell the model to
+    ask or to report every variety; verified examples (v2) follow the SQL prompt's rules; tests
+    check both. v2 routes tool and domain on Jev.
+  - Reliability: access token aged by wall-clock time with a refresh on 401/403; longer pause on
+    HTTP 429; intent cap 1024, request timeout 20 s, run deadline 45 s; a reply that loops or is
+    cut at the cap keeps its complete fields; indicator ids repaired by hash suffix or, when one
+    indicator fits, by label words.
+  - A follow-up that asks for new figures after an explanation request continues on the query
+    path. A single-place question with no place named, on a table without a national row, is
+    asked. A single-value question whose rows would differ in an unnamed category with a small
+    closed set of values (MSP variety, crop season) is asked. Category values that do not exist
+    in their column, or repeat another column's value, are dropped.
+  - Evaluation: 20-item dev supplement (describe, search, clarify, decline, multi-turn) written
+    by T3; e2e_v1 and its test split unchanged; success by expected action in the ladder table.
 
 ### Notes
 

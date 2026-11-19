@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import time
 from collections.abc import Callable, Mapping
@@ -35,6 +36,9 @@ from analyst.tools.resolve import resolve_plan, total_value
 from analyst.tools.sql_runner import ReadOnlyDatabase, SqlRejectedError, SqlTimeoutError, check_sql
 
 NodeFn = Callable[[AnalystState], dict[str, Any]]
+
+
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -341,6 +345,98 @@ def _period_options(
     return plan.model_copy(update={"unresolved": slots}) if slots != plan.unresolved else plan
 
 
+SINGLE_PLACE_OPERATIONS = {"lookup", "change", "trend", "share"}
+
+
+def _missing_place(
+    plan: InterpretationPlan, intent: QueryIntent, table: Mapping[str, Any]
+) -> InterpretationPlan:
+    """A question about one place that names none, on a table without a national row, is
+    asked: there is no default place (e2e_v1 rule for tables without an all-India row; smoke
+    run, 19 Nov: "the modal price of onion" listed a few of 482 markets). A ranking or a
+    comparison across places needs no place, and a follow-up keeps the previous one."""
+    if (
+        intent.action != "answer"
+        or plan.places
+        or plan.all_places_level
+        or plan.unresolved
+        or plan.operation not in SINGLE_PLACE_OPERATIONS
+        or "national" in (table.get("geo_levels") or [])
+    ):
+        return plan
+    slot = UnresolvedSlot(slot="place", mention="no place was named", options=[])
+    return plan.model_copy(update={"unresolved": [slot]})
+
+
+MAX_CATEGORY_OPTIONS = 6
+
+
+def _ambiguous_category(
+    plan: InterpretationPlan,
+    intent: QueryIntent,
+    table: Mapping[str, Any],
+    deps: ToolNodeDependencies,
+) -> InterpretationPlan:
+    """A single-value question whose rows would differ in a category the user did not name,
+    and that has no total value to default to, is asked, offering the values found (MSP of
+    paddy: Common or Grade A; smoke run, 19 Nov, where one variety or both were reported)."""
+    if (
+        intent.action != "answer"
+        or plan.unresolved
+        or plan.operation != "lookup"
+        or len(plan.places) > 1
+        or len(plan.periods) != 1
+        or not plan.indicators
+    ):
+        return plan
+    dataset_id = str(table.get("dataset_id"))
+    obs = str(table.get("obs_table") or f"obs_{dataset_id}")
+    if not re.fullmatch(r"obs_[a-z][a-z0-9_]*", obs):
+        return plan
+    window = plan.periods[0]
+    for column in table.get("categories") or {}:
+        if column in plan.categories or total_value(dataset_id, column) is not None:
+            continue
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", column):
+            continue
+        ids = [i.indicator_id for i in plan.indicators]
+        where = [
+            f"indicator_id IN ({', '.join('?' for _ in ids)})",
+            "period_start = ?",
+            "period_end = ?",
+            "quality_flag <> 'implausible'",
+        ]
+        params: list[Any] = [*ids, window.start, window.end]
+        for name, values in plan.categories.items():
+            if re.fullmatch(r"[a-z][a-z0-9_]*", name) and values:
+                where.append(f"{name} IN ({', '.join('?' for _ in values)})")
+                params.extend(values)
+        if plan.places:
+            where.append("geo_code = ?")
+            params.append(plan.places[0].code)
+        db = deps.database_for(dataset_id)
+        try:
+            found = db.execute(
+                f"SELECT DISTINCT {column} FROM {obs} WHERE {' AND '.join(where)} "  # noqa: S608 - validated identifiers
+                f"AND {column} IS NOT NULL ORDER BY 1 LIMIT 7",
+                params,
+            ).fetchall()
+        except Exception as error:  # a lookup that cannot be checked is left to the checks
+            LOG.warning("category check on %s.%s skipped: %s", dataset_id, column, error)
+            continue
+        finally:
+            db.close()
+        values = [str(row[0]) for row in found]
+        # Asked only for a small closed set (MSP varieties, crop seasons); a long open list such
+        # as market varieties is answered across all values.
+        if 1 < len(values) <= MAX_CATEGORY_OPTIONS:
+            slot = UnresolvedSlot(
+                slot="category", mention=f"{column} was not named", options=values[:6]
+            )
+            return plan.model_copy(update={"unresolved": [slot]})
+    return plan
+
+
 def _single_measure(slot: str, options: list[str], plan: InterpretationPlan) -> bool:
     """A clarification about the measure with one option, which the plan already resolved.
     Indicator slot only: a missing group ("youth" on a persons-15+ table, slot `category`) must
@@ -508,6 +604,8 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         if state.prior_plan is not None:
             plan = inherit_from_prior(plan, state.intent, state.prior_plan, table)
         plan = _period_options(plan, state.intent, table, deps)
+        plan = _missing_place(plan, state.intent, table)
+        plan = _ambiguous_category(plan, state.intent, table, deps)
         if state.intent.action == "clarify" and not plan.unresolved:
             # The intent asks for a detail the question leaves out; coverage turns an
             # unresolved slot into a clarification.

@@ -25,6 +25,33 @@ from analyst.tools.places import FILTER_LEVELS, is_national, resolve_filter_plac
 TOTAL_VALUES = ("total", "all", "rural+urban", "rural + urban", "combined", "persons", "both")
 
 
+def _known_values(dataset_id: str, categories: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Keep only category values that exist in their column and are not copied from another
+    column; a column left with none is dropped. Matching ignores case and spacing. Smoke run,
+    19 Nov: the intent copied the commodity into the variety column ("variety: Potato"), which
+    kept only the rows of the generic variety of that name."""
+    kept: dict[str, list[str]] = {}
+    # A value repeated from another column ("commodity_name: Potato", "variety: Potato") is a
+    # copy: as a variety it would keep only the rows of the generic variety named "Potato".
+    first: dict[str, str] = {}
+    for column, values in categories.items():
+        for value in values:
+            first.setdefault(value.strip().casefold(), column)
+    categories = {
+        column: [v for v in values if first[v.strip().casefold()] == column]
+        for column, values in categories.items()
+    }
+    for column, values in categories.items():
+        known = {str(v).strip().casefold(): str(v) for v in codelist(dataset_id, column)}
+        if not known:  # no codelist to check against: keep as given
+            kept[column] = values
+            continue
+        found = [known[v.strip().casefold()] for v in values if v.strip().casefold() in known]
+        if found:
+            kept[column] = found
+    return kept
+
+
 def total_value(dataset_id: str, column: str) -> str | None:
     """The codelist value of `column` that stands for the total, if there is exactly one kind."""
     values = {str(v).strip().casefold(): str(v) for v in codelist(dataset_id, column)}
@@ -171,7 +198,7 @@ def resolve_plan(
                 assumptions.append(
                     Assumption(code="D1", text=f"No period named: the latest, {latest.label}.")
                 )
-    categories = dict(intent.categories)
+    categories = _known_values(dataset_id, dict(intent.categories))
     for column in dataset.get("categories") or {}:
         total = total_value(dataset_id, column) if column not in categories else None
         if total is not None:

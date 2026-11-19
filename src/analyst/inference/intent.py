@@ -84,8 +84,23 @@ def repair_indicator_ids(intent: QueryIntent, retrieved: Mapping[str, Any]) -> Q
     for given in intent.indicator_ids:
         match = HASH_SUFFIX.search(given)
         candidates = by_hash.get(match.group(1), []) if match and given not in valid else []
+        if given not in valid and not candidates:
+            candidates = _by_words(given, valid)
         fixed.append(candidates[0] if len(candidates) == 1 else given)
     return intent.model_copy(update={"indicator_ids": fixed})
+
+
+ID_STOP = {"nfhs5", "state", "of", "the", "in", "per", "who", "are", "is", "a", "and", "to"}
+
+
+def _by_words(given: str, valid: list[str]) -> list[str]:
+    """Valid ids that contain every distinctive word of an id written from its label without
+    the hash (smoke run, 19 Nov: "nfhs5_state_infant_mortality_rate_per_1000_live_births").
+    Only a single match is used; words of four or more letters must all appear."""
+    words = {w for w in given.split("_") if len(w) >= 4 and w not in ID_STOP and not w.isdigit()}
+    if len(words) < 2:
+        return []
+    return [v for v in valid if words <= set(v.split("_"))]
 
 
 def check_intent(intent: QueryIntent, retrieved: Mapping[str, Any]) -> None:

@@ -621,6 +621,48 @@ def _short(error: Exception) -> str:
     return f"{type(error).__name__}: {str(error)[:300]}"
 
 
+def salvage_json(text: str) -> dict[str, Any] | None:
+    """The usable part of a reply that is not valid JSON as a whole: the first complete object
+    (a reply followed by runaway text or newlines), or the object cut after its last complete
+    top-level field (a reply whose last field ran on until the output cap). Smoke run, 19 Nov:
+    16 intent replies looped inside a free-text field until cut. The schema check still applies,
+    so a reply that lacks a required field is still rejected."""
+    start = text.find("{")
+    if start < 0:
+        return None
+    body = text[start:]
+    try:
+        value, _ = json.JSONDecoder().raw_decode(body)
+        return value if isinstance(value, dict) else None
+    except json.JSONDecodeError:
+        pass
+    cuts: list[int] = []  # positions of commas between top-level members
+    depth, in_string, escaped = 0, False, False
+    for i, ch in enumerate(body):
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch in "{[":
+            depth += 1
+        elif ch in "}]":
+            depth -= 1
+        elif ch == "," and depth == 1:
+            cuts.append(i)
+    for cut in reversed(cuts):
+        try:
+            value = json.loads(body[:cut] + "}")
+        except json.JSONDecodeError:
+            continue
+        return value if isinstance(value, dict) else None
+    return None
+
+
 def parse_json(content: str, purpose: str = "reply") -> dict[str, Any]:
     """The JSON object in a reply, with or without a code fence."""
     fenced = re.search(r"```(?:json)?\s*(.*?)```", content, flags=re.DOTALL)
@@ -628,7 +670,9 @@ def parse_json(content: str, purpose: str = "reply") -> dict[str, Any]:
     try:
         value = json.loads(text)
     except json.JSONDecodeError as error:
-        raise LlmError(f"{purpose}: reply is not JSON: {content[:200]}") from error
+        value = salvage_json(text)
+        if value is None:
+            raise LlmError(f"{purpose}: reply is not JSON: {content[:200]}") from error
     if not isinstance(value, dict):
         raise LlmError(f"{purpose}: reply is not a JSON object")
     return value

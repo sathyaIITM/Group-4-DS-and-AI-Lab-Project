@@ -71,7 +71,6 @@ LLM_NODES = {
 # Nodes whose only edge leads to finalize_response; their edges are not guarded.
 TERMINAL = {
     "search_catalog_entries",
-    "explain_from_evidence",
     "render_chart",
     "ask_clarification",
     "decline_and_log_data_request",
@@ -129,8 +128,9 @@ def after_routing(state: AnalystState) -> str:
 
 
 def after_describe(state: AnalystState) -> str:
-    """A describe request that turns out to ask for figures ("comment on all the categories"
-    after an answer) continues on the query path; otherwise the description is the reply."""
+    """A describe or explain request that turns out to ask for figures ("comment on all the
+    categories", "how much did it change between those years?") continues on the query path;
+    otherwise the written reply is the answer."""
     if state.routing is not None and state.routing.branch == "query":
         return "retrieve_context_and_examples"
     return "finalize_response"
@@ -259,6 +259,7 @@ CONDITIONAL: list[tuple[str, Router]] = [
     ("resolve_routing_decision", after_routing),
     ("validate_existing_result_for_chart", after_chart_validation),
     ("describe_from_metadata", after_describe),
+    ("explain_from_evidence", after_describe),
     ("check_coverage", after_coverage),
     ("validate_sql_with_sqlglot", after_sql_validation),
     ("execute_read_only_duckdb", after_execution),
@@ -275,7 +276,6 @@ PLAIN: list[tuple[str, str]] = [
     ("route_tool_and_domain", "escalate_to_jev"),
     ("escalate_to_jev", "resolve_routing_decision"),
     ("search_catalog_entries", "finalize_response"),
-    ("explain_from_evidence", "finalize_response"),
     ("retrieve_context_and_examples", "extract_query_intent"),
     ("extract_query_intent", "resolve_places_periods_units"),
     ("resolve_places_periods_units", "check_coverage"),

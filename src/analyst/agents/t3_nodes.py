@@ -382,6 +382,52 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
             ),
         }
 
+    def explain(state: AnalystState) -> dict[str, Any]:
+        """`explain_result`: an answer about the stored result (its source, query, assumptions
+        and caveats) written from the evidence only; a message that asks for new figures
+        continues on the query path (smoke run, 19 Nov: "How much did it change between those
+        two years?" returned the source note)."""
+        from analyst.tools.evidence import EvidenceStore
+
+        bundle = EvidenceStore().get(state.prior_result_ref) if state.prior_result_ref else None
+        if bundle is None:
+            return t2.explain_from_evidence(state)
+        documentation = {
+            "result": {
+                "statement": bundle.statement,
+                "sql": bundle.sql,
+                "columns": [c.name for c in bundle.result.columns],
+                "rows": bundle.result.rows[:20],
+            },
+            "sources": [s.model_dump(mode="json") for s in bundle.sources],
+            "assumptions": [a.text for a in bundle.assumptions],
+            "caveats": [c.text for c in bundle.caveats],
+        }
+        counters = state.counters.model_copy()
+        try:
+            reply, record = replies.write_description(
+                state.question, [documentation], [], llm, counters, state.history[-2:]
+            )
+        except (LlmError, ValueError) as error:
+            update = t2.explain_from_evidence(state)
+            update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
+            return update
+        if reply.data_request and state.routing is not None:
+            routing = state.routing.model_copy(update={"final_tool": "run_sql", "branch": "query"})
+            return {
+                "routing": routing,
+                "counters": counters,
+                "llm_records": [record],
+                "events": stage_event(state, "explain_from_evidence", handed_to_query=True),
+            }
+        return {
+            "response_text": reply.answer.strip(),
+            "outcome": "explained",
+            "counters": counters,
+            "llm_records": [record],
+            "events": stage_event(state, "explain_from_evidence", evidence_id=bundle.evidence_id),
+        }
+
     def clarification(state: AnalystState) -> dict[str, Any]:
         """The T2 node, with the question text written by the LLM when it can be."""
         update = t2.ask_clarification(state)
@@ -417,6 +463,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         "ask_clarification": clarification,
         "decline_and_log_data_request": decline,
         "describe_from_metadata": describe,
+        "explain_from_evidence": explain,
     }
 
 

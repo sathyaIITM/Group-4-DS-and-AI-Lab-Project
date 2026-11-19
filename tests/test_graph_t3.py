@@ -148,6 +148,18 @@ def run(
     return invoke_graph(state, overrides=nodes), transport
 
 
+def run_with(
+    fields: dict[str, Any], *replies: Any, question: str, **script: list[Any]
+) -> tuple[AnalystState, ScriptedTransport]:
+    """`run` with extra initial state fields (for example a stored result reference)."""
+    client, transport = scripted_client(*replies, max_llm_calls=8)
+    deps = T3Dependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
+    nodes = {**make_t3_nodes(deps), "resolve_places_periods_units": resolver}
+    config = RunConfig(version="v0", stub_script=script)
+    state = AnalystState(run_id="r1", question=question, config=config, **fields)
+    return invoke_graph(state, overrides=nodes), transport
+
+
 def test_answer(workdir: Path) -> None:
     state, transport = run(ROUTE, intent(), SQL, NARRATION)
     assert (state.outcome, state.outcome_cause) == ("answered", None)
@@ -322,3 +334,37 @@ def test_a_describe_request_that_asks_for_figures_continues_as_a_query(workdir: 
     assert state.outcome == "answered"
     purposes = [r.purpose for r in state.llm_records]
     assert purposes[:3] == ["route", "describe", "intent"] and "narrate" in purposes
+
+
+def test_an_explain_request_that_asks_for_figures_continues_as_a_query(
+    workdir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Smoke run, 19 Nov: "How much did it change between those two years?" was explained.
+    from types import SimpleNamespace
+
+    import analyst.tools.evidence as evidence_mod
+
+    bundle = SimpleNamespace(
+        statement="s",
+        sql="SELECT 1",
+        result=SimpleNamespace(columns=[], rows=[]),
+        sources=[],
+        assumptions=[],
+        caveats=[],
+        evidence_id="ev1",
+    )
+    monkeypatch.setattr(evidence_mod.EvidenceStore, "get", lambda self, ref: bundle)
+    route = {"tool": "explain_result", "domain": "rainfall"}
+    handover = {"data_request": True, "documented": False, "answer": ""}
+    config_state = {"prior_result_ref": "ev1"}
+    state, _ = run_with(
+        config_state,
+        route,
+        handover,
+        intent(),
+        SQL,
+        NARRATION,
+        question="Compare the annual rainfall in Kerala",
+    )
+    assert state.outcome == "answered"
+    assert [r.purpose for r in state.llm_records][:3] == ["route", "describe", "intent"]

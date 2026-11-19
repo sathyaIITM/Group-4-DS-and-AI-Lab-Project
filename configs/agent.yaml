@@ -16,7 +16,7 @@ limits:
   shortcut_threshold: null
   answer_threshold: null      # unused before v5
 rag:
-  cards: configs/rag/guidance_cards.v2.json      # v2 (19 Nov): no card asks the user what code decides
+  cards: configs/rag/guidance_cards.v3.json      # v3 (19 Nov): cards state facts; code decides when to ask
   examples: data/sample/rag_verified_examples.v2.jsonl   # v2 (19 Nov): follow the SQL prompt rules
-  cards_fallback: configs/rag/guidance_cards.v1.json
+  cards_fallback: configs/rag/guidance_cards.v2.json
   examples_fallback: data/sample/rag_verified_examples.v1.jsonl
