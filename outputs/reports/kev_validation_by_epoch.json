@@ -1,0 +1,26 @@
+[
+  {
+    "run_id": "ep1",
+    "epochs": 1,
+    "calibration_nll_raw": 0.349474599951739,
+    "dev_nll_raw": 0.12821015125715182,
+    "dev_nll_calibrated": 0.13986341234842947,
+    "dev_accuracy": 0.9661971830985916
+  },
+  {
+    "run_id": "b0_s0",
+    "epochs": 2,
+    "calibration_nll_raw": 0.25375772358641474,
+    "dev_nll_raw": 0.03473954937165836,
+    "dev_nll_calibrated": 0.03507075386751978,
+    "dev_accuracy": 0.9915492957746479
+  },
+  {
+    "run_id": "ep3",
+    "epochs": 3,
+    "calibration_nll_raw": 0.23384367655538518,
+    "dev_nll_raw": 0.02983148701652196,
+    "dev_nll_calibrated": 0.023705504246191042,
+    "dev_accuracy": 0.9943661971830986
+  }
+]

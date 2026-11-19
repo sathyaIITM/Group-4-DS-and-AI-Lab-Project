@@ -1,0 +1,30 @@
+{
+  "n": 198,
+  "error_budget": 0.05,
+  "kev_temperature": 3.763404352848288,
+  "threshold": 0.4458168112457468,
+  "min_accepted_calibration": 30,
+  "calibration_accepted": 322,
+  "calibration_error_on_accepted": 0.015527950310559006,
+  "calibration_error_upper95": 0.031552845397806575,
+  "escalation_band": [
+    0.0,
+    0.4458168112457468
+  ],
+  "kev_share": 1.0,
+  "kev_error_on_handled": 0.02020202020202022,
+  "cascade_accuracy": 0.9797979797979798,
+  "cascade_accuracy_ci95": [
+    0.9595959595959596,
+    0.9949494949494949
+  ],
+  "kev_only_accuracy": 0.9797979797979798,
+  "jev_only_accuracy": 0.9696969696969697,
+  "cost_usd_per_1000": null,
+  "jev_calls_per_1000": 0.0,
+  "inputs_sha256": {
+    "kev_calibration": "5eea52e3cb2b61e88f2adb983c5317c4710f750615b1906b2090058456287a74",
+    "kev_dev": "4b5c55056f465a9aeb8a0f20230e68a79dd40cec3ca2f7979689da26f07770c3",
+    "jev_dev": "ed0fd8ce42368b465d3ff60612ae76d4629c88eb70c8532690ab81892374f276"
+  }
+}

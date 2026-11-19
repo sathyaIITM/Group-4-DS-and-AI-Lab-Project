@@ -1,0 +1,11 @@
+{
+  "file": "data/splits/kev/dev_human.v1.jsonl",
+  "sha256": "a20943505d897c98399eb0d16ae74c36ea1b27238f3ee03ac54d20fcbd77d7ef",
+  "items_source": "data/labels/dev_human_v1/items_rendered.jsonl",
+  "items_source_sha256": "4b13e28f4b3345eabb967a9cda2f844fe9d1621ba42ab9dd7c558dce38ac4c17",
+  "kept": 198,
+  "removed_ambiguous": [
+    "dh-086",
+    "dh-195"
+  ]
+}

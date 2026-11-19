@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-11-16T19:35:54+00:00",
+  "location": "global",
+  "tier": "ad hoc",
+  "output_cap": 512,
+  "calls": [
+    {
+      "model": "google/gemini-3.8-flash",
+      "level": "low",
+      "served_model": "google/gemini-3.8-flash",
+      "latency_ms": 3623,
+      "tokens_in": 126,
+      "tokens_out": 105,
+      "reasoning_tokens": null,
+      "finish_reason": "stop",
+      "valid_json": true,
+      "visible_chars": 316,
+      "cost_usd_est": 0.00048825
+    },
+    {
+      "model": "google/gemini-3.8-flash",
+      "level": "medium",
+      "served_model": "google/gemini-3.8-flash",
+      "latency_ms": 6147,
+      "tokens_in": 126,
+      "tokens_out": 111,
+      "reasoning_tokens": 308,
+      "finish_reason": "stop",
+      "valid_json": true,
+      "visible_chars": 321,
+      "cost_usd_est": 0.00166575
+    }
+  ],
+  "total_cost_usd_est": 0.002154
+}

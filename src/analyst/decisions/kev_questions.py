@@ -9,7 +9,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-GUIDE_VERSION = "1.0-draft.4"
+GUIDE_VERSION = "1.0"
 STATE_CHAR_LIMIT = 1400  # about 384 tokens, the state length Kev-0.8B was mostly trained on
 
 Tool = Literal[
@@ -19,6 +19,7 @@ Tool = Literal[
     "search_catalog",
     "ask_clarification",
     "decline_not_covered",
+    "explain_result",
 ]
 Domain = Literal[
     "labour",
@@ -62,6 +63,11 @@ TOOL_OPTIONS: dict[str, str] = {
         "Decline: the figure needs data absent from the catalogue, or the message is not a data "
         "request."
     ),
+    "explain_result": (
+        "Explain the current result: a result table is already available and the user asks "
+        "where its figures come from, how they were computed, or which definition, period, "
+        "assumption or caveat applies, without asking for new figures."
+    ),
 }
 
 DOMAIN_INSTRUCTIONS = (
@@ -99,6 +105,8 @@ class KevState(BaseModel):
 
 
 class ChoiceQuestion(BaseModel):
+    """A Kev choice question: instructions, options and, in training data, the label."""
+
     model_config = ConfigDict(extra="forbid")
 
     type: Literal["choice"] = "choice"
@@ -141,6 +149,7 @@ class KevRecord(BaseModel):
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
+        """Check that the record asks exactly the canonical questions with their canonical text."""
         if set(self.questions) != set(QUESTIONS):
             raise ValueError(f"questions must be exactly {sorted(QUESTIONS)}")
         for name, question in self.questions.items():
@@ -153,19 +162,23 @@ class KevRecord(BaseModel):
 
     @property
     def tool(self) -> str:
+        """Return the tool label."""
         return self.questions["tool"].label
 
     @property
     def domain(self) -> str:
+        """Return the domain label."""
         return self.questions["domain"].label
 
     def to_json(self) -> str:
+        """Serialise the record as one JSON line."""
         return self.model_dump_json(by_alias=True)
 
 
 def render_context(
     has_result: bool, prior_turn: str | None = None, previous_tool: str | None = None
 ) -> str:
+    """Describe the conversation context shown to the router."""
     if not has_result:
         return "No result table yet."
     return (
@@ -175,6 +188,7 @@ def render_context(
 
 
 def build_record(state: KevState, tool: Tool, domain: Domain, meta: RecordMeta) -> KevRecord:
+    """Build a Kev training record from a state, labels and metadata."""
     questions = {
         name: ChoiceQuestion(instructions=instructions, criteria=criteria, label=label)
         for (name, (instructions, criteria)), label in zip(

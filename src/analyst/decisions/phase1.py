@@ -39,6 +39,7 @@ def to_domain_record(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def read_jsonl(path: Path) -> Iterator[dict[str, Any]]:
+    """Yield the JSON objects of a JSONL file."""
     with path.open(encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
@@ -53,6 +54,7 @@ def convert_split(source: Path, target: Path) -> int:
 
 
 def write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
+    """Write JSON objects to a JSONL file, creating its directory."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for record in records:
@@ -74,3 +76,37 @@ def subsample(records: list[dict[str, Any]], n: int, seed: int = 0) -> list[dict
     rng.shuffle(remaining)
     chosen.update(remaining[: max(0, n - len(chosen))])
     return [records[i] for i in sorted(chosen)]
+
+
+def to_laya_row(record: dict[str, Any], decision: str = "domain") -> dict[str, Any]:
+    """A Kev record as a Laya training row (`{state, questions, expected}`; laya 0.4.23,
+    `laya.train.rows_to_items`): the same state and question text, the label moved to
+    `expected`, so both models are fine-tuned on identical inputs."""
+    question = dict(record["questions"][decision])
+    label = question.pop("label")
+    question.setdefault("type", "choice")
+    return {
+        "state": record["state"],
+        "questions": {decision: question},
+        "expected": {decision: label},
+        "_meta": {"id": record["_meta"]["id"]},
+    }
+
+
+def dev_human_record(row: dict[str, Any]) -> dict[str, Any]:
+    """A frozen dev_human row (`{id, state, tool, domain, label_source}`, written by
+    `scripts/label_agreement.py freeze`) as a Kev record with both routing questions in their
+    canonical text, so every backend is scored on identical requests."""
+    questions = {}
+    for decision in ("tool", "domain"):
+        instructions, criteria = QUESTIONS[decision]
+        if row[decision] not in criteria:
+            raise ValueError(f"{row['id']}: {decision} label {row[decision]!r} is not an option")
+        questions[decision] = {
+            "type": "choice",
+            "instructions": instructions,
+            "criteria": criteria,
+            "label": row[decision],
+        }
+    meta = {"id": row["id"], "label_source": row.get("label_source", "human"), "split": "dev_human"}
+    return {"state": row["state"], "questions": questions, "_meta": meta}

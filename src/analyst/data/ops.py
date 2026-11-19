@@ -37,15 +37,18 @@ def clean_header(value: object) -> str:
 
 
 def slug(text: str) -> str:
+    """Return a lower-case identifier made of letters, digits and underscores."""
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
 
 
 def slug_with_hash(text: str, prefix: str) -> str:
+    """Return a prefixed slug with a short hash so that long labels stay unique."""
     digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:8]  # noqa: S324 - identifier only
     return f"{prefix}_{slug(text)[:90]}_{digest}"
 
 
 def sha256_of(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -63,6 +66,7 @@ def clean_frame(raw: pd.DataFrame) -> tuple[pd.DataFrame, int]:
 # Values
 # ---------------------------------------------------------------------------
 def _append(rule: pd.Series, mask: pd.Series, text: str) -> None:
+    """Append a rule note to the rows selected by a mask."""
     rule.loc[mask] = rule.loc[mask].map(lambda r: f"{r};{text}".lstrip(";"))
 
 
@@ -113,6 +117,7 @@ def parse_values(
 
 
 def unit_from_label(label: str, rules: list[UnitRule], default: str) -> str:
+    """Return the unit of the first rule whose phrase appears in the label."""
     lowered = label.lower()
     for unit_rule in rules:
         if unit_rule.contains.lower() in lowered:
@@ -124,6 +129,7 @@ def unit_from_label(label: str, rules: list[UnitRule], default: str) -> str:
 # Periods
 # ---------------------------------------------------------------------------
 def month_end(year: int, month: int) -> date:
+    """Return the last day of a month."""
     return date(year, month, calendar.monthrange(year, month)[1])
 
 
@@ -161,6 +167,7 @@ def parse_dates(raw: pd.Series, date_format: str) -> pd.Series:
 # Places
 # ---------------------------------------------------------------------------
 def load_reference(name: str) -> list[str]:
+    """Load a reference list from configs/reference."""
     frame = pd.read_csv(REFERENCE_DIR / f"{name}.csv", dtype=str)
     return list(frame.iloc[:, 0])
 
@@ -219,4 +226,5 @@ def match_names(
 
 
 def flag_patterns_summary(patterns: list[FlagPattern]) -> list[str]:
+    """Return the names of the configured flag patterns."""
     return [pattern.name for pattern in patterns]

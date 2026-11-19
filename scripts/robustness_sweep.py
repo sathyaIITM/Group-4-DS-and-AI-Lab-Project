@@ -37,21 +37,25 @@ Mutation = Callable[[pd.DataFrame, SourceConfig], Mutant]
 
 
 def load(config: SourceConfig) -> pd.DataFrame:
+    """Load and clean a source's raw file."""
     raw = pd.read_csv(RAW / config.dataset.raw_file, dtype="string", keep_default_na=False)
     return ops.clean_frame(raw)[0]
 
 
 def value_headers(config: SourceConfig, frame: pd.DataFrame) -> list[str]:
+    """Return the value column headers of a frame."""
     return [column.header for column in value_columns(config, frame)]
 
 
 def place_header(config: SourceConfig) -> str | None:
+    """Return the state or sub-division column header, if any."""
     return next(
         (h for h, role in config.columns.items() if role in ("geo_state", "geo_subdivision")), None
     )
 
 
 def as_number(series: pd.Series) -> pd.Series:
+    """Read text as numbers, ignoring thousands separators."""
     return pd.to_numeric(series.str.replace(",", "", regex=False), errors="coerce").astype(
         "float64"
     )
@@ -67,10 +71,12 @@ def replace_numbers(out: pd.DataFrame, header: str, changed: pd.Series) -> None:
 
 
 def shuffle(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: shuffle the rows."""
     return frame.sample(frac=1, random_state=1).reset_index(drop=True), config
 
 
 def upper_case_places(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: write place names in capitals."""
     header = place_header(config)
     if header is None:
         return None
@@ -80,18 +86,22 @@ def upper_case_places(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def append_duplicate(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: append a duplicate row."""
     return pd.concat([frame, frame.iloc[[len(frame) // 2]]], ignore_index=True), config
 
 
 def drop_value_column(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: drop the last value column."""
     return frame.drop(columns=[value_headers(config, frame)[-1]]), config
 
 
 def add_column(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: add an unknown column."""
     return frame.assign(brand_new_breakdown="x"), config
 
 
 def misspell_place(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: misspell one place name."""
     header = place_header(config)
     if header is None:
         return None
@@ -102,12 +112,14 @@ def misspell_place(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def inject_token(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: put a missing-value token in one cell."""
     out = frame.copy()
     out.loc[out.index[len(out) // 3], value_headers(config, frame)[0]] = "N/A"
     return out, config
 
 
 def negative_value(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: put a negative value in one cell."""
     out = frame.copy()
     headers = value_headers(config, frame)
     out.loc[out.index[len(out) // 2], headers[min(2, len(headers) - 1)]] = "-7"
@@ -115,6 +127,7 @@ def negative_value(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def rescale_one_indicator(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: multiply one value column by 100."""
     out = frame.copy()
     header = value_headers(config, frame)[0]
     replace_numbers(out, header, as_number(out[header]) * 100)
@@ -122,6 +135,7 @@ def rescale_one_indicator(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def noise_in_a_third(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: add noise to a third of the values."""
     out = frame.copy()
     for header in value_headers(config, frame):
         number = as_number(out[header])
@@ -131,10 +145,12 @@ def noise_in_a_third(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def truncate_history(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: keep only the first half of the rows."""
     return frame.iloc[: len(frame) // 2].copy(), config
 
 
 def move_year_window(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: shift the survey-year start month."""
     if config.period.type != "survey_year":
         return None
     moved = config.model_copy(deep=True)
@@ -143,6 +159,7 @@ def move_year_window(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
 
 
 def swap_two_columns(frame: pd.DataFrame, config: SourceConfig) -> Mutant:
+    """Mutation: swap two value columns."""
     headers = value_headers(config, frame)
     if len(headers) < 2:
         return None
@@ -169,6 +186,7 @@ MUTATIONS: list[tuple[str, bool, Mutation]] = [
 
 
 def classify(result: RunResult, baseline: Collection[tuple[str, str]]) -> tuple[str, str]:
+    """Classify a mutated run as blocked, flagged or passed relative to the baseline."""
     new = [i for i in result.review if (i.kind, i.severity) not in baseline]
     blocks = sorted({i.kind for i in new if i.severity == "block"})
     if result.blocked:
@@ -181,12 +199,14 @@ def classify(result: RunResult, baseline: Collection[tuple[str, str]]) -> tuple[
 
 
 def release(config: SourceConfig, frame: pd.DataFrame) -> RunResult:
+    """Run the pipeline on a mutated frame in a temporary directory."""
     with tempfile.TemporaryDirectory() as directory:
         frame.to_csv(Path(directory) / config.dataset.raw_file, index=False)
         return run_with_baseline(config, Path(directory))
 
 
 def main() -> int:
+    """Run every mutation on every source and report the outcomes."""
     os.chdir(ROOT)
     rows = []
     for config in load_all():

@@ -10,6 +10,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from pydantic import ValidationError
+
+from analyst.data import ops, reconcile
+from analyst.data.config import SourceConfig
+from analyst.data.contract import PERIOD_TYPES
+from analyst.data.engine import RunResult
+from analyst.data.publish import _write_parquet, build_catalogue_entry, run_with_baseline
 from tests.data_fixtures import (
     BUILDERS,
     approved,
@@ -19,12 +25,6 @@ from tests.data_fixtures import (
     run,
     run_config,
 )
-
-from analyst.data import ops, reconcile
-from analyst.data.config import SourceConfig
-from analyst.data.contract import PERIOD_TYPES
-from analyst.data.engine import RunResult
-from analyst.data.publish import _write_parquet, build_catalogue_entry, run_with_baseline
 
 PLFS = "plfs_state_ur_usual_status"
 IMD = "imd_subdivision_monthly_rainfall"
@@ -253,6 +253,143 @@ def test_an_unknown_quarter_name_blocks_and_flags_the_value() -> None:
 def test_a_quarter_table_without_a_quarter_map_is_refused() -> None:
     with pytest.raises(ValidationError):
         config_from_toml(QUARTERS_BASE)
+
+
+# --- Months as rows --------------------------------------------------------------------------
+
+MONTHS = QUARTERS_BASE.replace('quarter = "period_quarter"', 'month = "period_month"').replace(
+    'type = "quarter"', 'type = "month"\nmonth_map = { "Marcrh" = 3 }'
+)
+
+
+def month_frame(years: list[str], months: list[str]) -> pd.DataFrame:
+    frame = quarter_frame(years, months)
+    return frame.rename(columns={"quarter": "month"})
+
+
+def test_months_get_their_own_dates_and_labels() -> None:
+    cfg = config_from_toml(MONTHS)
+    frame = month_frame(["2019", "2020", "2019", "2019"], ["January", "February", "Marcrh", "Sept"])
+    result = run_config(cfg, frame, approved(frame))
+    assert not result.blocked, result.review
+    spans = {
+        r.period_label: (str(r.period_start.date()), str(r.period_end.date()))
+        for r in result.obs.itertuples()
+    }
+    assert spans == {
+        "2019-01": ("2019-01-01", "2019-01-31"),
+        "2020-02": ("2020-02-01", "2020-02-29"),
+        "2019-03": ("2019-03-01", "2019-03-31"),
+        "2019-09": ("2019-09-01", "2019-09-30"),
+    }
+    assert set(result.obs["period_type"]) == {"month"}
+
+
+def test_an_unknown_month_name_blocks_and_flags_the_value() -> None:
+    cfg = config_from_toml(MONTHS)
+    frame = month_frame(["2019", "2019"], ["April", "Auust"])
+    result = run_config(cfg, frame, approved(frame))
+    assert "unparsed_period" in kinds(result, "block")
+    bad = result.obs[result.obs["period_source"] == "2019 Auust"]
+    assert set(bad["quality_flag"]) == {"unparsed"} and bad["period_start"].isna().all()
+
+
+def test_a_month_table_without_a_month_column_is_refused() -> None:
+    cfg = config_from_toml(MONTHS.replace('month = "period_month"\n', ""))
+    frame = month_frame(["2019"], ["April"]).drop(columns="month")
+    with pytest.raises(ValueError, match="period_month"):
+        run_config(cfg, frame, approved(frame))
+
+
+# --- A unit that depends on the row ---------------------------------------------------------
+
+UNITS_BY_CROP = """
+[dataset]
+id = "t_crops"
+domain = "agriculture"
+title = "t"
+source_name = "s"
+source_table = "s"
+publisher = "p"
+raw_file = "x.csv"
+config_version = "0.1.0"
+retrieved = "2026-11-17"
+
+[columns]
+state = "geo_state"
+year = "period_year"
+crop = "category:crop"
+
+[values]
+mode = "indicators"
+
+[values.columns.production]
+id = "crop_production"
+unit = "tonne"
+
+[[values.columns.production.overrides]]
+column = "crop"
+values = ["Cotton(lint)"]
+id = "crop_production_bales_170kg"
+unit = "bale_170kg"
+
+[period]
+type = "survey_year"
+start_month = 7
+
+[geo]
+level = "state"
+vintage = "t"
+state_reference = "states"
+
+[view]
+mode = "rows"
+table = "t_crops"
+
+[view.columns]
+state = "geo_name"
+"""
+
+
+def crop_frame(crops: list[str]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "state": ["Kerala"] * len(crops),
+            "year": ["2000"] * len(crops),
+            "crop": crops,
+            "production": [str(10 * (i + 1)) for i in range(len(crops))],
+        },
+        dtype="string",
+    )
+
+
+def test_an_override_gives_listed_rows_their_own_indicator_and_unit() -> None:
+    frame = crop_frame(["Rice", "Cotton(lint)", "Wheat"])
+    result = run_config(config_from_toml(UNITS_BY_CROP), frame, approved(frame))
+    assert not result.blocked, result.review
+    got = {r.crop: (r.indicator_id, r.unit) for r in result.obs.itertuples()}
+    assert got == {
+        "Rice": ("crop_production", "tonne"),
+        "Cotton(lint)": ("crop_production_bales_170kg", "bale_170kg"),
+        "Wheat": ("crop_production", "tonne"),
+    }
+    # One unit per indicator, as the catalogue records it.
+    assert (result.obs.groupby("indicator_id")["unit"].nunique() == 1).all()
+    assert "override_value_missing" not in kinds(result)
+
+
+def test_an_override_value_not_in_the_table_is_reported() -> None:
+    frame = crop_frame(["Rice", "Wheat"])
+    result = run_config(config_from_toml(UNITS_BY_CROP), frame, approved(frame))
+    assert "override_value_missing" in kinds(result, "warn")
+    assert set(result.obs["indicator_id"]) == {"crop_production"}
+
+
+def test_an_override_naming_an_absent_column_is_refused() -> None:
+    cfg = config_from_toml(UNITS_BY_CROP.replace('column = "crop"', 'column = "variety"'))
+    frame = crop_frame(["Rice"])
+    with pytest.raises(ValueError, match="variety"):
+        run_config(cfg, frame, approved(frame))
 
 
 # --- A year window that moves --------------------------------------------------------------
@@ -643,3 +780,25 @@ def test_a_total_row_is_recognised_whatever_its_case() -> None:
     total = result.obs[result.obs["geo_name_source"] == "ALL INDIA"]
     assert total["is_total_row"].all() and set(total["geo_level"]) == {"national"}
     assert set(total["geo_name"]) == {"India"} and "geo_unmatched" not in kinds(result)
+
+
+# --- Rows that are not observations of a place ----------------------------------------------
+
+
+def test_drop_rows_removes_subtotals_and_records_them() -> None:
+    cfg = config_from_toml(Path("configs/sources/ncrb_violent_crimes_state.toml").read_text())
+    frame = pd.DataFrame(
+        {
+            "Sl. No": ["1", "2", "Total State (S)", "Total UT (S)", "Total All India"],
+            "State/UT": ["Bihar", "Kerala", "Total State (S)", "Total UT (S)", "Total All India"],
+            "2023": ["300", "100", "400", "0", "400"],
+            "Mid-Year Projected Population (in Lakhs) (2023)": ["1"] * 5,
+            "Rate of Violent Crimes (2023)": ["1"] * 5,
+            "Chargesheeting Rate (2023)": ["1"] * 5,
+        }
+    )
+    result = run_config(cfg, frame, approved(frame))
+    assert not result.blocked, [i.detail for i in result.review if i.severity == "block"]
+    assert sorted(result.obs["geo_name"]) == ["Bihar", "India", "Kerala"]
+    dropped = [i for i in result.review if i.kind == "rows_dropped"]
+    assert len(dropped) == 1 and dropped[0].count == 2

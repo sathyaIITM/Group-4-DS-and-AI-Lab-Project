@@ -25,6 +25,7 @@ NEAR_DUPLICATE_JACCARD = 0.8
 
 
 def words(text: str) -> set[str]:
+    """Return the set of lower-case words in a text."""
     return set(re.findall(r"[a-z0-9]+", text.lower()))
 
 

@@ -22,8 +22,21 @@ GROUPS = {
     "Processed tables (`data/processed`, not tracked)": sorted(
         (DATA_DIR / "processed").glob("*.parquet")
     ),
-    "Routing splits (`data/splits/kev`, tracked)": sorted(
+    "Routing splits, version 1 (`data/splits/kev`, tracked)": sorted(
         (DATA_DIR / "splits" / "kev").glob("*.v1.jsonl")
+    ),
+    "Routing splits, version 2, frozen catalogue (`data/splits/kev`, tracked)": sorted(
+        (DATA_DIR / "splits" / "kev").glob("*.v2.jsonl")
+    ),
+    "Domain-only Kev files, version 2 (`data/splits/kev_domain`, not tracked; "
+    "`python scripts/build_domain_phase1.py --version v2 --laya`)": sorted(
+        (DATA_DIR / "splits" / "kev_domain").glob("*.v2.jsonl")
+    ),
+    "Domain-only Laya rows, version 2 (`data/splits/laya_domain`, not tracked; same command)": (
+        sorted((DATA_DIR / "splits" / "laya_domain").glob("*.v2.jsonl"))
+    ),
+    "dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)": sorted(
+        p for p in (DATA_DIR / "labels" / "dev_human_v1").glob("items*.jsonl")
     ),
     "Text-to-SQL ground truth (`data/ground_truths`, tracked)": sorted(
         (DATA_DIR / "ground_truths").glob("*.csv")
@@ -32,6 +45,7 @@ GROUPS = {
 
 
 def sha256(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file, read in chunks."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
@@ -40,6 +54,7 @@ def sha256(path: Path) -> str:
 
 
 def shape(path: Path) -> tuple[int, int | str]:
+    """Return the row and column counts of a data file."""
     if path.suffix == ".parquet":
         frame = pd.read_parquet(path)
         return len(frame), frame.shape[1]
@@ -69,7 +84,8 @@ for title, paths in GROUPS.items():
     for path in paths:
         rows, columns = shape(path)
         lines.append(
-            f"| `{path.relative_to(ROOT_DIR)}` | {rows:,} | {columns} | {path.stat().st_size:,} | `{sha256(path)}` |"
+            f"| `{path.relative_to(ROOT_DIR).as_posix()}` | {rows:,} | {columns} | "
+            f"{path.stat().st_size:,} | `{sha256(path)}` |"
         )
     lines.append("")
 

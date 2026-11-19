@@ -46,12 +46,14 @@ RESOURCES = {
     "srs_imr_state.csv": "d64574ca-33b9-4108-bd90-b3de1edd82a8",  # T2-1
     "gsdp_per_capita_state.csv": "af17f25b-3bdf-4eeb-b3e3-b0fc93df16a7",  # T2-2
     "msp_crops.csv": "82e89d31-2208-4be0-babd-2286a4d9110b",  # T2-3
+    "ncrb_violent_crimes_state.csv": "214f1ee4-8a12-4d81-bc8a-e95cd0e57a27",  # NCRB State
 }
 
 
 def fetch_csv(
     client: httpx.Client, resource_id: str, key: str
 ) -> tuple[list[str], list[list[str]]]:
+    """Download every page of a data.gov.in resource and return the header and rows."""
     header: list[str] = []
     rows: list[list[str]] = []
     while True:
@@ -76,6 +78,7 @@ def fetch_csv(
 
 
 def main(names: list[str]) -> None:
+    """Download the named raw files."""
     unknown = sorted(set(names) - set(RESOURCES))
     if unknown:
         raise SystemExit(f"unknown file name(s): {', '.join(unknown)}; see RESOURCES")

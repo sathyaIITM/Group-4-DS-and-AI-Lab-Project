@@ -19,6 +19,7 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (india-analyst-agent data fetch)"}
 
 
 def _api_key() -> str:
+    """Return the data.gov.in API key from the environment, or raise."""
     key = os.environ.get("DATA_GOV_IN_API_KEY", "")
     if not key:
         msg = "DATA_GOV_IN_API_KEY is not set (see .env.example)"

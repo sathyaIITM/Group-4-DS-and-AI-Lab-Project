@@ -1,0 +1,31 @@
+{
+  "decision": "ep3",
+  "b0_seed_nll": {
+    "b0_s0": 0.03507075386751978,
+    "b0_s1": 0.03705275866939056,
+    "b0_s2": 0.05253246812253026
+  },
+  "b0_mean_nll": 0.04155199355314687,
+  "noise_floor": 0.01746171425501048,
+  "best_other": "ep3",
+  "best_other_nll": 0.023705504246191042,
+  "other_replaces_b0": true,
+  "eligible": [
+    "b0_s0",
+    "b0_s1",
+    "b0_s2",
+    "base_r16",
+    "ep1",
+    "ep3",
+    "lr1e-05",
+    "lr4e-05"
+  ],
+  "excluded": [],
+  "rule": {
+    "fit_temperature_on": "calibration",
+    "select_on": "dev_synthetic",
+    "metric": "nll_after_temperature",
+    "tie_break": "macro_f1",
+    "noise_floor": "b0_seed_range"
+  }
+}

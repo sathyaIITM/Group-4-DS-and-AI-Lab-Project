@@ -1,0 +1,11 @@
+{
+  "indicators": {
+    "gsdp_per_capita_current": {
+      "mad": 65049.0,
+      "median": 197433.0,
+      "p05": 76552.3,
+      "p95": 479960.74999999994
+    }
+  },
+  "observations": 140
+}

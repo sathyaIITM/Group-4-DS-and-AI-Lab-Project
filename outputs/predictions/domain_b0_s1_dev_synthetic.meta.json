@@ -1,0 +1,14 @@
+{
+  "run_id": "b0_s1",
+  "checkpoint": "models/checkpoints/b0_s1",
+  "weights_sha256": {
+    "adapter_model.safetensors": "27d5f57cf2e6d50948167ee396511a23a4a8b05b97a683490c103b49d2eff793",
+    "head.pt": "8c1a5ec7fc37a7c12af96af22d2b014b42629597d9162c8dd45adb21fc634b3f",
+    "adapter_config.json": "da498ff45649327b6a36be19ffde6a283fa462b2df00e6f937e46e390ae61f3f"
+  },
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "44dafc39a314a06d36b26ac7588f52be800f8e3e5eb991ac9fd68f4da0bcf7f7",
+  "device": "mps",
+  "created_utc": "2026-11-17T20:21:35+00:00"
+}

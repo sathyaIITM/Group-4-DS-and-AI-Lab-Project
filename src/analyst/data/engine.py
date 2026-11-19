@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from analyst.data import ops
-from analyst.data.config import Check, SourceConfig
+from analyst.data.config import Check, IndicatorOverride, SourceConfig
 from analyst.data.contract import (
     FLAG_RANK,
     OBS_HEAD,
@@ -44,10 +44,13 @@ class ValueColumn:
     indicator_label: str
     unit: str
     order: int
+    overrides: list[IndicatorOverride] = field(default_factory=list)
 
 
 @dataclass
 class RunResult:
+    """Output of preprocessing one source: observations, review items and metadata."""
+
     config: SourceConfig
     obs: pd.DataFrame
     review: list[ReviewItem]
@@ -56,6 +59,7 @@ class RunResult:
 
     @property
     def blocked(self) -> bool:
+        """Return True when any review item blocks publication."""
         return any(item.severity == "block" for item in self.review)
 
 
@@ -63,10 +67,12 @@ class RunResult:
 # Reading and column checks
 # ---------------------------------------------------------------------------
 def _roles(config: SourceConfig) -> dict[str, tuple[str, ...]]:
+    """Return each configured source column's role split into its parts."""
     return {header: tuple(role.split(":")) for header, role in config.columns.items()}
 
 
 def _is_period_header(config: SourceConfig, header: str) -> bool:
+    """Return True when a header is a period column under the configured pattern."""
     pattern = config.values.pattern
     if config.values.mode != "periods" or pattern is None:
         return False
@@ -145,6 +151,7 @@ def check_columns(
 
 
 def _rename_hint(header: str, candidates: list[str]) -> str:
+    """Suggest the configured column a new header may have been renamed from."""
     close = difflib.get_close_matches(header, candidates, n=1, cutoff=0.6)
     if close:
         return f"possible rename of {header!r} to {close[0]!r}: update the configuration"
@@ -155,6 +162,7 @@ def _rename_hint(header: str, candidates: list[str]) -> str:
 # Value columns
 # ---------------------------------------------------------------------------
 def value_columns(config: SourceConfig, df: pd.DataFrame) -> list[ValueColumn]:
+    """Return the value columns of a frame with their period or indicator."""
     values = config.values
     roles = set(config.columns)
     found: list[ValueColumn] = []
@@ -189,6 +197,7 @@ def value_columns(config: SourceConfig, df: pd.DataFrame) -> list[ValueColumn]:
                     indicator_label=spec.label or header,
                     unit=spec.unit,
                     order=order,
+                    overrides=spec.overrides,
                 )
             )
         elif values.remaining and header not in roles:
@@ -282,6 +291,7 @@ def _failures(check: Check, wide: pd.DataFrame, units: dict[str, str]) -> pd.Dat
 # Periods
 # ---------------------------------------------------------------------------
 def _year_label(year: int, start_month: int | None) -> str:
+    """Return a year label, as a span such as 2019-20 when the year does not start in January."""
     if start_month in (None, 1):
         return str(year)
     return f"{year}-{(year + 1) % 100:02d}"
@@ -308,6 +318,8 @@ def _row_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
         )
     if period.type == "quarter":
         return _quarter_periods(df, config)
+    if period.type == "month":
+        return _month_periods(df, config)
     header = next(h for h, role in roles.items() if role[0] in ("period_year", "period_date"))
     source = df[header]
     if period.type == "date":
@@ -389,6 +401,66 @@ def _quarter_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
     )
 
 
+MONTH_NAMES = {
+    name: number
+    for number, names in enumerate(
+        [
+            ("january", "jan"),
+            ("february", "feb"),
+            ("march", "mar"),
+            ("april", "apr"),
+            ("may",),
+            ("june", "jun"),
+            ("july", "jul"),
+            ("august", "aug"),
+            ("september", "sep", "sept"),
+            ("october", "oct"),
+            ("november", "nov"),
+            ("december", "dec"),
+        ],
+        start=1,
+    )
+    for name in names
+}
+
+
+def _month_periods(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
+    """Period of each row from a year column and a month-name column."""
+    period = config.period
+    roles = _roles(config)
+    year_header = next((h for h, r in roles.items() if r[0] == "period_year"), None)
+    month_header = next((h for h, r in roles.items() if r[0] == "period_month"), None)
+    if year_header is None or month_header is None:
+        msg = "period.type = month needs columns with the roles period_year and period_month"
+        raise ValueError(msg)
+    months = dict(MONTH_NAMES)
+    months.update({ops.normalise_name(name): number for name, number in period.month_map.items()})
+    years = pd.to_numeric(df[year_header].str.replace(",", "", regex=False), errors="coerce")
+    starts: list[Any] = []
+    ends: list[Any] = []
+    labels: list[str | None] = []
+    for year, text in zip(years, df[month_header].astype("string").fillna(""), strict=True):
+        month = months.get(ops.normalise_name(str(text)))
+        if pd.isna(year) or month is None:
+            starts.append(pd.NaT)
+            ends.append(pd.NaT)
+            labels.append(None)
+            continue
+        starts.append(pd.Timestamp(date(int(year), month, 1)))
+        ends.append(pd.Timestamp(ops.month_end(int(year), month)))
+        labels.append(f"{int(year)}-{month:02d}")
+    return pd.DataFrame(
+        {
+            "period_type": "month",
+            "period_label": labels,
+            "period_source": df[year_header].astype("string") + " " + df[month_header],
+            "period_start": pd.to_datetime(pd.Series(starts, index=df.index)),
+            "period_end": pd.to_datetime(pd.Series(ends, index=df.index)),
+        },
+        index=df.index,
+    )
+
+
 def _column_period(config: SourceConfig, header: str, df: pd.DataFrame) -> pd.DataFrame:
     """Period of each row for one value column when columns are periods."""
     index = df.index
@@ -448,11 +520,13 @@ def _column_period(config: SourceConfig, header: str, df: pd.DataFrame) -> pd.Da
 # Places
 # ---------------------------------------------------------------------------
 def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
+    """Resolve the place columns of a frame to geography codes, levels and names."""
     roles = _roles(config)
     geo = config.geo
     index = df.index
 
     def column_of(role: str) -> pd.Series | None:
+        """Return the source column with the given role, or None."""
         header = next((h for h, r in roles.items() if r[0] == role), None)
         return df[header] if header else None
 
@@ -513,7 +587,7 @@ def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
     out["geo_vintage"] = geo.vintage
 
     codes = []
-    for lvl, st, di, mk, nm in zip(
+    for geo_level, state, district, market, name in zip(
         out["geo_level"],
         out["geo_state"],
         out["geo_district"],
@@ -521,16 +595,18 @@ def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
         out["geo_name"],
         strict=True,
     ):
-        if lvl == "national":
+        if geo_level == "national":
             codes.append("IN")
-        elif lvl == "state":
-            codes.append(f"state:{ops.slug(str(nm))}")
-        elif lvl == "district":
-            codes.append(f"district:{ops.slug(str(st))}/{ops.slug(str(di))}")
-        elif lvl == "market":
-            codes.append(f"market:{ops.slug(str(st))}/{ops.slug(str(di))}/{ops.slug(str(mk))}")
+        elif geo_level == "state":
+            codes.append(f"state:{ops.slug(str(name))}")
+        elif geo_level == "district":
+            codes.append(f"district:{ops.slug(str(state))}/{ops.slug(str(district))}")
+        elif geo_level == "market":
+            codes.append(
+                f"market:{ops.slug(str(state))}/{ops.slug(str(district))}/{ops.slug(str(market))}"
+            )
         else:
-            codes.append(f"{lvl}:{ops.slug(str(nm))}")
+            codes.append(f"{geo_level}:{ops.slug(str(name))}")
     out["geo_code"] = codes
     return out
 
@@ -557,6 +633,7 @@ def run_source(
         raw_sha = "in-memory"
 
     def blocked_result(item: ReviewItem) -> RunResult:
+        """Return a run result that stops at a blocking review item."""
         return RunResult(config, pd.DataFrame(), [*review, item], {"dataset_id": dataset.id})
 
     if config.period.type == "survey_year" and config.period.start_month is None:
@@ -574,6 +651,21 @@ def run_source(
     columns_seen = list(frame.columns)
     review += check_columns(config, columns_seen, approved_columns)
     frame = frame.drop(columns=[c for c in config.read.drop_columns if c in frame.columns])
+    for column, drop_values in config.read.drop_rows.items():
+        if column not in frame.columns:
+            continue
+        drop = frame[column].astype(str).str.strip().isin(drop_values)
+        if drop.any():
+            review.append(
+                ReviewItem(
+                    dataset_id=dataset.id,
+                    severity="info",
+                    kind="rows_dropped",
+                    detail=f"rows with {column} in {sorted(drop_values)} removed (read.drop_rows)",
+                    count=int(drop.sum()),
+                )
+            )
+            frame = frame[~drop]
     if any(item.kind == "column_missing" for item in review):
         return RunResult(config, pd.DataFrame(), review, {"dataset_id": dataset.id}, columns_seen)
 
@@ -664,6 +756,28 @@ def run_source(
             piece[name] = series
         piece["value"] = wide[vcol.key]
         piece["unit"] = vcol.unit
+        for override in vcol.overrides:
+            if override.column not in frame.columns:
+                msg = f"override {override.id!r} names the column {override.column!r}, "
+                msg += "which is not in the table"
+                raise ValueError(msg)
+            hit = frame[override.column].isin(override.values)
+            piece.loc[hit, "indicator_id"] = override.id
+            piece.loc[hit, "indicator_label_source"] = override.label or override.id
+            piece.loc[hit, "unit"] = override.unit
+            absent = sorted(set(override.values) - set(frame[override.column].dropna()))
+            if absent:
+                review.append(
+                    ReviewItem(
+                        dataset_id=dataset.id,
+                        severity="warn",
+                        kind="override_value_missing",
+                        detail=f"override {override.id!r} of {vcol.header!r} names {absent}, "
+                        f"which are not in {override.column!r}",
+                        count=len(absent),
+                        suggestion="correct the values of the override or remove them",
+                    )
+                )
         piece["value_raw"] = frame[vcol.header]
         piece["quality_flag"] = base_rank[vcol.key].map(RANK_FLAG)
         piece["rule_ids"] = rule_wide[vcol.key]
@@ -736,6 +850,7 @@ def run_source(
 
 
 def _rule_note(rule_id: str) -> dict[str, Any]:
+    """Return the description and evidence of a source rule."""
     from analyst.data.source_rules import RULES
 
     rule = RULES[rule_id]

@@ -1,9 +1,366 @@
 <!doctype html>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>India analyst agent</title>
-<h1>A Calibrated Analyst Agent for Indian Public Data</h1>
-<p>
-  Scaffold. The streaming interface, evidence panel and confidence badge are
-  Milestone 3 deliverables. The API is served at <code>/api</code>.
-</p>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>India Data Analyst</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1b1e23; --muted: #667080; --line: #e3e6ea;
+  --accent: #2458b3; --accent-soft: #eaf0fb; --ok: #18794e; --warn: #9a5b00; --bad: #b42318;
+  --code: #f3f4f6; --user: #2458b3; --user-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131518; --panel: #1b1e22; --ink: #e7e9ec; --muted: #9aa3ad; --line: #2c3036;
+    --accent: #7ea6ff; --accent-soft: #1d2738; --ok: #4cc38a; --warn: #f0b45a; --bad: #ff7b72;
+    --code: #22262b; --user: #2f5fb8; --user-ink: #ffffff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0;
+  z-index: 2; }
+header h1 { font-size: 15px; margin: 0; font-weight: 600; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; color: var(--muted);
+  border: 1px solid var(--line); }
+.badge.live { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+header .spacer { flex: 1; }
+button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); padding: 6px 12px; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: wait; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; padding: 20px;
+  max-width: 1180px; margin: 0 auto; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px; }
+  aside { order: 2; } }
+#thread { display: flex; flex-direction: column; gap: 18px; min-height: 55vh; }
+.user { align-self: flex-end; max-width: 78%; background: var(--user); color: var(--user-ink);
+  padding: 8px 14px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; }
+.reply { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 18px; }
+.working { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  animation: pulse 1s infinite ease-in-out; }
+@keyframes pulse { 50% { opacity: .25; } }
+.answer { white-space: pre-wrap; }
+.options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.options button { font-size: 13px; background: var(--accent-soft); border-color: transparent; }
+.chart { margin-top: 12px; overflow-x: auto; }
+.status { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; gap: 10px;
+  flex-wrap: wrap; align-items: center; }
+.status .outcome { font-weight: 600; }
+.outcome.answered, .outcome.charted, .outcome.described { color: var(--ok); }
+.outcome.clarifying { color: var(--accent); }
+.outcome.declined, .outcome.abstained, .outcome.out_of_scope { color: var(--warn); }
+.outcome.failed { color: var(--bad); }
+details.more { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 6px; }
+details.more > summary { cursor: pointer; font-size: 12px; color: var(--muted);
+  list-style: none; }
+details.more > summary::before { content: "▸ "; }
+details.more[open] > summary::before { content: "▾ "; }
+.kv { display: grid; grid-template-columns: 110px 1fr; gap: 2px 12px; font-size: 13px;
+  margin: 8px 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+h3 { font-size: 12px; margin: 12px 0 4px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .04em; }
+pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto;
+  font-size: 12px; white-space: pre-wrap; margin: 0; }
+table { border-collapse: collapse; font-size: 12px; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 3px 8px; text-align: left; white-space: nowrap; }
+th { background: var(--code); }
+ul { margin: 4px 0; padding-left: 18px; font-size: 13px; }
+.steps { font-size: 12px; color: var(--muted); }
+form { display: flex; gap: 8px; margin-top: 18px; position: sticky; bottom: 0; padding: 10px 0;
+  background: var(--bg); }
+textarea { flex: 1; font: inherit; padding: 9px 12px; border-radius: 12px; resize: none;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); height: 46px; }
+aside .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px; margin-bottom: 14px; }
+aside h2 { font-size: 11px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); font-weight: 600; }
+.hist { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.hist:last-child { border-bottom: 0; }
+.hist .meta { color: var(--muted); }
+details.try > summary { cursor: pointer; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.try-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.try-list button { text-align: left; font-size: 12px; }
+.group { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.empty { color: var(--muted); font-size: 13px; }
+code { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>India Data Analyst</h1>
+  <span id="mode" class="badge">connecting</span>
+  <span class="spacer"></span>
+  <button id="new" type="button">New conversation</button>
+</header>
+<main>
+  <section>
+    <div id="thread"><p class="empty">Ask about employment, prices, rainfall, crime, health or
+      crops in India. Follow-up questions use the last five turns.</p></div>
+    <form id="ask">
+      <textarea id="q" placeholder="Ask a question, or answer a clarification" required></textarea>
+      <button class="primary" id="send" type="submit">Ask</button>
+    </form>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>This conversation</h2>
+      <div id="history"><p class="empty">No turns yet.</p></div>
+      <div class="status">id <code id="cid">new</code></div>
+    </div>
+    <div class="card">
+      <details class="try">
+        <summary>Example questions</summary>
+        <div class="try-list" id="try"></div>
+      </details>
+    </div>
+  </aside>
+</main>
+<script>
+const API = "api";
+const TRY = [
+  ["Follow-up", ["What was the unemployment rate in Gujarat in 2021-22?", "And Maharashtra?"]],
+  ["Clarification", ["What is the unemployment rate in Kerala for youth?", "first one"]],
+  ["Charts", ["Show monsoon rainfall in Vidarbha from 2010 to 2017",
+              "Which five States had the highest infant mortality rate in 2019?"]],
+  ["Outside the data", ["What is the weather today?", "What is JJAS?"]],
+];
+const OUTCOME_LABEL = {
+  answered: "Answered", charted: "Charted", described: "Described", searched: "Searched",
+  explained: "Explained", clarifying: "Needs a detail", declined: "Not in the data",
+  abstained: "No answer", out_of_scope: "Outside scope", failed: "Failed",
+};
+const BADGE_LABEL = {
+  not_verified: "checks passed; independent verification is not run yet (from v5)",
+  verified: "verified by the answer verifier",
+  verified_with_caveats: "verified, with caveats",
+};
+let conversationId = null;
+let busy = false;
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+};
+const words = (name) => name.replaceAll("_", " ");
+
+function renderTry() {
+  const box = $("try");
+  for (const [group, questions] of TRY) {
+    box.append(el("div", "group", group));
+    for (const q of questions) {
+      const b = el("button", "", q);
+      b.type = "button";
+      b.onclick = () => send(q);
+      box.append(b);
+    }
+  }
+}
+
+function renderHistory(history) {
+  const box = $("history");
+  box.replaceChildren();
+  if (!history || !history.length) { box.append(el("p", "empty", "No turns yet.")); return; }
+  history.forEach((t) => {
+    const h = el("div", "hist");
+    h.append(el("div", "", t.question.split("\n")[0]));
+    const bits = [OUTCOME_LABEL[t.outcome] || t.outcome, (t.places || []).join(", "),
+                  (t.periods || []).join(", ")].filter(Boolean);
+    h.append(el("div", "meta", bits.join(" · ")));
+    box.append(h);
+  });
+}
+
+function chartTheme() {
+  // Chart colours follow the page theme (a white box in dark mode otherwise).
+  const css = getComputedStyle(document.documentElement);
+  const ink = css.getPropertyValue("--ink").trim();
+  const muted = css.getPropertyValue("--muted").trim();
+  const line = css.getPropertyValue("--line").trim();
+  return {
+    background: "transparent",
+    view: { stroke: null },
+    title: { color: ink, fontWeight: 600 },
+    axis: { labelColor: muted, titleColor: muted, gridColor: line, domainColor: line,
+            tickColor: line, labelAngle: 0, labelOverlap: true, labelLimit: 320 },
+    legend: { labelColor: muted, titleColor: muted },
+  };
+}
+
+function table(columns, rows) {
+  const t = el("table");
+  const head = el("tr");
+  columns.forEach((c) => head.append(el("th", "", c)));
+  t.append(head);
+  rows.forEach((r) => {
+    const tr = el("tr");
+    r.forEach((v) => tr.append(el("td", "", v === null ? "" : String(v))));
+    t.append(tr);
+  });
+  return t;
+}
+
+function section(parent, title, node) {
+  parent.append(el("h3", "", title));
+  parent.append(node);
+}
+
+function list(items) {
+  const ul = el("ul");
+  items.forEach((x) => ul.append(el("li", "", x)));
+  return ul;
+}
+
+function renderReply(card, r, steps) {
+  card.replaceChildren();
+  card.append(el("div", "answer", r.text || ""));
+  if (r.options && r.options.length) {
+    const box = el("div", "options");
+    r.options.forEach((o, i) => {
+      const b = el("button", "", `${i + 1}. ${o}`);
+      b.type = "button";
+      b.onclick = () => send(o);
+      box.append(b);
+    });
+    card.append(box);
+  }
+  if (r.chart && r.chart.vega_lite) {
+    const c = el("div", "chart");
+    card.append(c);
+    // An explicit width: "container" measured 0 inside this layout and drew an empty chart.
+    const width = Math.max(280, Math.min(($("thread").clientWidth || 720) - 80, 900));
+    const spec = Object.assign({}, r.chart.vega_lite, { width, height: 260, config: chartTheme() });
+    vegaEmbed(c, spec, { actions: false }).catch(() => c.remove());
+    const kind = { line: "Line chart", bar: "Bar chart", grouped_bar: "Grouped bar chart",
+                   horizontal_bar_sorted: "Ranked bar chart" }[r.chart.type] || "Chart";
+    card.append(el("div", "status", `${kind}, chosen for: ${r.chart.reason}`));
+  }
+  const status = el("div", "status");
+  status.append(el("span", `outcome ${r.outcome || ""}`, OUTCOME_LABEL[r.outcome] || "No outcome"));
+  if (r.evidence) status.append(el("span", "", r.evidence.sources.map((s) => s.publisher)
+    .filter((v, i, a) => v && a.indexOf(v) === i).join(", ")));
+  card.append(status);
+
+  const more = el("details", "more");
+  more.append(el("summary", "", "Details"));
+  const kv = el("dl", "kv");
+  const add = (k, v) => { if (v) { kv.append(el("dt", "", k), el("dd", "", v)); } };
+  const asked = r.question.split("\n")[0];
+  add("Read as", r.interpreted_as && r.interpreted_as !== asked ? r.interpreted_as : null);
+  add("Domain", r.domain && words(r.domain));
+  add("Tool", r.tool && words(r.tool));
+  add("Turn", r.follow_up === true ? "follow-up" : r.follow_up === false ? "new question" : null);
+  add("Cause", r.cause && words(r.cause));
+  add("Verification", r.badge && (BADGE_LABEL[r.badge] || words(r.badge)));
+  add("Model calls", `${r.llm_calls} · $${r.cost_usd_est} (estimate)`);
+  add("Run", r.run_id);
+  more.append(kv);
+  const ev = r.evidence;
+  if (ev) {
+    if (ev.sources.length) section(more, "Source", list(ev.sources.map((s) =>
+      `${s.title} (${s.publisher}, version ${s.dataset_version})`)));
+    if (ev.assumptions.length) section(more, "Assumptions", list(ev.assumptions));
+    if (ev.caveats.length) section(more, "Caveats", list(ev.caveats));
+    if (ev.checks.length) section(more, "Checks", list(ev.checks.map((c) =>
+      `${c.passed ? "✓" : "✗"} ${words(c.name)}`)));
+    section(more, `Rows (${ev.row_count})`, table(ev.columns, ev.rows));
+    section(more, "SQL", el("pre", "", ev.sql));
+  }
+  section(more, "Steps", el("div", "steps", steps.map(words).join(" → ")));
+  card.append(more);
+}
+
+async function send(question) {
+  if (busy || !question.trim()) return;
+  busy = true; $("send").disabled = true;
+  const thread = $("thread");
+  thread.querySelector(".empty")?.remove();
+  thread.append(el("div", "user", question));
+  const card = el("div", "reply");
+  const working = el("div", "working");
+  const label = el("span", "", "Starting");
+  working.append(el("span", "dot"), label);
+  card.append(working);
+  thread.append(card);
+  card.scrollIntoView({ behavior: "smooth", block: "end" });
+  $("q").value = "";
+  const steps = [];
+  try {
+    const res = await fetch(`${API}/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, conversation_id: conversationId }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const blocks = buffer.split(/\r?\n\r?\n/);
+      buffer = blocks.pop();
+      for (const block of blocks) {
+        let name = "message", data = "";
+        for (const line of block.split(/\r?\n/)) {
+          if (line.startsWith("event:")) name = line.slice(6).trim();
+          else if (line.startsWith("data:")) data += line.slice(5).trim();
+        }
+        const payload = data ? JSON.parse(data) : {};
+        if (name === "stage") {
+          steps.push(payload.node);
+          label.textContent = words(payload.node);
+        } else if (name === "answer" && payload) {
+          conversationId = payload.conversation_id;
+          $("cid").textContent = conversationId.slice(0, 8);
+          renderReply(card, payload, steps);
+          renderHistory(payload.history);
+        } else if (name === "error") {
+          card.replaceChildren(el("div", "outcome failed",
+            `Something went wrong: ${payload.error}.`));
+        }
+      }
+    }
+  } catch (err) {
+    card.replaceChildren(el("div", "outcome failed", `Request failed: ${err.message}`));
+  } finally {
+    busy = false; $("send").disabled = false;
+    card.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
+}
+
+$("ask").addEventListener("submit", (e) => { e.preventDefault(); send($("q").value); });
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("q").value); }
+});
+$("new").onclick = () => {
+  conversationId = null;
+  $("cid").textContent = "new";
+  $("thread").replaceChildren(el("p", "empty", "New conversation."));
+  renderHistory([]);
+};
+fetch(`${API}/healthz`).then((r) => r.json()).then((h) => {
+  const routing = h.variant === "jev_routing" ? " · Jev routing" : "";
+  $("mode").textContent = h.llm === "live" ? `live · ${h.agent}${routing}` : `stub · ${h.agent}`;
+  if (h.llm === "live") $("mode").classList.add("live");
+}).catch(() => { $("mode").textContent = "API not reachable"; });
+renderTry();
+</script>
+</body>
+</html>

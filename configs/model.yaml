@@ -1,0 +1,102 @@
+# Model identifiers by component. Owner: T3. Secrets and the GCP project id come from the
+# environment (.env), never from this file.
+
+hosted_llm:
+  provider: vertex             # vertex | ai_studio
+  # Global endpoint (decided 2026-11-16): the 3.5 models are offered pay-as-you-go only on
+  # global, us and eu (not asia-south1); global is about 10% cheaper per token than the others
+  # and has the most capacity. Requests may be processed in any region (public data only).
+  location: global
+  temperature: 0
+  # Per-request timeout. Calls took 2-3 s (p50) and at most 10.6 s on e2e_dev (18 Nov); one
+  # 32 s spike used up the 30 s run deadline. A timed-out call is retried once as transient;
+  # 12 s keeps one stalled call plus its retry inside the deadline.
+  request_timeout_s: 20         # 12 until 19 Nov: replies near 10 s timed out under load
+  # Reply format: json_schema (the contract's JSON Schema is sent and the model must follow it)
+  # or json_object (any JSON, validated by code only). json_schema since 2026-11-17: confirmed
+  # on Vertex AI with the QueryIntent contract; replies are still validated by code.
+  response_format: json_schema
+  # Output-token cap per call purpose for the visible reply (cost guard; initial values). The
+  # thinking allowance of the call's level (thinking.allowance) is added on top, because
+  # thinking tokens count against the cap (checked 2026-11-17: at medium, 490 of 512 tokens went
+  # to thinking and the reply was cut). A reply cut at the cap fails validation and is retried.
+  max_output_tokens:
+    intent: 1024              # 512 until 19 Nov: v7-v9 replies (follow-up, standalone, pointer) were cut off
+    sql: 1024                 # raised from 512 on 2026-11-17: a 30-period query was cut off
+    sql_repair: 1024
+    narrate: 2000             # 400 -> 1000 -> 2000 on 2026-11-18: 12 monthly values with one claim each were cut at 1000
+    clarify: 150
+    route: 300
+    decline: 800              # 2026-11-19: thinking used about 290 tokens even at minimal
+    describe: 1200            # 2026-11-19: a 300 cap cut the reply after the thinking
+  # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
+  # on Gemini 3). Starting values, to be tuned on e2e_dev. Thinking tokens are billed as output.
+  thinking:
+    per_purpose:
+      route: minimal
+      intent: low
+      sql: minimal
+      sql_repair: low
+      narrate: minimal
+      clarify: minimal
+      decline: minimal
+      describe: minimal
+    on_regenerate:              # a query regenerated after a failed result check
+      sql: low                  # medium until 19 Nov: about 10 s against a 12 s timeout
+    # Tokens added to the purpose's output cap for each level (option (a), 2026-11-17). On a
+    # small SQL task, medium used 308-490 thinking tokens and low 0-302; these leave headroom
+    # for longer prompts. Worst case for one medium call on Flash-Lite: 2,560 output tokens,
+    # about USD 0.0064.
+    allowance:
+      minimal: 0
+      low: 1024
+      medium: 4096              # raised from 2048 on 2026-11-18: a regenerated query used 2,950 thinking tokens and was cut off
+      high: 4096
+    # Levels each model accepts; a requested level is moved up to the nearest accepted one.
+    # A model not listed gets the requested level unchanged. Sources: model pages (3.7, 3.8
+    # Flash reject minimal) and scripts/check_vertex.py on 2026-11-17 (accepted: Flash-Lite
+    # minimal and medium; 3.5 Flash and 3.8 Flash low and medium). Untested levels are kept as
+    # documented and will be confirmed when first used.
+    supported_levels:
+      gemini-3.5-flash-lite: [minimal, low, medium, high]
+      gemini-3.5-flash: [low, medium, high]
+      gemini-3.8-flash: [low, medium, high]
+      gemini-3.7-flash: [low, medium, high]
+  # Default tier for development and all runs: 3.5 Flash-Lite (GA). Comparison tier for E2:
+  # 3.8 Flash (GA), the cheaper of the two Flash models checked on 2026-11-17 (at low it used no
+  # thinking tokens; 3.5 Flash used about 300). The API returns only the base id, which is
+  # logged per call.
+  tiers:
+    small: gemini-3.5-flash-lite
+    large: gemini-3.8-flash
+  default_tier: small
+  # USD per million tokens, global endpoint, Standard pay-as-you-go. Source: Vertex AI
+  # generative AI pricing page (cloud.google.com/vertex-ai/generative-ai/pricing), read through
+  # a search excerpt on 2026-11-16; confirm in the console's pricing view.
+  price_per_mtok:
+    small: {input: 0.30, output: 2.50, checked: 2026-11-16}
+    # Introductory price until 2026-12-31; from 2027-01-01 USD 1.50 / 7.50.
+    large: {input: 0.75, output: 3.75, checked: 2026-11-17}
+  ai_studio_base_url: https://generativelanguage.googleapis.com/v1beta/openai
+
+kev:
+  model: jaredpalmer/kev-0.8b
+  revision: bf75a6a8848ea6960ff2ed108d9ed44c2941174f
+  checkpoint: null             # fine-tuned run id from models/registry.json, once the gate is run
+  temperature: null            # fitted on the calibration split; null serves raw probabilities
+  serve:
+    base_url_env: KEV_BASE_URL
+    api_key_env: KEV_API_KEY
+    dtype: fp32
+    raw_temperature: 1.0       # KEV_TEMPERATURE at the server; scaling is applied by the client
+
+jev:
+  model: jev-latest
+  backends:
+    - {name: typesafe, base_url: https://api.typesafe.ai, api_key_env: TYPESAFE_API_KEY}
+    - {name: openrouter, base_url: null, api_key_env: OPENROUTER_API_KEY}   # route to be confirmed
+
+embedding:
+  model: BAAI/bge-small-en-v1.5
+  revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
+  dim: 384

@@ -1,18 +1,19 @@
-# Catalogue for the Kev data generator (draft, 2026-10-23).
+# Catalogue for the Kev data generator and the router's catalogue lines (version 2.0, 2026-11-17).
 #
-# Only tables with status = "real" are shown in generated states. The two real tables are the
-# week-1 tables (data/sample/README.md). Placeholder entries reserve one slot per planned
-# domain; they hold no metadata and are not used until T1 freezes the Milestone 2 catalogue.
-# Facts below were read from the Parquet files in data/processed on 2026-10-23.
+# One entry per published table (data/processed/catalogue.json). `line` is the text the router
+# sees for a candidate table; a state shows the top-4 candidates. PLFS and IMD keep their
+# dedicated generator families; the other tables use the generic family, driven by `measures`,
+# `places`, `periods` and the breakdowns and groups they lack. Facts were read from the
+# published Parquet files on 2026-11-17 (PLFS and IMD on 2026-10-23).
 
-version = "0.1-draft"
+version = "2.0"
 
 [[table]]
 name = "plfs_state_ur_usual_status"
 status = "real"
 domain = "labour"
 topic = "unemployment"
-line = "plfs_state_ur_usual_status: PLFS unemployment rate (%), usual status (ps+ss), persons aged 15+, by State/UT plus an All India row, survey years 2017-18 to 2021-22 (July-June)"
+line = "plfs_state_ur_usual_status: PLFS unemployment rate (%), usual status (ps+ss), persons 15+, by State/UT plus All India, survey years 2017-18 to 2021-22 (July-June)"
 publisher = "Rajya Sabha answer table citing MoSPI (PLFS)"
 resource_id = "d038e512-231e-4adb-bbb7-a3f95102d18a"
 licence = "Government Open Data License - India"
@@ -55,7 +56,7 @@ name = "imd_subdivision_monthly_rainfall"
 status = "real"
 domain = "rainfall"
 topic = "rainfall"
-line = "imd_subdivision_monthly_rainfall: IMD rainfall (mm) by month, season (jf, mam, jjas, ond) and year for 36 meteorological sub-divisions (not states or districts), calendar years 1901-2017; no all-India row"
+line = "imd_subdivision_monthly_rainfall: IMD rainfall (mm) by month, season (jf, mam, jjas, ond) and year, 36 sub-divisions (not States or districts), 1901-2017; no All India row"
 publisher = "India Meteorological Department, Ministry of Earth Sciences"
 resource_id = "8e0bd482-4aba-4d99-9cb9-ff124f6f1c2f"
 licence = "Government Open Data License - India"
@@ -97,27 +98,240 @@ describe_templates = [
 ]
 
 [[table]]
-name = "TBD-agriculture"
-status = "placeholder"
-domain = "agriculture"
+name = "ncrb_violent_crimes_state"
+status = "real"
+domain = "other"
+topic = "violent crime"
+line = "ncrb_violent_crimes_state: NCRB violent crimes, number of registered cases, by State/UT plus an All India row, calendar years 2021 to 2023; counts only, no rates"
+publisher = "National Crime Records Bureau (via data.gov.in)"
+resource_id = "214f1ee4-8a12-4d81-bc8a-e95cd0e57a27"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-17"
+national_row = true
+periods = ["2021", "2022", "2023"]
+out_of_range_periods = ["2019", "2020", "2024", "2025"]
+places = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "State"
+measures = ["number of violent crimes", "violent crime incidence", "registered violent crime cases"]
+absent_breakdowns = ["by district", "for each month", "by city"]
+describe_questions = ["What counts as a violent crime in the NCRB table?", "Which years does the State violent crime table cover?", "Does the violent crime table give crime rates or only counts?", "Is the All India violent crime figure the sum of the States?", "Does the State crime table cover districts or cities?", "Who publishes the State violent crime figures?"]
 
 [[table]]
-name = "TBD-prices-economy"
-status = "placeholder"
+name = "ncrb_annual_crime_statistics"
+status = "real"
+domain = "other"
+topic = "crime"
+line = "ncrb_annual_crime_statistics: NCRB total cognizable crimes (IPC/BNS and SLL), counts and rates per lakh population, India only, calendar years 2022 to 2024"
+publisher = "National Crime Records Bureau (via data.gov.in catalogue download)"
+resource_id = ""
+licence = "Government Open Data License - India"
+retrieved = "2026-10-29"
+national_row = true
+periods = ["2022", "2023", "2024"]
+out_of_range_periods = ["2019", "2020", "2021", "2025"]
+places = ["India"]
+place_kind = "national"
+measures = ["total crime rate", "number of cognizable crimes", "IPC crime rate", "number of SLL crimes"]
+absent_breakdowns = ["by State", "by district", "for each month"]
+describe_questions = ["What is the difference between IPC/BNS and SLL crimes in the NCRB table?", "What population is the national crime rate per?", "Which years does the national crime table cover?", "Does the national crime table have State figures?", "Is the crime rate per lakh or per 100,000 people?"]
+
+[[table]]
+name = "cpi_all_india"
+status = "real"
 domain = "prices_economy"
+topic = "consumer prices"
+line = "cpi_all_india: Consumer Price Index (base 2012=100), All India only, rural, urban and combined, general index and item groups, monthly, Jan 2013 to Dec 2023"
+publisher = "Ministry of Statistics and Programme Implementation (via data.gov.in)"
+resource_id = "2a6edbfb-b416-48db-9183-645be023f757"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = true
+periods = ["2013-01", "2013-06", "2013-12", "2014-01", "2014-06", "2014-12", "2015-01", "2015-06", "2015-12", "2016-01", "2016-06", "2016-12", "2017-01", "2017-06", "2017-12", "2018-01", "2018-06", "2018-12", "2019-01", "2019-03", "2019-06", "2019-12", "2020-01", "2020-04", "2020-06", "2020-12", "2021-01", "2021-06", "2021-12", "2022-01", "2022-06", "2022-12", "2023-01", "2023-06", "2023-11", "2023-12"]
+out_of_range_periods = ["2012-12", "2024-01", "2024-06", "2025-03"]
+places = ["India"]
+place_kind = "national"
+measures = ["consumer price index", "general CPI", "food and beverages price index", "CPI for vegetables", "retail inflation"]
+absent_breakdowns = ["by State", "for each city", "by district"]
+describe_questions = ["What is the base year of the CPI table?", "Does the CPI table give inflation rates or index numbers?", "Which months does the CPI table cover?", "What do rural, urban and combined mean in the CPI table?", "Does the CPI table have State-level figures?", "Which item groups are in the CPI table?"]
 
 [[table]]
-name = "TBD-health"
-status = "placeholder"
+name = "gsdp_per_capita_state"
+status = "real"
+domain = "prices_economy"
+topic = "state income"
+line = "gsdp_per_capita_state: per capita GSDP (rupees) at current prices, 28 States (no UTs, no All India), fiscal years 2019-20 to 2023-24 (April-March)"
+publisher = "Rajya Sabha answer on data.gov.in"
+resource_id = "af17f25b-3bdf-4eeb-b3e3-b0fc93df16a7"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = false
+periods = ["2019-20", "2020-21", "2021-22", "2022-23", "2023-24"]
+out_of_range_periods = ["2017-18", "2018-19", "2024-25"]
+places = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "State"
+measures = ["per capita GSDP", "per capita income", "GSDP per person"]
+absent_breakdowns = ["by district", "for each quarter"]
+lacking_definitions = ["at constant prices", "in real terms"]
+describe_questions = ["Is the per capita GSDP at current or constant prices?", "Which years does the GSDP table cover?", "Does the GSDP table include Delhi or other Union Territories?", "Are the GSDP years fiscal years?", "What unit is per capita GSDP reported in?"]
+
+[[table]]
+name = "msp_crops"
+status = "real"
+domain = "agriculture"
+topic = "minimum support prices"
+line = "msp_crops: minimum support price (rupees per quintal) of 24 crops, India, crop years 2013-14 to 2024-25 (July-June); sugarcane is the FRP"
+publisher = "Department of Agriculture and Farmers Welfare (via Rajya Sabha answer on data.gov.in)"
+resource_id = "82e89d31-2208-4be0-babd-2286a4d9110b"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = true
+periods = ["2013-14", "2014-15", "2015-16", "2016-17", "2017-18", "2018-19", "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25"]
+out_of_range_periods = ["2011-12", "2012-13", "2025-26"]
+places = ["India"]
+place_kind = "national"
+measures = ["minimum support price of wheat", "MSP for paddy", "MSP of cotton", "minimum support price of tur (arhar)", "MSP of mustard"]
+absent_breakdowns = ["by State", "by district"]
+describe_questions = ["What unit are minimum support prices reported in?", "Which crops are in the MSP table?", "Are MSP years crop years or calendar years?", "Is the sugarcane figure an MSP?", "Does the MSP table differ by State?"]
+
+[[table]]
+name = "mandi_daily_prices"
+status = "real"
+domain = "prices_economy"
+topic = "mandi prices"
+line = "mandi_daily_prices: mandi (market) minimum, maximum and modal prices (rupees per quintal) by commodity and market, about 1,700 markets in 29 States, one day: 2026-10-29"
+publisher = "Directorate of Marketing and Inspection (AGMARKNET, via data.gov.in)"
+resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
+licence = "Government Open Data License - India"
+retrieved = "2026-10-29"
+national_row = false
+periods = ["2026-10-29"]
+out_of_range_periods = ["2026-10-28", "2026-10-01", "2025-10-29", "2024"]
+places = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "market"
+measures = ["modal price of onion", "modal price of tomato", "maximum price of potato", "minimum price of wheat", "modal price of brinjal"]
+absent_breakdowns = ["for each week", "as a monthly average"]
+describe_questions = ["How many days does the mandi price table cover?", "What does modal price mean in the mandi table?", "What unit are mandi prices reported in?", "Why do some markets report the same minimum and maximum price?", "Are mandi prices wholesale or retail prices?", "Which States are in the mandi price table?"]
+
+[[table]]
+name = "srs_imr_state"
+status = "real"
 domain = "health"
+topic = "infant mortality"
+line = "srs_imr_state: infant mortality rate (deaths per 1,000 live births), Sample Registration System, by State/UT plus All India, calendar years 2015 to 2019"
+publisher = "Office of the Registrar General of India (via Rajya Sabha answer on data.gov.in)"
+resource_id = "d64574ca-33b9-4108-bd90-b3de1edd82a8"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-03"
+national_row = true
+periods = ["2015", "2016", "2017", "2018", "2019"]
+out_of_range_periods = ["2012", "2013", "2014", "2020", "2021"]
+places = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli", "Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir Including Ladakh", "Jharkhand", "Karnataka", "Kerala", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "State"
+measures = ["infant mortality rate", "IMR"]
+absent_breakdowns = ["by district"]
+lacking_groups = ["for girls", "for boys", "in rural areas", "in urban areas"]
+describe_questions = ["What does the infant mortality rate measure?", "Which years does the SRS infant mortality table cover?", "Why does the SRS infant mortality rate differ from the NFHS-5 figure?", "Is Ladakh separate from Jammu and Kashmir in the IMR table?", "Does the IMR table split rural and urban areas?"]
+
+[[table]]
+name = "plfs_lfpr_urban_state"
+status = "real"
+domain = "labour"
+topic = "labour force participation"
+line = "plfs_lfpr_urban_state: PLFS labour force participation rate (%), current weekly status, urban areas only, by State/UT plus All India, survey year 2023-24 (July-June)"
+publisher = "Ministry of Statistics and Programme Implementation (via Rajya Sabha answer on data.gov.in)"
+resource_id = "67634139-cc72-4f90-a82f-d2b9b22488dc"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = true
+periods = ["2023-24"]
+out_of_range_periods = ["2021-22", "2022-23", "2024-25"]
+places = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "State"
+measures = ["urban labour force participation rate", "LFPR in urban areas", "urban LFPR"]
+absent_breakdowns = ["by district"]
+lacking_groups = ["for women", "for men", "for youth aged 15-29"]
+lacking_definitions = ["by usual status"]
+describe_questions = ["Does the LFPR table cover rural areas?", "What is current weekly status in the LFPR table?", "Which survey year does the LFPR table cover?", "Can the LFPR table show a trend over years?", "Is the All India LFPR the average of the States?"]
+
+[[table]]
+name = "imd_district_rainfall_normals"
+status = "real"
+domain = "rainfall"
+topic = "normal rainfall"
+line = "imd_district_rainfall_normals: IMD normal rainfall (mm), long-term average 1951-2000, by district, month, season and year; not the rainfall of any single year"
+publisher = "India Meteorological Department, Ministry of Earth Sciences (via data.gov.in)"
+resource_id = "d0419b03-b41b-4226-b48b-0bc92bf139f8"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = false
+periods = ["1951-2000"]
+out_of_range_periods = ["1961-1990", "1971-2000", "1981-2010", "1991-2020"]
+places = ["Aizawl", "Ashoknagar(Gna", "Badaun", "Bellary", "Bhilwara", "Bhind", "Burhanpur", "Chitradurga", "Deogarh", "Dholpur", "East Kameng", "East Siang", "Gandhinagar", "Goalpara", "Hailakandi", "Hassan", "Hazaribag", "Jajpur", "Jammu", "Janjgir-Champ", "Jhalawar", "Kolkata", "Kutch", "Lohit", "Medak", "Mumbai Sub", "Ramgarh", "Saiha", "Sant Kabir Ngr", "Seraikela-Kha", "Shimoga", "Shivpuri", "Sirmaur", "Solan", "Solapur", "Sonbhadra", "Sonepur", "South Dinajpur", "Srikakulam", "Surendranagar", "Surguja", "Thoothukudi", "Upper Siang", "West Godavari", "Yanam"]
+place_kind = "district"
+measures = ["normal annual rainfall", "normal monsoon rainfall", "normal rainfall in July", "long-term average rainfall"]
+absent_breakdowns = ["for each year", "by block"]
+describe_questions = ["What is a rainfall normal?", "Which years are the district rainfall normals averaged over?", "Does the normals table give rainfall for a particular year?", "What seasons are in the district normals table?", "Are Telangana districts listed separately in the normals table?"]
+
+[[table]]
+name = "nfhs5_district_indicators"
+status = "real"
+domain = "health"
+topic = "district health indicators"
+line = "nfhs5_district_indicators: NFHS-5 district factsheet indicators (104: health, nutrition, households), about 700 districts, survey round 2019-2021"
+publisher = "IIPS and Ministry of Health and Family Welfare (via data.gov.in)"
+resource_id = "cf80173e-fece-439d-a0b1-6e9cb510593d"
+licence = "Government Open Data License - India"
+retrieved = "2026-10-29"
+national_row = false
+periods = ["2019-2021"]
+out_of_range_periods = ["2015-16", "2005-06", "2023-24"]
+places = ["Ajmer", "Alirajpur", "Amritsar", "Auraiya", "Baloda Bazar", "Banas Kantha", "Banswara", "Baramula", "Bathinda", "Bundi", "Dhemaji", "Dibang Valley", "Gondiya", "Gurgaon", "Hojai", "Hoshiarpur", "Jayashankar Bhupalapally", "Jhajjar", "Khargone (West Nimar)", "Kodagu", "Kollam", "Kurnool", "Lahul & Spiti", "Lakhimpur", "Mahasamund", "Malappuram", "Maldah", "Mamit", "Mau", "Mewat", "Morena", "North East", "North Goa", "Palwal", "Patan", "Prakasam", "Rampur", "Rewa", "Shahdol", "Siang", "Surendranagar", "Tamenglong", "Tirunelveli", "Udhampur", "Uttara Kannada"]
+place_kind = "district"
+measures = ["share of women aged 15-49 who are literate", "share of children under 5 who are stunted", "share of households with electricity", "sex ratio at birth", "share of institutional births"]
+absent_breakdowns = ["for each year", "by village"]
+lacking_groups = ["in rural areas", "in urban areas"]
+describe_questions = ["How many indicators does the NFHS-5 district table have?", "Which survey round does the NFHS district table cover?", "Why are some NFHS district values flagged as low-sample?", "Does the NFHS district table split rural and urban areas?", "Can the NFHS district table show a trend?"]
+
+[[table]]
+name = "nfhs5_state_factsheet"
+status = "real"
+domain = "health"
+topic = "state health indicators"
+line = "nfhs5_state_factsheet: NFHS-5 State/UT factsheet indicators (about 130), total, urban and rural, India and 36 States/UTs, survey round 2019-2021"
+publisher = "IIPS and Ministry of Health and Family Welfare (via data.gov.in)"
+resource_id = "7c568619-b9b4-40bb-b563-68c28c27a6c1"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-05"
+national_row = true
+periods = ["2019-2021"]
+out_of_range_periods = ["2015-16", "2005-06", "2023-24"]
+places = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"]
+place_kind = "State"
+measures = ["share of women aged 15-49 who are literate", "share of children under 5 who are stunted", "share of households with electricity", "sex ratio at birth", "share of institutional births", "total fertility rate"]
+absent_breakdowns = ["by district", "for each year"]
+describe_questions = ["Does the NFHS State table split urban and rural areas?", "Which survey round does the NFHS State table cover?", "Why does West Bengal have no total figure in the NFHS State table?", "Are the India rows the average of the States?", "What does a value in brackets mean in the NFHS State table?"]
+
+[[table]]
+name = "crop_production_district"
+status = "real"
+domain = "agriculture"
+topic = "crop production"
+line = "crop_production_district: crop area (hectares) and production (tonnes; cotton, jute in bales) by district, season and crop, crop years 1997-98 to 2015-16"
+publisher = "Ministry of Agriculture and Farmers Welfare (via data.gov.in)"
+resource_id = "35be999b-0208-4354-b557-f6ca9a5355de"
+licence = "Government Open Data License - India"
+retrieved = "2026-11-17"
+national_row = false
+periods = ["1997-98", "1998-99", "1999-00", "2000-01", "2001-02", "2002-03", "2003-04", "2004-05", "2005-06", "2006-07", "2007-08", "2008-09", "2009-10", "2010-11", "2011-12", "2012-13", "2013-14", "2014-15", "2015-16"]
+out_of_range_periods = ["2016-17", "2018-19", "2020-21", "2022-23"]
+places = ["Mysore", "Kurnool", "Guntur", "East Godavari", "Bijapur", "Tumkur", "Belgaum", "Hassan", "Bellary", "Aurangabad", "Bilaspur", "Visakhapatanam", "Prakasam", "Anantapur", "Mandya", "Davangere", "Haveri", "Chamarajanagar", "Chitradurga", "Gulbarga", "Shimoga", "Dharwad", "Kadapa", "Chikmagalur", "Bangalore Rural", "Chittoor", "Bidar", "Gadag", "Vizianagaram", "Bagalkot", "Medak", "Rangareddi", "Raichur", "Srikakulam", "Spsr Nellore", "Koppal", "Uttar Kannad", "Bengaluru Urban", "Mahbubnagar", "Hamirpur", "Adilabad", "Nizamabad", "Purulia", "Medinipur West", "Krishna"]
+place_kind = "district"
+measures = ["rice production", "wheat production", "area under cotton", "maize production", "sugarcane production", "area under rice"]
+absent_breakdowns = ["for each month", "by village"]
+describe_questions = ["What unit is crop production reported in?", "Which crop years does the crop production table cover?", "Is cotton production in tonnes or bales?", "What seasons are in the crop production table?", "Does the crop production table have State totals?", "Are crop years July to June?"]
 
 # Measures absent from every real table: quantitative questions on them are declined (R7);
 # searches for them are searches (R2). Domain `other` marks topics outside the five domains.
-[[uncovered]]
-phrase = "labour force participation rate"
-domain = "labour"
-topic = "labour force participation"
-
 [[uncovered]]
 phrase = "average daily wage of casual workers"
 domain = "labour"
@@ -129,34 +343,9 @@ domain = "labour"
 topic = "MGNREGA employment"
 
 [[uncovered]]
-phrase = "rice production"
-domain = "agriculture"
-topic = "crop production"
-
-[[uncovered]]
-phrase = "wheat yield per hectare"
-domain = "agriculture"
-topic = "crop yields"
-
-[[uncovered]]
-phrase = "minimum support price for paddy"
-domain = "agriculture"
-topic = "minimum support prices"
-
-[[uncovered]]
-phrase = "area under cotton"
-domain = "agriculture"
-topic = "cropped area"
-
-[[uncovered]]
 phrase = "fertiliser consumption"
 domain = "agriculture"
 topic = "fertiliser use"
-
-[[uncovered]]
-phrase = "CPI inflation"
-domain = "prices_economy"
-topic = "inflation"
 
 [[uncovered]]
 phrase = "GDP growth rate"
@@ -164,39 +353,9 @@ domain = "prices_economy"
 topic = "GDP"
 
 [[uncovered]]
-phrase = "per capita income"
-domain = "prices_economy"
-topic = "state income"
-
-[[uncovered]]
-phrase = "retail price of onions"
-domain = "prices_economy"
-topic = "food prices"
-
-[[uncovered]]
-phrase = "infant mortality rate"
-domain = "health"
-topic = "infant mortality"
-
-[[uncovered]]
-phrase = "share of stunted children under five"
-domain = "health"
-topic = "child nutrition"
-
-[[uncovered]]
-phrase = "share of institutional births"
-domain = "health"
-topic = "institutional deliveries"
-
-[[uncovered]]
 phrase = "number of hospital beds"
 domain = "health"
 topic = "hospital capacity"
-
-[[uncovered]]
-phrase = "literacy rate"
-domain = "other"
-topic = "literacy"
 
 [[uncovered]]
 phrase = "number of registered vehicles"
@@ -212,3 +371,24 @@ topic = "school enrolment"
 phrase = "number of reported road accidents"
 domain = "other"
 topic = "road accidents"
+
+[[uncovered]]
+phrase = "maternal mortality ratio"
+domain = "health"
+topic = "maternal mortality"
+
+[[uncovered]]
+phrase = "wholesale price index"
+domain = "prices_economy"
+topic = "wholesale prices"
+
+[[uncovered]]
+phrase = "groundwater level"
+domain = "other"
+topic = "groundwater"
+
+[[uncovered]]
+phrase = "number of tractors sold"
+domain = "agriculture"
+topic = "farm machinery"
+

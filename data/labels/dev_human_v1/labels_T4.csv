@@ -1,0 +1,134 @@
+item_id,tool,domain,rule,undecided,note
+dh-068,search_catalog,other,"R2, M2, M6",FALSE,Literacy data availability; education is outside the five domains.
+dh-069,run_sql,other,"R6, M1, M6",FALSE,Requests a covered quantitative measure outside the five domains.
+dh-070,make_chart,health,"R4, M4",FALSE,Chart the existing health result.
+dh-071,decline_not_covered,labour,"R7, M1",FALSE,Requested labour measure is absent from shown tables.
+dh-072,explain_result,agriculture,"R17, M4",FALSE,Asks about the existing agriculture result.
+dh-073,run_sql,prices_economy,"R6, M1",FALSE,Covered potato market price; latest date default.
+dh-074,ask_clarification,rainfall,"R10, M1",FALSE,Rainfall needs a place; there is no national row.
+dh-075,run_sql,prices_economy,"R6, M1",FALSE,Covered price measure and details.
+dh-076,make_chart,multiple,"R4, M7",FALSE,Chart both measures already present in the result.
+dh-077,ask_clarification,prices_economy,"R10, C7, M1",FALSE,Demonetisation is named without a date.
+dh-078,decline_not_covered,health,"R7, M1",FALSE,Maternal mortality measure is absent.
+dh-079,explain_result,labour,"R17, M4",FALSE,Asks for definition behind existing result.
+dh-080,search_catalog,prices_economy,"R2, M2",FALSE,Asks whether inflation data exists.
+dh-081,ask_clarification,unspecified,"R10, M8",FALSE,No measure or topic is identified.
+dh-082,make_chart,prices_economy,"R4, M4",FALSE,Chart existing GSDP rows grouped by year.
+dh-083,explain_result,other,"R17, M4",FALSE,Asks for SQL behind existing crime result.
+dh-084,run_sql,labour,"R6, D1, M1",FALSE,Use latest covered unemployment period by default.
+dh-085,ask_clarification,unspecified,"R10, M8",FALSE,No measure or topic to anchor the period.
+dh-086,,rainfall,M4,TRUE,"Ambiguous whether highlight means compute/rank or annotate a chart; only a result table, not chart, is stated."
+dh-087,search_catalog,unspecified,"R17, M8",FALSE,No result exists and no topic is named; search per R17.
+dh-088,search_catalog,labour,"R2, M2",FALSE,Asks for sources reporting farm labour wages.
+dh-089,describe_table,prices_economy,"R3, M3",FALSE,Asks about CPI table coverage/structure.
+dh-090,run_sql,rainfall,"R6, M1",FALSE,Covered district seasonal rainfall normals.
+dh-091,describe_table,labour,"R3, M3",FALSE,Asks what a term in the shown table means.
+dh-092,decline_not_covered,rainfall,"R8, M1",FALSE,Tomorrow is a forecast outside historical data.
+dh-093,run_sql,prices_economy,"R6, M1",FALSE,Covered per-capita GSDP request.
+dh-094,search_catalog,health,"R15, M2",FALSE,Asks about an unshown health table.
+dh-095,ask_clarification,labour,"R14, M1",FALSE,Requested FY boundaries cannot be rebuilt from PLFS survey years.
+dh-096,run_sql,agriculture,"R6, M1",FALSE,Covered crop production request.
+dh-097,describe_table,rainfall,"R3, M3",FALSE,Asks what period rainfall normals represent.
+dh-098,run_sql,multiple,"R6, C4, M7",FALSE,Two independent covered measures; both can be returned.
+dh-099,make_chart,rainfall,"R4, M4",FALSE,Add high/low markers using existing chart rows.
+dh-100,make_chart,other,"R4, M4",FALSE,Visualize top ten from rows in the existing crime result.
+dh-101,ask_clarification,unspecified,"R10, M8",FALSE,Follow-up has no prior context.
+dh-102,explain_result,health,"R17, M4",FALSE,Asks for caveats about existing result.
+dh-103,ask_clarification,unspecified,"R10, M8",FALSE,No result/topic to sort.
+dh-104,run_sql,agriculture,"R6, M1",FALSE,Covered MSP series and period.
+dh-105,describe_table,health,"R3, M3",FALSE,Asks about shown NFHS table split.
+dh-106,run_sql,health,"R6, M1",FALSE,Covered infant mortality figure.
+dh-107,run_sql,agriculture,"R6, M1",FALSE,Covered wheat MSP.
+dh-108,explain_result,prices_economy,"R17, M4",FALSE,Asks about date of existing price result.
+dh-109,search_catalog,agriculture,"R15, M2",FALSE,Asks coverage of an unshown agriculture table.
+dh-110,decline_not_covered,other,"R1, M5",FALSE,Coding error help is not a data request.
+dh-111,decline_not_covered,other,"R7, M6",FALSE,Groundwater figure is outside shown coverage and five domains.
+dh-112,run_sql,labour,"R6, D7, D8, M1",FALSE,Use PLFS survey year beginning 2019 and default comparison for evaluative wording.
+dh-113,run_sql,health,"R6, M1",FALSE,Requests district-level health figure available in shown file.
+dh-114,run_sql,other,"R13, M4",FALSE,Needs additional state rows beyond current result.
+dh-115,ask_clarification,agriculture,"R10, M1",FALSE,Crop is missing and has no default.
+dh-116,ask_clarification,labour,"R12, M1",FALSE,Named gender split is not in the unemployment table.
+dh-117,run_sql,rainfall,"R11, M1",FALSE,Return each mapped subdivision; do not aggregate into state value.
+dh-118,explain_result,labour,"R17, M4",FALSE,Asks provenance of existing result.
+dh-119,run_sql,rainfall,"R6, D6, M1",FALSE,Use composite rainfall subdivisions for Delhi.
+dh-120,run_sql,labour,"R6, D2, D7, M1",FALSE,All India default; bare 2019 maps to survey year 2019-20.
+dh-121,make_chart,labour,"R4, M4",FALSE,Chart existing unemployment result.
+dh-122,search_catalog,multiple,"R2, M7",FALSE,Asks availability of both market prices and MSP data.
+dh-123,decline_not_covered,multiple,"R16, M7",FALSE,Joint comparison periods do not overlap.
+dh-124,make_chart,agriculture,"R4, M4",FALSE,Change scale of existing MSP chart.
+dh-125,decline_not_covered,prices_economy,"R9, M1",FALSE,State-level CPI grain is unavailable.
+dh-126,describe_table,agriculture,"R3, M3",FALSE,Asks for unit in shown crop table.
+dh-127,run_sql,prices_economy,"R6, M1",FALSE,Covered CPI comparison across months.
+dh-128,run_sql,rainfall,"R6, M1",FALSE,Covered district rainfall normal.
+dh-129,describe_table,other,"R3, M3",FALSE,Asks whether shown crime table has per-capita rates.
+dh-130,run_sql,health,"R6, M1",FALSE,Covered NFHS district health/spending measure.
+dh-131,decline_not_covered,labour,"R8, M1",FALSE,Requested PLFS year is beyond shown series.
+dh-132,run_sql,labour,"R6, C2, M1",FALSE,Data request controls; ignore added writing request.
+dh-133,explain_result,rainfall,"R17, M4",FALSE,Asks what period existing rainfall normals cover.
+dh-134,decline_not_covered,agriculture,"R7, M1",FALSE,Fertiliser use per hectare is not a shown measure.
+dh-135,search_catalog,labour,"R2, M2",FALSE,Asks for other sources on joblessness.
+dh-136,explain_result,prices_economy,"R17, M4",FALSE,Asks base year of the index in the existing result.
+dh-137,run_sql,health,"R6, M1",FALSE,Health spending is an available NFHS measure for Maharashtra.
+dh-138,run_sql,labour,"R6, M1",FALSE,Ranking is answerable from covered unemployment data.
+dh-139,run_sql,multiple,"R6, C4, M7",FALSE,Independent unemployment and IMR figures; return covered parts.
+dh-140,search_catalog,other,"R2, M2",FALSE,Asks whether crime-against-women data exists.
+dh-141,make_chart,health,"R4, M4",FALSE,Plot two existing health result rows side by side.
+dh-142,decline_not_covered,labour,"R7, M1",FALSE,Rural LFPR is absent; shown LFPR is urban-only.
+dh-143,decline_not_covered,prices_economy,"R7, M1",FALSE,GDP growth is not a shown measure.
+dh-144,make_chart,labour,"R4, M4",FALSE,Edit title of existing chart.
+dh-145,describe_table,prices_economy,"R3, M3",FALSE,Asks meaning of a term in shown mandi table.
+dh-146,run_sql,health,"R6, C4, M7",FALSE,Unit explanation plus independently answerable IMR figure.
+dh-147,run_sql,prices_economy,"R6, M1",FALSE,Covered CPI categories and comparison.
+dh-148,run_sql,health,"R6, M1",FALSE,Covered NFHS anaemia indicator.
+dh-149,run_sql,rainfall,"R6, M1",FALSE,Covered subdivision monsoon rainfall in 2005.
+dh-150,ask_clarification,unspecified,"R10, M8",FALSE,No measure or prior result identifies what lowest means.
+dh-151,run_sql,labour,"R6, M1",FALSE,Covered state unemployment and explicit survey year.
+dh-152,make_chart,prices_economy,"R4, M4",FALSE,Chart existing CPI monthly result.
+dh-153,explain_result,multiple,"R17, M4",FALSE,Asks sources of both existing figures.
+dh-154,describe_table,labour,"R3, M3",FALSE,Asks about coverage of the shown LFPR table.
+dh-155,run_sql,agriculture,"R13, M4",FALSE,Needs paddy rows added before charting.
+dh-156,search_catalog,rainfall,"R2, M2",FALSE,Asks if a district is present in rainfall normals data.
+dh-157,describe_table,prices_economy,"R3, M3",FALSE,Asks which states are absent from the shown GSDP table.
+dh-158,run_sql,prices_economy,"R6, D1, D2, M1",FALSE,Modal onion price; default latest date and all markets.
+dh-159,search_catalog,health,"R2, M2",FALSE,Asks whether NFHS district data covers Ladakh.
+dh-160,ask_clarification,labour,"R12, M1",FALSE,Youth subgroup is not available; offer the table's 15+ definition.
+dh-161,run_sql,agriculture,"R6, M1",FALSE,Covered tur MSP and explicit crop year.
+dh-162,run_sql,rainfall,"R6, M1",FALSE,Covered Saurashtra & Kutch subdivision monsoon rainfall.
+dh-163,search_catalog,rainfall,"R2, M2",FALSE,Asks where district rainfall data can be found.
+dh-164,run_sql,labour,"R6, D1, D2, M1",FALSE,Use latest period and All India defaults.
+dh-165,search_catalog,other,"R2, M2",FALSE,Asks whether groundwater-depth data exists.
+dh-166,run_sql,agriculture,"R6, M1",FALSE,Covered district crop-production request.
+dh-167,search_catalog,health,"R2, M2",FALSE,Asks whether hospital-level data exists.
+dh-168,explain_result,health,"R17, M4",FALSE,Asks reliability/sample behind existing result.
+dh-169,run_sql,prices_economy,"R6, M1",FALSE,Covered GSDP ranking for specified year.
+dh-170,ask_clarification,unspecified,"R10, M8",FALSE,No previous context or topic for 'repeat that'.
+dh-171,run_sql,rainfall,"R13, M4",FALSE,Needs reshaping existing monthly data into columns.
+dh-172,ask_clarification,unspecified,"R10, M8",FALSE,National figure has no preceding topic/context.
+dh-173,decline_not_covered,labour,"R9, M1",FALSE,Monthly unemployment grain is unavailable in annual PLFS table.
+dh-174,ask_clarification,unspecified,"R10, M8",FALSE,No measure or topic is supplied.
+dh-175,decline_not_covered,multiple,"R16, C4, M7",FALSE,Joint crime-versus-IMR state analysis lacks compatible covered state series.
+dh-176,make_chart,agriculture,"R4, M4",FALSE,Change existing chart line colour and labels.
+dh-177,explain_result,rainfall,"R17, M4",FALSE,Asks why state rainfall result has three subdivision values.
+dh-178,search_catalog,health,"R2, M2",FALSE,Asks whether child-malnutrition data exists.
+dh-179,decline_not_covered,other,"R7, M1",FALSE,The shown violent-crime table does not provide a women-specific measure.
+dh-180,decline_not_covered,health,"R7, M1",FALSE,Hospital-bed measure is not shown.
+dh-181,describe_table,agriculture,"R3, M3",FALSE,Asks which crops the shown MSP table covers.
+dh-182,run_sql,health,"R6, M1",FALSE,Covered state IMR and year.
+dh-183,run_sql,rainfall,"R11, M1",FALSE,"For Odisha list mapped subdivisions, without state aggregation."
+dh-184,run_sql,other,"R6, M1",FALSE,Covered NCRB table includes counts needed for share calculation?
+dh-185,decline_not_covered,other,"R1, M5",FALSE,Thanks is not a data request.
+dh-186,run_sql,rainfall,"R6, M1",FALSE,Covered subdivision monthly rainfall.
+dh-187,decline_not_covered,multiple,"R16, C11, M7",FALSE,Joint chart overlay has non-overlapping MSP and CPI periods.
+dh-188,run_sql,prices_economy,"R13, M4",FALSE,Requests additional period rows for all states.
+dh-189,run_sql,prices_economy,"R6, D1, M1",FALSE,Latest available CPI month is Dec 2023.
+dh-190,explain_result,agriculture,"R17, M4",FALSE,Asks how existing percentage change was computed.
+dh-191,make_chart,prices_economy,"R4, M4",FALSE,Chart existing 41-row mandi price result.
+dh-192,run_sql,labour,"R6, M1",FALSE,Covered urban LFPR and period.
+dh-193,decline_not_covered,multiple,"R7, C4, M7",FALSE,Requested local causal/joint analysis lacks compatible rainfall and joblessness measure coverage.
+dh-194,run_sql,health,"R6, M1",FALSE,Covered NFHS district indicator and ranking.
+dh-195,decline_not_covered,other,"R7, M1",FALSE,Tractor sales are not in the shown tables.
+dh-196,ask_clarification,rainfall,"R10, M1",FALSE,Normals need a place; no all-India row.
+dh-197,explain_result,labour,"R17, M4",FALSE,Asks why prior result uses survey-year interpretation.
+dh-198,decline_not_covered,labour,"R7, C5, M1",FALSE,Requests absolute unemployment headcount; table provides rates.
+dh-199,decline_not_covered,rainfall,"R8, M1",FALSE,2018 is beyond the shown actual rainfall series; normals cannot answer actual event.
+dh-200,run_sql,other,"R6, M1",FALSE,Covered all-India cognizable crime rate for 2024.

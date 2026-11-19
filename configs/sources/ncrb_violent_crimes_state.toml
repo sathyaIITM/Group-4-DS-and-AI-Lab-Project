@@ -1,0 +1,59 @@
+# NCRB State/UT-wise violent crimes, incidence 2021-2023. Years as columns; the 2023
+# population, rate and charge-sheeting columns are not used in this table.
+
+[dataset]
+id = "ncrb_violent_crimes_state"
+domain = "other"
+title = "NCRB violent crimes (incidence) by State/UT, 2021-2023"
+source_name = "National Crime Records Bureau (NCRB)"
+source_table = "State/UT-wise Violent Crimes (Incidence and Crime Rate) from 2021 to 2023"
+publisher = "National Crime Records Bureau (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "214f1ee4-8a12-4d81-bc8a-e95cd0e57a27"
+raw_file = "ncrb_violent_crimes_state.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-17"
+caveats = [
+  "Violent crimes only (a subset of total cognizable crimes), as defined by NCRB.",
+  "Counts registered cases; a change over time can reflect registration as well as crime.",
+  "Counts are not adjusted for population; compare States with care.",
+  "Calendar years 2021 to 2023.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["Sl. No", "Mid-Year Projected Population (in Lakhs) (2023)", "Rate of Violent Crimes (2023)", "Chargesheeting Rate (2023)"]
+drop_rows = { "State/UT" = ["Total State (S)", "Total UT (S)"] }   # subtotals, not places
+
+[columns]
+"State/UT" = "geo_state"
+
+[values]
+mode = "periods"
+pattern = '^(\d{4})$'
+
+[values.indicator]
+id = "violent_crime_count"
+label = "Violent crimes, incidence"
+unit = "count"
+
+[period]
+type = "calendar_year"
+
+[geo]
+level = "state"
+vintage = "ncrb_2023"
+state_reference = "states"
+total_members = ["Total All India"]
+
+[[checks]]
+name = "non_negative"
+kind = "range"
+min = 0
+flag = "out_of_range"
+
+[view]
+mode = "pivot_period"
+table = "ncrb_violent_crimes_state"
+columns = { state = "geo_name_source" }

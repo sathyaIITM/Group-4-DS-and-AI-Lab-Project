@@ -35,6 +35,7 @@ def build_dim_period(start: str = "1901-01-01", end: str = "2030-12-31") -> pd.D
     year = days.year
 
     def span(first_year: pd.Series) -> pd.Series:
+        """Return survey-year labels such as 2019-20 from first years."""
         return first_year.astype(str) + "-" + ((first_year + 1) % 100).astype(str).str.zfill(2)
 
     frame = pd.DataFrame({"date": days, "calendar_year": year, "month": month})
@@ -83,6 +84,7 @@ def build_catalogue_entry(
 
 
 def _git_commit() -> str:
+    """Return the current git commit, or unknown."""
     try:
         out = subprocess.run(
             ["git", "rev-parse", "HEAD"],  # noqa: S607 - git is resolved from PATH
@@ -97,12 +99,14 @@ def _git_commit() -> str:
 
 
 def _quality_report(obs: pd.DataFrame) -> pd.DataFrame:
+    """Count observations per quality flag."""
     counts = obs["quality_flag"].value_counts().sort_index()
     rows = [("observations", len(obs)), *[(f"flag_{k}", int(v)) for k, v in counts.items()]]
     return pd.DataFrame(rows, columns=["metric", "value"])
 
 
 def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
+    """Write a frame to Parquet with snappy compression."""
     frame.to_parquet(path, index=False, engine="pyarrow", compression="snappy")
 
 
@@ -166,6 +170,7 @@ def run_with_baseline(
 
 
 def write_review(result: RunResult, directory: Path = REVIEW_DIR) -> Path:
+    """Write a source's review items to a CSV file."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{result.config.dataset_id}.csv"
     frame = pd.DataFrame([item.model_dump() for item in result.review])
@@ -226,6 +231,7 @@ def update_catalogue(entries: list[dict[str, Any]], out_dir: Path = PROCESSED) -
 
 
 def write_dim_period(out_dir: Path = PROCESSED) -> Path:
+    """Write the period dimension table."""
     path = out_dir / "dim_period.parquet"
     _write_parquet(build_dim_period(), path)
     return path
@@ -256,4 +262,5 @@ def verify_release(
 
 
 def today() -> str:
+    """Return today's date in ISO format."""
     return date.today().isoformat()

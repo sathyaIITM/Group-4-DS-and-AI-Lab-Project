@@ -1,0 +1,59 @@
+# SRS infant mortality rate by State/UT, 2015-2019. Calendar years as columns.
+
+[dataset]
+id = "srs_imr_state"
+domain = "health"
+title = "Infant mortality rate (deaths per 1,000 live births), Sample Registration System, by State/UT, 2015-2019"
+source_name = "Rajya Sabha answer citing the Sample Registration System (Office of the Registrar General of India)"
+source_table = "State/UT-wise infant mortality rate (IMR), 2015-2019 (Rajya Sabha Session 256, Unstarred Question 730)"
+publisher = "Office of the Registrar General of India (via Rajya Sabha answer on data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "d64574ca-33b9-4108-bd90-b3de1edd82a8"
+raw_file = "srs_imr_state.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-03"
+caveats = [
+  "Infant mortality rate: deaths of babies under one year per 1,000 live births in the year.",
+  "For smaller States and UTs, the value for a year is the average of three years ending in that year.",
+  "Jammu and Kashmir includes Ladakh in every year (SRS reports them together). Dadra and Nagar Haveli and Daman and Diu are shown separately, as before their 2020 merger.",
+  "This is the SRS rate, measured every year; it differs from the NFHS-5 survey figure for 2019-21 by design.",
+  "The All India row is a published figure, not the sum or average of the States.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["Sl. No."]
+
+[columns]
+"National/ State/ UT" = "geo_state"
+
+[values]
+mode = "periods"
+pattern = '^Infant Mortality Rate \(per 1000 live births\) - (\d{4})$'
+
+[values.indicator]
+id = "imr_srs"
+label = "Infant mortality rate (SRS)"
+unit = "per_1000_live_births"
+
+[period]
+type = "calendar_year"
+
+[geo]
+level = "state"
+vintage = "srs_2015_19"
+state_reference = "states"
+total_members = ["All India"]
+
+[[checks]]
+name = "imr_range"
+kind = "range"
+min = 0
+max = 1000
+flag = "out_of_range"
+
+[view]
+mode = "pivot_period"
+table = "srs_imr_state"
+columns = { state_ut = "geo_name_source" }

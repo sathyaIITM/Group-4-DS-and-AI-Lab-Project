@@ -156,6 +156,8 @@ def test_every_candidate_table_sends_indicators(index: HybridIndex) -> None:
     state = pipeline.retrieve_tables({"question": q})
     context = pipeline.retrieve_context({"question": q, **state})
     sent = {(i["dataset_id"], i["indicator_id"]) for i in context["indicators"]}
-    assert ("imd_subdivision_monthly_rainfall", "rainfall_mm") in sent
-    nfhs = [d for d, _ in sent if d == "nfhs5_district_indicators"]
-    assert len(nfhs) <= rag_poc.INDICATORS_PER_TABLE
+    # Every candidate table sends indicators (independent of which tables are published).
+    for table in state["tables"]:
+        assert any(d == table["dataset_id"] for d, _ in sent), table["dataset_id"]
+    for dataset_id in {d for d, _ in sent}:
+        assert sum(1 for d, _ in sent if d == dataset_id) <= rag_poc.INDICATORS_PER_TABLE

@@ -1,0 +1,62 @@
+# Decision-layer backend chains, escalation bands and the gate. Owner: T3.
+# Agent design Sections 5 and 8; agent_graph.md v0.3 Section 4.
+# A chain lists backends in order; the next one answers when the previous fails (fallback).
+
+decisions:
+  tool:
+    v0: [llm]
+    v1: [llm]
+    v2: [jev, llm]             # 19 Nov: v2 adds verified examples and moves routing to Jev
+    v3: [jev, llm]
+    v4: [jev, kev, llm]        # phase 1: tool selection stays on Jev; Kev only if Jev is down
+    v5: [jev, kev, llm]
+    v6: [jev, kev, llm]
+  domain:
+    v0: [llm]
+    v1: [llm]
+    v2: [jev, llm]             # with the LLM as fallback; the routing ablation (v2 with LLM vs
+    v3: [jev, llm]             # Jev routing) is in the dev ladders of 19 Nov (fdedcca, a1e87e8)
+    v4: [kev, jev, llm]        # phase 1: domain on Kev, escalated to Jev inside the band
+    v5: [kev, jev, llm]
+    v6: [kev, jev, llm]
+  coverage:
+    all: [rules]               # Jev for "does this measure match this indicator" is a Should
+  chart:
+    all: [rules]               # Jev only when the rules leave a tie (Should)
+  verification:
+    v0: [pass_through]
+    v1: [pass_through]
+    v2: [pass_through]
+    v3: [pass_through]
+    v4: [pass_through]
+    v5: [jev]                  # Should; abstain with `verifier_unavailable` if Jev is down
+    v6: [jev]
+
+# Variants change backend chains for one experiment row without changing the version ladder.
+# `jev_routing` ("v2 + Jev routing", 18 Nov): tool and domain on Jev, the hosted LLM only as the
+# fallback. Since 19 Nov this is v2 itself; the variant is kept for the earlier runs' records.
+variants:
+  jev_routing:
+    tool: [jev, llm]
+    domain: [jev, llm]
+
+escalation:
+  # Calibrated maximum probability inside [low, high) is re-asked to Jev. Set on the
+  # calibration split for the 5% error budget; null disables escalation.
+  domain: {low: null, high: null}
+  tool: {low: null, high: null}
+
+gate:
+  margin_points: 3             # fine-tuned Kev accuracy may trail Jev's by at most 3 points
+  decides: point_estimate      # which rule decides adoption (fixed 2026-11-17, before dev_human);
+                               # the non-inferiority result (lower 95% bound) is reported beside it
+  ece_max: 0.10                # after temperature scaling, 10 equal-width bins
+  error_budget: 0.05           # for the share handled by Kev in the cascade
+  evaluation_set: dev_human
+  bootstrap: {resamples: 2000, seed: 0}
+
+parallel_routing: true         # tool and domain asked concurrently in v4+
+timeouts_s:
+  kev: 10
+  jev: 10
+  llm: 30

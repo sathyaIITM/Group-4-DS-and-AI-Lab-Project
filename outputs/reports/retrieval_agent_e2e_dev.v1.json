@@ -1,0 +1,639 @@
+{
+  "backend": "agent catalogue retrieval",
+  "retriever": "agent",
+  "cases_file": "data/eval/e2e_dev.v1.jsonl",
+  "k": 4,
+  "cases": 40,
+  "scored": 31,
+  "recall_at_k": 1.0,
+  "mrr": 0.8602150537634409,
+  "indicator_recall_at_k": null,
+  "per_case": [
+    {
+      "id": "e2e-001",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "plfs_lfpr_urban_state",
+        "srs_imr_state",
+        "nfhs5_state_factsheet"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "e2e-003",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "plfs_lfpr_urban_state",
+        "cpi_all_india",
+        "nfhs5_state_factsheet"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "e2e-005",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "plfs_lfpr_urban_state",
+        "cpi_all_india",
+        "gsdp_per_capita_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "e2e-007",
+      "expected": [
+        "plfs_state_ur_usual_status"
+      ],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "gsdp_per_capita_state",
+        "nfhs5_state_factsheet",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_state_ur_usual_status": 1
+      }
+    },
+    {
+      "id": "e2e-010",
+      "expected": [
+        "plfs_lfpr_urban_state"
+      ],
+      "top": [
+        "plfs_lfpr_urban_state",
+        "plfs_state_ur_usual_status",
+        "nfhs5_state_factsheet",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_lfpr_urban_state": 1
+      }
+    },
+    {
+      "id": "e2e-011",
+      "expected": [
+        "plfs_lfpr_urban_state"
+      ],
+      "top": [
+        "plfs_lfpr_urban_state",
+        "crop_production_district",
+        "plfs_state_ur_usual_status",
+        "nfhs5_state_factsheet"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "plfs_lfpr_urban_state": 1
+      }
+    },
+    {
+      "id": "e2e-014",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "top": [
+        "imd_district_rainfall_normals",
+        "crop_production_district",
+        "imd_subdivision_monthly_rainfall",
+        "msp_crops"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "ranks": {
+        "imd_subdivision_monthly_rainfall": 3
+      }
+    },
+    {
+      "id": "e2e-017",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "top": [
+        "imd_subdivision_monthly_rainfall",
+        "imd_district_rainfall_normals",
+        "crop_production_district",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "imd_subdivision_monthly_rainfall": 1
+      }
+    },
+    {
+      "id": "e2e-019",
+      "expected": [
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "top": [
+        "imd_district_rainfall_normals",
+        "crop_production_district",
+        "imd_subdivision_monthly_rainfall",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "ranks": {
+        "imd_subdivision_monthly_rainfall": 3
+      }
+    },
+    {
+      "id": "e2e-023",
+      "expected": [
+        "imd_district_rainfall_normals"
+      ],
+      "top": [
+        "imd_district_rainfall_normals",
+        "imd_subdivision_monthly_rainfall",
+        "crop_production_district",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "imd_district_rainfall_normals": 1
+      }
+    },
+    {
+      "id": "e2e-025",
+      "expected": [
+        "imd_district_rainfall_normals"
+      ],
+      "top": [
+        "imd_district_rainfall_normals",
+        "imd_subdivision_monthly_rainfall",
+        "crop_production_district",
+        "plfs_state_ur_usual_status"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "imd_district_rainfall_normals": 1
+      }
+    },
+    {
+      "id": "e2e-028",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "top": [
+        "cpi_all_india",
+        "crop_production_district",
+        "nfhs5_state_factsheet",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.25,
+      "ranks": {
+        "nfhs5_district_indicators": 4
+      }
+    },
+    {
+      "id": "e2e-030",
+      "expected": [
+        "nfhs5_district_indicators"
+      ],
+      "top": [
+        "nfhs5_district_indicators",
+        "nfhs5_state_factsheet",
+        "gsdp_per_capita_state",
+        "imd_district_rainfall_normals"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "nfhs5_district_indicators": 1
+      }
+    },
+    {
+      "id": "e2e-033",
+      "expected": [
+        "nfhs5_state_factsheet"
+      ],
+      "top": [
+        "nfhs5_district_indicators",
+        "nfhs5_state_factsheet",
+        "ncrb_annual_crime_statistics",
+        "srs_imr_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "ranks": {
+        "nfhs5_state_factsheet": 2
+      }
+    },
+    {
+      "id": "e2e-036",
+      "expected": [
+        "nfhs5_state_factsheet"
+      ],
+      "top": [
+        "nfhs5_state_factsheet",
+        "srs_imr_state",
+        "nfhs5_district_indicators",
+        "plfs_state_ur_usual_status"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "nfhs5_state_factsheet": 1
+      }
+    },
+    {
+      "id": "e2e-042",
+      "expected": [
+        "mandi_daily_prices"
+      ],
+      "top": [
+        "mandi_daily_prices",
+        "gsdp_per_capita_state",
+        "crop_production_district",
+        "msp_crops"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "mandi_daily_prices": 1
+      }
+    },
+    {
+      "id": "e2e-043",
+      "expected": [
+        "mandi_daily_prices"
+      ],
+      "top": [
+        "mandi_daily_prices",
+        "msp_crops",
+        "crop_production_district",
+        "cpi_all_india"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "mandi_daily_prices": 1
+      }
+    },
+    {
+      "id": "e2e-045",
+      "expected": [
+        "ncrb_annual_crime_statistics"
+      ],
+      "top": [
+        "ncrb_violent_crimes_state",
+        "ncrb_annual_crime_statistics",
+        "cpi_all_india",
+        "gsdp_per_capita_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "ranks": {
+        "ncrb_annual_crime_statistics": 2
+      }
+    },
+    {
+      "id": "e2e-047",
+      "expected": [],
+      "top": [
+        "ncrb_annual_crime_statistics",
+        "srs_imr_state",
+        "ncrb_violent_crimes_state",
+        "nfhs5_state_factsheet"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-051",
+      "expected": [
+        "ncrb_violent_crimes_state"
+      ],
+      "top": [
+        "ncrb_violent_crimes_state",
+        "ncrb_annual_crime_statistics",
+        "nfhs5_state_factsheet",
+        "crop_production_district"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "ncrb_violent_crimes_state": 1
+      }
+    },
+    {
+      "id": "e2e-052",
+      "expected": [],
+      "top": [
+        "crop_production_district",
+        "cpi_all_india",
+        "srs_imr_state",
+        "imd_subdivision_monthly_rainfall"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-053",
+      "expected": [
+        "ncrb_violent_crimes_state"
+      ],
+      "top": [
+        "ncrb_violent_crimes_state",
+        "gsdp_per_capita_state",
+        "ncrb_annual_crime_statistics",
+        "plfs_lfpr_urban_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "ncrb_violent_crimes_state": 1
+      }
+    },
+    {
+      "id": "e2e-057",
+      "expected": [
+        "cpi_all_india"
+      ],
+      "top": [
+        "cpi_all_india",
+        "gsdp_per_capita_state",
+        "plfs_lfpr_urban_state",
+        "msp_crops"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "cpi_all_india": 1
+      }
+    },
+    {
+      "id": "e2e-058",
+      "expected": [
+        "cpi_all_india"
+      ],
+      "top": [
+        "cpi_all_india",
+        "gsdp_per_capita_state",
+        "msp_crops",
+        "plfs_lfpr_urban_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "cpi_all_india": 1
+      }
+    },
+    {
+      "id": "e2e-060",
+      "expected": [
+        "cpi_all_india"
+      ],
+      "top": [
+        "cpi_all_india",
+        "gsdp_per_capita_state",
+        "msp_crops",
+        "mandi_daily_prices"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "cpi_all_india": 1
+      }
+    },
+    {
+      "id": "e2e-062",
+      "expected": [
+        "cpi_all_india"
+      ],
+      "top": [
+        "msp_crops",
+        "gsdp_per_capita_state",
+        "mandi_daily_prices",
+        "cpi_all_india"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.25,
+      "ranks": {
+        "cpi_all_india": 4
+      }
+    },
+    {
+      "id": "e2e-063",
+      "expected": [
+        "gsdp_per_capita_state"
+      ],
+      "top": [
+        "gsdp_per_capita_state",
+        "plfs_state_ur_usual_status",
+        "nfhs5_state_factsheet",
+        "ncrb_annual_crime_statistics"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "gsdp_per_capita_state": 1
+      }
+    },
+    {
+      "id": "e2e-066",
+      "expected": [],
+      "top": [
+        "ncrb_annual_crime_statistics",
+        "plfs_state_ur_usual_status",
+        "cpi_all_india",
+        "gsdp_per_capita_state"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-068",
+      "expected": [
+        "msp_crops"
+      ],
+      "top": [
+        "msp_crops",
+        "mandi_daily_prices",
+        "nfhs5_district_indicators",
+        "gsdp_per_capita_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "msp_crops": 1
+      }
+    },
+    {
+      "id": "e2e-072",
+      "expected": [
+        "msp_crops"
+      ],
+      "top": [
+        "msp_crops",
+        "mandi_daily_prices",
+        "cpi_all_india",
+        "gsdp_per_capita_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "msp_crops": 1
+      }
+    },
+    {
+      "id": "e2e-075",
+      "expected": [
+        "srs_imr_state"
+      ],
+      "top": [
+        "srs_imr_state",
+        "nfhs5_state_factsheet",
+        "plfs_state_ur_usual_status",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "srs_imr_state": 1
+      }
+    },
+    {
+      "id": "e2e-078",
+      "expected": [
+        "srs_imr_state"
+      ],
+      "top": [
+        "srs_imr_state",
+        "nfhs5_state_factsheet",
+        "imd_district_rainfall_normals",
+        "plfs_lfpr_urban_state"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "srs_imr_state": 1
+      }
+    },
+    {
+      "id": "e2e-079",
+      "expected": [],
+      "top": [
+        "plfs_state_ur_usual_status",
+        "plfs_lfpr_urban_state",
+        "srs_imr_state",
+        "nfhs5_state_factsheet"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-081",
+      "expected": [],
+      "top": [
+        "ncrb_violent_crimes_state",
+        "nfhs5_state_factsheet",
+        "cpi_all_india",
+        "nfhs5_district_indicators"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-085",
+      "expected": [],
+      "top": [
+        "cpi_all_india",
+        "gsdp_per_capita_state",
+        "imd_district_rainfall_normals",
+        "msp_crops"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-086",
+      "expected": [],
+      "top": [
+        "msp_crops",
+        "cpi_all_india",
+        "mandi_daily_prices",
+        "nfhs5_district_indicators"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-089",
+      "expected": [],
+      "top": [
+        "imd_district_rainfall_normals",
+        "plfs_lfpr_urban_state",
+        "plfs_state_ur_usual_status",
+        "crop_production_district"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-091",
+      "expected": [],
+      "top": [
+        "nfhs5_state_factsheet",
+        "msp_crops",
+        "imd_district_rainfall_normals",
+        "ncrb_annual_crime_statistics"
+      ],
+      "scored": false
+    },
+    {
+      "id": "e2e-096",
+      "expected": [
+        "crop_production_district"
+      ],
+      "top": [
+        "msp_crops",
+        "crop_production_district",
+        "nfhs5_state_factsheet",
+        "nfhs5_district_indicators"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "ranks": {
+        "crop_production_district": 2
+      }
+    },
+    {
+      "id": "e2e-100",
+      "expected": [
+        "crop_production_district"
+      ],
+      "top": [
+        "crop_production_district",
+        "msp_crops",
+        "nfhs5_state_factsheet",
+        "plfs_state_ur_usual_status"
+      ],
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "ranks": {
+        "crop_production_district": 1
+      }
+    }
+  ]
+}

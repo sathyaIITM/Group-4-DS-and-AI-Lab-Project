@@ -26,6 +26,7 @@ from analyst.data.config import load_all  # noqa: E402
 
 
 def main() -> int:
+    """Command-line entry point for the preprocessing pipeline."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

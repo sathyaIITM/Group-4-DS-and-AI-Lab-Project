@@ -1,0 +1,239 @@
+{
+  "set": "test",
+  "scorer_rules": "v1",
+  "rows": {
+    "v0": {
+      "runs": 3,
+      "questions": 60,
+      "instability": 0.05,
+      "success_ci95_first_run": [
+        0.5,
+        0.75
+      ],
+      "by_action": {
+        "answer": {
+          "success": 0.5916666666666667,
+          "cases": 120
+        },
+        "clarify": {
+          "success": 0.4444444444444444,
+          "cases": 18
+        },
+        "describe": {
+          "success": 0.6666666666666666,
+          "cases": 12
+        },
+        "decline": {
+          "success": 1.0,
+          "cases": 21
+        },
+        "search": {
+          "success": 0.6666666666666666,
+          "cases": 9
+        }
+      },
+      "Success": {
+        "mean": 0.6333333333333333,
+        "min": 0.6166666666666667,
+        "max": 0.65
+      },
+      "Execution accuracy": {
+        "mean": 0.43333333333333335,
+        "min": 0.425,
+        "max": 0.45
+      },
+      "Wrong-answer rate": {
+        "mean": 0.11253561253561255,
+        "min": 0.1111111111111111,
+        "max": 0.11538461538461539
+      },
+      "Abstention precision": {
+        "mean": 0.6096681096681097,
+        "min": 0.5909090909090909,
+        "max": 0.6190476190476191
+      },
+      "Abstention recall": {
+        "mean": 1.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "Latency p50 (s)": {
+        "mean": 6.890333333333333,
+        "min": 6.6585,
+        "max": 7.1055
+      },
+      "Latency p95 (s)": {
+        "mean": 12.980366666666667,
+        "min": 10.47115,
+        "max": 17.053
+      },
+      "Cost per answer (USD, est.)": {
+        "mean": 0.026915144772079774,
+        "min": 0.026142084444444443,
+        "max": 0.02799392333333333
+      },
+      "Model calls per answer": {
+        "mean": 8.75261158594492,
+        "min": 8.592592592592593,
+        "max": 8.961538461538462
+      }
+    },
+    "v1": {
+      "runs": 3,
+      "questions": 60,
+      "instability": 0.08333333333333333,
+      "success_ci95_first_run": [
+        0.5166666666666667,
+        0.7666666666666667
+      ],
+      "by_action": {
+        "answer": {
+          "success": 0.6166666666666667,
+          "cases": 120
+        },
+        "clarify": {
+          "success": 0.2777777777777778,
+          "cases": 18
+        },
+        "describe": {
+          "success": 0.75,
+          "cases": 12
+        },
+        "decline": {
+          "success": 1.0,
+          "cases": 21
+        },
+        "search": {
+          "success": 0.6666666666666666,
+          "cases": 9
+        }
+      },
+      "Success": {
+        "mean": 0.638888888888889,
+        "min": 0.6166666666666667,
+        "max": 0.65
+      },
+      "Execution accuracy": {
+        "mean": 0.525,
+        "min": 0.525,
+        "max": 0.525
+      },
+      "Wrong-answer rate": {
+        "mean": 0.08641975308641975,
+        "min": 0.07407407407407407,
+        "max": 0.1111111111111111
+      },
+      "Abstention precision": {
+        "mean": 0.5441919191919191,
+        "min": 0.5416666666666666,
+        "max": 0.5454545454545454
+      },
+      "Abstention recall": {
+        "mean": 0.9487179487179488,
+        "min": 0.9230769230769231,
+        "max": 1.0
+      },
+      "Latency p50 (s)": {
+        "mean": 6.709166666666667,
+        "min": 6.376,
+        "max": 6.902
+      },
+      "Latency p95 (s)": {
+        "mean": 11.894483333333334,
+        "min": 10.44775,
+        "max": 13.6371
+      },
+      "Cost per answer (USD, est.)": {
+        "mean": 0.029558162962962962,
+        "min": 0.029457841111111112,
+        "max": 0.029725239629629627
+      },
+      "Model calls per answer": {
+        "mean": 8.555555555555555,
+        "min": 8.481481481481481,
+        "max": 8.62962962962963
+      }
+    },
+    "v2": {
+      "runs": 3,
+      "questions": 60,
+      "instability": 0.08333333333333333,
+      "success_ci95_first_run": [
+        0.55,
+        0.7833333333333333
+      ],
+      "by_action": {
+        "answer": {
+          "success": 0.6,
+          "cases": 120
+        },
+        "clarify": {
+          "success": 0.2777777777777778,
+          "cases": 18
+        },
+        "describe": {
+          "success": 1.0,
+          "cases": 12
+        },
+        "decline": {
+          "success": 1.0,
+          "cases": 21
+        },
+        "search": {
+          "success": 0.6666666666666666,
+          "cases": 9
+        }
+      },
+      "Success": {
+        "mean": 0.6444444444444445,
+        "min": 0.6166666666666667,
+        "max": 0.6666666666666666
+      },
+      "Execution accuracy": {
+        "mean": 0.6333333333333333,
+        "min": 0.625,
+        "max": 0.65
+      },
+      "Wrong-answer rate": {
+        "mean": 0.15311986863711002,
+        "min": 0.13793103448275862,
+        "max": 0.17857142857142858
+      },
+      "Abstention precision": {
+        "mean": 0.5678524374176548,
+        "min": 0.5217391304347826,
+        "max": 0.5909090909090909
+      },
+      "Abstention recall": {
+        "mean": 0.9743589743589745,
+        "min": 0.9230769230769231,
+        "max": 1.0
+      },
+      "Latency p50 (s)": {
+        "mean": 6.048666666666667,
+        "min": 5.7555,
+        "max": 6.455
+      },
+      "Latency p95 (s)": {
+        "mean": 9.957616666666667,
+        "min": 9.45605,
+        "max": 10.46805
+      },
+      "Cost per answer (USD, est.)": {
+        "mean": 0.019023610073891625,
+        "min": 0.015463229642857143,
+        "max": 0.022875843793103447
+      },
+      "Model calls per answer": {
+        "mean": 6.0484400656814445,
+        "min": 5.931034482758621,
+        "max": 6.25
+      }
+    }
+  },
+  "sources": {
+    "v0": "outputs/reports/final_test_v0_scorer_v1.json",
+    "v1": "outputs/reports/final_test_v1_scorer_v1.json",
+    "v2": "outputs/reports/final_test_v2_scorer_v1.json"
+  }
+}

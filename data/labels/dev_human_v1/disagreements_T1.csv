@@ -1,0 +1,29 @@
+item_id,decision,labeller_a,label_a,rule_a,labeller_b,label_b,rule_b,final_label,final_rule,ambiguous,note
+dh-068,tool,T2,decline_not_covered,R7,T4,search_catalog,"R2, M2, M6",search_catalog,R2,false,Asks whether literacy data exists; R2 applies even for uncovered topics and precedes R7.
+dh-071,tool,T2,run_sql,R6,T4,decline_not_covered,"R7, M1",decline_not_covered,R7,false,No MGNREGA table exists in the published catalogue.
+dh-073,domain,T2,agriculture,R6,T4,prices_economy,"R6, M1",prices_economy,M1,false,Mandi modal prices of farm produce are prices_economy (Section 3 boundary rule).
+dh-074,tool,T2,run_sql,R6,T4,ask_clarification,"R10, M1",ask_clarification,R10,false,Place is missing and IMD rainfall has no All-India row (D2).
+dh-074,domain,T2,agriculture,R6,T4,rainfall,"R10, M1",rainfall,M1,false,Measure is monsoon rainfall.
+dh-075,tool,T2,decline_not_covered,R8,T4,run_sql,"R6, M1",run_sql,R6,false,GSDP table covers 2019-20 to 2023-24 (cf. dh-082); 2020-21 is in range.
+dh-076,domain,T2,labour,R4,T4,multiple,"R4, M7",multiple,"M4, M7",false,Existing result holds unemployment (labour) and IMR (health) on equal terms.
+dh-077,tool,T2,decline_not_covered,R1,T4,ask_clarification,"R10, C7, M1",ask_clarification,"C7, D1",false,Named event without a date ('during demonetisation') requires clarification (C7).
+dh-078,tool,T2,run_sql,R6,T4,decline_not_covered,"R7, M1",decline_not_covered,R7,false,No maternal mortality ratio (MMR) table exists in the published catalogue.
+dh-086,tool,T2,make_chart,R4,T4,,M4,ask_clarification,R10,true,"'Best' is undefined for rainfall (wettest vs closest to normal, cf. rb-064) and previous_tool is run_sql; R4 vs R10 tension."
+dh-086,domain,T2,rainfall,R4,T4,rainfall,M4,rainfall,M4,false,Both labellers agreed on rainfall (M4); emitted only because T4 left tool undecided.
+dh-087,tool,T2,ask_clarification,R10,T4,search_catalog,"R17, M8",search_catalog,R17,false,No result exists and no table or topic is named; R17 routes directly to search_catalog (M8).
+dh-094,tool,T2,decline_not_covered,R7,T4,search_catalog,"R15, M2",search_catalog,R15,false,"Hospital beds table is not shown, but health is within the five domains (H9)."
+dh-095,tool,T2,run_sql,R6,T4,ask_clarification,"R14, M1",ask_clarification,R14,false,Explicit April-March FY on the July-June PLFS table cannot be rebuilt from annual grain (H11b).
+dh-098,domain,T2,labour,R6,T4,multiple,"R6, C4, M7",multiple,M7,false,Urban LFPR (labour) and per capita GSDP (prices_economy) asked on equal terms.
+dh-108,domain,T2,agriculture,R17,T4,prices_economy,"R17, M4",prices_economy,M4,false,"Existing result is mandi tomato prices, which is prices_economy (Section 3 boundary rule)."
+dh-109,tool,T2,decline_not_covered,R7,T4,search_catalog,"R15, M2",search_catalog,R15,false,"Fertiliser table is not shown, but agriculture (farm inputs) is within the five domains (H9)."
+dh-113,tool,T2,ask_clarification,R10,T4,run_sql,"R6, M1",ask_clarification,R10,false,District-level stunting requested without naming a district; D2 (All India) does not apply.
+dh-113,domain,T2,unspecified,R10,T4,health,"R6, M1",health,M1,false,Measure ('stunting') is explicitly named and falls under health.
+dh-116,tool,T2,run_sql,R6,T4,ask_clarification,"R12, M1",ask_clarification,R12,false,PLFS unemployment table lacks a gender split ('female'); clarify and offer persons 15+ (H5).
+dh-120,tool,T2,ask_clarification,R10,T4,run_sql,"R6, D2, D7, M1",run_sql,"R6, D2, D7",false,"Defaults cover all missing details: All India (D2), survey year 2019-20 (D7/H11), usual status 15+ (D3/D4)."
+dh-122,domain,T2,agriculture,R2,T4,multiple,"R2, M7",multiple,"M2, M7",false,Mandi prices (prices_economy) and MSP (agriculture) searched on equal terms.
+dh-123,tool,T2,run_sql,R6,T4,decline_not_covered,"R16, M7",decline_not_covered,R16,false,"Joint comparison needs 2020 mandi prices, but the mandi table holds only a latest-date snapshot (no period overlap/coverage for 2020)."
+dh-123,domain,T2,agriculture,R6,T4,multiple,"R16, M7",multiple,M7,false,"MSP (agriculture) vs mandi price (prices_economy) is explicitly multiple (Section 3), even when declined."
+dh-125,tool,T2,run_sql,R6,T4,decline_not_covered,"R9, M1",decline_not_covered,R9,false,Published CPI table is All-India only and lacks state-level grain (Tamil Nadu).
+dh-130,tool,T2,decline_not_covered,R7,T4,run_sql,"R6, M1",run_sql,R6,false,NFHS-5 district table covers out-of-pocket delivery cost in public facilities; period defaults to NFHS-5 (D1).
+dh-130,domain,T2,other,R7,T4,health,"R6, M1",health,M1,false,Section 3 explicitly assigns out-of-pocket childbirth cost to health.
+dh-131,tool,T2,run_sql,R6,T4,decline_not_covered,"R8, M1",decline_not_covered,R8,false,PLFS unemployment table ends in 2021-22 (D1); 2023-24 is outside the table's period range.

@@ -21,6 +21,7 @@ dependencies = [
   "sqlglot>=25.0",
   "pyarrow>=17.0",
   "pandas>=2.2",
+  "pandera>=0.35",
   "langgraph>=0.2",
   "httpx>=0.27",
   "fastapi>=0.115",
@@ -29,6 +30,7 @@ dependencies = [
   "psycopg[binary]>=3.2",
   "pgvector>=0.3",
   "structlog>=24.4",
+  "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -58,12 +60,14 @@ target-version = "py312"
 src = ["src", "app", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "B", "ANN", "S", "C4", "SIM", "RUF"]
-ignore = ["ANN401"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "ANN", "S", "C4", "SIM", "RUF", "D1"]
+# D105/D107: magic methods and __init__ are described by their class docstring.
+ignore = ["ANN401", "D105", "D107"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "ANN"]
-"notebooks/*" = ["ANN", "E402"]
+# Test names state the behaviour under test; test modules keep a module docstring only.
+"tests/*" = ["S101", "S608", "ANN", "D101", "D102", "D103", "D106"]
+"notebooks/*" = ["ANN", "E402", "D1"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -74,7 +78,7 @@ warn_unreachable = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["duckdb.*", "langgraph.*", "pgvector.*", "langfuse.*", "sklearn.*"]
+module = ["duckdb.*", "langgraph.*", "pgvector.*", "langfuse.*", "sklearn.*", "yaml.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

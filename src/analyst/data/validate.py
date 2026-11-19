@@ -15,6 +15,7 @@ from analyst.data.contract import EMPTY_VALUE_FLAGS, FLAG_RANK, GEO_MATCH, PERIO
 
 
 def category_columns(config: SourceConfig) -> list[str]:
+    """Return the category columns configured for a source."""
     return [role.split(":")[1] for role in config.columns.values() if role.startswith("category:")]
 
 
@@ -24,6 +25,7 @@ def key_columns(config: SourceConfig) -> list[str]:
 
 
 def build_schema(config: SourceConfig) -> pa.DataFrameSchema:
+    """Build the Pandera schema that observation tables of a source must satisfy."""
     key = key_columns(config)
     return pa.DataFrameSchema(
         {

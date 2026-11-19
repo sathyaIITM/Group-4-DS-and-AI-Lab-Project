@@ -1,0 +1,59 @@
+# PLFS urban labour force participation rate (CWS) by State/UT, survey year 2023-24 (July-June).
+
+[dataset]
+id = "plfs_lfpr_urban_state"
+domain = "labour"
+title = "PLFS labour force participation rate (%), current weekly status, urban areas, by State/UT, 2023-24"
+source_name = "Rajya Sabha answer citing MoSPI (PLFS)"
+source_table = "State/UT-wise LFPR according to current weekly status (CWS) for urban areas, PLFS 2023-24 (Rajya Sabha Session 267, Unstarred Question 2720, answered 24 March 2025; PLFS Annual Report 2023-24)"
+publisher = "Ministry of Statistics and Programme Implementation (via Rajya Sabha answer on data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "67634139-cc72-4f90-a82f-d2b9b22488dc"
+raw_file = "plfs_lfpr_urban_state.csv"
+config_version = "1.0.0"
+retrieved = "2026-11-05"
+caveats = [
+  "Urban areas only; there is no rural or combined figure in this table.",
+  "Current weekly status (CWS): a person counts as in the labour force if they worked or looked for work in the week before the survey. This differs from the usual-status unemployment table.",
+  "One survey year only, July 2023 to June 2024; no trend can be drawn from this table.",
+  "The All India row is a published figure, not the sum or average of the States.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source" }
+drop_columns = ["Sl. No."]
+
+[columns]
+"State/UT" = "geo_state"
+
+[values]
+mode = "indicators"
+
+[values.columns."LFPR (in percent) according to CWS for Urban Areas"]
+id = "lfpr_cws_urban"
+label = "Labour force participation rate, current weekly status, urban areas"
+unit = "percent"
+
+[period]
+type = "survey_round"
+label = "2023-24"            # PLFS survey year, July 2023 to June 2024
+start = "2023-07-01"
+end = "2024-06-30"
+
+[geo]
+level = "state"
+vintage = "states_2020"
+state_reference = "states"
+total_members = ["All India"]
+
+[[checks]]
+name = "percent_range"
+kind = "range"
+min = 0
+max = 100
+flag = "out_of_range"
+
+[view]
+mode = "rows"
+table = "plfs_lfpr_urban_state"

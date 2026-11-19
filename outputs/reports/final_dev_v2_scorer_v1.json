@@ -1,0 +1,81 @@
+{
+  "repeats": 1,
+  "runs": [
+    {
+      "path": "outputs/predictions/final_dev_v2_r1.jsonl",
+      "n": 60,
+      "success_rate": 0.9666666666666667,
+      "success_ci95": [
+        0.9166666666666666,
+        1.0
+      ],
+      "execution_accuracy": 0.8648648648648649,
+      "abstention_precision": 0.9375,
+      "abstention_recall": 1.0,
+      "wrong_answer_rate": 0.0,
+      "outcome_counts": {
+        "answered": 35,
+        "clarifying": 7,
+        "failed": 1,
+        "declined": 8,
+        "described": 4,
+        "searched": 4,
+        "out_of_scope": 1
+      },
+      "failure_rate": 0.016666666666666666,
+      "failure_causes": {
+        "budget_exhausted": 1
+      },
+      "latency_ms": {
+        "p50": 5697.5,
+        "p95": 10746.85,
+        "max": 15975.0
+      },
+      "first_event_ms": {
+        "p50": 29.0,
+        "p95": 31.05,
+        "max": 37.0
+      },
+      "calls_per_answered": 5.171428571428572,
+      "tokens_in": 2478937,
+      "tokens_out": 36255,
+      "cost_usd_est": 0.60865417,
+      "cost_per_answered_usd_est": 0.017390119142857142,
+      "sql_repairs": 0,
+      "sql_attempts": 141,
+      "narration_retries": 0,
+      "widened_searches": 0,
+      "sql_repairs_per_run": 0.0,
+      "narration_retries_per_run": 0.0,
+      "widened_searches_per_run": 0.0,
+      "review_cases": [
+        {
+          "id": "e2e-023",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-042",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        }
+      ]
+    }
+  ],
+  "success_rate_mean": 0.9666666666666667,
+  "success_rate_min": 0.9666666666666667,
+  "success_rate_max": 0.9666666666666667,
+  "success_rate_range": 0.0,
+  "items_compared": 60,
+  "items_changed_correctness": [],
+  "run_to_run_instability": 0.0,
+  "scorer_rules": "v1",
+  "experiment": null,
+  "scored_at": "2026-11-19T10:49:15.980170+00:00"
+}

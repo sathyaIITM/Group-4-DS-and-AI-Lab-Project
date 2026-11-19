@@ -1,0 +1,67 @@
+{
+  "description": "Two-turn sample conversations for the Milestone 4 slide on conversation flow. Replies are copied unedited from the run log (agent version v2, run 1).",
+  "conversations": [
+    {
+      "name": "example_1_follow_up_answered",
+      "evaluation_item": "e2e-004",
+      "split": "test",
+      "turns": [
+        {
+          "turn": 1,
+          "run_id": "a68b56cb-c27e-4ea1-9657-70b826223ed8",
+          "question_id": "e2e-004:prior-1",
+          "question": "What was the unemployment rate in Gujarat in 2021-22?",
+          "outcome": "answered",
+          "reply": "In fiscal year 2021-22, the unemployment rate, usual status (ps+ss), persons aged 15+, for Gujarat was 2.0 percent, according to the PLFS unemployment rate (%), usual status (ps+ss), persons aged 15+, by State/UT source table.",
+          "duration_ms": 5745,
+          "llm_calls": 3,
+          "commit": "a2c8c7d8ecde703002dbaa02e499bd71cb1499df",
+          "experiment": "final_test_v2_r1"
+        },
+        {
+          "turn": 2,
+          "run_id": "91fbae35-9be9-4fcf-9d55-59c7f3482556",
+          "question_id": "e2e-004",
+          "question": "And how does Maharashtra compare with that?",
+          "outcome": "answered",
+          "reply": "In the July-June survey year July 2021 to June 2022, the unemployment rate, usual status (ps+ss), persons aged 15+ for Gujarat was 2.0 percent, and for Maharashtra it was 3.5 percent, according to the PLFS unemployment rate (%), usual status (ps+ss), persons aged 15+, by State/UT source.",
+          "duration_ms": 6581,
+          "llm_calls": 3,
+          "commit": "a2c8c7d8ecde703002dbaa02e499bd71cb1499df",
+          "experiment": "final_test_v2_r1"
+        }
+      ]
+    },
+    {
+      "name": "example_2_follow_up_outside_coverage",
+      "evaluation_item": "e2e-081",
+      "split": "development",
+      "turns": [
+        {
+          "turn": 1,
+          "run_id": "5129b743-19dc-4cab-834b-42e0a7d930f6",
+          "question_id": "e2e-081:prior-1",
+          "question": "What was the monsoon rainfall in Vidarbha in 2016?",
+          "outcome": "answered",
+          "reply": "In the meteorological sub-division of Vidarbha, the monsoon rainfall measured 1045.4 millimeters during the 2016-JJAS season (interpreted as June-September), according to the India Meteorological Department, Ministry of Earth Sciences (via data.gov.in).",
+          "duration_ms": 6706,
+          "llm_calls": 3,
+          "commit": "a2c8c7d8ecde703002dbaa02e499bd71cb1499df",
+          "experiment": "final_dev_v2_r1"
+        },
+        {
+          "turn": 2,
+          "run_id": "27b11b9f-17e3-4167-84d6-1475327bac8f",
+          "question_id": "e2e-081",
+          "question": "And in 2021?",
+          "outcome": "declined",
+          "reply": "The catalogue does not contain the requested data. Missing: period (2021-JJAS outside 1901-01-01 to 2017-12-31). Related tables: imd_district_rainfall_normals. The request has been recorded as a data request.",
+          "duration_ms": 2686,
+          "llm_calls": 1,
+          "commit": "a2c8c7d8ecde703002dbaa02e499bd71cb1499df",
+          "experiment": "final_dev_v2_r1"
+        }
+      ]
+    }
+  ]
+}

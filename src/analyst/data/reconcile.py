@@ -37,14 +37,17 @@ EXAMPLES = 3
 
 
 def _extras(frame: pd.DataFrame) -> list[str]:
+    """Return the columns between the standard leading and trailing observation columns."""
     return [c for c in frame.columns if c not in OBS_HEAD and c not in OBS_TAIL]
 
 
 def _differs(left: pd.Series, right: pd.Series) -> pd.Series:
+    """Return where two series differ, treating two missing values as equal."""
     return (left != right) & ~(left.isna() & right.isna())
 
 
 def _names(values: set[Any], limit: int = 5) -> list[str]:
+    """Return up to a limit of values as sorted strings."""
     return sorted(str(v) for v in values)[:limit]
 
 
@@ -56,6 +59,7 @@ def _item(
     count: int,
     suggestion: str = "",
 ) -> ReviewItem:
+    """Build a review item for a dataset."""
     return ReviewItem(
         dataset_id=config.dataset_id,
         severity=severity,

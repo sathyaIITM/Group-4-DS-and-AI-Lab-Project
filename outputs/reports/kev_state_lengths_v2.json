@@ -1,0 +1,30 @@
+{
+  "tokenizer": "Qwen/Qwen3.5-0.8B-Base@dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+  "max_state": 384,
+  "files": {
+    "train.v2.jsonl": {
+      "records": 1876,
+      "state_tokens_median": 248.0,
+      "state_tokens_p95": 295,
+      "state_tokens_max": 318,
+      "over_max_state": 0,
+      "would_be_dropped_by_kev_train": 0
+    },
+    "calibration.v2.jsonl": {
+      "records": 322,
+      "state_tokens_median": 252.0,
+      "state_tokens_p95": 293,
+      "state_tokens_max": 312,
+      "over_max_state": 0,
+      "would_be_dropped_by_kev_train": 0
+    },
+    "dev_synthetic.v2.jsonl": {
+      "records": 355,
+      "state_tokens_median": 253,
+      "state_tokens_p95": 295,
+      "state_tokens_max": 318,
+      "over_max_state": 0,
+      "would_be_dropped_by_kev_train": 0
+    }
+  }
+}

@@ -12,6 +12,8 @@ CATALOGUE_PATH = Path("configs/catalogue.toml")
 
 
 class CatalogueTable(BaseModel):
+    """One table of the routing catalogue: name, domain, status, places, periods and templates."""
+
     model_config = ConfigDict(extra="forbid")
 
     name: str
@@ -35,9 +37,14 @@ class CatalogueTable(BaseModel):
     lacking_definitions: list[str] = Field(default_factory=list)
     describe_questions: list[str] = Field(default_factory=list)
     describe_templates: list[str] = Field(default_factory=list)
+    # Generic tables (routing data v2): measure phrases users ask for, and what a place is.
+    measures: list[str] = Field(default_factory=list)
+    place_kind: str = "State"
 
 
 class UncoveredMeasure(BaseModel):
+    """A measure the catalogue does not hold, used to build search and decline examples."""
+
     model_config = ConfigDict(extra="forbid")
 
     phrase: str
@@ -46,6 +53,8 @@ class UncoveredMeasure(BaseModel):
 
 
 class Catalogue(BaseModel):
+    """The routing catalogue: its version, tables and uncovered measures."""
+
     model_config = ConfigDict(extra="forbid")
 
     version: str
@@ -53,12 +62,15 @@ class Catalogue(BaseModel):
     uncovered: list[UncoveredMeasure]
 
     def real_tables(self) -> list[CatalogueTable]:
+        """Return the tables whose data is published."""
         return [t for t in self.table if t.status == "real"]
 
     def get(self, name: str) -> CatalogueTable:
+        """Return the table with the given name."""
         return next(t for t in self.table if t.name == name)
 
 
 def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
+    """Load and validate the catalogue from a TOML file."""
     with path.open("rb") as handle:
         return Catalogue.model_validate(tomllib.load(handle))

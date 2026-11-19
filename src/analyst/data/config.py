@@ -19,6 +19,8 @@ SOURCES_DIR = Path("configs/sources")
 
 
 class DatasetSection(BaseModel):
+    """Identity and provenance of a source dataset."""
+
     id: str
     domain: str
     title: str
@@ -45,17 +47,40 @@ class FlagPattern(BaseModel):
 
 
 class ReadSection(BaseModel):
+    """How to read the raw file: missing markers, flag patterns and characters to strip."""
+
     missing_markers: dict[str, str] = Field(default_factory=lambda: {"": "missing_in_source"})
     flag_patterns: list[FlagPattern] = Field(default_factory=list)
     strip_chars: list[str] = Field(default_factory=list)
     drop_columns: list[str] = Field(default_factory=list)
+    # Rows to remove before parsing, by source header -> published values, for rows that are
+    # not observations of a place: subtotals such as "Total State (S)" next to an All India row.
+    drop_rows: dict[str, list[str]] = Field(default_factory=dict)
     dedupe_exact: bool = False
 
 
-class IndicatorSpec(BaseModel):
+class IndicatorOverride(BaseModel):
+    """Rows whose category column holds one of `values` get another indicator and unit.
+
+    For a value column whose unit depends on the row, such as production in tonnes for most
+    crops and in bales for cotton: each unit becomes its own indicator, so that one indicator
+    always has one unit.
+    """
+
+    column: str  # source header of a column given a category role in [columns]
+    values: list[str]
     id: str
     label: str | None = None
     unit: str = "unknown"
+
+
+class IndicatorSpec(BaseModel):
+    """An indicator's id, label and unit."""
+
+    id: str
+    label: str | None = None
+    unit: str = "unknown"
+    overrides: list[IndicatorOverride] = Field(default_factory=list)
 
 
 class PeriodSpec(BaseModel):
@@ -67,11 +92,15 @@ class PeriodSpec(BaseModel):
 
 
 class UnitRule(BaseModel):
+    """A rule that assigns a unit when an indicator label contains a phrase."""
+
     contains: str
     unit: str
 
 
 class ValuesSection(BaseModel):
+    """Where the values are: period columns for one indicator, or indicator columns."""
+
     mode: Literal["periods", "indicators"]
     # mode = periods: the indicator is fixed; columns are periods.
     indicator: IndicatorSpec | None = None
@@ -87,6 +116,7 @@ class ValuesSection(BaseModel):
 
     @model_validator(mode="after")
     def _check_mode(self) -> "ValuesSection":
+        """Check that the fields required by the values mode are present."""
         if self.mode == "periods" and self.indicator is None:
             msg = "values.mode = periods needs values.indicator"
             raise ValueError(msg)
@@ -124,14 +154,17 @@ class YearException(BaseModel):
 
     @property
     def start_date(self) -> date:
+        """Return the exception's start date."""
         return date.fromisoformat(self.start)
 
     @property
     def end_date(self) -> date:
+        """Return the exception's end date."""
         return date.fromisoformat(self.end)
 
     @model_validator(mode="after")
     def _check_order(self) -> "YearException":
+        """Check that the exception starts before it ends."""
         if self.start_date > self.end_date:
             msg = f"period.exceptions: year {self.year} starts after it ends"
             raise ValueError(msg)
@@ -139,7 +172,9 @@ class YearException(BaseModel):
 
 
 class PeriodSection(BaseModel):
-    type: Literal["date", "calendar_year", "survey_year", "survey_round", "quarter"]
+    """How periods are read: type, start month, date format and exceptions."""
+
+    type: Literal["date", "calendar_year", "survey_year", "survey_round", "quarter", "month"]
     start_month: int | None = None  # survey_year: month the year starts; must be stated
     date_format: str | None = None  # date: strptime format
     # survey_round: one fixed period for the whole table
@@ -149,6 +184,10 @@ class PeriodSection(BaseModel):
     # quarter: published quarter name -> label and months; needs period_year and
     # period_quarter columns
     quarter_map: dict[str, QuarterSpec] = Field(default_factory=dict)
+    # month: one row per month, from a period_year column and a period_month column holding
+    # the month name. English names (January, Jan, Sept) are known; month_map adds spellings
+    # that a source uses, such as {"Marcrh" = 3}. Case and spacing are ignored.
+    month_map: dict[str, int] = Field(default_factory=dict)
     # Year windows that changed over time: later conventions apply from their first year on
     # and earlier years keep the window they were published with.
     conventions: list[YearConvention] = Field(default_factory=list)
@@ -163,6 +202,7 @@ class PeriodSection(BaseModel):
 
     @model_validator(mode="after")
     def _check(self) -> "PeriodSection":
+        """Check that the fields required by the period type are present."""
         if self.type == "quarter" and not self.quarter_map:
             msg = "period.type = quarter needs period.quarter_map"
             raise ValueError(msg)
@@ -185,6 +225,8 @@ class PeriodSection(BaseModel):
 
 
 class GeoSection(BaseModel):
+    """Geography of the table: level, boundary vintage and reference lists."""
+
     level: Literal["national", "state", "district", "subdivision", "market"]
     vintage: str
     state_reference: str | None = "states"  # configs/reference/<name>.csv
@@ -196,6 +238,8 @@ class GeoSection(BaseModel):
 
 
 class Check(BaseModel):
+    """A consistency check on the values and the flag it sets on failure."""
+
     name: str
     kind: Literal["range", "order", "sum", "ratio", "bound_multiple", "unique_key"]
     flag: str = "inconsistent"
@@ -225,10 +269,14 @@ class ReconcileSection(BaseModel):
 
 
 class RuleRef(BaseModel):
+    """A reference to a registered source-specific rule."""
+
     id: str
 
 
 class ViewDerived(BaseModel):
+    """A derived column of an agent view and the rule it is computed from."""
+
     name: str
     from_: Literal[
         "check_failed", "check_passed", "flag_in", "flag_equals", "period_valid", "constant"
@@ -258,6 +306,8 @@ class ViewSection(BaseModel):
 
 
 class SourceConfig(BaseModel):
+    """Complete preprocessing configuration of one source table."""
+
     dataset: DatasetSection
     read: ReadSection = Field(default_factory=ReadSection)
     columns: dict[str, str] = Field(default_factory=dict)  # source header -> role
@@ -272,10 +322,12 @@ class SourceConfig(BaseModel):
 
     @property
     def dataset_id(self) -> str:
+        """Return the dataset id."""
         return self.dataset.id
 
     @property
     def obs_table(self) -> str:
+        """Return the name of the observation table."""
         return f"obs_{self.dataset.id}"
 
 

@@ -1,0 +1,120 @@
+# NFHS-5 State/UT factsheets: 131 indicators as columns, one survey round; rows by State/UT and area (Total, Urban, Rural).
+
+[dataset]
+id = "nfhs5_state_factsheet"
+domain = "health"
+title = "NFHS-5 State/UT factsheet indicators (total, urban and rural), India and 36 States/UTs, 2019-2021"
+source_name = "National Family Health Survey-5"
+source_table = "All India and State/UT-wise factsheets of the National Family Health Survey (NFHS-5), 2019-2021"
+publisher = "IIPS and Ministry of Health and Family Welfare (via data.gov.in)"
+source_tier = "B"
+adapter = "ogd_api"
+resource_id = "7c568619-b9b4-40bb-b563-68c28c27a6c1"
+raw_file = "nfhs5_state_factsheet.csv"
+config_version = "1.1.2"   # 1.1.x: API export headers (canonical), NA marker, percent rule, West Bengal Total present, minus-as-low-sample rule
+retrieved = "2026-11-05"
+caveats = [
+  "Survey estimates from one round, with fieldwork in 2019-2021; there is no trend in this table.",
+  "Each State has three figures per indicator: Total, Urban and Rural. Compare like with like.",
+  "Values in brackets in the source are based on few cases (25-49) and are flagged as low-sample estimates; values marked * are not shown by NFHS (fewer than 25 cases) and are empty.",
+  "Most indicators are percentages of the group named in the indicator; sex ratios are females per 1,000 males, and mortality rates are per 1,000 live births.",
+  "The NFHS-5 infant mortality rate is a survey estimate for the years before the survey; it differs from the yearly SRS rate by design.",
+  "The India rows are published figures, not the sum or average of the States.",
+]
+
+[read]
+missing_markers = { "" = "missing_in_source", "NA" = "missing_in_source", "*" = "suppressed" }   # NA appears in the API export
+strip_chars = ["*"]
+drop_columns = ["Unnamed: 136"]   # trailing column with no name and no values
+
+[[read.flag_patterns]]
+name = "parentheses"
+pattern = '^\((.*)\)$'
+flag = "low_sample_estimate"
+
+[columns]
+"States/UTs" = "geo_state"
+Area = "category:area"
+"Number of Households surveyed" = "attr:sample_households:int"
+"Number of Women age 15-49 years interviewed" = "attr:sample_women_15_49:int"
+"Number of Men age 15-54 years interviewed" = "attr:sample_men_15_54:int"
+
+[values]
+mode = "indicators"
+remaining = true
+id_prefix = "nfhs5_state"
+default_unit = "unknown"
+unit_rules = [
+  { contains = "%", unit = "percent" },
+  { contains = "females per 1,000 males", unit = "per_1000_males" },
+  { contains = "per 1000 live births", unit = "per_1000_live_births" },
+  { contains = "children per woman", unit = "children_per_woman" },
+  { contains = "adolescent fertility rate", unit = "births_per_1000_women" },
+  { contains = "(rs.)", unit = "INR" },
+  # Last: the API export drops "(%)" from five birth-history headers; rupee headers match above.
+  { contains = "in the 5 years before the survey)", unit = "percent" },
+]
+
+[period]
+type = "survey_round"
+label = "2019-2021"          # year-granular bounds: the source states 2019-2021
+start = "2019-01-01"
+end = "2021-12-31"
+
+[geo]
+level = "state"
+vintage = "nfhs5_2019_21"
+state_reference = "states"
+total_members = ["India"]
+
+# The API export writes low-sample values "(x)" as "-x" (same as the district table).
+[[rules]]
+id = "nfhs5_minus_as_low_sample"
+
+[[checks]]
+name = "value_range"
+kind = "range"
+min = 0
+flag = "out_of_range"
+units = { percent = [0, 100] }
+
+[[checks]]
+name = "unique_place_area_indicator"
+kind = "unique_key"
+columns = ["geo_name", "area", "indicator_id"]
+
+[view]
+mode = "rows"
+table = "nfhs5_state_factsheet"
+sort = ["state_name", "area", "indicator_id"]
+int_columns = ["sample_households", "sample_women_15_49", "sample_men_15_54"]
+
+[view.constants]
+source_name = "National Family Health Survey-5"
+source_table = "All India and State/UT-wise factsheets"
+survey_round = "NFHS-5"
+survey_period = "2019-2021"
+geography_level = "state"
+
+[view.columns]
+state_name_source = "geo_state_source"
+state_name = "geo_name"
+area = "area"
+indicator_id = "indicator_id"
+indicator_label = "indicator_label_source"
+value = "value"
+unit = "unit"
+sample_households = "sample_households"
+sample_women_15_49 = "sample_women_15_49"
+sample_men_15_54 = "sample_men_15_54"
+value_raw = "value_raw"
+
+[[view.derived]]
+name = "is_suppressed"
+from = "flag_equals"
+flags = ["suppressed"]
+
+[[view.derived]]
+name = "is_low_sample_estimate"
+from = "flag_equals"
+flags = ["low_sample_estimate"]

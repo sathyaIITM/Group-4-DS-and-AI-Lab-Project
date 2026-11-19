@@ -4,13 +4,13 @@ from datetime import date
 
 import pandas as pd
 import pytest
-from tests.data_fixtures import BUILDERS, approved, config, run
 
 from analyst.data import ops
 from analyst.data.config import ReadSection, load_all
 from analyst.data.contract import EMPTY_VALUE_FLAGS, FLAG_RANK, Flag
 from analyst.data.publish import build_catalogue_entry, build_dim_period
 from analyst.data.source_rules import RULES, SourceRule, register
+from tests.data_fixtures import BUILDERS, approved, config, run
 
 NFHS_READ = ReadSection(
     missing_markers={"": "missing_in_source", "*": "suppressed"},
@@ -114,11 +114,11 @@ def test_alias_table_points_only_at_canonical_names() -> None:
     assert set(ops.load_aliases().values()) <= canonical
 
 
-def test_all_five_configs_load_and_name_distinct_tables() -> None:
+def test_all_configs_load_and_name_distinct_tables() -> None:
     configs = load_all()
-    assert len(configs) == 5
-    assert len({c.view.table for c in configs}) == 5
-    assert len({c.obs_table for c in configs}) == 5
+    assert set(BUILDERS) <= {c.dataset_id for c in configs}  # the Milestone 2 tables stay
+    assert len({c.view.table for c in configs}) == len(configs)
+    assert len({c.obs_table for c in configs}) == len(configs)
 
 
 @pytest.mark.parametrize("dataset_id", sorted(BUILDERS))

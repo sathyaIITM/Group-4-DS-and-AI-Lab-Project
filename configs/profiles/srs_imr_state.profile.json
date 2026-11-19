@@ -1,0 +1,11 @@
+{
+  "indicators": {
+    "imr_srs": {
+      "mad": 9.0,
+      "median": 24.0,
+      "p05": 7.0,
+      "p95": 44.0
+    }
+  },
+  "observations": 185
+}

@@ -1,0 +1,106 @@
+{
+  "repeats": 1,
+  "runs": [
+    {
+      "path": "outputs/predictions/final_dev_v1_r1.jsonl",
+      "n": 60,
+      "success_rate": 0.9166666666666666,
+      "success_ci95": [
+        0.85,
+        0.9833333333333333
+      ],
+      "execution_accuracy": 0.7027027027027027,
+      "abstention_precision": 0.9285714285714286,
+      "abstention_recall": 0.8666666666666667,
+      "wrong_answer_rate": 0.02857142857142857,
+      "outcome_counts": {
+        "answered": 35,
+        "clarifying": 6,
+        "failed": 2,
+        "declined": 7,
+        "searched": 5,
+        "described": 4,
+        "out_of_scope": 1
+      },
+      "failure_rate": 0.03333333333333333,
+      "failure_causes": {
+        "result_check_failed": 1,
+        "budget_exhausted": 1
+      },
+      "latency_ms": {
+        "p50": 6712.0,
+        "p95": 10671.9,
+        "max": 16501.0
+      },
+      "first_event_ms": {
+        "p50": 29.0,
+        "p95": 31.0,
+        "max": 32.0
+      },
+      "calls_per_answered": 7.057142857142857,
+      "tokens_in": 2447511,
+      "tokens_out": 50574,
+      "cost_usd_est": 0.79346146,
+      "cost_per_answered_usd_est": 0.02267032742857143,
+      "sql_repairs": 0,
+      "sql_attempts": 135,
+      "narration_retries": 0,
+      "widened_searches": 0,
+      "sql_repairs_per_run": 0.0,
+      "narration_retries_per_run": 0.0,
+      "widened_searches_per_run": 0.0,
+      "review_cases": [
+        {
+          "id": "e2e-042",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-043",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-091",
+          "expected": "decline",
+          "outcome": "searched",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-111",
+          "expected": "clarify",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-120",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        }
+      ]
+    }
+  ],
+  "success_rate_mean": 0.9166666666666666,
+  "success_rate_min": 0.9166666666666666,
+  "success_rate_max": 0.9166666666666666,
+  "success_rate_range": 0.0,
+  "items_compared": 60,
+  "items_changed_correctness": [],
+  "run_to_run_instability": 0.0,
+  "scorer_rules": "v1",
+  "experiment": null,
+  "scored_at": "2026-11-19T10:49:14.452281+00:00"
+}

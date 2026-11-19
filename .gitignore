@@ -244,6 +244,7 @@ data/splits/*
 !data/splits/kev/
 data/splits/kev/*
 !data/splits/kev/*.v1.jsonl
+!data/splits/kev/*.v2.jsonl
 
 # Model checkpoints, adapters and calibration artefacts
 models/*
@@ -291,6 +292,8 @@ outputs/logs/*
 *.pkl
 # Tabular dumps: allow small tracked samples under data/sample
 *.csv
+# dev_human label and adjudication files are small hand-written records and are tracked
+!data/labels/dev_human_v1/*.csv
 *.tsv
 *.xlsx
 *.xls

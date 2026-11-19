@@ -1,0 +1,38 @@
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 2757.96it/s]
+W1117 21:19:11.497000 36098 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+train items 29, calibration items 3, eval items 3 (calibration_slice), skipped {}, device mps
+optimizer budget: 29 train item(s), effective batch up to 64 (micro_batch 2 x grad_accum 32), 1 optimizer updates over 1 epoch(s)
+epoch 1/1 mean loss 1.8133
+/Users/sathyaprakash/.cache/uv/archive-v0/UyvLfXo1YbtSe2Yf/lib/python3.12/site-packages/laya/train_cli.py:221: RuntimeWarning: laya.train: choice calibration: not fitted: 3 calibration items, fewer than 10, so the temperature stays 1.0
+  summary = finetune(
+
+=== Calibration Evidence (in-sample calibration slice, 3 items; not held-out) ===
+Metric                 Before         After          Delta         
+-----------------------------------------------------------------
+Accuracy               0.3333         0.6667         +0.3334       
+Loss                   1.1337         0.8473         -0.2864       
+ECE                    0.3114         0.3482         +0.0368       
+Brier (multi-class)    0.5498         0.4187         -0.1311       
+Brier (top-1)          0.0989         0.1385         +0.0396       
+Mean Confidence        0.4315         0.4955         +0.0640       
+-----------------------------------------------------------------
+
+Training complete! Model saved to models/checkpoints/laya_smoke
+       29.16 real         2.54 user         2.06 sys
+          2915926016  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              267825  page reclaims
+               67352  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                  83  messages sent
+                 106  messages received
+                   2  signals received
+                9598  voluntary context switches
+               51605  involuntary context switches
+            12824983  instructions retired
+             7512887  cycles elapsed
+             1081584  peak memory footprint
