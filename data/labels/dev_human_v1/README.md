@@ -56,6 +56,17 @@ Domains: at least 20 items each for `labour`, `agriculture`, `rainfall`, `prices
   Confirmed by T2 on 2026-11-19.
 
 `labels_T1.csv` was taken as submitted; only Windows line endings were converted.
+`labels_T4.csv` is the file of commit 9cc5a5e (branch `feature/t4-labels`), unchanged; a later
+local copy that differed in one row (dh-179) was discarded.
+
+Agreement (`agreement.json`, all three blocks): tool kappa 0.70 overall (A 0.68, B 0.68, C 0.73),
+below the 0.80 target; domain kappa 0.88 overall (A 0.86, B 0.84, C 0.95), above it. Every
+disagreement and undecided item is adjudicated.
+
+Blocks B and C were adjudicated by their assigned adjudicators (T1: 28 rows; T2: 17 rows) and
+returned on 2026-11-19 as `disagreements_T1.csv` and `disagreements_T2.csv`. Two items were marked
+ambiguous and removed (dh-086, dh-195). Freeze: `freeze.json`; 198 items kept,
+`data/splits/kev/dev_human.v1.jsonl`, SHA-256 a20943505d897c98399eb0d16ae74c36ea1b27238f3ee03ac54d20fcbd77d7ef.
 
 ## Deviation: block A adjudicated by T3
 
