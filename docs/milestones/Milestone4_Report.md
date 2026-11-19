@@ -1,7 +1,7 @@
 # Milestone 4: Model Training, Configuration and Evaluation
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.2 (draft).
+Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.4 (draft).
 
 **Status of this file.** Skeleton with the section structure, the requirement map and the
 facts already fixed. Sections marked *Pending* are written by the named member once the
@@ -25,6 +25,7 @@ that holds it and the command that produced it (Appendix A).
 | 0.1 | 12 Nov 2026 | Skeleton: structure, requirement map, training configuration facts |
 | 0.2 | 17 Nov 2026 | Hosted LLM layer configuration and the Vertex AI access and thinking check (Section A2) |
 | 0.3 | 19 Nov 2026 | Part B under the twelve guideline headings (training, selection, test results, gate, cascade); Section 2.3 (`dev_human`) |
+| 0.4 | 19 Nov 2026 | Response to the Milestone 3 review (1.2), status (1.3), key findings (4), artifacts and reproduction (Appendix A) |
 
 ## 1. Introduction
 
@@ -46,13 +47,29 @@ development set, and measuring it end to end.
 
 ### 1.2 Response to the Milestone 3 review
 
-*Pending (T3).* Carries forward the items moved to Milestone 4: the human-labelled
-`dev_human` set, the fair Kev and Laya comparison, the built agent and its end-to-end
-measurement.
+The Milestone 3 report moved eight items to Milestone 4. Their state on 19 November:
+
+| Item promised in Milestone 3 | State | Where |
+| --- | --- | --- |
+| 1. Human-labelled routing set (two labellers, agreement, results per label) | **Done.** 200 items, two labellers per item and an adjudicator; 198 kept; Cohen's kappa domain 0.88, tool 0.70; per-label F1 reported | Sections 2.3 and B12 |
+| 2. About 100 evaluation questions with outcomes fixed in advance by a member who did not write the pipeline, at least 20 to decline or clarify | **Done, validation pending.** `e2e_v1`: 100 questions written by T1, 12 to decline and 8 to clarify; gold checked by T3; T1's own validation flag is not yet set (0 of 100) | Section 2.2; [`data/eval/e2e_v1.jsonl`](../../data/eval/e2e_v1.jsonl) |
+| 3. v0 and the retrieval configurations on that set, three runs each | **Done.** v0, v1 and v2, 3 runs x 60 test questions each | Sections A4-A6; [`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md) |
+| 4. Fair Kev and Laya comparison (same split, same calibration, human labels) | **Partly done.** Kev zero-shot, Kev fine-tuned and Jev on the same human labels with the same calibration procedure. Laya only zero-shot, on `dev_synthetic`; the fine-tuned Laya run did not fit the local machine and was not run on Kaggle in time | Sections B11 and B12 |
+| 5. Full graph merged, with result checks tied to the intent | **Built.** Graph, control, model and tool nodes merged; intent-tied result checks and the narrated-number check run in the live graph | Section A3; [`src/analyst/agents/`](../../src/analyst/agents/) |
+| 6. Catalogue freeze, reviewed guidance cards, new verified examples, retrieval recall at 4 | **Done.** 14 tables frozen; guidance cards version 3 and verified examples version 2; catalogue retrieval recall at 4 of 1.0 in every query category of the audit, and recall 1.0 with MRR 0.86 on the 40 `e2e_dev` cases | [`catalogue_retrieval_audit.json`](../../outputs/reports/catalogue_retrieval_audit.json), [`retrieval_agent_e2e_dev.v1.json`](../../outputs/reports/retrieval_agent_e2e_dev.v1.json) |
+| 7. Vertex AI and the two-tier Gemini comparison | **Vertex AI done; comparison not run.** All runs use `gemini-3.5-flash-lite`; the comparison with `gemini-3.8-flash` (E2) moves to the next milestone | Section A2; [`configs/model.yaml`](../../configs/model.yaml) |
+| 8. Configuration files `model.yaml`, `train.yaml`, `inference.yaml`, `evaluation.yaml` | **Done**, with `agent.yaml` | [`configs/`](../../configs/) |
 
 ### 1.3 Status
 
-*Pending (T3).*
+| Area | State | Evidence |
+| --- | --- | --- |
+| Agent graph with hosted LLM, retrieval and deterministic tools | **Built**; runs end to end on the frozen catalogue | Part A |
+| Version ladder v0, v1, v2 on `e2e_test` (3 x 60) | **Measured**: success 0.683, 0.689, 0.694; execution accuracy 0.433, 0.525, 0.633; cost per answer USD 0.0269, 0.0296, 0.0190 (estimates) | [`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md) |
+| Kev-0.8B domain decision | **Measured**: 8 runs trained, `ep3` selected on validation, 0.980 accuracy on `dev_human`; gate passed | Part B |
+| Kev inside the agent (v4) | Not yet: the ladder runs use the hosted LLM for routing; Kev replaces it for the domain decision in v4 | Section 4 |
+| Calibrated verification by Jev (v5), prompt optimisation (v3) | Not started; next milestone | - |
+| Drift baseline and log collation | **Built**; no real baseline yet | Section 3 |
 
 ## 2. Data and evaluation sets
 
@@ -475,11 +492,72 @@ runs and collated warehouse are not yet available.
 
 ## 4. Key findings
 
-*Pending (all).*
+**Agent system (Part A; `e2e_test`, 3 runs x 60 questions,
+[`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md)).**
+
+1. Retrieval and verified examples (v2) raise execution accuracy from 0.433 (v0) to 0.633, cut
+   model calls per answer from 8.75 to 6.05 and the estimated cost per answer by about 30% (USD
+   0.0269 to 0.0190), and lower the median latency from 6.9 s to 6.0 s.
+2. The end-to-end success rate barely moves (0.683, 0.689, 0.694): the gain in execution accuracy
+   is offset by a higher wrong-answer rate in v2 (0.083 against 0.038 for v0) and by weak
+   clarification (success on clarify cases 0.444 for v0 and 0.278 for v1 and v2, 18 cases).
+3. The agent declines and searches correctly (success 1.000 on both), and abstains when it should
+   (abstention recall 0.95 to 1.00), but it also abstains too often (abstention precision 0.54 to
+   0.61).
+4. Development and test diverge: success on `e2e_dev` is 0.917 to 0.967
+   ([`version_ladder_dev.md`](../../outputs/reports/version_ladder_dev.md)) against 0.683 to 0.694
+   on `e2e_test`. The configuration was tuned on the development cases; the test figures are the
+   ones to rely on.
+
+**Decision models (Part B; `dev_human`, 198 items).**
+
+5. Fine-tuning moves Kev-0.8B on the domain decision from 0.783 to 0.980 accuracy, and from
+   macro-F1 0.625 to 0.973. The largest change is on the two labels defined by the project's own
+   conventions, `multiple` and `unspecified` (F1 0 for zero-shot Kev).
+6. Temperature scaling is needed: the raw fine-tuned probabilities are over-confident
+   (temperatures 2.6 to 3.9). After scaling, the ECE of the selected run is 0.040.
+7. Fine-tuned Kev matches Jev within the pre-set margin (difference +1.0 point, 95% CI -2.0 to
+   +3.5); the gate passes, and at a 5% error budget the cascade keeps every item on Kev.
+8. Validation on rule- and teacher-labelled data (0.994) predicts the human-labelled result
+   (0.980) well for this decision. Human agreement is high for the domain (kappa 0.88) and lower
+   for tool selection (0.70), which is the harder decision for phase 2.
+
+**Next.** Put Kev on the domain decision inside the agent (v4) and measure it on `e2e_test`; fix
+the clarification and wrong-answer failures through new development cases, never through test
+text; run the two-tier Gemini comparison (E2) and prompt optimisation (v3).
 
 ## Appendix A. Artifacts and reproduction
 
-*Pending (T3 with all).*
+Every command runs from the repository root. Model weights and the raw and processed tables are
+not in git; the checkpoints are on the shared drive (`Group4/checkpoints/<run>`), and the data
+files are checked against their hashes before use.
+
+**Part B: decision models.**
+
+| Step | Command | Output |
+| --- | --- | --- |
+| Build the domain files | `python scripts/build_domain_phase1.py --version v2 --laya` | `data/splits/kev_domain/*.v2.jsonl` (hashes in `data/MANIFEST.md`) |
+| Check the data | `python -m analyst.models.kev_runs check-data` | Pass or fail against `configs/train.yaml` |
+| Coverage | `python -m analyst.models.kev_report coverage` | `outputs/reports/kev_data_coverage_v2.{json,md}` |
+| Run plan | `python -m analyst.models.kev_runs plan` | `kev_plan.json` (runs, commands, data hashes) |
+| Train | [`notebooks/kev_train_t4.ipynb`](../../notebooks/kev_train_t4.ipynb), `PLATFORM` and `SESSION` set per `configs/train.yaml` | `checkpoints/<run>/` with `environment.json`, `train.log`, `pip_freeze.txt` |
+| Score a run | `scripts/score_kev_run.sh <run>` | `outputs/reports/score_domain_<run>.json`, predictions, reliability figure |
+| Register a run | `python -m analyst.models.kev_runs register models/checkpoints/<run> --run-id <run> --drive-path Group4/checkpoints/<run> --scores outputs/reports/score_domain_<run>.json` | [`models/registry.json`](../../models/registry.json), `outputs/reports/kev_runs/<run>/` |
+| Comparison, curves, selection | `python -m analyst.models.kev_report table`, `curves`, `select` | `kev_runs_table.md`, `kev_train_loss.png`, `kev_validation_by_epoch.png`, `kev_selection.json` |
+| Freeze `dev_human` | `python scripts/label_agreement.py agree`, then `freeze --items data/labels/dev_human_v1/items_rendered.jsonl` | `agreement.json`, `freeze.json`, `data/splits/kev/dev_human.v1.jsonl` |
+| Test records | `python scripts/build_domain_phase1.py --dev-human data/splits/kev/dev_human.v1.jsonl` | `data/splits/kev_domain/dev_human.v1.jsonl` |
+| Test scores | `SPLITS=dev_human scripts/score_kev_run.sh ep3`; `SPLITS=dev_human scripts/score_kev_run.sh zeroshot_v2 released`; Jev, gate and cascade as in [`kev_training_protocol.md`](../../docs/specs/kev_training_protocol.md) Section 6 | `score_domain_*_dev_human.json`, `gate_domain.json`, `cascade_domain.json` |
+| Option order | `decision_eval run --option-order-seed 1` and `2`, then `decision_eval flips` | `flips_domain_ep3_dev_human.json` |
+
+Pinned versions: Kev commit `2074cc44`; base model revision `dc7cdfe2`; warm start
+`jaredpalmer/kev-0.8b@bf75a6a8`; environment locked by `uv sync --python 3.13 --frozen --no-dev`.
+
+**Part A: agent system.** Configuration files in [`configs/`](../../configs/); evaluation harness
+[`src/analyst/evaluation/e2e_eval.py`](../../src/analyst/evaluation/e2e_eval.py); ladder tables
+from [`scripts/version_ladder.py`](../../scripts/version_ladder.py) (usage in its header), output
+[`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md) and
+[`version_ladder_dev.md`](../../outputs/reports/version_ladder_dev.md). Run commands per
+configuration: Sections A4 to A6.
 
 ## Contribution log
 
