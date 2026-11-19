@@ -55,10 +55,10 @@ The Milestone 3 report moved eight items to Milestone 4. Their state on 19 Novem
 | 1. Human-labelled routing set (two labellers, agreement, results per label) | **Done.** 200 items, two labellers per item and an adjudicator; 198 kept; Cohen's kappa domain 0.88, tool 0.70; per-label F1 reported | Sections 2.3 and B12 |
 | 2. About 100 evaluation questions with outcomes fixed in advance by a member who did not write the pipeline, at least 20 to decline or clarify | **Done, validation pending.** `e2e_v1`: 100 questions written by T1, 12 to decline and 8 to clarify; gold checked by T3; T1's own validation flag is not yet set (0 of 100) | Section 2.2; [`data/eval/e2e_v1.jsonl`](../../data/eval/e2e_v1.jsonl) |
 | 3. v0 and the retrieval configurations on that set, three runs each | **Done.** v0, v1 and v2, 3 runs x 60 test questions each | Sections A4-A6; [`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md) |
-| 4. Fair Kev and Laya comparison (same split, same calibration, human labels) | **Partly done.** Kev zero-shot, Kev fine-tuned and Jev on the same human labels with the same calibration procedure. Laya only zero-shot, on `dev_synthetic`; the fine-tuned Laya run did not fit the local machine and was not run on Kaggle in time | Sections B11 and B12 |
+| 4. Fair Kev and Laya comparison (same split, same calibration, human labels) | **Done for Kev; Laya in the following week.** Kev zero-shot, Kev fine-tuned and Jev on the same human labels with the same calibration procedure. Kev was taken forward because its zero-shot accuracy on `dev_synthetic` was well above Laya's (0.823 against 0.473); a fine-tuned Laya run is planned for the following week and will be reported then | Sections B11 and B12 |
 | 5. Full graph merged, with result checks tied to the intent | **Built.** Graph, control, model and tool nodes merged; intent-tied result checks and the narrated-number check run in the live graph | Section A3; [`src/analyst/agents/`](../../src/analyst/agents/) |
 | 6. Catalogue freeze, reviewed guidance cards, new verified examples, retrieval recall at 4 | **Done.** 14 tables frozen; guidance cards version 3 and verified examples version 2; catalogue retrieval recall at 4 of 1.0 in every query category of the audit, and recall 1.0 with MRR 0.86 on the 40 `e2e_dev` cases | [`catalogue_retrieval_audit.json`](../../outputs/reports/catalogue_retrieval_audit.json), [`retrieval_agent_e2e_dev.v1.json`](../../outputs/reports/retrieval_agent_e2e_dev.v1.json) |
-| 7. Vertex AI and the two-tier Gemini comparison | **Vertex AI done; comparison not run.** All runs use `gemini-3.5-flash-lite`; the comparison with `gemini-3.8-flash` (E2) moves to the next milestone | Section A2; [`configs/model.yaml`](../../configs/model.yaml) |
+| 7. Vertex AI and the two-tier Gemini comparison | **Vertex AI done; comparison closed.** All runs use `gemini-3.5-flash-lite`. The team closed the two-tier comparison (E2) on 19 November as not required: the default tier is kept | Section A2; [`configs/model.yaml`](../../configs/model.yaml) |
 | 8. Configuration files `model.yaml`, `train.yaml`, `inference.yaml`, `evaluation.yaml` | **Done**, with `agent.yaml` | [`configs/`](../../configs/) |
 
 ### 1.3 Status
@@ -129,7 +129,7 @@ data/labels/dev_human_v1/items_rendered.jsonl`. Code:
 | Item | Configuration |
 | --- | --- |
 | Provider and endpoint | Gemini on Vertex AI, OpenAI-compatible Chat Completions, `global` endpoint |
-| Default model | `gemini-3.5-flash-lite` (generally available); comparison tier for E2: `gemini-3.8-flash` (generally available; choice to be confirmed by the team) |
+| Default model | `gemini-3.5-flash-lite` (generally available); a comparison with `gemini-3.8-flash` (E2) was planned and closed on 19 November as not required |
 | Model selection | Only from `configs/model.yaml` (tier); environment variables supply credentials and the project only |
 | Temperature | 0 |
 | Prompts | One file per prompt with a header (`id`, `version`, `purpose`, `inputs`, `output_schema`); the SHA-256 of the file is recorded with every call; user text inside `<user_question>`, retrieved content inside `<context>`, delimiter tags removed from values |
@@ -352,7 +352,7 @@ reviewed with v3.
   point between versions are not separable.
 - The gold answers are checked by T3 only; T1 validation is pending, and two expected actions are
   disputed (Section A6.4).
-- One hosted model tier was run; the comparison with the larger tier (E2) is not yet run.
+- One hosted model tier was run; the two-tier comparison (E2) was closed as not required (Section 1.2).
 - Verification is pass-through in v0 to v2, so the confidence badge reads "not verified" on every
   answer; calibrated verification arrives with v5.
 
@@ -543,8 +543,11 @@ over its own length. They compare training horizons and are not reported as earl
 Overfitting check: the training loss of the longer runs approaches zero (final 10-step mean 0.001
 for `ep3` and `lr4e-05`), but validation NLL keeps falling with the horizon (Section B9), and the
 test accuracy on human labels (0.980) is close to the validation accuracy on `dev_synthetic`
-(0.994). Temperatures of 2.6 to 3.9 show that the raw probabilities are over-confident;
-temperature scaling corrects this (Section B12).
+(0.994). The fitted temperatures (2.6 to 3.9) show that the raw probabilities are over-confident
+on the calibration split. On the evaluation sets the effect of scaling is mixed for the selected
+run: it lowers NLL (`dev_human` 0.081 to 0.070) but raises ECE (0.017 to 0.040; `dev_synthetic`
+0.005 to 0.009). Both ECE values are well below the 0.10 limit; the gate uses the calibrated value,
+as fixed in advance (Section B12).
 
 ### B9. Training progress
 
@@ -598,7 +601,7 @@ The full log is protocol Section 8; the main items:
 | No validation loss during LoRA training; no resume | Validation on each saved checkpoint; horizon runs instead of early stopping; runs under one hour |
 | Free compute: one account per platform per person | The eight runs fitted within the free-tier sessions, two GPUs at a time on Kaggle; the five deferred runs were not needed (Section B6) |
 | External code review (17 November): unpinned warm start, augmentation defaults, from-base learning rate, run persistence, strict evaluation checks | All valid findings fixed before the planned runs; protocol Section 9 |
-| Laya, the planned comparator, ran out of memory on the local machine (its internal evaluation uses a fixed batch of 16) | A Kaggle notebook is prepared; the fine-tuned Laya row was not run for Milestone 4. Laya zero-shot on `dev_synthetic`: accuracy 0.473 ([`score_domain_laya_zeroshot_v2.json`](../../outputs/reports/score_domain_laya_zeroshot_v2.json)) |
+| Laya, the planned comparator, ran out of memory on the local machine (its internal evaluation uses a fixed batch of 16) | Kev was taken forward because its zero-shot accuracy on `dev_synthetic` was well above Laya's: 0.823 against 0.473 ([`score_domain_zeroshot_v2.json`](../../outputs/reports/score_domain_zeroshot_v2.json), [`score_domain_laya_zeroshot_v2.json`](../../outputs/reports/score_domain_laya_zeroshot_v2.json)). A fine-tuned Laya run on a Kaggle T4 (notebook prepared) is planned for the following week |
 | Scoring of one batch took about 7 hours instead of about 45 minutes, most likely because the local machine slept | Later scoring runs keep the machine awake (`caffeinate`) |
 | Labelling: one labeller's file used non-option names (`economy`, `missing`) | Corrected for format only, mapped by the labeller's own cited rule, and confirmed by the labeller; recorded in the `dev_human` README |
 | Tool-selection agreement below target (Cohen's kappa 0.70 against 0.80) | Every disagreement adjudicated; reported. The domain decision, the one trained here, has kappa 0.88 |
@@ -643,7 +646,7 @@ domain decision and brings its calibrated ECE to 0.040. It matches Jev within th
 its lead of one point is not statistically separable from Jev. Under the adoption rule, the domain decision moves to
 Kev, with the cascade to Jev kept for items below the threshold. Limits: one decision, one test set of
 198 items written by T3 and labelled by the team, five conditional runs not run (Section B6), no fine-tuned
-Laya row, no row for the v0 hosted LLM on this decision, and no held-out-table split (deferred in
+Laya row yet (planned for the following week), no row for the v0 hosted LLM on this decision, and no held-out-table split (deferred in
 `configs/train.yaml`).
 
 ## 3. Drift baseline and log collation
@@ -677,8 +680,9 @@ runs and collated warehouse are not yet available.
 5. Fine-tuning moves Kev-0.8B on the domain decision from 0.783 to 0.980 accuracy, and from
    macro-F1 0.625 to 0.973. The largest change is on the two labels defined by the project's own
    conventions, `multiple` and `unspecified` (F1 0 for zero-shot Kev).
-6. Temperature scaling is needed: the raw fine-tuned probabilities are over-confident
-   (temperatures 2.6 to 3.9). After scaling, the ECE of the selected run is 0.040.
+6. The fine-tuned model is well calibrated with or without temperature scaling (ECE 0.017 raw,
+   0.040 scaled, against a limit of 0.10). Scaling lowers NLL but slightly raises ECE on the test
+   set; the temperatures fitted on the calibration split (2.6 to 3.9) over-correct for it.
 7. Fine-tuned Kev matches Jev within the pre-set margin (difference +1.0 point, 95% CI -2.0 to
    +3.5); the gate passes, and at a 5% error budget the cascade keeps every item on Kev.
 8. Validation on rule- and teacher-labelled data (0.994) predicts the human-labelled result
@@ -688,7 +692,7 @@ runs and collated warehouse are not yet available.
 **Next.** Fix the general failure causes of Section A6.4 (place resolution, periods,
 clarification) through new development items, never through test text, and measure them with v3
 (prompt optimisation); put Kev on the domain decision inside the agent (v4) and measure it on
-`e2e_test`; run the two-tier Gemini comparison (E2).
+`e2e_test`; fine-tune Laya and report it beside Kev.
 
 ## Appendix A. Artifacts and reproduction
 
