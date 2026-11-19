@@ -1,4 +1,4 @@
-"""Tests for the T3 node functions: intent, coverage, SQL, narration, clarification."""
+"""Tests for the model-backed node functions: intent, coverage, SQL, narration, clarification."""
 
 from datetime import date
 from typing import Any

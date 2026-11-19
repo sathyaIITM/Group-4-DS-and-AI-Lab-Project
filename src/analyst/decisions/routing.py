@@ -47,6 +47,8 @@ INSTRUCTION_TEMPLATE = (
 
 
 class RoutingExample(BaseModel):
+    """A labelled routing example for evaluation."""
+
     id: str
     question: str
     has_result: bool
@@ -55,6 +57,8 @@ class RoutingExample(BaseModel):
 
 
 class RoutingPrediction(BaseModel):
+    """A predicted label for a routing example."""
+
     id: str
     label: str
     predicted: str
@@ -73,6 +77,7 @@ def render_state(example: RoutingExample) -> str:
 
 
 def tool_questions() -> dict[str, NoulQuestion]:
+    """Return one yes-or-no question per tool."""
     return {
         tool: NoulQuestion(
             instructions=INSTRUCTION_TEMPLATE.format(tool=tool, description=description)

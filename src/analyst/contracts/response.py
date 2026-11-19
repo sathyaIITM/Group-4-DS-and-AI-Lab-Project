@@ -34,6 +34,8 @@ Cause = Literal[
 
 
 class AgentResponse(Contract):
+    """The reply returned to the caller: outcome, text, badge, evidence id, chart and options."""
+
     run_id: str
     outcome: Outcome
     cause: Cause | None

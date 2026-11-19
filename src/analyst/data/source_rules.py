@@ -20,6 +20,8 @@ RuleFn = Callable[[pd.Series, pd.Series, pd.Series, pd.Series], None]
 
 @dataclass(frozen=True)
 class SourceRule:
+    """A rule specific to one source, with its description and the evidence for it."""
+
     id: str
     description: str
     evidence: str
@@ -31,6 +33,7 @@ RULES: dict[str, SourceRule] = {}
 
 
 def register(rule: SourceRule) -> SourceRule:
+    """Register a source rule under its id."""
     if rule.id in RULES:
         msg = f"source rule {rule.id!r} is already registered"
         raise ValueError(msg)
@@ -41,6 +44,7 @@ def register(rule: SourceRule) -> SourceRule:
 def _nfhs5_minus_as_low_sample(
     token: pd.Series, numeric_text: pd.Series, flag: pd.Series, rule: pd.Series
 ) -> None:
+    """Read a leading minus in NFHS-5 values as a low-sample marker, not a sign."""
     mask = flag.isna() & token.str.match(r"^-\d", na=False)
     numeric_text.loc[mask] = token.loc[mask].str[1:]
     flag.loc[mask] = Flag.LOW_SAMPLE_ESTIMATE.value

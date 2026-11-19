@@ -49,6 +49,8 @@ class ValueColumn:
 
 @dataclass
 class RunResult:
+    """Output of preprocessing one source: observations, review items and metadata."""
+
     config: SourceConfig
     obs: pd.DataFrame
     review: list[ReviewItem]
@@ -57,6 +59,7 @@ class RunResult:
 
     @property
     def blocked(self) -> bool:
+        """Return True when any review item blocks publication."""
         return any(item.severity == "block" for item in self.review)
 
 
@@ -64,10 +67,12 @@ class RunResult:
 # Reading and column checks
 # ---------------------------------------------------------------------------
 def _roles(config: SourceConfig) -> dict[str, tuple[str, ...]]:
+    """Return each configured source column's role split into its parts."""
     return {header: tuple(role.split(":")) for header, role in config.columns.items()}
 
 
 def _is_period_header(config: SourceConfig, header: str) -> bool:
+    """Return True when a header is a period column under the configured pattern."""
     pattern = config.values.pattern
     if config.values.mode != "periods" or pattern is None:
         return False
@@ -146,6 +151,7 @@ def check_columns(
 
 
 def _rename_hint(header: str, candidates: list[str]) -> str:
+    """Suggest the configured column a new header may have been renamed from."""
     close = difflib.get_close_matches(header, candidates, n=1, cutoff=0.6)
     if close:
         return f"possible rename of {header!r} to {close[0]!r}: update the configuration"
@@ -156,6 +162,7 @@ def _rename_hint(header: str, candidates: list[str]) -> str:
 # Value columns
 # ---------------------------------------------------------------------------
 def value_columns(config: SourceConfig, df: pd.DataFrame) -> list[ValueColumn]:
+    """Return the value columns of a frame with their period or indicator."""
     values = config.values
     roles = set(config.columns)
     found: list[ValueColumn] = []
@@ -284,6 +291,7 @@ def _failures(check: Check, wide: pd.DataFrame, units: dict[str, str]) -> pd.Dat
 # Periods
 # ---------------------------------------------------------------------------
 def _year_label(year: int, start_month: int | None) -> str:
+    """Return a year label, as a span such as 2019-20 when the year does not start in January."""
     if start_month in (None, 1):
         return str(year)
     return f"{year}-{(year + 1) % 100:02d}"
@@ -512,11 +520,13 @@ def _column_period(config: SourceConfig, header: str, df: pd.DataFrame) -> pd.Da
 # Places
 # ---------------------------------------------------------------------------
 def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
+    """Resolve the place columns of a frame to geography codes, levels and names."""
     roles = _roles(config)
     geo = config.geo
     index = df.index
 
     def column_of(role: str) -> pd.Series | None:
+        """Return the source column with the given role, or None."""
         header = next((h for h, r in roles.items() if r[0] == role), None)
         return df[header] if header else None
 
@@ -577,7 +587,7 @@ def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
     out["geo_vintage"] = geo.vintage
 
     codes = []
-    for lvl, st, di, mk, nm in zip(
+    for geo_level, state, district, market, name in zip(
         out["geo_level"],
         out["geo_state"],
         out["geo_district"],
@@ -585,16 +595,18 @@ def _places(df: pd.DataFrame, config: SourceConfig) -> pd.DataFrame:
         out["geo_name"],
         strict=True,
     ):
-        if lvl == "national":
+        if geo_level == "national":
             codes.append("IN")
-        elif lvl == "state":
-            codes.append(f"state:{ops.slug(str(nm))}")
-        elif lvl == "district":
-            codes.append(f"district:{ops.slug(str(st))}/{ops.slug(str(di))}")
-        elif lvl == "market":
-            codes.append(f"market:{ops.slug(str(st))}/{ops.slug(str(di))}/{ops.slug(str(mk))}")
+        elif geo_level == "state":
+            codes.append(f"state:{ops.slug(str(name))}")
+        elif geo_level == "district":
+            codes.append(f"district:{ops.slug(str(state))}/{ops.slug(str(district))}")
+        elif geo_level == "market":
+            codes.append(
+                f"market:{ops.slug(str(state))}/{ops.slug(str(district))}/{ops.slug(str(market))}"
+            )
         else:
-            codes.append(f"{lvl}:{ops.slug(str(nm))}")
+            codes.append(f"{geo_level}:{ops.slug(str(name))}")
     out["geo_code"] = codes
     return out
 
@@ -621,6 +633,7 @@ def run_source(
         raw_sha = "in-memory"
 
     def blocked_result(item: ReviewItem) -> RunResult:
+        """Return a run result that stops at a blocking review item."""
         return RunResult(config, pd.DataFrame(), [*review, item], {"dataset_id": dataset.id})
 
     if config.period.type == "survey_year" and config.period.start_month is None:
@@ -837,6 +850,7 @@ def run_source(
 
 
 def _rule_note(rule_id: str) -> dict[str, Any]:
+    """Return the description and evidence of a source rule."""
     from analyst.data.source_rules import RULES
 
     rule = RULES[rule_id]

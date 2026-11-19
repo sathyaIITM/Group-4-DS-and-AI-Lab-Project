@@ -110,6 +110,15 @@ recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milesto
 
 ### Changed
 
+- Naming and docstrings (19 November 2026): modules and tests named after team tracks renamed by
+  role: `agents/nodes.py` -> `agents/control_nodes.py`, `agents/t3_nodes.py` ->
+  `agents/model_nodes.py` (`make_model_nodes`, `live_model_nodes`, `ModelNodeDependencies`;
+  `T2_NODES` -> `CONTROL_NODES`), tests `test_t2_nodes` -> `test_control_nodes`, `test_t2_rules`
+  -> `test_routing_rules_and_config`, `test_t2_runtime` -> `test_runtime_stores`, `test_t3_nodes`
+  -> `test_model_nodes`, `test_graph_t3` -> `test_graph_model_nodes`, `test_tool_review_fixes` ->
+  `test_tool_regressions`, and `docs/specs/t2_runtime_notes.md` -> `agent_runtime_notes.md`.
+  Unclear single-letter names replaced by descriptive ones; a docstring added to every module,
+  class and function in `src/`, `app/` and `scripts/`, enforced by Ruff `D1`. No behaviour change.
 - `.gitignore` (5 November 2026): exception for `configs/reference/*.csv`, which the data
   pipeline and 55 tests need and which were not tracked.
 - Data preparation (3 November 2026): IMD and PLFS now carry `quality_flag` and `rule_ids`;

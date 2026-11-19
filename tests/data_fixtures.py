@@ -16,10 +16,12 @@ IMD_VALUES = [
 
 
 def config(dataset_id: str) -> SourceConfig:
+    """Load a source configuration by dataset id."""
     return load_source_config(__import__("pathlib").Path(f"configs/sources/{dataset_id}.toml"))
 
 
 def plfs() -> pd.DataFrame:
+    """Return a small PLFS-shaped raw frame."""
     return pd.DataFrame(
         {
             "sl__no_": ["1", "2", "3", "4"],
@@ -31,6 +33,7 @@ def plfs() -> pd.DataFrame:
 
 
 def imd() -> pd.DataFrame:
+    """Return a small IMD-shaped raw frame."""
     rows = []
     for subdivision in ("Kerala", "Orissa"):
         for year in (1950, 1951):
@@ -42,6 +45,7 @@ def imd() -> pd.DataFrame:
 
 
 def mandi() -> pd.DataFrame:
+    """Return a small mandi-shaped raw frame."""
     return pd.DataFrame(
         {
             "State": ["Odisha", "Keralam", "Kerala", "Odisha"],
@@ -59,6 +63,7 @@ def mandi() -> pd.DataFrame:
 
 
 def ncrb() -> pd.DataFrame:
+    """Return a small NCRB-shaped raw frame."""
     return pd.DataFrame(
         {
             "Year": ["2022"],
@@ -75,6 +80,7 @@ def ncrb() -> pd.DataFrame:
 
 
 def nfhs() -> pd.DataFrame:
+    """Return a small NFHS-shaped raw frame."""
     return pd.DataFrame(
         {
             "District Names": ["Khordha", "Puri", "Nuh"],
@@ -106,6 +112,7 @@ def approved(frame: pd.DataFrame) -> list[str]:
 
 
 def run(dataset_id: str, frame: pd.DataFrame, approved_columns: list[str] | None) -> RunResult:
+    """Run a source's pipeline on a frame."""
     from pathlib import Path
 
     return run_source(
@@ -131,6 +138,7 @@ def edited(dataset_id: str, **sections: dict[str, object]) -> SourceConfig:
 def run_config(
     cfg: SourceConfig, frame: pd.DataFrame, approved_columns: list[str] | None = None
 ) -> RunResult:
+    """Run the pipeline for a configuration on a frame."""
     from pathlib import Path
 
     return run_source(cfg, Path("data/raw"), raw_frame=frame, approved_columns=approved_columns)

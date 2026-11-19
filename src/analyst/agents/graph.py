@@ -12,7 +12,7 @@ from typing import Any
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from analyst.agents import nodes as t2
+from analyst.agents import control_nodes
 from analyst.agents.limits import budget_exhausted, deadline_exceeded
 from analyst.agents.state import AnalystState
 from analyst.agents.stubs import make_stub
@@ -87,6 +87,7 @@ def guarded(router: Router) -> Router:
     """Apply the deadline and the LLM-call budget to an edge, exactly once."""
 
     def route(state: AnalystState) -> str:
+        """Send the run to failure on a node error or an exceeded deadline, else route normally."""
         if state.node_error:
             return "report_system_failure"
         if not state.answer_accepted and deadline_exceeded(state):
@@ -100,10 +101,12 @@ def guarded(router: Router) -> Router:
 
 
 def to(destination: str) -> Router:
+    """Return a router that always goes to one destination."""
     return lambda _state: destination
 
 
 def after_screen(state: AnalystState) -> str:
+    """Continue to retrieval if the request passed screening, else reply out of scope."""
     if state.screen is not None and not state.screen.passes:
         return "respond_out_of_scope"
     return "retrieve_catalogue_candidates"
@@ -121,6 +124,7 @@ BRANCH_NODES = {
 
 
 def after_routing(state: AnalystState) -> str:
+    """Choose the graph branch selected by the routing decision."""
     branch = state.routing.branch if state.routing else "query"
     if branch == "explain" and not state.prior_result_ref:
         return "search_catalog_entries"
@@ -137,6 +141,7 @@ def after_describe(state: AnalystState) -> str:
 
 
 def after_chart_validation(state: AnalystState) -> str:
+    """Draw a chart from the stored result if it can be plotted, else query again."""
     # Nothing stored to plot, or one value: fetch the values to plot on the query path.
     return (
         "select_chart_type" if state.chart_result == "verified" else "retrieve_context_and_examples"
@@ -144,6 +149,7 @@ def after_chart_validation(state: AnalystState) -> str:
 
 
 def after_coverage(state: AnalystState) -> str:
+    """Continue, restrict, clarify or decline according to the coverage result."""
     status = state.coverage.status if state.coverage else "covered"
     limits = state.config.limits
     if status == "covered":
@@ -170,6 +176,7 @@ def should_widen(state: AnalystState) -> bool:
 
 
 def after_sql_validation(state: AnalystState) -> str:
+    """Execute valid SQL, else repair or regenerate it within the limits."""
     if state.validation_result == "valid":
         return "execute_read_only_duckdb"
     if state.counters.sql_repairs < state.config.limits.max_sql_repairs:
@@ -178,6 +185,7 @@ def after_sql_validation(state: AnalystState) -> str:
 
 
 def after_execution(state: AnalystState) -> str:
+    """Compute derivations after a successful query, else retry generation within the limits."""
     if state.execution_result == "success":
         return "compute_derivations"
     if state.counters.sql_generations < state.config.limits.max_sql_generations:
@@ -186,6 +194,7 @@ def after_execution(state: AnalystState) -> str:
 
 
 def after_checks(state: AnalystState) -> str:
+    """Continue after passing result checks, else retry or end the run within the limits."""
     verdict = state.checks.verdict if state.checks else "pass"
     counters, limits = state.counters, state.config.limits
     if verdict in {"pass", "pass_with_caveats"}:
@@ -204,6 +213,7 @@ def after_checks(state: AnalystState) -> str:
 
 
 def after_number_check(state: AnalystState) -> str:
+    """Verify claims if the narrated numbers match, else narrate again within the limits."""
     if state.number_check is None or state.number_check.passed:
         return "verify_claim_support_and_intent"
     if state.counters.narrations < state.config.limits.max_narrations:
@@ -212,11 +222,12 @@ def after_number_check(state: AnalystState) -> str:
 
 
 def after_claim_check(state: AnalystState) -> str:
-    v = state.verification
+    """Compute confidence if claims are supported, else narrate again or abstain."""
+    verification = state.verification
     supported = (
-        v is None
-        or v.skipped_reason is not None
-        or (v.claims_supported is not False and v.intent_aligned is not False)
+        verification is None
+        or verification.skipped_reason is not None
+        or (verification.claims_supported is not False and verification.intent_aligned is not False)
     )
     if supported:
         return "calibrate_end_to_end_confidence"
@@ -226,31 +237,32 @@ def after_claim_check(state: AnalystState) -> str:
 
 
 def after_answer_decision(state: AnalystState) -> str:
+    """Assemble the answer if it was accepted, else abstain."""
     if state.answer_decision == "answer":
         return "assemble_answer_and_evidence_panel"
     return "abstain_with_reason"
 
 
-T2_NODES: dict[str, NodeFn] = {
-    "receive_request": t2.receive_request,
-    "screen_request": t2.screen_request,
-    "retrieve_catalogue_candidates": t2.retrieve_catalogue_candidates,
-    "resolve_routing_decision": t2.resolve_routing_decision,
-    "validate_existing_result_for_chart": t2.validate_existing_result_for_chart,
-    "describe_from_metadata": t2.describe_from_metadata,
-    "search_catalog_entries": t2.search_catalog_entries,
-    "explain_from_evidence": t2.explain_from_evidence,
-    "retrieve_context_and_examples": t2.retrieve_context_and_examples,
-    "build_evidence_bundle": t2.build_evidence_bundle,
-    "assemble_answer_and_evidence_panel": t2.assemble_answer_and_evidence_panel,
-    "select_chart_type": t2.select_chart_type,
-    "render_chart": t2.render_chart,
-    "ask_clarification": t2.ask_clarification,
-    "decline_and_log_data_request": t2.decline_and_log_data_request,
-    "abstain_with_reason": t2.abstain_with_reason,
-    "report_system_failure": t2.report_system_failure,
-    "respond_out_of_scope": t2.respond_out_of_scope,
-    "finalize_response": t2.finalize_response,
+CONTROL_NODES: dict[str, NodeFn] = {
+    "receive_request": control_nodes.receive_request,
+    "screen_request": control_nodes.screen_request,
+    "retrieve_catalogue_candidates": control_nodes.retrieve_catalogue_candidates,
+    "resolve_routing_decision": control_nodes.resolve_routing_decision,
+    "validate_existing_result_for_chart": control_nodes.validate_existing_result_for_chart,
+    "describe_from_metadata": control_nodes.describe_from_metadata,
+    "search_catalog_entries": control_nodes.search_catalog_entries,
+    "explain_from_evidence": control_nodes.explain_from_evidence,
+    "retrieve_context_and_examples": control_nodes.retrieve_context_and_examples,
+    "build_evidence_bundle": control_nodes.build_evidence_bundle,
+    "assemble_answer_and_evidence_panel": control_nodes.assemble_answer_and_evidence_panel,
+    "select_chart_type": control_nodes.select_chart_type,
+    "render_chart": control_nodes.render_chart,
+    "ask_clarification": control_nodes.ask_clarification,
+    "decline_and_log_data_request": control_nodes.decline_and_log_data_request,
+    "abstain_with_reason": control_nodes.abstain_with_reason,
+    "report_system_failure": control_nodes.report_system_failure,
+    "respond_out_of_scope": control_nodes.respond_out_of_scope,
+    "finalize_response": control_nodes.finalize_response,
 }
 
 # (source, router) pairs: conditional edges, all guarded.
@@ -302,7 +314,7 @@ def build_graph(
 ) -> CompiledStateGraph[AnalystState, None, AnalystState, AnalystState]:
     """Compile the graph. `overrides` replaces stubs with real nodes by name."""
     builder = StateGraph(AnalystState)
-    implementations = {**T2_NODES, **(overrides or {})}
+    implementations = {**CONTROL_NODES, **(overrides or {})}
     for name in NODE_NAMES:
         node: NodeFn = implementations.get(name) or make_stub(name)
         builder.add_node(name, node)  # type: ignore[call-overload]  # langgraph overloads

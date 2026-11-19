@@ -47,6 +47,7 @@ EXAMPLE_FIELDS = {
 
 
 def check_cards(cards: list[dict[str, Any]], datasets: set[str]) -> list[str]:
+    """Return problems with the guidance cards."""
     problems = []
     seen: set[str] = set()
     for card in cards:
@@ -72,6 +73,7 @@ def check_cards(cards: list[dict[str, Any]], datasets: set[str]) -> list[str]:
 def check_examples(
     examples: list[dict[str, Any]], datasets: set[str], db: ReadOnlyDatabase
 ) -> tuple[list[str], list[dict[str, Any]]]:
+    """Run the verified examples and return their problems and results."""
     problems = []
     results = []
     seen: set[str] = set()
@@ -108,6 +110,7 @@ def check_examples(
 
 
 def evaluation_questions() -> dict[str, list[str]]:
+    """Return the evaluation questions per source file, to detect leakage."""
     sources: dict[str, list[str]] = {}
     for path in sorted((ROOT / "data" / "ground_truths").glob("*.csv")):
         with path.open(encoding="utf-8") as handle:
@@ -119,6 +122,7 @@ def evaluation_questions() -> dict[str, list[str]]:
 
 
 def main() -> int:
+    """Check the guidance cards and verified examples."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--cards", type=Path, default=CARDS)
     parser.add_argument("--examples", type=Path, default=EXAMPLES)

@@ -27,6 +27,8 @@ DEPTH = 20
 
 
 class RetrievalCase(BaseModel):
+    """A retrieval evaluation case with its expected tables and indicators."""
+
     model_config = ConfigDict(extra="ignore")
 
     id: str
@@ -36,6 +38,7 @@ class RetrievalCase(BaseModel):
 
 
 def case_scores(expected: Sequence[str], ranked: Sequence[str], k: int) -> dict[str, Any]:
+    """Return hit, recall and reciprocal rank of one case at k."""
     ranks = {e: ranked.index(e) + 1 for e in expected if e in ranked}
     found = [e for e in expected if ranks.get(e, k + 1) <= k]
     first = min(ranks.values()) if ranks else None
@@ -108,10 +111,12 @@ def hybrid_retrievers() -> tuple[Callable[[str], list[str]], Callable[[str], lis
     backend = index.build()
 
     def tables(question: str) -> list[str]:
+        """Return the table ids the hybrid index ranks for a question."""
         hits = index.search(question, "table", DEPTH)
         return [h.entry.dataset_id for h in hits if h.entry.dataset_id]
 
     def indicators(question: str) -> list[str]:
+        """Return the indicator ids the hybrid index ranks for a question."""
         hits = index.search(question, "indicator", DEPTH)
         return [str(h.entry.payload.get("indicator_id", h.entry.id)) for h in hits]
 
@@ -119,10 +124,11 @@ def hybrid_retrievers() -> tuple[Callable[[str], list[str]], Callable[[str], lis
 
 
 def catalogue_retriever(k: int) -> tuple[Callable[[str], list[str]], str]:
-    """The agent's own catalogue retrieval (`agents.nodes.rank_catalogue`)."""
-    from analyst.agents.nodes import rank_catalogue
+    """The agent's own catalogue retrieval (`agents.control_nodes.rank_catalogue`)."""
+    from analyst.agents.control_nodes import rank_catalogue
 
     def tables(question: str) -> list[str]:
+        """Return the table names the catalogue ranker returns for a question."""
         ranking, _ = rank_catalogue(question, k)
         return [name for name, _ in ranking]
 
@@ -130,6 +136,7 @@ def catalogue_retriever(k: int) -> tuple[Callable[[str], list[str]], str]:
 
 
 def main() -> None:
+    """Command-line entry point for the retrieval evaluation."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--cases", type=Path, required=True)
     parser.add_argument("--k", type=int, default=DEFAULT_K)

@@ -41,6 +41,8 @@ DATASET_NAMES = {
 
 @dataclass(frozen=True)
 class Case:
+    """A question with its reference SQL for the end-to-end slice."""
+
     case_id: str
     question: str
     sql: str
@@ -49,6 +51,7 @@ class Case:
 
 
 def load_catalogue(path: Path = PROCESSED / "catalogue.json") -> list[dict[str, Any]]:
+    """Load the published catalogue tables."""
     return list(json.loads(path.read_text(encoding="utf-8"))["tables"])
 
 
@@ -67,12 +70,12 @@ def rank_tables(tables: list[dict[str, Any]], domain: str) -> list[dict[str, Any
 def load_cases(per_source: dict[str, int]) -> list[Case]:
     """Answerable cases: v0 questions (IMD, PLFS) and reference pairs (NFHS-5, Mandi, NCRB)."""
     cases: list[Case] = []
-    v0 = [json.loads(line) for line in (ROOT / "data/sample/v0_questions.jsonl").open()]
+    v0_questions = [json.loads(line) for line in (ROOT / "data/sample/v0_questions.jsonl").open()]
     for table, n in (
         ("imd_subdivision_monthly_rainfall", per_source.get("IMD", 0)),
         ("plfs_state_ur_usual_status", per_source.get("PLFS", 0)),
     ):
-        picked = [q for q in v0 if q["answerable"] and q["tables"] == [table]][:n]
+        picked = [q for q in v0_questions if q["answerable"] and q["tables"] == [table]][:n]
         cases += [
             Case(
                 q["id"],
@@ -131,6 +134,7 @@ def run_case(
     client: SystemOneClient,
     checkpoint: str,
 ) -> dict[str, Any]:
+    """Route one question with the decision model, run its SQL and record the outcome."""
     started = time.perf_counter()
     state = {
         "catalogue": catalogue_text(tables),
@@ -193,6 +197,7 @@ def run_case(
 
 
 def main() -> None:
+    """Command-line entry point for the end-to-end slice."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument(

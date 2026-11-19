@@ -20,6 +20,7 @@ from analyst.evaluation.dev_human import OVERLAP_THRESHOLD, messages_of, overlap
 
 
 def main() -> int:
+    """Flag dev-human items that are near-duplicates of reference items."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--items", type=Path, required=True)
     parser.add_argument("--reference", type=Path, nargs="+", required=True)

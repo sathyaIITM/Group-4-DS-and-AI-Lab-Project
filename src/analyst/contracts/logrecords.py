@@ -1,9 +1,13 @@
+"""Records written to the run log: one row per run and one per node event."""
+
 from pydantic import Field
 
 from .common import Contract
 
 
 class RunRecord(Contract):
+    """One agent run as stored in the run log."""
+
     run_id: str
     conversation_id: str
     question: str
@@ -17,6 +21,8 @@ class RunRecord(Contract):
 
 
 class NodeEventRecord(Contract):
+    """One node event of a run as stored in the run log."""
+
     run_id: str
     stage: str
     timestamp: str

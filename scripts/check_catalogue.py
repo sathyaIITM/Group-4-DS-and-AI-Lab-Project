@@ -28,6 +28,7 @@ SOURCES = ROOT / "configs" / "sources"
 
 
 def number(text: Any) -> float | None:
+    """Read a number from text, ignoring other characters."""
     cleaned = re.sub(r"[^0-9.\-]", "", str(text))
     try:
         return float(cleaned)
@@ -52,26 +53,34 @@ def trace(table: dict[str, Any], samples: int, rng: random.Random) -> list[dict[
     ).df()
     header_of = {spec["id"]: header for header, spec in config["values"].get("columns", {}).items()}
     rows = []
-    for _, o in obs.sample(min(samples, len(obs)), random_state=rng.randint(0, 10**6)).iterrows():
+    for _, observation in obs.sample(
+        min(samples, len(obs)), random_state=rng.randint(0, 10**6)
+    ).iterrows():
         if config["values"]["mode"] == "periods":
-            source_column = o.get("period_source")
+            source_column = observation.get("period_source")
         else:
-            source_column = header_of.get(o["indicator_id"], o.get("indicator_label_source"))
+            source_column = header_of.get(
+                observation["indicator_id"], observation.get("indicator_label_source")
+            )
         cell = None
-        if source_column in raw.columns and 0 <= int(o["source_row"]) < len(raw):
-            cell = raw.iloc[int(o["source_row"])][source_column]
+        if source_column in raw.columns and 0 <= int(observation["source_row"]) < len(raw):
+            cell = raw.iloc[int(observation["source_row"])][source_column]
         raw_number = number(cell) if cell is not None else None
         rows.append(
             {
-                "place": o["geo_name"],
-                "period": o["period_label"],
-                "indicator": o["indicator_id"],
-                "published": o["value"],
+                "place": observation["geo_name"],
+                "period": observation["period_label"],
+                "indicator": observation["indicator_id"],
+                "published": observation["value"],
                 "raw_cell": cell,
                 "match": raw_number is not None
                 and abs(
-                    (abs(raw_number) if o["quality_flag"] == "low_sample_estimate" else raw_number)
-                    - float(o["value"])
+                    (
+                        abs(raw_number)
+                        if observation["quality_flag"] == "low_sample_estimate"
+                        else raw_number
+                    )
+                    - float(observation["value"])
                 )
                 < 1e-6,
             }
@@ -80,6 +89,7 @@ def trace(table: dict[str, Any], samples: int, rng: random.Random) -> list[dict[
 
 
 def main() -> None:
+    """Write the catalogue and metadata checklist."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--samples", type=int, default=5)
     parser.add_argument("--seed", type=int, default=0)
@@ -98,17 +108,17 @@ def main() -> None:
         "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     traced_all = []
-    for t in catalogue["tables"]:
-        flags = ", ".join(f"{k} {v:,}" for k, v in sorted(t["flag_counts"].items()))
-        units = sorted(set(t["indicator_units"].values()))
+    for table in catalogue["tables"]:
+        flags = ", ".join(f"{k} {v:,}" for k, v in sorted(table["flag_counts"].items()))
+        units = sorted(set(table["indicator_units"].values()))
         units_text = ", ".join(units[:4]) + (f" (+{len(units) - 4})" if len(units) > 4 else "")
         lines.append(
-            f"| `{t['dataset_id']}` | {t['domain']} | {', '.join(t['period_types'])} | "
-            f"{t.get('period_start_month') or '-'} | {', '.join(t['geo_levels'])} | "
-            f"{'yes' if t['has_total_rows'] else 'no'} | {t['coverage_start']} to "
-            f"{t['coverage_end']} | {units_text} | {flags} |"
+            f"| `{table['dataset_id']}` | {table['domain']} | {', '.join(table['period_types'])} | "
+            f"{table.get('period_start_month') or '-'} | {', '.join(table['geo_levels'])} | "
+            f"{'yes' if table['has_total_rows'] else 'no'} | {table['coverage_start']} to "
+            f"{table['coverage_end']} | {units_text} | {flags} |"
         )
-        traced_all.append((t["dataset_id"], trace(t, args.samples, rng)))
+        traced_all.append((table["dataset_id"], trace(table, args.samples, rng)))
     lines += ["", "## Values traced to the raw file", ""]
     total = matched = 0
     for dataset_id, rows in traced_all:
@@ -118,15 +128,15 @@ def main() -> None:
             "| Place | Period | Indicator | Published | Raw cell | Match |",
             "| --- | --- | --- | --- | --- | --- |",
         ]
-        for r in rows:
-            if "note" in r:
-                lines.append(f"| {r['note']} | | | | | |")
+        for row in rows:
+            if "note" in row:
+                lines.append(f"| {row['note']} | | | | | |")
                 continue
             total += 1
-            matched += r["match"]
+            matched += row["match"]
             lines.append(
-                f"| {r['place']} | {r['period']} | `{r['indicator']}` | {r['published']} | "
-                f"{r['raw_cell']} | {'yes' if r['match'] else '**no**'} |"
+                f"| {row['place']} | {row['period']} | `{row['indicator']}` | {row['published']} | "
+                f"{row['raw_cell']} | {'yes' if row['match'] else '**no**'} |"
             )
         lines.append("")
     lines.insert(4, f"Traced values matching the raw file: {matched} of {total}.")

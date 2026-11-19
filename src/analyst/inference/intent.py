@@ -76,10 +76,10 @@ def repair_indicator_ids(intent: QueryIntent, retrieved: Mapping[str, Any]) -> Q
     if not valid or all(i in valid for i in intent.indicator_ids):
         return intent
     by_hash: dict[str, list[str]] = {}
-    for v in valid:
-        match = HASH_SUFFIX.search(v)
+    for valid_id in valid:
+        match = HASH_SUFFIX.search(valid_id)
         if match:
-            by_hash.setdefault(match.group(1), []).append(v)
+            by_hash.setdefault(match.group(1), []).append(valid_id)
     fixed = []
     for given in intent.indicator_ids:
         match = HASH_SUFFIX.search(given)
@@ -168,6 +168,7 @@ def extract_intent(
     counters: CallCounter,
     history: list[dict[str, Any]] | None = None,
 ) -> tuple[QueryIntent, LlmCallRecord]:
+    """Extract the query intent from a question with the model, using context and history."""
     prior = prior_plan.model_dump(mode="json") if isinstance(prior_plan, BaseModel) else prior_plan
     variables: dict[str, Any] = {
         # Fixed for a catalogue release, so the long prefix is cached by the provider.

@@ -58,6 +58,8 @@ class BudgetExhaustedError(LlmError):
 
 @dataclass
 class LlmCall:
+    """Timing and token counts of one model call."""
+
     purpose: str
     seconds: float
     prompt_tokens: int
@@ -111,6 +113,8 @@ THINKING_ORDER = ("minimal", "low", "medium", "high")
 
 @dataclass
 class ChatRequest:
+    """A chat completion request: prompts, model, temperature, token cap and schema."""
+
     system: str
     user: str
     model: str
@@ -122,6 +126,8 @@ class ChatRequest:
 
 @dataclass
 class ChatReply:
+    """A chat completion reply with its token counts and latency."""
+
     content: str
     tokens_in: int
     tokens_out: int
@@ -167,6 +173,7 @@ def inline_schema(schema: dict[str, Any]) -> dict[str, Any]:
     defs = schema.get("$defs", {})
 
     def walk(node: Any) -> Any:
+        """Replace schema references with their definitions."""
         if isinstance(node, dict):
             if "$ref" in node:
                 return walk(defs[node["$ref"].split("/")[-1]])
@@ -201,6 +208,7 @@ def billed_output_tokens(reply: ChatReply) -> int:
 
 
 def parse_reply(payload: dict[str, Any], model: str, latency_ms: int) -> ChatReply:
+    """Read a chat completion response into a reply."""
     usage = payload.get("usage") or {}
     details = usage.get("completion_tokens_details") or {}
     choice = payload["choices"][0]
@@ -284,6 +292,7 @@ def gcloud_token() -> str:
 
 
 def vertex_base_url(project: str, location: str) -> str:
+    """Return the OpenAI-compatible Vertex AI base URL for a project and location."""
     host = (
         "aiplatform.googleapis.com"
         if location == "global"
@@ -296,6 +305,7 @@ def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 6
     """An OpenAI-compatible chat-completions transport with JSON output."""
 
     def send(request: ChatRequest) -> ChatReply:
+        """Send a request, refreshing the token once on an authentication error."""
         body = request_body(request)
         started = time.perf_counter()
         for refreshed in (False, True):
@@ -326,6 +336,8 @@ def http_transport(base_url: str, token: Callable[[], str], timeout_s: float = 6
 
 @dataclass
 class LlmClient:
+    """Client for structured model calls with retries, budgets and call records."""
+
     api_key: str
     model: str
     base_url: str = GEMINI_OPENAI_BASE
@@ -346,6 +358,7 @@ class LlmClient:
 
     @classmethod
     def from_env(cls) -> "LlmClient":
+        """Build a client from the LLM_* environment variables."""
         key, model = os.environ.get("LLM_API_KEY"), os.environ.get("LLM_MODEL")
         if not key or not model:
             msg = "set LLM_API_KEY and LLM_MODEL (and LLM_BASE_URL if not Gemini) in .env"
@@ -449,6 +462,7 @@ class LlmClient:
     # ------------------------------------------------------------------ agent calls
 
     def _transport(self) -> Transport:
+        """Return the transport, creating the HTTP transport on first use."""
         if self.transport is None:
             key = self.api_key
             self.transport = http_transport(self.base_url, lambda: key, self.timeout_s)
@@ -618,6 +632,7 @@ class LlmClient:
 
 
 def _short(error: Exception) -> str:
+    """Return a short description of an error."""
     return f"{type(error).__name__}: {str(error)[:300]}"
 
 
@@ -638,21 +653,21 @@ def salvage_json(text: str) -> dict[str, Any] | None:
         pass
     cuts: list[int] = []  # positions of commas between top-level members
     depth, in_string, escaped = 0, False, False
-    for i, ch in enumerate(body):
+    for i, char in enumerate(body):
         if in_string:
             if escaped:
                 escaped = False
-            elif ch == "\\":
+            elif char == "\\":
                 escaped = True
-            elif ch == '"':
+            elif char == '"':
                 in_string = False
-        elif ch == '"':
+        elif char == '"':
             in_string = True
-        elif ch in "{[":
+        elif char in "{[":
             depth += 1
-        elif ch in "}]":
+        elif char in "}]":
             depth -= 1
-        elif ch == "," and depth == 1:
+        elif char == "," and depth == 1:
             cuts.append(i)
     for cut in reversed(cuts):
         try:

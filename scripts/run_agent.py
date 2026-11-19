@@ -33,6 +33,7 @@ def run_one(
     meta: dict[str, str | None] | None = None,
     nodes: dict[str, Callable[[AnalystState], dict[str, Any]]] | None = None,
 ) -> AnalystState:
+    """Run the agent on one question and return the final state."""
     state = AnalystState(
         run_id=str(uuid.uuid4()),
         conversation_id=conversation_id or str(uuid.uuid4()),
@@ -44,6 +45,7 @@ def run_one(
 
 
 def main() -> int:
+    """Command-line entry point for running the agent."""
     parser = argparse.ArgumentParser(description="Run the analyst agent")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--question")
@@ -56,7 +58,7 @@ def main() -> int:
         "--llm",
         choices=["stub", "live"],
         default="stub",
-        help="stub: no model call (default); live: T3 nodes on the hosted model",
+        help="stub: no model call (default); live: model-backed nodes on the hosted model",
     )
     parser.add_argument("--yes", action="store_true", help="confirm that a live run spends credit")
     parser.add_argument("--debug", action="store_true")
@@ -74,9 +76,9 @@ def main() -> int:
     if args.llm == "live":
         if not args.yes:
             parser.error("--llm live calls the hosted model and spends cloud credit; add --yes")
-        from analyst.agents.t3_nodes import live_t3_nodes
+        from analyst.agents.model_nodes import live_model_nodes
 
-        nodes = live_t3_nodes(args.version)
+        nodes = live_model_nodes(args.version)
     if args.question:
         questions = [args.question]
     else:

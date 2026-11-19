@@ -19,6 +19,7 @@ _TABLE = re.compile(r"\bobs_[a-z0-9_]+\b", re.IGNORECASE)
 
 
 def check_draft(draft: SqlDraft, obs_table: str) -> None:
+    """Check that a draft is one SELECT statement on the plan's table."""
     sql = draft.sql.strip()
     if not re.match(r"^(select|with)\b", sql, re.IGNORECASE):
         raise ValueError("the query must be one SELECT statement")
@@ -32,6 +33,7 @@ def check_draft(draft: SqlDraft, obs_table: str) -> None:
 
 
 def _as_json(value: Any) -> Any:
+    """Return a model as JSON-ready data, or the value unchanged."""
     return value.model_dump(mode="json") if isinstance(value, BaseModel) else value
 
 
@@ -78,6 +80,7 @@ def repair_sql(
     llm: LlmClient,
     counters: CallCounter,
 ) -> tuple[SqlDraft, LlmCallRecord]:
+    """Repair SQL with the model using the error it raised."""
     repaired, record = llm.structured(
         "sql_repair",
         "sql_repair",

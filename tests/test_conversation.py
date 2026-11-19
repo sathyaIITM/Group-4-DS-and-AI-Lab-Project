@@ -312,7 +312,7 @@ def test_rows_that_differ_only_by_indicator_are_bars_by_indicator() -> None:
 
 
 def test_a_chart_only_reply_is_a_sentence() -> None:
-    from analyst.agents.nodes import render_chart
+    from analyst.agents.control_nodes import render_chart
     from analyst.agents.state import AnalystState
     from analyst.contracts.chart import ChartSpec
 

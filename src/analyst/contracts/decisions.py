@@ -6,6 +6,8 @@ from analyst.contracts.common import Contract
 
 
 class DecisionRecord(Contract):
+    """One control decision: backend, label, probabilities, calibration, escalation and cost."""
+
     decision: Literal["tool", "domain", "coverage", "verification", "chart"]
     backend: Literal["kev", "jev", "laya", "llm", "rules"]
     model_revision: str | None
@@ -20,6 +22,8 @@ class DecisionRecord(Contract):
 
 
 class RoutingDecision(Contract):
+    """The tool and domain decisions and the graph branch they select."""
+
     tool: DecisionRecord
     domain: DecisionRecord
     final_tool: str

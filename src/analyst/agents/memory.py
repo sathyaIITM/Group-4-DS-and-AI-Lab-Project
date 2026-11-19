@@ -1,3 +1,5 @@
+"""Conversation memory in SQLite: pending clarification, prior plan and result, recent turns."""
+
 from __future__ import annotations
 
 import json
@@ -29,9 +31,11 @@ class ConversationMemory:
                 db.execute("ALTER TABLE memory ADD COLUMN history TEXT")
 
     def _connect(self) -> sqlite3.Connection:
+        """Open a connection to the memory database."""
         return sqlite3.connect(self.path)
 
     def get(self, conversation_id: str) -> dict[str, Any]:
+        """Return the stored state of a conversation, or empty values for a new one."""
         with self._connect() as db:
             row = db.execute(
                 "SELECT pending_clarification, prior_plan, prior_sql, prior_result_ref, history "

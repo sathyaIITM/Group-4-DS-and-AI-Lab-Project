@@ -56,11 +56,13 @@ def redact(text: str) -> str:
 
 
 def load_config(path: Path = TRAIN_CONFIG) -> dict[str, Any]:
+    """Load the training configuration."""
     config: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
     return config
 
 
 def sha256_file(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file, read in chunks."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
@@ -72,6 +74,8 @@ def sha256_file(path: Path) -> str:
 
 
 class RunSpec(BaseModel):
+    """One planned training run: data, hyperparameters and the factor it varies."""
+
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
@@ -98,6 +102,7 @@ class RunSpec(BaseModel):
     platform: str | None = None
 
     def command(self) -> str:
+        """Return the training command for the run."""
         parts = [
             "python -m kev.train",
             f"--data {self.data}",
@@ -127,6 +132,7 @@ class RunSpec(BaseModel):
 
 
 def _subset_path(config: dict[str, Any], train: Path, size: int) -> str:
+    """Return the path of a training subset of a given size."""
     return str(Path(config["data"]["subsets_dir"]) / f"{train.stem}.n{size}.jsonl")
 
 
@@ -215,6 +221,7 @@ def plan_meta(config: dict[str, Any], config_path: Path = TRAIN_CONFIG) -> dict[
     import subprocess
 
     def git(*args: str) -> str:
+        """Run a fixed git command in the repository and return its output."""
         out = subprocess.run(  # noqa: S603  # fixed git arguments
             ["git", "-C", str(ROOT), *args],  # noqa: S607
             capture_output=True,
@@ -248,6 +255,7 @@ def full_sweep(config: dict[str, Any], train: Path | None = None) -> list[RunSpe
     runs: list[RunSpec] = []
 
     def add(run_id: str, factor: str, from_base: bool = False, **changes: Any) -> None:
+        """Add a run that changes the given settings from the baseline."""
         values = {**b0, **common, **changes}
         runs.append(
             RunSpec(
@@ -298,6 +306,8 @@ def write_subsets(config: dict[str, Any], train: Path | None = None) -> dict[str
 
 
 class RegistryEntry(BaseModel):
+    """A registered training run and its results."""
+
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
@@ -442,6 +452,7 @@ def archive_records(run_dir: Path, run_id: str, target: Path = RUN_RECORDS) -> l
 
 
 def load_registry(path: Path = REGISTRY) -> dict[str, RegistryEntry]:
+    """Load the run registry."""
     if not path.exists():
         return {}
     rows = json.loads(path.read_text())
@@ -449,6 +460,7 @@ def load_registry(path: Path = REGISTRY) -> dict[str, RegistryEntry]:
 
 
 def save_registry(entries: dict[str, RegistryEntry], path: Path = REGISTRY) -> None:
+    """Save the run registry sorted by run id."""
     rows = [entries[k].model_dump() for k in sorted(entries)]
     path.write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
 
@@ -471,6 +483,7 @@ def register(
 
 
 def main() -> None:
+    """Command-line entry point for planning and registering Kev runs."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     plan_cmd = sub.add_parser("plan")
@@ -503,16 +516,16 @@ def main() -> None:
             args.out.parent.mkdir(parents=True, exist_ok=True)
             rows = [
                 {
-                    **r.model_dump(),
-                    "data_sha256": _data_hash(config, r.data),
-                    "command": r.command(),
+                    **run.model_dump(),
+                    "data_sha256": _data_hash(config, run.data),
+                    "command": run.command(),
                 }
-                for r in runs
+                for run in runs
             ]
             plan_file = {"meta": plan_meta(config), "runs": rows}
             args.out.write_text(json.dumps(plan_file, indent=2) + "\n")
-        for r in runs:
-            print(f"# {r.run_id} ({r.factor}, {r.platform or 'deferred'})\n{r.command()}\n")
+        for run in runs:
+            print(f"# {run.run_id} ({run.factor}, {run.platform or 'deferred'})\n{run.command()}\n")
     elif args.command == "subsets":
         print(json.dumps(write_subsets(config, args.data), indent=2))
     else:

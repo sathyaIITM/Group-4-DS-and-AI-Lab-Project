@@ -1,4 +1,7 @@
-"""Graph nodes owned by T2 (design document Section 5)."""
+"""Control nodes of the agent graph: intake, routing, retrieval, evidence and replies.
+
+Design document Section 5.
+"""
 
 from __future__ import annotations
 
@@ -93,6 +96,7 @@ def screen_request(state: AnalystState) -> dict[str, Any]:
 
 
 def _catalogue() -> Catalogue:
+    """Load the table catalogue configuration."""
     return load_catalogue(Path("configs/catalogue.toml"))
 
 
@@ -152,6 +156,7 @@ def retrieve_catalogue_candidates(state: AnalystState) -> dict[str, Any]:
 
 
 def _existing(*paths: str) -> Path | None:
+    """Return the first of the given paths that exists, or None."""
     return next((Path(p) for p in paths if Path(p).exists()), None)
 
 
@@ -258,6 +263,7 @@ def resolve_routing_decision(state: AnalystState) -> dict[str, Any]:
 
 
 def describe_from_metadata(state: AnalystState) -> dict[str, Any]:
+    """Describe a table from its catalogue metadata without querying data."""
     catalogue = _catalogue()
     requested = next((c.get("dataset_id") for c in state.catalogue_candidates), None)
     if requested is None:
@@ -282,6 +288,7 @@ def describe_from_metadata(state: AnalystState) -> dict[str, Any]:
 
 
 def search_catalog_entries(state: AnalystState) -> dict[str, Any]:
+    """List the catalogue tables that best match the question."""
     results = search_listing(_catalogue(), state.question, limit=5)
     if results:
         text = "Catalogue matches: " + "; ".join(f"{r['name']} ({r['topic']})" for r in results)
@@ -295,6 +302,7 @@ def search_catalog_entries(state: AnalystState) -> dict[str, Any]:
 
 
 def explain_from_evidence(state: AnalystState) -> dict[str, Any]:
+    """Explain the previous answer from its stored evidence bundle."""
     ref = state.prior_result_ref
     bundle = EvidenceStore().get(ref) if ref else None
     if bundle is None:
@@ -313,6 +321,7 @@ def explain_from_evidence(state: AnalystState) -> dict[str, Any]:
 
 
 def build_evidence_bundle(state: AnalystState) -> dict[str, Any]:
+    """Build the evidence bundle for the current result and store it."""
     bundle = build_evidence(state)
     EvidenceStore().put(bundle)
     return {
@@ -323,6 +332,7 @@ def build_evidence_bundle(state: AnalystState) -> dict[str, Any]:
 
 
 def select_chart_type(state: AnalystState) -> dict[str, Any]:
+    """Choose a chart type for the result by rules."""
     chart = select_chart(state.plan, state.result)
     return {
         "chart": chart,
@@ -405,6 +415,7 @@ def abstention_cause(state: AnalystState) -> Cause:
 
 
 def respond_out_of_scope(state: AnalystState) -> dict[str, Any]:
+    """Reply to a request that failed input screening."""
     reason = state.screen.reason if state.screen else None
     return {
         "response_text": templates.out_of_scope(reason),
@@ -436,6 +447,7 @@ DECLINE_KINDS = {"indicator", "period", "place", "geo_level"}
 
 
 def decline_and_log_data_request(state: AnalystState) -> dict[str, Any]:
+    """Decline a question the catalogue cannot answer and record it as a data request."""
     missing = state.coverage.missing if state.coverage else []
     intent = state.intent
     if (
@@ -460,6 +472,7 @@ def decline_and_log_data_request(state: AnalystState) -> dict[str, Any]:
 
 
 def abstain_with_reason(state: AnalystState) -> dict[str, Any]:
+    """End the run without an answer and state why."""
     cause = abstention_cause(state)
     return {
         "response_text": templates.abstain(cause),
@@ -470,6 +483,7 @@ def abstain_with_reason(state: AnalystState) -> dict[str, Any]:
 
 
 def report_system_failure(state: AnalystState) -> dict[str, Any]:
+    """End the run with a system-failure message for its cause."""
     cause = failure_cause(state)
     return {
         "response_text": templates.failure(cause),
@@ -499,6 +513,7 @@ def validate_existing_result_for_chart(state: AnalystState) -> dict[str, Any]:
 
 
 def assemble_answer_and_evidence_panel(state: AnalystState) -> dict[str, Any]:
+    """Assemble the final answer text, badge, chart and evidence reference."""
     text = state.narration[-1].text if state.narration else ""
     badge = state.confidence.badge if state.confidence else "not_verified"
     return {

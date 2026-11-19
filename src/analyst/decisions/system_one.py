@@ -20,16 +20,22 @@ class NoulQuestion(BaseModel):
 
 
 class SystemOneRequest(BaseModel):
+    """Request body for yes-or-no questions to a System One endpoint."""
+
     state: str | dict[str, Any] | list[Any]
     model: str
     questions: dict[str, NoulQuestion]
 
 
 class NoulAnswer(BaseModel):
+    """Probability of yes for one question."""
+
     noul: float
 
 
 class Usage(BaseModel):
+    """Token usage reported by the endpoint."""
+
     input_tokens: int = 0
     output_tokens: int = 0
 
@@ -43,23 +49,31 @@ class ChoiceQuestion(BaseModel):
 
 
 class ChoiceAnswer(BaseModel):
+    """Chosen option, its confidence and the probability of every option."""
+
     choice: str
     confidence: float
     probabilities: dict[str, float]
 
 
 class ChoiceRequest(BaseModel):
+    """Request body for choice questions to a System One endpoint."""
+
     state: str | dict[str, Any] | list[Any]
     model: str
     questions: dict[str, ChoiceQuestion]
 
 
 class ChoiceResponse(BaseModel):
+    """Answers to choice questions and token usage."""
+
     answers: dict[str, ChoiceAnswer]
     usage: Usage = Field(default_factory=Usage)
 
 
 class SystemOneResponse(BaseModel):
+    """Answers to yes-or-no questions and token usage."""
+
     answers: dict[str, NoulAnswer]
     usage: Usage = Field(default_factory=Usage)
 
@@ -97,6 +111,7 @@ class SystemOneClient:
         self._client = httpx.Client(base_url=base_url, headers=headers, timeout=timeout_s)
 
     def ask(self, state: str, questions: dict[str, NoulQuestion]) -> TimedAnswer:
+        """Ask yes-or-no questions about a state and return the answers with their latency."""
         payload = SystemOneRequest(state=state, model=self._model, questions=questions)
         started = time.perf_counter()
         response = self._client.post("/v1/systemone", json=payload.model_dump(exclude_none=True))
@@ -126,4 +141,5 @@ class SystemOneClient:
         )
 
     def close(self) -> None:
+        """Close the HTTP client."""
         self._client.close()

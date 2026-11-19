@@ -64,6 +64,7 @@ def probability_matrix(rows: list[dict[str, Any]]) -> np.ndarray:
 
 
 def label_index(rows: list[dict[str, Any]]) -> np.ndarray:
+    """Return the index of each row's true domain label."""
     return np.array([LABELS.index(r["label"]) for r in rows])
 
 
@@ -77,6 +78,7 @@ def apply_temperature(probabilities: np.ndarray, temperature: float) -> np.ndarr
 
 
 def nll(probabilities: np.ndarray, truth: np.ndarray) -> float:
+    """Return the mean negative log-likelihood of the true labels."""
     return float(-np.log(np.clip(probabilities[np.arange(len(truth)), truth], 1e-12, 1.0)).mean())
 
 
@@ -88,6 +90,7 @@ def fit_temperature(probabilities: np.ndarray, truth: np.ndarray) -> float:
 
 
 def brier(probabilities: np.ndarray, truth: np.ndarray) -> float:
+    """Return the multi-class Brier score."""
     onehot = np.eye(probabilities.shape[1])[truth]
     return float(((probabilities - onehot) ** 2).sum(axis=1).mean())
 
@@ -132,20 +135,21 @@ def paired_bootstrap(
     if [r["id"] for r in rows_a] != [r["id"] for r in rows_b]:
         msg = "the two prediction files must cover the same items in the same order"
         raise ValueError(msg)
-    a = (label_index(rows_a) == probability_matrix(rows_a).argmax(axis=1)).astype(float)
-    b = (label_index(rows_b) == probability_matrix(rows_b).argmax(axis=1)).astype(float)
+    correct_a = (label_index(rows_a) == probability_matrix(rows_a).argmax(axis=1)).astype(float)
+    correct_b = (label_index(rows_b) == probability_matrix(rows_b).argmax(axis=1)).astype(float)
     rng = np.random.default_rng(SEED)
     diffs = []
     for _ in range(N_BOOTSTRAP):
-        pick = rng.integers(0, len(a), len(a))
-        diffs.append(b[pick].mean() - a[pick].mean())
+        pick = rng.integers(0, len(correct_a), len(correct_a))
+        diffs.append(correct_b[pick].mean() - correct_a[pick].mean())
     return {
-        "difference": float(b.mean() - a.mean()),
+        "difference": float(correct_b.mean() - correct_a.mean()),
         "ci95": [float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5))],
     }
 
 
 def load_predictions(path: Path) -> list[dict[str, Any]]:
+    """Load domain predictions from a JSONL file."""
     return list(read_jsonl(path))
 
 
@@ -162,6 +166,7 @@ def report(calibration: Path, dev: Path) -> dict[str, Any]:
 
 
 def main() -> None:
+    """Command-line entry point for domain evaluation."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     run_cmd = sub.add_parser("run")

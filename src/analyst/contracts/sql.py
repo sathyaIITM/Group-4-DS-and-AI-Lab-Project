@@ -6,11 +6,15 @@ from analyst.contracts.common import Contract
 
 
 class SqlDraft(Contract):
+    """SQL written by the model and the plain-language statement of what it computes."""
+
     sql: str
     statement: str
 
 
 class SqlAttempt(Contract):
+    """One SQL generation or repair attempt, its validity, error class and run time."""
+
     attempt: int
     kind: Literal["generate", "repair", "regenerate"]
     sql: str

@@ -30,6 +30,7 @@ _TOKEN = re.compile(r"[a-z0-9]+")
 
 
 def tokenize(text: str) -> list[str]:
+    """Split text into lower-case word tokens."""
     return _TOKEN.findall(text.lower())
 
 
@@ -38,26 +39,27 @@ class BM25:
 
     def __init__(self, docs: Sequence[str], k1: float = 1.5, b: float = 0.75) -> None:
         self.k1, self.b = k1, b
-        self.docs = [Counter(tokenize(d)) for d in docs]
-        self.lengths = [sum(d.values()) for d in self.docs]
+        self.docs = [Counter(tokenize(doc)) for doc in docs]
+        self.lengths = [sum(doc.values()) for doc in self.docs]
         self.avg_len = sum(self.lengths) / max(len(self.docs), 1)
         df: Counter[str] = Counter()
-        for d in self.docs:
-            df.update(d.keys())
+        for doc in self.docs:
+            df.update(doc.keys())
         n = len(self.docs)
         self.idf = {t: math.log(1 + (n - f + 0.5) / (f + 0.5)) for t, f in df.items()}
 
     def scores(self, query: str) -> list[float]:
+        """Return the BM25 score of every document for a query."""
         terms = tokenize(query)
         out = []
         for doc, length in zip(self.docs, self.lengths, strict=True):
-            s = 0.0
-            for t in terms:
-                if t in doc:
-                    tf = doc[t]
+            score = 0.0
+            for term in terms:
+                if term in doc:
+                    tf = doc[term]
                     norm = tf + self.k1 * (1 - self.b + self.b * length / self.avg_len)
-                    s += self.idf[t] * tf * (self.k1 + 1) / norm
-            out.append(s)
+                    score += self.idf[term] * tf * (self.k1 + 1) / norm
+            out.append(score)
         return out
 
 
@@ -72,6 +74,8 @@ def rrf(rankings: Sequence[Sequence[str]], k: int = RRF_K) -> dict[str, float]:
 
 @dataclass
 class Hit:
+    """A retrieved entry with its fused score and its BM25 and vector ranks."""
+
     entry: Entry
     score: float
     bm25_rank: int | None
@@ -98,6 +102,7 @@ class HybridIndex:
 
     # -- embeddings ------------------------------------------------------------------------
     def _model(self) -> Any:
+        """Return the embedding model, loading the pinned revision on first use."""
         if self._embedder is None:
             # The model is pinned by revision and cached after the first download; online hub
             # checks held agent processes open for minutes at exit (18 Nov), so the cache is used
@@ -109,6 +114,7 @@ class HybridIndex:
         return self._embedder
 
     def embed(self, texts: Sequence[str], query: bool = False) -> np.ndarray:
+        """Return normalised embeddings, with the query prefix for queries."""
         prefixed = [QUERY_PREFIX + t for t in texts] if query else list(texts)
         return np.asarray(self._model().encode(prefixed, normalize_embeddings=True))
 
@@ -126,6 +132,7 @@ class HybridIndex:
         return self.backend
 
     def _connect(self) -> Any:
+        """Open a Postgres connection with pgvector support."""
         import psycopg
         from pgvector.psycopg import register_vector
 
@@ -134,6 +141,7 @@ class HybridIndex:
         return con
 
     def _write_pgvector(self, vectors: np.ndarray) -> None:
+        """Write entries and their vectors to the pgvector table."""
         with self._connect() as con:
             con.execute(
                 f"CREATE TABLE IF NOT EXISTS rag_entries (id text PRIMARY KEY, kind text NOT NULL,"
@@ -152,6 +160,7 @@ class HybridIndex:
 
     # -- search ----------------------------------------------------------------------------
     def _vector_ranking(self, query_vec: np.ndarray, kind: str, n: int) -> list[str]:
+        """Return entry ids of a kind ranked by vector similarity."""
         if self.backend == "pgvector":
             with self._connect() as con:
                 rows = con.execute(

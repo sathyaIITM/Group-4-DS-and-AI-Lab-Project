@@ -1,4 +1,4 @@
-"""Regression tests for the review of the T4 tool and evaluation branches (18 November)."""
+"""Regression tests for the tool and evaluation fixes of 18 November."""
 
 from __future__ import annotations
 
@@ -735,7 +735,7 @@ def test_cached_input_tokens_are_read_and_priced_at_ten_percent() -> None:
 
 def test_a_decline_with_a_named_table_states_the_intent_reason() -> None:
     # Dev run 3, e2e-085: "past month" when the CPI table ends in December 2023.
-    from analyst.agents.nodes import decline_and_log_data_request
+    from analyst.agents.control_nodes import decline_and_log_data_request
     from analyst.agents.state import AnalystState
     from analyst.contracts.coverage import CoverageResult, MissingPart
 

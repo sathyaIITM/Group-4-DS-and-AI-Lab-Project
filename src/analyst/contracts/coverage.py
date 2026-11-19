@@ -7,6 +7,8 @@ from analyst.contracts.plan import InterpretationPlan
 
 
 class MissingPart(Contract):
+    """One part of a question that the catalogue cannot supply, and why."""
+
     kind: Literal[
         "indicator",
         "period",
@@ -21,6 +23,8 @@ class MissingPart(Contract):
 
 
 class CoverageResult(Contract):
+    """Whether the catalogue covers a question, what is missing, and the supported plan."""
+
     status: Literal["covered", "partial", "ambiguous", "not_covered"]
     probability: float | None
     decided_by: Literal["rules", "jev", "llm"]

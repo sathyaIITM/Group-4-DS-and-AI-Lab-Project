@@ -1,4 +1,4 @@
-"""Scripted stand-ins for nodes owned by T3 and T4 until their implementations are wired in.
+"""Scripted stand-ins for the model-backed and tool nodes, used without a model or data.
 
 A stub returns the state update of its node as Section 4 contracts. The node that performs an
 attempt increments its counter; the real nodes keep this behaviour. A stub follows
@@ -78,6 +78,7 @@ def next_script_value(state: AnalystState, node: str) -> tuple[Any, dict[str, in
 
 
 def decision_record(decision: str, label: str, probability: float = 1.0) -> DecisionRecord:
+    """Return a rules-backed decision record with one label."""
     return DecisionRecord(
         decision=decision,
         backend="rules",
@@ -94,6 +95,7 @@ def decision_record(decision: str, label: str, probability: float = 1.0) -> Deci
 
 
 def stub_routing(tool: str, domain: str = "other", probability: float = 1.0) -> RoutingDecision:
+    """Return a routing decision for the given tool and domain."""
     return RoutingDecision(
         tool=decision_record("tool", tool, probability),
         domain=decision_record("domain", domain, probability),
@@ -104,6 +106,7 @@ def stub_routing(tool: str, domain: str = "other", probability: float = 1.0) -> 
 
 
 def stub_plan(dataset_id: str, unresolved: bool = False) -> InterpretationPlan:
+    """Return a fixed plan for a dataset, optionally with an unresolved period."""
     slots = (
         [UnresolvedSlot(slot="period", mention="2019", options=["2018-19", "2019-20"])]
         if unresolved
@@ -137,17 +140,20 @@ def stub_plan(dataset_id: str, unresolved: bool = False) -> InterpretationPlan:
 
 
 def _dataset(state: AnalystState) -> str:
+    """Return the first candidate dataset, or the default stub dataset."""
     if state.catalogue_candidates:
         return str(state.catalogue_candidates[0].get("dataset_id", STUB_DATASET))
     return STUB_DATASET
 
 
 def _route(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub routing node update."""
     routing = stub_routing(str(value))
     return {"routing": routing, "decision_log": [routing.tool, routing.domain]}
 
 
 def _intent(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub intent extraction node update."""
     intent = QueryIntent(
         action="answer",
         dataset_id=_dataset(state),
@@ -167,6 +173,7 @@ def _intent(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _resolve(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub resolution node update."""
     dataset = state.intent.dataset_id if state.intent else _dataset(state)
     update: dict[str, Any] = {"plan": stub_plan(dataset, unresolved=value == "unresolved")}
     if state.plan is not None:  # re-entry after an empty result is a resolution retry
@@ -175,6 +182,7 @@ def _resolve(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _coverage(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub coverage node update with the scripted status."""
     status = str(value)
     missing = [MissingPart(kind="indicator", detail="stub")] if status == "not_covered" else []
     coverage = CoverageResult(
@@ -193,11 +201,15 @@ def _coverage(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _restrict(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub restriction node update (no change)."""
     return {}
 
 
 def _sql(kind: str) -> Callable[[AnalystState, Any], dict[str, Any]]:
+    """Return a stub SQL node of the given kind."""
+
     def make(state: AnalystState, value: Any) -> dict[str, Any]:
+        """Add a stub SQL attempt."""
         attempt = SqlAttempt(
             attempt=len(state.sql) + 1,
             kind=kind,
@@ -214,10 +226,12 @@ def _sql(kind: str) -> Callable[[AnalystState, Any], dict[str, Any]]:
 
 
 def _validate(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub SQL validation node update with the scripted result."""
     return {"validation_result": str(value)}
 
 
 def _execute(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub execution node update with a one-value result."""
     result = QueryResult(
         sql=state.sql[-1].sql if state.sql else STUB_SQL,
         columns=[ColumnSpec(name="value", type="DOUBLE")],
@@ -231,10 +245,12 @@ def _execute(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _derive(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub derivation node update (no derivations)."""
     return {"derived": []}
 
 
 def _checks(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub result-check node update with the scripted verdict."""
     verdict = VERDICTS.get(str(value), str(value))
     passed = verdict in {"pass", "pass_with_caveats"}
     failure = "none" if verdict == "pass" else ("caveat" if passed else verdict)
@@ -256,6 +272,7 @@ def _checks(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _narrate(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub narration node update."""
     number = NumberRef(text="1", cell=CellRef(row=0, column="value"), derived_id=None)
     narration = Narration(
         attempt=len(state.narration) + 1,
@@ -266,6 +283,7 @@ def _narrate(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _numbers(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub number-check node update with the scripted result."""
     passed = value == "match"
     check = NumberCheck(
         passed=passed,
@@ -277,6 +295,7 @@ def _numbers(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _verify(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub verification node update."""
     numbers = state.number_check or NumberCheck(
         passed=True, matched=[], unmatched=[], unit_or_direction_errors=[]
     )
@@ -294,14 +313,17 @@ def _verify(state: AnalystState, value: Any) -> dict[str, Any]:
 
 
 def _confidence(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub confidence node update (not verified)."""
     return {"confidence": ConfidenceResult(probability=None, badge="not_verified", inputs={})}
 
 
 def _decide(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub answer-decision node update with the scripted decision."""
     return {"answer_decision": str(value), "answer_accepted": value == "answer"}
 
 
 def _escalate(state: AnalystState, value: Any) -> dict[str, Any]:
+    """Stub escalation node update (no change)."""
     return {}
 
 
@@ -331,6 +353,7 @@ def make_stub(node: str) -> Callable[[AnalystState], dict[str, Any]]:
     build = STUBS.get(node)
 
     def run(state: AnalystState) -> dict[str, Any]:
+        """Apply the next scripted value for this node."""
         value, positions = next_script_value(state, node)
         update = build(state, value) if build else {}
         update["stub_positions"] = positions

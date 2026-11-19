@@ -53,12 +53,14 @@ Rows = list[dict[str, Any]]
 
 
 def sha256_of(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file."""
     import hashlib
 
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def labels_of(decision: str) -> tuple[str, ...]:
+    """Return the option labels of a decision."""
     return tuple(QUESTIONS[decision][1])
 
 
@@ -118,13 +120,14 @@ def probability_matrix(rows: Rows, labels: tuple[str, ...]) -> np.ndarray:
     with finite, non-negative values summing to 1 within a tolerance; a malformed row is an
     error, not something to repair. Rounding residue is then renormalised away."""
     expected = set(labels)
-    for r in rows:
-        keys = set(r["probabilities"])
+    for row in rows:
+        keys = set(row["probabilities"])
         if keys != expected:
             raise ValueError(
-                f"{r.get('id')}: probabilities for {sorted(keys ^ expected)} missing or unexpected"
+                f"{row.get('id')}: probabilities for {sorted(keys ^ expected)} "
+                "missing or unexpected"
             )
-    matrix = np.array([[r["probabilities"][x] for x in labels] for r in rows], float)
+    matrix = np.array([[row["probabilities"][x] for x in labels] for row in rows], float)
     if not np.isfinite(matrix).all() or (matrix < 0).any():
         raise ValueError("a prediction has a negative or non-finite probability")
     sums = matrix.sum(axis=1, keepdims=True)
@@ -136,6 +139,7 @@ def probability_matrix(rows: Rows, labels: tuple[str, ...]) -> np.ndarray:
 
 
 def truth_index(rows: Rows, labels: tuple[str, ...]) -> np.ndarray:
+    """Return the index of each row's true label, rejecting unknown labels."""
     unknown = {r["label"] for r in rows} - set(labels)
     if unknown:
         raise ValueError(f"labels outside the option set: {sorted(unknown)}")
@@ -172,6 +176,7 @@ def align(a: Rows, b: Rows) -> tuple[Rows, Rows]:
 
 
 def bootstrap_ci(values: np.ndarray, seed: int = SEED) -> list[float]:
+    """Return a 95% bootstrap confidence interval for the mean."""
     rng = np.random.default_rng(seed)
     n = len(values)
     means = [values[rng.integers(0, n, n)].mean() for _ in range(N_BOOTSTRAP)]
@@ -190,13 +195,13 @@ def reliability_bins(confidence: np.ndarray, correct: np.ndarray) -> list[dict[s
     edges = np.linspace(0.0, 1.0, N_BINS + 1)
     bins = np.clip(np.digitize(confidence, edges[1:-1]), 0, N_BINS - 1)
     out = []
-    for b in range(N_BINS):
-        mask = bins == b
+    for bin_index in range(N_BINS):
+        mask = bins == bin_index
         if mask.any():
             out.append(
                 {
-                    "low": float(edges[b]),
-                    "high": float(edges[b + 1]),
+                    "low": float(edges[bin_index]),
+                    "high": float(edges[bin_index + 1]),
                     "n": int(mask.sum()),
                     "confidence": float(confidence[mask].mean()),
                     "accuracy": float(correct[mask].mean()),
@@ -255,6 +260,7 @@ def calibrated_report(calibration: Rows, dev: Rows, labels: tuple[str, ...]) -> 
 
 
 def _correct(rows: Rows, labels: tuple[str, ...], temperature: float = 1.0) -> np.ndarray:
+    """Return 1 where the most probable label is correct, after temperature scaling."""
     probabilities = apply_temperature(probability_matrix(rows, labels), temperature)
     result: np.ndarray = (probabilities.argmax(axis=1) == truth_index(rows, labels)).astype(float)
     return result
@@ -322,9 +328,9 @@ def wilson_upper(errors: int, n: int, z: float = 1.645) -> float:
     """One-sided 95% Wilson upper bound of an error rate."""
     if n == 0:
         return 1.0
-    p = errors / n
-    centre = p + z * z / (2 * n)
-    spread = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    error_rate = errors / n
+    centre = error_rate + z * z / (2 * n)
+    spread = z * np.sqrt(error_rate * (1 - error_rate) / n + z * z / (4 * n * n))
     return float(min(1.0, (centre + spread) / (1 + z * z / n)))
 
 
@@ -339,10 +345,10 @@ def choose_threshold(
     Returns 1.01 (accept nothing) if none qualifies. The point estimate decides; the Wilson
     upper bound is reported beside it by `cascade`, since the bound is not a guarantee either."""
     best = 1.01
-    for t in sorted(set(confidence.tolist()), reverse=True):
-        accepted = confidence >= t
+    for threshold in sorted(set(confidence.tolist()), reverse=True):
+        accepted = confidence >= threshold
         if accepted.sum() >= min_accepted and 1.0 - correct[accepted].mean() <= error_budget:
-            best = t
+            best = threshold
     return float(best)
 
 
@@ -449,10 +455,12 @@ def plot_reliability(reports: dict[str, dict[str, Any]], path: Path, title: str)
 
 
 def _load(path: Path) -> Rows:
+    """Load prediction rows from a JSONL file."""
     return list(read_jsonl(path))
 
 
 def _emit(result: dict[str, Any], out: Path | None) -> None:
+    """Print a result as JSON and write it to a file when one is given."""
     text = json.dumps(result, indent=2)
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -461,6 +469,7 @@ def _emit(result: dict[str, Any], out: Path | None) -> None:
 
 
 def main() -> None:
+    """Command-line entry point for decision-model evaluation."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
 

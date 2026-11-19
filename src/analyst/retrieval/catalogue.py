@@ -75,6 +75,7 @@ def _label_key(label: object) -> str:
 
 
 def _norm(text: str) -> str:
+    """Return lower-case text with punctuation replaced by spaces."""
     return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
 
@@ -128,6 +129,7 @@ def place_ranking(question: str, processed: Path = PROCESSED) -> list[str]:
 
 
 def _release_key(processed: Path) -> str:
+    """Return the hash that identifies a catalogue release."""
     return hashlib.sha256((processed / "catalogue.json").read_bytes()).hexdigest()
 
 

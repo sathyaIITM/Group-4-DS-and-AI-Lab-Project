@@ -24,6 +24,7 @@ EXAMPLES = 3
 
 
 def _series_keys(config: SourceConfig) -> list[str]:
+    """Return the columns that identify one time series."""
     return ["geo_code", "period_type", "indicator_id", *category_columns(config)]
 
 
@@ -129,6 +130,7 @@ def check_periods(config: SourceConfig, obs: pd.DataFrame) -> list[ReviewItem]:
 
 
 def _examples(rows: pd.DataFrame) -> list[str]:
+    """Return a few example period transitions for a review item."""
     pairs = rows["previous_label"].astype(str) + " -> " + rows["period_label"].astype(str)
     return list(dict.fromkeys(pairs))[:EXAMPLES]
 

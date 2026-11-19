@@ -88,6 +88,7 @@ class ReadOnlyDatabase:
 
     @property
     def table_names(self) -> set[str]:
+        """Return the names of the registered tables."""
         return set(self._tables)
 
     def close(self) -> None:

@@ -46,6 +46,7 @@ CATALOGUE_LINE = re.compile(r"^(?P<rank>\d+)\. (?P<table>\w+):", re.MULTILINE)
 
 
 def score_path(run_id: str) -> Path:
+    """Return the path of a run's domain score report."""
     return REPORTS / f"score_domain_{run_id}.json"
 
 
@@ -63,6 +64,7 @@ def target_table(meta: dict[str, Any]) -> str | None:
 
 
 def split_coverage(path: Path, tables: dict[str, str]) -> dict[str, Any]:
+    """Count how often each table is named and ranked first in a split."""
     records = list(read_jsonl(path))
     named: Counter[str] = Counter()
     top1: Counter[str] = Counter()
@@ -101,6 +103,7 @@ def split_coverage(path: Path, tables: dict[str, str]) -> dict[str, Any]:
 
 
 def coverage(splits: tuple[Path, ...] = ROUTING_SPLITS) -> dict[str, Any]:
+    """Report catalogue coverage of the routing splits."""
     catalogue = tomllib.loads(CATALOGUE.read_text(encoding="utf-8"))
     tables = {t["name"]: t["domain"] for t in catalogue["table"]}
     return {
@@ -110,6 +113,7 @@ def coverage(splits: tuple[Path, ...] = ROUTING_SPLITS) -> dict[str, Any]:
 
 
 def coverage_markdown(result: dict[str, Any]) -> str:
+    """Render the coverage report as Markdown."""
     names = list(result["splits"])
     lines = [
         "# Routing data v2: coverage of the training and validation splits",
@@ -135,8 +139,8 @@ def coverage_markdown(result: dict[str, Any]) -> str:
     for label in labels:
         cells = []
         for n in names:
-            d = result["splits"][n]["domain"].get(label, {"n": 0, "share": 0.0})
-            cells.append(f"{d['n']} ({d['share']:.1%})")
+            domain_stats = result["splits"][n]["domain"].get(label, {"n": 0, "share": 0.0})
+            cells.append(f"{domain_stats['n']} ({domain_stats['share']:.1%})")
         lines.append(f"| {label} | " + " | ".join(cells) + " |")
     lines.append("")
     return "\n".join(lines)
@@ -146,6 +150,7 @@ def coverage_markdown(result: dict[str, Any]) -> str:
 
 
 def loss_points(records: Path = RUN_RECORDS) -> dict[str, list[dict[str, float]]]:
+    """Return the training loss points of every recorded run."""
     out = {}
     for run_dir in sorted(p for p in records.glob("*") if (p / "train.log").exists()):
         out[run_dir.name] = parse_train_log(run_dir / "train.log")["points"]
@@ -175,6 +180,7 @@ def epoch_validation(runs: tuple[str, ...] = ("ep1", "b0_s0", "ep3")) -> list[di
 
 
 def write_curves() -> list[Path]:
+    """Write the training-loss curves as a CSV table and a figure."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -189,13 +195,17 @@ def write_curves() -> list[Path]:
         writer = csv.writer(handle)
         writer.writerow(["run_id", "epoch", "step", "steps", "loss"])
         for run_id, rows in points.items():
-            for p in rows:
-                writer.writerow([run_id, p["epoch"], p["step"], p["steps"], p["loss"]])
+            for point in rows:
+                writer.writerow(
+                    [run_id, point["epoch"], point["step"], point["steps"], point["loss"]]
+                )
     written.append(table)
     if points:
         fig, ax = plt.subplots(figsize=(7, 4))
         for run_id, rows in points.items():
-            ax.plot([p["step"] for p in rows], [p["loss"] for p in rows], label=run_id)
+            ax.plot(
+                [point["step"] for point in rows], [point["loss"] for point in rows], label=run_id
+            )
         ax.set_xlabel("optimizer step")
         ax.set_ylabel("training cross-entropy (mean of the last 10 steps)")
         ax.set_title("Kev-0.8B domain runs: training loss")
@@ -233,6 +243,7 @@ def write_curves() -> list[Path]:
 
 
 def comparison_rows() -> list[dict[str, Any]]:
+    """Return one comparison row per registered run."""
     config = load_config()
     factors = {r.run_id: r.factor for r in full_sweep(config)}
     rows = []
@@ -270,6 +281,7 @@ def comparison_rows() -> list[dict[str, Any]]:
 
 
 def _fmt(value: Any) -> str:
+    """Format a value for a Markdown table."""
     if value is None:
         return "-"
     if isinstance(value, float):
@@ -278,6 +290,7 @@ def _fmt(value: Any) -> str:
 
 
 def table_markdown(rows: list[dict[str, Any]]) -> str:
+    """Render comparison rows as a Markdown table."""
     if not rows:
         return "No registered runs.\n"
     keys = list(rows[0])
@@ -315,8 +328,9 @@ def select(rows: list[dict[str, Any]], eligible: set[str] | None = None) -> dict
     b0_mean = sum(nlls) / len(nlls)
     noise = max(nlls) - min(nlls)
 
-    def key(r: dict[str, Any]) -> tuple[float, float]:
-        return (r["dev_nll"], -(r["dev_macro_f1"] or 0.0))
+    def key(row: dict[str, Any]) -> tuple[float, float]:
+        """Sort key: lowest dev loss, then highest dev macro-F1."""
+        return (row["dev_nll"], -(row["dev_macro_f1"] or 0.0))
 
     others = sorted((r for r in scored if r["run_id"] not in B0_SEEDS), key=key)
     best_b0 = min(seeds, key=key)
@@ -341,6 +355,7 @@ def select(rows: list[dict[str, Any]], eligible: set[str] | None = None) -> dict
 
 
 def main() -> None:
+    """Command-line entry point for Kev reports."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("coverage")

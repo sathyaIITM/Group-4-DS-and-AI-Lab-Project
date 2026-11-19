@@ -24,6 +24,7 @@ class PeriodResolution(Contract):
 
 
 def _window(kind: str, start_year: int, start_month: int, requested: str) -> PeriodWindow:
+    """Return the window of a year that starts in a given month."""
     end_year = start_year + (start_month != 1)
     end_month = 12 if start_month == 1 else start_month - 1
     end_day = calendar.monthrange(end_year, end_month)[1]
@@ -83,6 +84,7 @@ def latest_complete_period(dataset_id: str, period_type: str, db: Any) -> Period
 
 
 def _catalogue_entry(dataset_id: str, catalogue: Any) -> Mapping[str, Any] | None:
+    """Return a dataset's catalogue entry from a mapping or list catalogue."""
     if isinstance(catalogue, Mapping):
         if dataset_id in catalogue and isinstance(catalogue[dataset_id], Mapping):
             return cast(Mapping[str, Any], catalogue[dataset_id])
@@ -341,6 +343,7 @@ def season_codes(rows: Sequence[tuple[Any, Any, Any]]) -> dict[str, tuple[int, i
 
 
 def _year_type(types: set[str], start_month: int | None) -> str | None:
+    """Return the period type that matches a year's start month."""
     if start_month == 1 and "calendar_year" in types:
         return "calendar_year"
     if start_month == 4 and "fiscal_year" in types:

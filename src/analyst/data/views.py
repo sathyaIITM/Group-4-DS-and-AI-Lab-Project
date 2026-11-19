@@ -14,6 +14,7 @@ RANK_FLAG = {rank: flag for flag, rank in FLAG_RANK.items()}
 
 
 def _first_rows(obs: pd.DataFrame) -> pd.DataFrame:
+    """Return one observation per source row, indexed by source row."""
     return obs.drop_duplicates("source_row").set_index("source_row")
 
 
@@ -23,6 +24,7 @@ def _rowwise(values: pd.Series) -> pd.Series:
 
 
 def _derived(spec: ViewDerived, obs: pd.DataFrame, index: pd.Index) -> pd.Series:
+    """Compute a derived view column from its rule."""
     if spec.from_ == "constant":
         return pd.Series(spec.value, index=index)
     if spec.from_ == "period_valid":
@@ -50,12 +52,16 @@ def _derived(spec: ViewDerived, obs: pd.DataFrame, index: pd.Index) -> pd.Series
 
 
 def _worst_flag(obs: pd.DataFrame, index: pd.Index) -> pd.Series:
+    """Return the most severe quality flag per source row."""
     ranks = obs["quality_flag"].map(FLAG_RANK).groupby(obs["source_row"]).min()
     return ranks.map(RANK_FLAG).reindex(index)
 
 
 def _union_text(obs: pd.DataFrame, column: str, index: pd.Index) -> pd.Series:
+    """Join the distinct notes of each source row."""
+
     def merge(series: pd.Series) -> str | None:
+        """Join distinct semicolon-separated parts."""
         parts = sorted({p for text in series.dropna() for p in str(text).split(";")})
         return ";".join(parts) if parts else None
 
@@ -63,6 +69,7 @@ def _union_text(obs: pd.DataFrame, column: str, index: pd.Index) -> pd.Series:
 
 
 def _take(first: pd.DataFrame, source: str) -> pd.Series:
+    """Return a source column, or a date part of it when written column:part."""
     if ":" in source:
         column, part = source.split(":")
         extracted: pd.Series = getattr(pd.to_datetime(first[column]).dt, part)

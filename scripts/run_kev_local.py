@@ -44,6 +44,7 @@ VERSIONS = (
 
 
 def main() -> None:
+    """Run a planned Kev training run on the local machine."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("run_id", help="a run planned for the local platform, or 'smoke'")
     args = parser.parse_args()

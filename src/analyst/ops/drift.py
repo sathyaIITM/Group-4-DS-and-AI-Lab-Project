@@ -79,6 +79,7 @@ def proportion_difference(reference: list[bool], current: list[bool]) -> dict[st
 
 
 def _psi_verdict(value: float) -> str:
+    """Return stable, watch or alert for a population stability index."""
     if value < PSI_STABLE:
         return "stable"
     if value <= PSI_ALERT:
@@ -89,6 +90,7 @@ def _psi_verdict(value: float) -> str:
 def _categorical_signal(
     name: str, reference: list[Any], current: list[Any], minimum: int
 ) -> dict[str, Any]:
+    """Compare two categorical samples with the population stability index."""
     if min(len(reference), len(current)) < minimum:
         return {
             "name": name,
@@ -113,6 +115,7 @@ def _categorical_signal(
 def _continuous_signal(
     name: str, reference: Sequence[float], current: Sequence[float], minimum: int
 ) -> dict[str, Any]:
+    """Compare two numeric samples with the population stability index."""
     if min(len(reference), len(current)) < minimum:
         return {
             "name": name,
@@ -137,6 +140,7 @@ def _continuous_signal(
 def _proportion_signal(
     name: str, reference: list[bool], current: list[bool], minimum: int
 ) -> dict[str, Any]:
+    """Compare two proportions of True values."""
     if min(len(reference), len(current)) < minimum:
         return {
             "name": name,
@@ -165,6 +169,7 @@ def _proportion_signal(
 def _relative_signal(
     name: str, reference: list[float], current: list[float], minimum: int
 ) -> dict[str, Any]:
+    """Compare two means as a relative change."""
     if min(len(reference), len(current)) < minimum:
         return {
             "name": name,
@@ -192,6 +197,7 @@ def _relative_signal(
 
 
 def _probabilities(row: dict[str, Any]) -> dict[str, float]:
+    """Return a decision row's probabilities, parsing JSON text when needed."""
     values = row.get("probabilities")
     if isinstance(values, str):
         try:
@@ -202,6 +208,7 @@ def _probabilities(row: dict[str, Any]) -> dict[str, float]:
 
 
 def _max_probability(row: dict[str, Any]) -> float | None:
+    """Return the highest probability of a decision row."""
     values = _probabilities(row)
     numbers = [float(value) for value in values.values() if isinstance(value, int | float)]
     return max(numbers) if numbers else None
@@ -420,6 +427,7 @@ def compare_windows(
 
 
 def _disagreement_by_run(decisions: list[dict[str, Any]]) -> dict[str, bool]:
+    """Return, per run, whether its backends disagreed on a decision."""
     labels: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     escalated: set[tuple[str, str]] = set()
     for row in decisions:
@@ -502,6 +510,7 @@ def load_window(
 
 
 def main() -> int:
+    """Command-line entry point for the drift report."""
     import duckdb
 
     parser = argparse.ArgumentParser(description=__doc__)

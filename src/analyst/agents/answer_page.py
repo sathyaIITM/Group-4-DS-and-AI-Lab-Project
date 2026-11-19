@@ -30,6 +30,7 @@ pre{background:#f6f8fa;padding:.8rem;overflow-x:auto;font-size:.8rem}
 
 
 def _table(columns: list[str], rows: list[list[Any]]) -> str:
+    """Render result rows as an HTML table, showing at most MAX_TABLE_ROWS rows."""
     head = "".join(f"<th>{html.escape(c)}</th>" for c in columns)
     body = "".join(
         "<tr>" + "".join(f"<td>{html.escape(str(v))}</td>" for v in row) + "</tr>"

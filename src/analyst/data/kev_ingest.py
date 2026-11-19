@@ -90,15 +90,18 @@ def _repair(chunk: str) -> dict[str, Any] | None:
 
 
 def load_split(path: Path) -> dict[str, dict[str, Any]]:
+    """Load a split file as a mapping from record id to record."""
     rows = (json.loads(line) for line in path.read_text().splitlines() if line.strip())
     return {r["_meta"]["id"]: r for r in rows}
 
 
 def state_catalogue(tables_shown: list[str], lines: dict[str, str]) -> str:
+    """Render the numbered catalogue lines shown in a record's state."""
     return "\n".join(f"{i}. {lines[name]}" for i, name in enumerate(tables_shown, start=1))
 
 
 def candidate_ok(item: dict[str, Any]) -> list[str]:
+    """Return the problems of a model-written candidate item."""
     errors = []
     if item.get("tool") not in TOOL_OPTIONS:
         errors.append(f"bad tool {item.get('tool')!r}")
@@ -110,6 +113,7 @@ def candidate_ok(item: dict[str, Any]) -> list[str]:
 def build_paraphrases(
     objects: list[dict[str, Any]], train: dict[str, dict[str, Any]]
 ) -> tuple[list[KevRecord], list[str]]:
+    """Build records from model-written paraphrases of training messages."""
     records: list[KevRecord] = []
     notes: list[str] = []
     seen = {normalise(r["state"]["user_message"]) for r in train.values()}
@@ -145,6 +149,7 @@ def build_hard_cases(
     seen: set[str],
     batch_of: dict[str, str],
 ) -> tuple[list[KevRecord], list[dict[str, Any]], list[str]]:
+    """Build records and review questions from model-written hard cases."""
     records: list[KevRecord] = []
     questions: list[dict[str, Any]] = []
     notes: list[str] = []
@@ -195,21 +200,22 @@ def build_hard_cases(
 
 def near_duplicates(records: list[KevRecord], train: list[dict[str, Any]]) -> set[str]:
     """Candidate ids whose message is within Jaccard 0.8 of a training message."""
-    reference = [shingles(r["state"]["user_message"]) for r in train]
+    reference = [shingles(record["state"]["user_message"]) for record in train]
     flagged = set()
-    for r in records:
-        mine = shingles(r.state.user_message)
+    for record in records:
+        mine = shingles(record.state.user_message)
         for theirs in reference:
             small, large = sorted((len(mine), len(theirs)))
             if small >= NEAR_DUP_JACCARD * large and (
                 len(mine & theirs) / len(mine | theirs) >= NEAR_DUP_JACCARD
             ):
-                flagged.add(r.meta.id)
+                flagged.add(record.meta.id)
                 break
     return flagged
 
 
 def write_jsonl(path: Path, rows: list[str]) -> None:
+    """Write lines to a JSONL file, creating its directory."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(rows) + ("\n" if rows else ""))
 
@@ -231,14 +237,14 @@ def compare_relabels(
             continue
         rule_tool = record["questions"]["tool"]["label"]
         rule_domain = record["questions"]["domain"]["label"]
-        tools = {m: v["tool"] for m, v in by_model.items()}
-        domains = {m: v["domain"] for m, v in by_model.items()}
+        tools = {model_name: v["tool"] for model_name, v in by_model.items()}
+        domains = {model_name: v["domain"] for model_name, v in by_model.items()}
         stats["items"] += 1
         stats["tool_all_agree"] += len({rule_tool, *tools.values()}) == 1
         stats["domain_all_agree"] += len({rule_domain, *domains.values()}) == 1
-        for m in by_model:
-            stats[f"tool_{m}_matches_rule"] += tools[m] == rule_tool
-            stats[f"domain_{m}_matches_rule"] += domains[m] == rule_domain
+        for model_name in by_model:
+            stats[f"tool_{model_name}_matches_rule"] += tools[model_name] == rule_tool
+            stats[f"domain_{model_name}_matches_rule"] += domains[model_name] == rule_domain
         if len({rule_tool, *tools.values()}) > 1 or len({rule_domain, *domains.values()}) > 1:
             rows.append(
                 {
@@ -248,7 +254,8 @@ def compare_relabels(
                     "context": record["state"]["context"][:60],
                     "rule": [rule_tool, rule_domain, record["_meta"]["tool_rule"]],
                     "models": {
-                        m: [v["tool"], v["domain"], v.get("note")] for m, v in by_model.items()
+                        model_name: [v["tool"], v["domain"], v.get("note")]
+                        for model_name, v in by_model.items()
                     },
                 }
             )
@@ -256,6 +263,7 @@ def compare_relabels(
 
 
 def build(returns: Path, train_path: Path, out: Path, catalogue_path: Path) -> None:
+    """Build candidate records from the model returns and write them with notes."""
     train = load_split(train_path)
     tables = load_catalogue(catalogue_path).real_tables()
     lines = {t.name: t.line for t in tables}
@@ -304,27 +312,29 @@ RISK_TAGS = {
 }  # fmt: skip
 
 
-def critic_item(r: dict[str, Any]) -> str:
+def critic_item(record: dict[str, Any]) -> str:
+    """Render one record as an item for the critic prompt."""
     shown = [
         re.sub(r"^\d+\.\s*", "", line).split(":", 1)[0]
-        for line in r["state"]["catalogue"].splitlines()
+        for line in record["state"]["catalogue"].splitlines()
     ]
     return json.dumps(
         {
-            "id": r["_meta"]["id"],
+            "id": record["_meta"]["id"],
             "tables_shown": shown,
-            "context": r["state"]["context"],
-            "user_message": r["state"]["user_message"],
-            "tool": r["questions"]["tool"]["label"],
-            "domain": r["questions"]["domain"]["label"],
-            "tool_rule": r["_meta"]["tool_rule"],
-            "domain_rule": r["_meta"]["domain_rule"],
+            "context": record["state"]["context"],
+            "user_message": record["state"]["user_message"],
+            "tool": record["questions"]["tool"]["label"],
+            "domain": record["questions"]["domain"]["label"],
+            "tool_rule": record["_meta"]["tool_rule"],
+            "domain_rule": record["_meta"]["domain_rule"],
         },
         ensure_ascii=False,
     )
 
 
 def reviewed_ids(returns: Path | None) -> set[str]:
+    """Return the ids already reviewed in earlier critic returns."""
     if returns is None:
         return set()
     return {
@@ -356,9 +366,10 @@ def critic_batches(
     returns: Path | None = None,
     max_chars: int = PACK_CHARS,
 ) -> None:
+    """Write critic prompt packs for the records not yet reviewed."""
     cases, sampled, paras = critic_selection(candidates)
     done = reviewed_ids(returns)
-    ordered = [r for r in [*cases, *sampled] if r["_meta"]["id"] not in done]
+    ordered = [record for record in [*cases, *sampled] if record["_meta"]["id"] not in done]
     tables = "\n".join(f"- {t.line}" for t in load_catalogue().real_tables())
     guide_text = guide.read_text().split("\n## 5.")[0].rstrip() + "\n"
     head = template.read_text().replace("{{GUIDE}}", guide_text).replace("{{TABLES}}", tables)
@@ -366,17 +377,17 @@ def critic_batches(
         old.unlink()
     batches: list[list[dict[str, Any]]] = [[]]
     size = len(head)
-    for r in ordered:
-        length = len(critic_item(r)) + 1
+    for record in ordered:
+        length = len(critic_item(record)) + 1
         if batches[-1] and size + length > max_chars:
             batches.append([])
             size = len(head)
-        batches[-1].append(r)
+        batches[-1].append(record)
         size += length
-    for b, batch in enumerate(batches, start=1):
-        body = head.replace("{{ITEMS}}", "\n".join(critic_item(r) for r in batch))
-        (out / f"B5_critic_{b:02d}.md").write_text(body)
-        print(f"  B5_critic_{b:02d}.md: {len(batch)} items, {len(body)} characters")
+    for batch_number, batch in enumerate(batches, start=1):
+        body = head.replace("{{ITEMS}}", "\n".join(critic_item(record) for record in batch))
+        (out / f"B5_critic_{batch_number:02d}.md").write_text(body)
+        print(f"  B5_critic_{batch_number:02d}.md: {len(batch)} items, {len(body)} characters")
     print(
         f"{len(ordered)} items to review ({len(done)} already reviewed, {len(cases)} hard cases, "
         f"{len(sampled)} of {len(paras)} paraphrases) -> {len(batches)} critic packs"
@@ -393,25 +404,25 @@ def critic_merge(candidates: Path, returns: Path) -> None:
     for path in sorted(returns.glob("B5_*")):
         objects, bad = read_objects(path)
         problems.extend(bad)
-        for o in objects:
-            if "verdict" not in o or "id" not in o:
+        for item in objects:
+            if "verdict" not in item or "id" not in item:
                 problems.append(f"{path.name}: object without id and verdict")
                 continue
-            if str(o["id"]) in verdicts:
-                duplicates.append(str(o["id"]))
-            verdicts[str(o["id"])] = {**o, "_file": path.stem}
+            if str(item["id"]) in verdicts:
+                duplicates.append(str(item["id"]))
+            verdicts[str(item["id"])] = {**item, "_file": path.stem}
     missing = sorted(set(expected) - set(verdicts))
     unknown = sorted(set(verdicts) - set(expected))
     by_kind: dict[str, Counter[str]] = {"hard_case": Counter(), "paraphrase": Counter()}
     issues: Counter[str] = Counter()
-    for item_id, v in verdicts.items():
+    for item_id, verdict in verdicts.items():
         if item_id not in expected:
             continue
         kind = (
             "hard_case" if expected[item_id]["_meta"]["label_source"] == "teacher" else "paraphrase"
         )
-        by_kind[kind][str(v["verdict"])] += 1
-        issues.update(v.get("issues", []))
+        by_kind[kind][str(verdict["verdict"])] += 1
+        issues.update(verdict.get("issues", []))
     print(
         f"expected {len(expected)}, received {len(verdicts)}, missing {len(missing)}, "
         f"unknown {len(unknown)}, duplicate ids {len(duplicates)}"
@@ -429,13 +440,13 @@ def critic_merge(candidates: Path, returns: Path) -> None:
                 expected[i]["questions"]["domain"]["label"],
             ],
             "rule": expected[i]["_meta"]["tool_rule"],
-            "verdict": v["verdict"],
-            "issues": v.get("issues", []),
-            "suggested": [v.get("suggested_tool"), v.get("suggested_domain")],
-            "comment": v.get("comment"),
+            "verdict": verdict["verdict"],
+            "issues": verdict.get("issues", []),
+            "suggested": [verdict.get("suggested_tool"), verdict.get("suggested_domain")],
+            "comment": verdict.get("comment"),
         }
-        for i, v in sorted(verdicts.items())
-        if i in expected and v["verdict"] != "ok"
+        for i, verdict in sorted(verdicts.items())
+        if i in expected and verdict["verdict"] != "ok"
     ]
     write_jsonl(
         candidates / "critic_flagged.jsonl", [json.dumps(f, ensure_ascii=False) for f in flagged]
@@ -443,11 +454,11 @@ def critic_merge(candidates: Path, returns: Path) -> None:
     questions = [
         {
             "id": i,
-            "question": v["question_for_human"],
+            "question": verdict["question_for_human"],
             "message": expected[i]["state"]["user_message"],
         }
-        for i, v in sorted(verdicts.items())
-        if i in expected and v.get("question_for_human")
+        for i, verdict in sorted(verdicts.items())
+        if i in expected and verdict.get("question_for_human")
     ]
     write_jsonl(
         candidates / "critic_questions.jsonl",
@@ -455,34 +466,41 @@ def critic_merge(candidates: Path, returns: Path) -> None:
     )
     write_jsonl(
         candidates / "critic_verdicts.jsonl",
-        [json.dumps(v, ensure_ascii=False) for _, v in sorted(verdicts.items())],
+        [json.dumps(verdict, ensure_ascii=False) for _, verdict in sorted(verdicts.items())],
     )
     print(
         f"flagged {len(flagged)}, questions for a human {len(questions)}, "
         f"reader problems {len(problems)}"
     )
-    for p in problems[:10]:
-        print("  ", p)
+    for problem in problems[:10]:
+        print("  ", problem)
 
 
 def main() -> None:
+    """Command-line entry point for ingesting model-written Kev data."""
     parser = argparse.ArgumentParser(description="Ingest model-written Kev data.")
     sub = parser.add_subparsers(dest="command", required=True)
-    b = sub.add_parser("build")
-    b.add_argument("--returns", type=Path, required=True)
-    b.add_argument("--train", type=Path, default=Path("data/splits/kev/train.v1.jsonl"))
-    b.add_argument("--catalogue", type=Path, default=CATALOGUE_PATH)
-    b.add_argument("--out", type=Path, default=Path("data/splits/kev_candidates"))
-    c = sub.add_parser("critic-batches")
-    c.add_argument("--candidates", type=Path, default=Path("data/splits/kev_candidates"))
-    c.add_argument("--template", type=Path, required=True)
-    c.add_argument("--guide", type=Path, default=Path("docs/specs/labelling_guide_v1.md"))
-    c.add_argument("--out", type=Path, required=True)
-    c.add_argument("--returns", type=Path, help="skip items that already have a verdict here")
-    c.add_argument("--max-chars", type=int, default=PACK_CHARS)
-    m = sub.add_parser("critic-merge")
-    m.add_argument("--candidates", type=Path, default=Path("data/splits/kev_candidates"))
-    m.add_argument("--returns", type=Path, required=True)
+    build_parser = sub.add_parser("build")
+    build_parser.add_argument("--returns", type=Path, required=True)
+    build_parser.add_argument("--train", type=Path, default=Path("data/splits/kev/train.v1.jsonl"))
+    build_parser.add_argument("--catalogue", type=Path, default=CATALOGUE_PATH)
+    build_parser.add_argument("--out", type=Path, default=Path("data/splits/kev_candidates"))
+    critic_parser = sub.add_parser("critic-batches")
+    critic_parser.add_argument(
+        "--candidates", type=Path, default=Path("data/splits/kev_candidates")
+    )
+    critic_parser.add_argument("--template", type=Path, required=True)
+    critic_parser.add_argument(
+        "--guide", type=Path, default=Path("docs/specs/labelling_guide_v1.md")
+    )
+    critic_parser.add_argument("--out", type=Path, required=True)
+    critic_parser.add_argument(
+        "--returns", type=Path, help="skip items that already have a verdict here"
+    )
+    critic_parser.add_argument("--max-chars", type=int, default=PACK_CHARS)
+    merge_parser = sub.add_parser("critic-merge")
+    merge_parser.add_argument("--candidates", type=Path, default=Path("data/splits/kev_candidates"))
+    merge_parser.add_argument("--returns", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "critic-merge":
         critic_merge(args.candidates, args.returns)

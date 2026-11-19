@@ -82,16 +82,20 @@ SHORT_REPLY_WORDS = 4  # an option named inside a reply counts only in a reply t
 
 @dataclass(frozen=True)
 class ReplyReading:
+    """How a clarification reply was read: its kind, chosen option and full question."""
+
     kind: Kind
     option: str | None
     question: str  # the complete question every later node receives
 
 
 def _words(text: str) -> list[str]:
+    """Split text into lower-case words and numbers."""
     return re.findall(r"[a-z0-9+]+", text.casefold())
 
 
 def _by_position(words: list[str], options: list[str]) -> str | None:
+    """Return the option a short positional reply picks ("second", "2", "last"), if any."""
     if not options:
         return None
     content = [w for w in words if w not in FILLER]
@@ -130,6 +134,7 @@ def read_reply(reply: str, pending: Clarification) -> ReplyReading:
     asked = pending.question or "A detail was missing."
 
     def merged(answer: str) -> str:
+        """Join the original question, the clarification asked and the user's answer."""
         return f"{original}\nClarification asked: {asked}\nAnswer: {answer}"
 
     chosen = _by_position(words, options) or _by_words(reply, options)

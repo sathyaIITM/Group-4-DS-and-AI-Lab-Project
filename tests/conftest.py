@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(autouse=True)
 def _repo_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run every test from the repository root."""
     monkeypatch.chdir(ROOT)
 
 

@@ -100,6 +100,7 @@ def score(predictions: list[RoutingPrediction]) -> dict[str, Any]:
 
 
 def load_predictions(path: Path) -> list[RoutingPrediction]:
+    """Load routing predictions from a JSONL file."""
     return [
         RoutingPrediction.model_validate_json(line)
         for line in path.read_text().splitlines()
@@ -108,6 +109,7 @@ def load_predictions(path: Path) -> list[RoutingPrediction]:
 
 
 def main() -> None:
+    """Command-line entry point for the routing evaluation."""
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     run_parser = sub.add_parser("run")

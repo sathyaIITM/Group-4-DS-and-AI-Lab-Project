@@ -14,6 +14,7 @@ CONFIG_FILES = ("configs/model.yaml", "configs/inference.yaml")
 
 
 def sha256_file(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file, read in chunks."""
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(65536), b""):
@@ -22,6 +23,7 @@ def sha256_file(path: Path) -> str:
 
 
 def _prompt_hashes() -> dict[str, str]:
+    """Return the content hash of every registered prompt."""
     from analyst.inference.prompts import PromptRegistry
 
     return PromptRegistry().hashes()

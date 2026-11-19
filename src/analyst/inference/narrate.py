@@ -25,6 +25,7 @@ class NarrationReply(BaseModel):
 
 
 def _evidence_dict(evidence: BaseModel | Mapping[str, Any]) -> dict[str, Any]:
+    """Return evidence as a plain dictionary."""
     return evidence.model_dump(mode="json") if isinstance(evidence, BaseModel) else dict(evidence)
 
 
@@ -51,6 +52,7 @@ def describe_period(window: Mapping[str, Any]) -> str | None:
 
 
 def _with_period_words(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Add plain-language period descriptions to the evidence plan."""
     plan = bundle.get("plan")
     if not isinstance(plan, dict):
         return bundle
@@ -62,6 +64,7 @@ def _with_period_words(bundle: dict[str, Any]) -> dict[str, Any]:
 
 
 def check_references(reply: NarrationReply, evidence: Mapping[str, Any]) -> None:
+    """Check that every number in the narration refers to an existing cell or derived value."""
     result = evidence.get("result") or {}
     columns = {c["name"] for c in result.get("columns", [])}
     n_rows = len(result.get("rows", []))

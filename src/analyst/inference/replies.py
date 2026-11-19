@@ -35,6 +35,8 @@ MAX_REPLY_CHARS = 600
 
 
 class DeclineReply(BaseModel):
+    """The kind of decline and the reply text written by the model."""
+
     model_config = ConfigDict(extra="forbid")
 
     kind: DeclineKind
@@ -42,6 +44,8 @@ class DeclineReply(BaseModel):
 
 
 class DescribeReply(BaseModel):
+    """A description of tables written by the model, or a hand-over to the query path."""
+
     model_config = ConfigDict(extra="forbid")
 
     data_request: bool = False  # the message asks for figures: the query path answers it
@@ -50,6 +54,7 @@ class DescribeReply(BaseModel):
 
 
 def _numbers(text: str) -> set[str]:
+    """Return the numbers written in a text."""
     return set(re.findall(r"\d+(?:\.\d+)?", text))
 
 
@@ -70,6 +75,7 @@ def write_decline(
     llm: LlmClient,
     counters: CallCounter,
 ) -> tuple[DeclineReply, LlmCallRecord]:
+    """Write a decline reply with the model."""
     catalogue = list(catalogue_lines)
     sources = question + "\n" + "\n".join(catalogue)
     reply, record = llm.structured(
@@ -92,6 +98,7 @@ def write_description(
     counters: CallCounter,
     history: Sequence[Mapping[str, Any]] | None = None,
 ) -> tuple[DescribeReply, LlmCallRecord]:
+    """Describe tables from their documentation with the model."""
     documentation = {
         "tables": list(tables),
         "guidance": [{"title": c.get("title"), "text": c.get("body")} for c in cards],
@@ -99,6 +106,7 @@ def write_description(
     sources = question + "\n" + json.dumps(documentation, ensure_ascii=False, default=str)
 
     def validate(reply: DescribeReply) -> None:
+        """Check that the description adds no numbers absent from its sources."""
         if not reply.data_request:  # a hand-over to the query path carries no answer text
             check_reply(reply.answer, sources)
 

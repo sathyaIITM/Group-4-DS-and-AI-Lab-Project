@@ -18,11 +18,13 @@ PROCESSED = Path("data/processed")
 
 
 def _norm(text: str) -> str:
+    """Return lower-case text with punctuation replaced by spaces."""
     return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
 
 @lru_cache(maxsize=64)
 def _read(path: str, column: str, mtime: float) -> tuple[str, ...]:
+    """Return the distinct values of a column of a Parquet file, cached by modification time."""
     if not re.fullmatch(r"[a-z_][a-z0-9_]*", column):
         raise ValueError(f"invalid column name: {column!r}")
     sql = f'SELECT DISTINCT "{column}" FROM read_parquet(?) WHERE "{column}" IS NOT NULL ORDER BY 1'  # noqa: S608 - validated identifier

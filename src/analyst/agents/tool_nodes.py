@@ -1,4 +1,4 @@
-"""Graph adapters for T4's deterministic plan, SQL, derivation and check tools."""
+"""Graph adapters for the deterministic plan, SQL, derivation and check tools."""
 
 from __future__ import annotations
 
@@ -43,12 +43,15 @@ LOG = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ToolNodeDependencies:
+    """Catalogue, reference data and database access the tool nodes need."""
+
     catalogue: Mapping[str, Mapping[str, Any]]
     refs: Mapping[str, Any]
     database_for: Callable[[str], ReadOnlyDatabase]
 
 
 def _error_class(error: Exception) -> str:
+    """Classify a DuckDB error message into an SQL error class."""
     message = str(error).casefold()
     if "column" in message or "binder" in message:
         return "unknown_column"
@@ -62,6 +65,7 @@ def _error_class(error: Exception) -> str:
 
 
 def _cell_ref(token: str, state: AnalystState) -> tuple[Decimal, int, str]:
+    """Read a row:column reference and return the cell value, row and column."""
     row_text, separator, column = token.partition(":")
     if not separator or state.result is None:
         raise ValueError(f"cell reference must be row:column: {token!r}")
@@ -116,6 +120,7 @@ def _aliases(state: AnalystState) -> dict[str, str]:
 
 
 def _matching_rows(token: str, rows: list[int], state: AnalystState) -> list[int]:
+    """Return the result rows whose place or category matches a token."""
     if state.result is None:
         raise ValueError("derivations need a plan and a result")
     target = _aliases(state).get(token.casefold(), token.casefold())
@@ -129,10 +134,12 @@ def _matching_rows(token: str, rows: list[int], state: AnalystState) -> list[int
 
 
 def _first(args: dict[str, str], keys: tuple[str, ...]) -> str | None:
+    """Return the first non-empty argument among the given keys."""
     return next((args[key] for key in keys if args.get(key)), None)
 
 
 def _years_between(previous: str, current: str, state: AnalystState) -> int | None:
+    """Return the number of years between two period labels of the plan."""
     if state.plan is None:
         raise ValueError("derivations need a plan and a result")
     starts = {}
@@ -165,6 +172,7 @@ def _derive_one(
         groups[None] = []
 
     def failed(status: str, note: str, place: str | None = None) -> DerivedValue:
+        """Return a derived value that failed with a status and note."""
         return DerivedValue(
             id="",
             op=op,
@@ -177,6 +185,7 @@ def _derive_one(
         )
 
     def cell(token: str, rows: list[int]) -> tuple[float, int, str]:
+        """Return the value, row and column a derivation argument refers to."""
         if ":" in token and token.split(":", 1)[0].isdigit():
             number, row, column = _cell_ref(token, state)
             return float(number), row, column
@@ -198,8 +207,8 @@ def _derive_one(
                 previous, current = _first(args, _PREVIOUS_KEYS), _first(args, _CURRENT_KEYS)
                 if previous is None or current is None:
                     raise KeyError("start and end inputs are not named")
-                a, row_a, col_a = cell(previous, rows)
-                b, row_b, col_b = cell(current, rows)
+                value_a, row_a, col_a = cell(previous, rows)
+                value_b, row_b, col_b = cell(current, rows)
                 inputs = [{"row": row_a, "column": col_a}, {"row": row_b, "column": col_b}]
                 if op == "cagr":
                     periods = (
@@ -209,11 +218,13 @@ def _derive_one(
                     )
                     if not periods or periods <= 0:
                         raise KeyError("the number of years between the inputs is unknown")
-                    output = cagr(a, b, periods)
+                    output = cagr(value_a, value_b, periods)
                 elif op in {"change_pp", "difference"}:
-                    output = change_pp(b, a)
+                    output = change_pp(value_b, value_a)
                 else:
-                    output = (pct_change if op == "pct_change" else inflation_from_index)(b, a)
+                    output = (pct_change if op == "pct_change" else inflation_from_index)(
+                        value_b, value_a
+                    )
             elif op == "share":
                 part_token, total_token = args.get("part"), args.get("total")
                 if not part_token or not total_token:
@@ -493,6 +504,7 @@ def _clarify_options(
 
 
 def codelist_of(table: Mapping[str, Any], column: str) -> list[str]:
+    """Return a column's values when there are few enough to offer as options."""
     values = codelist(str(table["dataset_id"]), column)
     return values if len(values) <= 6 else []
 
@@ -547,9 +559,10 @@ def check_plan_indicators(sql: str, plan: InterpretationPlan) -> None:
 
 
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
-    """Return graph node overrides; callers combine these with the T2 and T3 adapters."""
+    """Return graph node overrides; callers combine them with the control and model nodes."""
 
     def resolve(state: AnalystState) -> dict[str, Any]:
+        """Resolve places, periods and units of the intent into a plan."""
         if state.intent is None:
             return {
                 "node_error": "backend_error",
@@ -664,6 +677,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         }
 
     def validate_sql(state: AnalystState) -> dict[str, Any]:
+        """Validate the last SQL attempt against the read-only and plan rules."""
         if state.plan is None or not state.sql:
             return {
                 "validation_result": "invalid",
@@ -699,6 +713,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         }
 
     def execute_sql(state: AnalystState) -> dict[str, Any]:
+        """Execute the validated SQL on the read-only database."""
         if state.plan is None or not state.sql:
             return {
                 "execution_result": "error",
@@ -759,6 +774,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
             }
 
     def derive(state: AnalystState) -> dict[str, Any]:
+        """Compute the derivations the plan asks for."""
         if state.plan is None or state.result is None:
             return {
                 "derived": [],
@@ -774,6 +790,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         return {"derived": out, "events": stage_event(state, "compute_derivations", count=len(out))}
 
     def result_checks(state: AnalystState) -> dict[str, Any]:
+        """Run consistency checks on the result."""
         if state.plan is None or state.result is None:
             return {
                 "events": stage_event(
@@ -789,6 +806,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
         }
 
     def number_check(state: AnalystState) -> dict[str, Any]:
+        """Check that every narrated number matches the result or a derived value."""
         if not state.narration or state.result is None:
             return {
                 "events": stage_event(

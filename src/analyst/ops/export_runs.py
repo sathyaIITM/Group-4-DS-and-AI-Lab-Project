@@ -1,3 +1,5 @@
+"""Export run-log records as a reproducible, incremental bundle for collation."""
+
 from __future__ import annotations
 
 import argparse
@@ -110,6 +112,7 @@ def export_runs(
 
 
 def main() -> None:
+    """Command-line entry point for exporting runs."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default="outputs/runs/runs.sqlite")
     parser.add_argument("--since")

@@ -1,3 +1,5 @@
+"""Tests for the end-to-end evaluation: splitting, running and scoring."""
+
 from __future__ import annotations
 
 import json

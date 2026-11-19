@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS memory (
 
 
 def _json(value: Any) -> str | None:
+    """Serialise a value or model to JSON text, or return None."""
     if value is None:
         return None
     if hasattr(value, "model_dump"):
@@ -99,6 +100,7 @@ def _json(value: Any) -> str | None:
 
 
 def _git(*args: str) -> str | None:
+    """Run a fixed git command and return its output, or None if git is unavailable."""
     try:
         out = subprocess.check_output(  # noqa: S603  # fixed git arguments
             ["git", *args],  # noqa: S607
@@ -117,6 +119,7 @@ def code_version() -> tuple[str, int]:
 
 
 def catalogue_hash(path: Path = Path("data/processed/catalogue.json")) -> str | None:
+    """Return the SHA-256 of the published catalogue, or None if it is absent."""
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 
 
@@ -125,6 +128,7 @@ def llm_rows(records: list[LlmCallRecord]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
 
     def add(record: LlmCallRecord, retry_of_seq: int | None) -> int:
+        """Add one model-call row and return its sequence number."""
         seq = len(rows) + 1
         row = record.model_dump(exclude={"earlier_attempts", "retry_of"}, mode="json")
         row["variables"] = json.dumps(row["variables"], default=str)
@@ -184,6 +188,7 @@ class RunLogger:
             )
 
     def _write(self, state: AnalystState) -> None:
+        """Write all records of one run to the run log."""
         run_id = state.run_id
         ended = datetime.now(UTC)
         started = (
@@ -227,9 +232,9 @@ class RunLogger:
                     state.response_text,
                     evidence.evidence_id if evidence else None,
                     len(llm),
-                    sum(r["tokens_in"] for r in llm),
-                    sum(r["tokens_out"] for r in llm),
-                    sum(r["cost_usd_est"] or 0.0 for r in llm),
+                    sum(record["tokens_in"] for record in llm),
+                    sum(record["tokens_out"] for record in llm),
+                    sum(record["cost_usd_est"] or 0.0 for record in llm),
                     deadline_hit,
                     SCHEMA_VERSION,
                 ),
@@ -274,60 +279,62 @@ class RunLogger:
                         row["finish_reason"],
                     ),
                 )
-            for seq, d in enumerate(state.decision_log, 1):
+            for seq, decision in enumerate(state.decision_log, 1):
                 db.execute(
                     "INSERT INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         run_id,
                         seq,
-                        d.decision,
-                        d.backend,
-                        d.model_revision,
+                        decision.decision,
+                        decision.backend,
+                        decision.model_revision,
                         None,
-                        d.label,
-                        json.dumps(d.probabilities),
-                        int(d.calibrated),
-                        d.temperature,
-                        int(d.escalated),
-                        int(d.fallback),
-                        d.latency_ms,
-                        d.cost_usd,
+                        decision.label,
+                        json.dumps(decision.probabilities),
+                        int(decision.calibrated),
+                        decision.temperature,
+                        int(decision.escalated),
+                        int(decision.fallback),
+                        decision.latency_ms,
+                        decision.cost_usd,
                     ),
                 )
-            for seq, r in enumerate(self._retrievals(state), 1):
-                db.execute("INSERT INTO retrievals VALUES (?,?,?,?,?,?,?,?)", (run_id, seq, *r))
-            for seq, a in enumerate(state.sql, 1):
+            for seq, retrieval in enumerate(self._retrievals(state), 1):
+                db.execute(
+                    "INSERT INTO retrievals VALUES (?,?,?,?,?,?,?,?)", (run_id, seq, *retrieval)
+                )
+            for seq, attempt in enumerate(state.sql, 1):
                 last = seq == len(state.sql) and state.result is not None
                 db.execute(
                     "INSERT INTO sql_attempts VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         run_id,
                         seq,
-                        a.attempt,
-                        a.kind,
-                        a.sql,
-                        a.statement,
-                        int(a.valid),
-                        a.error_class,
-                        a.error,
+                        attempt.attempt,
+                        attempt.kind,
+                        attempt.sql,
+                        attempt.statement,
+                        int(attempt.valid),
+                        attempt.error_class,
+                        attempt.error,
                         state.result.row_count if last and state.result else None,
-                        a.executed_ms,
+                        attempt.executed_ms,
                         _json(state.result.dataset_versions) if last and state.result else None,
                     ),
                 )
             outcomes = state.checks.outcomes if state.checks else []
-            for seq, c in enumerate(outcomes, 1):
+            for seq, check in enumerate(outcomes, 1):
                 db.execute(
                     "INSERT INTO checks VALUES (?,?,?,?,?,?,?,?)",
                     (
                         run_id,
                         seq,
-                        c.name,
-                        int(c.passed),
-                        c.failure_class,
-                        c.expected,
-                        c.observed,
-                        c.detail,
+                        check.name,
+                        int(check.passed),
+                        check.failure_class,
+                        check.expected,
+                        check.observed,
+                        check.detail,
                     ),
                 )
             db.execute(
@@ -368,6 +375,7 @@ class RunLogger:
 
     @staticmethod
     def _retrievals(state: AnalystState) -> list[tuple[Any, ...]]:
+        """Return the retrieval rows of a run: catalogue candidates, cards and examples."""
         rows: list[tuple[Any, ...]] = []
         if state.catalogue_candidates:
             hits = [
@@ -378,24 +386,25 @@ class RunLogger:
                 ("catalogue_candidates", state.question, 0, 0, "bm25_only", json.dumps(hits))
             )
         if state.retrieved:
-            r = state.retrieved
+            retrieved = state.retrieved
             hits = [
                 {"id": t.get("dataset_id"), "kind": "table", "score": None, "rank": i}
-                for i, t in enumerate(r.get("tables", []), 1)
+                for i, t in enumerate(retrieved.get("tables", []), 1)
             ]
             hits += [
-                {"id": i, "kind": "card", "score": None, "rank": 0} for i in r.get("card_ids", [])
+                {"id": i, "kind": "card", "score": None, "rank": 0}
+                for i in retrieved.get("card_ids", [])
             ]
             hits += [
                 {"id": i, "kind": "example", "score": None, "rank": 0}
-                for i in r.get("example_ids", [])
+                for i in retrieved.get("example_ids", [])
             ]
             widened = int(state.counters.widened_searches > 0)
             rows.append(
                 (
                     "context",
                     state.question,
-                    int(bool(r.get("domain_ranked"))),
+                    int(bool(retrieved.get("domain_ranked"))),
                     widened,
                     "bm25_only",
                     json.dumps(hits),

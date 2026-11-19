@@ -42,10 +42,12 @@ FAILURE = {
 
 
 def out_of_scope(reason: str | None) -> str:
+    """Return the reply for a request that failed screening."""
     return SCREEN_REASONS.get(reason or "", "The request cannot be processed.")
 
 
 def decline(missing: list[MissingPart], pointers: list[str]) -> str:
+    """Return the decline text naming what is missing and related tables."""
     text = "The catalogue does not contain the requested data."
     if missing:
         text += " Missing: " + "; ".join(f"{m.kind} ({m.detail})" for m in missing) + "."
@@ -55,14 +57,17 @@ def decline(missing: list[MissingPart], pointers: list[str]) -> str:
 
 
 def abstain(cause: Cause) -> str:
+    """Return the abstention text for a cause."""
     return ABSTAIN.get(cause, "No answer is given.")
 
 
 def failure(cause: Cause) -> str:
+    """Return the system-failure text for a cause."""
     return FAILURE.get(cause, FAILURE["backend_error"])
 
 
 def clarification(question: str | None, options: list[str]) -> str:
+    """Return the clarification question with numbered options."""
     text = question or "Please state the place, the period and the indicator."
     if options:  # numbered, so that "the second one" or "2" maps onto an option
         text += " Options: " + "; ".join(f"{n}. {o}" for n, o in enumerate(options, 1)) + "."

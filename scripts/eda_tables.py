@@ -47,12 +47,14 @@ lines: list[str] = ["# Milestone 2 EDA summary", "", "Produced by `scripts/eda_t
 
 
 def save(fig: plt.Figure, name: str) -> None:
+    """Save a figure without software metadata and close it."""
     fig.tight_layout()
     fig.savefig(OUT_DIR / name, dpi=130, metadata={"Software": None})
     plt.close(fig)
 
 
 def iqr_outliers(series: pd.Series) -> int:
+    """Count values outside 1.5 times the interquartile range."""
     values = series.dropna()
     if values.empty:
         return 0
@@ -97,10 +99,12 @@ for table, frame in frames.items():
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for column in numeric.columns:
-        s = numeric[column]
+        column_values = numeric[column]
         lines.append(
-            f"| {column} | {int(s.count()):,} | {s.mean():.2f} | {s.std():.2f} | {s.min():.2f} "
-            f"| {s.median():.2f} | {s.max():.2f} | {iqr_outliers(s):,} |"
+            f"| {column} | {int(column_values.count()):,} | {column_values.mean():.2f} "
+            f"| {column_values.std():.2f} | {column_values.min():.2f} "
+            f"| {column_values.median():.2f} | {column_values.max():.2f} "
+            f"| {iqr_outliers(column_values):,} |"
         )
     lines.append("")
 
@@ -255,11 +259,11 @@ if split_counts:
                 + " |"
             )
         lines.append("")
-        for k, (split, c) in enumerate(split_counts.items()):
-            total = sum(c[name].values())
+        for k, (split, split_count) in enumerate(split_counts.items()):
+            total = sum(split_count[name].values())
             ax.bar(
                 np.arange(len(options)) + k * width,
-                [c[name][o] / total for o in options],
+                [split_count[name][o] / total for o in options],
                 width,
                 label=split,
             )

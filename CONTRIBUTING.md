@@ -46,6 +46,12 @@ scaffold.
 - Python 3.12 or 3.13. Kev's serving stack requires one of these versions.
 - PEP 8, enforced by Ruff (`ruff format`, `ruff check`). Line length 100.
 - Type hints on all public functions; `mypy --strict` must pass.
+- Every module, class and function in `src/`, `app/` and `scripts/` has a docstring whose first
+  line states what it does (Ruff `D1`); `__init__` and magic methods are covered by the class
+  docstring. Test modules have a module docstring; test names state the behaviour under test.
+- Names describe the role, not the team member or track that wrote the code: `control_nodes`,
+  `model_nodes`, `tool_nodes`, not `t2_nodes`. Single-letter names only for loop indices,
+  comprehensions and mathematical operands.
 - Pydantic models are the contracts for tools, decisions and streamed events.
   Do not pass untyped dictionaries across those boundaries.
 - Tests live in `tests/`, mirroring the package layout. Mark tests that need a

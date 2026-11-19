@@ -30,6 +30,7 @@ class EvidenceStore:
             )
 
     def put(self, bundle: EvidenceBundle) -> str:
+        """Store an evidence bundle and return its id."""
         with sqlite3.connect(self.path) as db:
             db.execute(
                 "INSERT OR REPLACE INTO evidence VALUES (?,?)",
@@ -38,6 +39,7 @@ class EvidenceStore:
         return bundle.evidence_id
 
     def get(self, evidence_id: str) -> EvidenceBundle | None:
+        """Return a stored evidence bundle, or None."""
         with sqlite3.connect(self.path) as db:
             row = db.execute(
                 "SELECT payload FROM evidence WHERE evidence_id=?", (evidence_id,)
@@ -54,6 +56,7 @@ def load_catalogue(path: Path = CATALOGUE) -> dict[str, dict[str, Any]]:
 
 
 def source_ref(dataset_id: str, catalogue: dict[str, dict[str, Any]]) -> SourceRef:
+    """Return the source reference of a dataset from the catalogue."""
     table = catalogue.get(dataset_id, {})
     return SourceRef(
         dataset_id=dataset_id,
@@ -68,6 +71,7 @@ def source_ref(dataset_id: str, catalogue: dict[str, dict[str, Any]]) -> SourceR
 
 
 def config_digest(state: AnalystState) -> str:
+    """Return the SHA-256 of the run configuration."""
     return hashlib.sha256(state.config.model_dump_json().encode()).hexdigest()
 
 

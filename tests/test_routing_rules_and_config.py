@@ -1,4 +1,4 @@
-"""Routing rules (P7, P8), context retrieval (N5) and configuration loading (T3 item 3)."""
+"""Routing rules (P7, P8), context retrieval (N5) and configuration loading."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from analyst.agents.nodes import resolve_routing_decision, retrieve_context_and_examples
+from analyst.agents.control_nodes import resolve_routing_decision, retrieve_context_and_examples
 from analyst.agents.state import AnalystState, Limits, RagPaths, RunConfig
 from analyst.agents.stubs import stub_routing
 

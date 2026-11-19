@@ -16,12 +16,15 @@ _NUMBER = re.compile(r"\d+(?:[.,-]\d+)*")
 
 
 class Clarification(BaseModel):
+    """The clarification question written by the model."""
+
     model_config = ConfigDict(extra="forbid")
 
     question: str
 
 
 def check_question(text: str, question: str, options: list[str]) -> None:
+    """Check the clarification's length and that it adds no numbers absent from the inputs."""
     if not text.strip() or len(text) > MAX_CHARS:
         raise ValueError(f"the question must be 1-{MAX_CHARS} characters")
     allowed = set(_NUMBER.findall(question)) | {n for o in options for n in _NUMBER.findall(o)}
@@ -33,6 +36,7 @@ def check_question(text: str, question: str, options: list[str]) -> None:
 def write_clarification(
     question: str, slot: str, options: list[str], llm: LlmClient, counters: CallCounter
 ) -> tuple[str, LlmCallRecord]:
+    """Write a clarification question for a missing slot with the model."""
     reply, record = llm.structured(
         "clarify",
         "clarify",

@@ -38,6 +38,8 @@ class Contract(BaseModel):
 
 
 class Place(Contract):
+    """A place mention resolved to a geography code, level and canonical name."""
+
     requested: str
     level: GeoLevel
     code: str
@@ -47,6 +49,8 @@ class Place(Contract):
 
 
 class PeriodWindow(Contract):
+    """A period mention resolved to a typed date window, noting any default that was applied."""
+
     requested: str
     type: PeriodType
     label: str
@@ -56,22 +60,30 @@ class PeriodWindow(Contract):
 
 
 class IndicatorRef(Contract):
+    """An indicator chosen from the catalogue, with its label and unit."""
+
     indicator_id: str
     label: str
     unit: str
 
 
 class CellRef(Contract):
+    """A reference to one cell of a query result by row index and column name."""
+
     row: int
     column: str
 
 
 class Assumption(Contract):
+    """An assumption the agent made in reading the question, with a stable code."""
+
     code: str
     text: str
 
 
 class Caveat(Contract):
+    """A caveat shown with an answer and where it came from."""
+
     code: str
     text: str
     source: Literal["catalogue", "flag", "check", "statistical", "coverage"]

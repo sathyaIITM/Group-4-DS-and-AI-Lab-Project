@@ -28,10 +28,12 @@ _ID_SUFFIXES = ("_id", "_code", "_rank")
 
 
 def _is_number(value: object) -> bool:
+    """Return True for an int or float that is not a bool."""
     return isinstance(value, int | float) and not isinstance(value, bool)
 
 
 def _numeric(result: QueryResult) -> list[str]:
+    """Return the result columns that hold numbers."""
     names = [c.name for c in result.columns]
     return [name for i, name in enumerate(names) if any(_is_number(r[i]) for r in result.rows)]
 
@@ -93,6 +95,7 @@ def _points_are_unique(result: QueryResult, *columns: str | None) -> bool:
 
 
 def _distinct(result: QueryResult, column: str | None) -> int:
+    """Return the number of distinct values in a result column."""
     if column is None:
         return 0
     i = [c.name for c in result.columns].index(column)
@@ -100,6 +103,7 @@ def _distinct(result: QueryResult, column: str | None) -> int:
 
 
 def _title_and_unit(plan: InterpretationPlan | None) -> tuple[str, str]:
+    """Return the chart title and axis unit from the plan's indicators."""
     if plan is None or not plan.indicators:
         return "", ""
     if len(plan.indicators) > 1:  # several measures: no title; the unit when they share one
@@ -118,6 +122,7 @@ def select_chart(
     title, unit = _title_and_unit(plan)
 
     def spec(kind: ChartType, reason: str, decided_by: str = "rules") -> ChartSpec:
+        """Build the chart specification for a chart type."""
         labels = (
             {i.indicator_id: re.sub(r"(?<=[A-Za-z)%])\d+\b", "", i.label) for i in plan.indicators}
             if plan

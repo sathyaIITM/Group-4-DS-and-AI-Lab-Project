@@ -45,6 +45,7 @@ GROUPS = {
 
 
 def sha256(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file, read in chunks."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1 << 20), b""):
@@ -53,6 +54,7 @@ def sha256(path: Path) -> str:
 
 
 def shape(path: Path) -> tuple[int, int | str]:
+    """Return the row and column counts of a data file."""
     if path.suffix == ".parquet":
         frame = pd.read_parquet(path)
         return len(frame), frame.shape[1]

@@ -1,3 +1,5 @@
+"""Tests for the tool nodes: resolution, SQL validation, execution and checks."""
+
 from __future__ import annotations
 
 from pathlib import Path

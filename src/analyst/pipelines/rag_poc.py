@@ -71,6 +71,8 @@ CHART_RULES = {  # analysis SOP: chart by analysis type and row count (code, not
 
 
 class State(TypedDict, total=False):
+    """State passed between the nodes of the retrieval proof of concept."""
+
     question: str
     tables: list[dict[str, Any]]
     indicators: list[dict[str, Any]]
@@ -94,6 +96,7 @@ class State(TypedDict, total=False):
 
 
 def _hits(hits: list[Hit]) -> list[dict[str, Any]]:
+    """Return retrieval hits as plain dictionaries."""
     return [
         {
             "id": h.entry.id,
@@ -107,10 +110,13 @@ def _hits(hits: list[Hit]) -> list[dict[str, Any]]:
 
 
 def _numbers(text: str) -> list[float]:
+    """Return the numbers written in a text."""
     return [float(n.replace(",", "")) for n in re.findall(r"-?\d[\d,]*\.?\d*", text)]
 
 
 class RagPipeline:
+    """Retrieval proof of concept: retrieve, extract intent, query, check, narrate and verify."""
+
     def __init__(self, index: HybridIndex, llm: LlmClient) -> None:
         self.index = index
         self.llm = llm
@@ -135,11 +141,13 @@ class RagPipeline:
 
     # -- helpers ---------------------------------------------------------------------------
     def _llm(self, state: State, purpose: str, system: str, user: str) -> dict[str, Any]:
+        """Make a JSON model call and record it in the state."""
         reply, call = self.llm.json_call(purpose, system, user)
         state.setdefault("llm_calls", []).append(call.__dict__)
         return reply
 
     def _distinct(self, dataset_id: str, column: str) -> set[str]:
+        """Return the distinct values of an allowed column of a table."""
         if column not in {"indicator_id", "period_label", "geo_name", "geo_state"}:
             msg = f"column not allowed: {column}"
             raise ValueError(msg)
@@ -149,7 +157,10 @@ class RagPipeline:
 
     @staticmethod
     def _timed(name: str, fn: Any) -> Any:
+        """Wrap a node so that its run time is recorded."""
+
         def wrapper(state: State) -> State:
+            """Run the node and add its run time to the state."""
             start = time.perf_counter()
             update = fn(state) or {}
             timings = dict(state.get("timings", {}))
@@ -163,11 +174,13 @@ class RagPipeline:
 
     # -- nodes -----------------------------------------------------------------------------
     def retrieve_tables(self, state: State) -> State:
+        """Retrieve the tables that best match the question."""
         hits = self.index.search(state["question"], "table", TOP_TABLES)
         return {"tables": _hits(hits)}
 
     def retrieve_context(self, state: State) -> State:
-        q = state["question"]
+        """Retrieve indicators, cards and examples for the retrieved tables."""
+        question = state["question"]
         # A fixed quota per table: a small table sends all its indicators; a large one (NFHS-5,
         # 104 indicators) sends its best matches. A shared top-k let NFHS crowd out the rest.
         indicators: list[Hit] = []
@@ -177,15 +190,15 @@ class RagPipeline:
                 indicators += [Hit(e, 0.0, None, None) for e in own]
             else:
                 indicators += self.index.search(
-                    q, "indicator", INDICATORS_PER_TABLE, dataset_ids={ds}
+                    question, "indicator", INDICATORS_PER_TABLE, dataset_ids={ds}
                 )
         # A table's convention cards travel with the table (top two tables); analysis SOP
         # cards are general and are retrieved by similarity.
         cards = [
             c for t in state["tables"][:2] for c in self.cards_by_table.get(t["dataset_id"], [])
         ]
-        sops = self.index.search(q, "card", 2, dataset_ids=set())
-        examples = self.index.search(q, "example", 3)
+        sops = self.index.search(question, "card", 2, dataset_ids=set())
+        examples = self.index.search(question, "example", 3)
         return {
             "indicators": _hits(indicators),
             "cards": cards + [h.entry.payload for h in sops],
@@ -193,6 +206,7 @@ class RagPipeline:
         }
 
     def extract_intent(self, state: State) -> State:
+        """Extract the query intent with the model."""
         tables = [
             {k: t[k] for k in ("dataset_id", "title", "geo_levels", "periods", "caveats")}
             for t in state["tables"]
@@ -229,6 +243,7 @@ class RagPipeline:
         return {"intent": self._llm(state, "intent", system, user)}
 
     def check_coverage(self, state: State) -> State:
+        """Check that the intent names a table, indicator, place and period that exist."""
         intent = state["intent"]
         action = intent.get("action")
         if action != "answer":
@@ -270,6 +285,7 @@ class RagPipeline:
         return {"coverage": {"status": "covered", "by": "code", "reason": "all slots resolved"}}
 
     def generate_sql(self, state: State) -> State:
+        """Generate SQL for the intent with the model."""
         intent = state["intent"]
         ds = intent["dataset_id"]
         table = f"obs_{ds}"
@@ -304,6 +320,7 @@ class RagPipeline:
         return {"sql": str(reply.get("sql", "")).strip().rstrip(";")}
 
     def execute(self, state: State) -> State:
+        """Execute the SQL on the read-only database and record the attempt."""
         attempts = list(state.get("sql_attempts", []))
         try:
             columns, rows = self.db.run(state["sql"])
@@ -314,6 +331,7 @@ class RagPipeline:
         return {"sql_attempts": attempts, "columns": columns, "rows": [list(r) for r in rows]}
 
     def check_result(self, state: State) -> State:
+        """Check the result for errors, empty rows and missing columns."""
         rows, columns = state.get("rows", []), state.get("columns", [])
         failed = state["sql_attempts"][-1]["error"]
         checks: dict[str, Any] = {
@@ -336,6 +354,7 @@ class RagPipeline:
         return {"checks": checks}
 
     def narrate(self, state: State) -> State:
+        """Narrate the answer from the result with the model."""
         table = next(t for t in state["tables"] if t["dataset_id"] == state["intent"]["dataset_id"])
         system = (
             "You write the answer to a user's question from a query result. Use only the "
@@ -358,6 +377,7 @@ class RagPipeline:
         return {"narration": str(reply.get("answer", ""))}
 
     def verify_and_release(self, state: State) -> State:
+        """Release the answer only if every narrated number is in the result."""
         allowed: list[float] = []
         for row in state["rows"]:
             for cell in row:
@@ -400,6 +420,7 @@ class RagPipeline:
         }
 
     def finalize_non_answer(self, state: State) -> State:
+        """Write the clarification or decline reply."""
         cov = state["coverage"]
         if cov["status"] == "clarify":
             question = state["intent"].get("clarifying_question") or cov["reason"]
@@ -419,7 +440,8 @@ class RagPipeline:
 
     # -- graph -----------------------------------------------------------------------------
     def _build_graph(self) -> Any:
-        g = StateGraph(State)
+        """Build the LangGraph graph of the pipeline."""
+        graph = StateGraph(State)
         for name in (
             "retrieve_tables",
             "retrieve_context",
@@ -432,19 +454,19 @@ class RagPipeline:
             "verify_and_release",
             "finalize_non_answer",
         ):
-            g.add_node(name, self._timed(name, getattr(self, name)))
-        g.set_entry_point("retrieve_tables")
-        g.add_edge("retrieve_tables", "retrieve_context")
-        g.add_edge("retrieve_context", "extract_intent")
-        g.add_edge("extract_intent", "check_coverage")
-        g.add_conditional_edges(
+            graph.add_node(name, self._timed(name, getattr(self, name)))
+        graph.set_entry_point("retrieve_tables")
+        graph.add_edge("retrieve_tables", "retrieve_context")
+        graph.add_edge("retrieve_context", "extract_intent")
+        graph.add_edge("extract_intent", "check_coverage")
+        graph.add_conditional_edges(
             "check_coverage",
             lambda s: (
                 "generate_sql" if s["coverage"]["status"] == "covered" else "finalize_non_answer"
             ),
         )
-        g.add_edge("generate_sql", "execute")
-        g.add_conditional_edges(  # one repair attempt on a failed or rejected query
+        graph.add_edge("generate_sql", "execute")
+        graph.add_conditional_edges(  # one repair attempt on a failed or rejected query
             "execute",
             lambda s: (
                 "generate_sql"
@@ -452,16 +474,17 @@ class RagPipeline:
                 else "check_result"
             ),
         )
-        g.add_conditional_edges(
+        graph.add_conditional_edges(
             "check_result",
             lambda s: "narrate" if s["checks"]["passed"] else "finalize_non_answer",
         )
-        g.add_edge("narrate", "verify_and_release")
-        g.add_edge("verify_and_release", END)
-        g.add_edge("finalize_non_answer", END)
-        return g.compile()
+        graph.add_edge("narrate", "verify_and_release")
+        graph.add_edge("verify_and_release", END)
+        graph.add_edge("finalize_non_answer", END)
+        return graph.compile()
 
     def run(self, question: str) -> State:
+        """Run the pipeline on one question and return the final state."""
         start = time.perf_counter()
         try:
             state: State = self.graph.invoke({"question": question, "llm_calls": []})
@@ -548,6 +571,7 @@ def run_metadata(backend: str, llm: LlmClient) -> dict[str, Any]:
 
 
 def main() -> None:
+    """Command-line entry point for the retrieval proof of concept."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--questions", type=Path, default=QUESTIONS)
     parser.add_argument("--out", type=Path, default=ROOT / "outputs/predictions/rag_poc.jsonl")

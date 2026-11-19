@@ -48,6 +48,8 @@ DISAGREEMENT_COLUMNS = (
 
 @dataclass(frozen=True)
 class Block:
+    """A block of dev-human items with its labellers and adjudicator."""
+
     name: str
     first: int
     last: int
@@ -55,6 +57,7 @@ class Block:
     adjudicator: str
 
     def holds(self, item_id: str) -> bool:
+        """Return True when an item belongs to the block."""
         return self.first <= item_number(item_id) <= self.last
 
 
@@ -66,6 +69,7 @@ BLOCKS = (
 
 
 def item_number(item_id: str) -> int:
+    """Return the number of a dh-NNN item id."""
     prefix, _, number = item_id.partition("-")
     if prefix != "dh" or not number.isdigit():
         raise ValueError(f"item id {item_id!r} is not of the form dh-NNN")
@@ -73,6 +77,7 @@ def item_number(item_id: str) -> int:
 
 
 def block_of(item_id: str) -> Block:
+    """Return the block an item belongs to."""
     for block in BLOCKS:
         if block.holds(item_id):
             return block
@@ -80,10 +85,12 @@ def block_of(item_id: str) -> Block:
 
 
 def sha256_file(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    """Load the JSON objects of a JSONL file."""
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
@@ -158,6 +165,7 @@ def messages_of(path: Path) -> list[str]:
 
 
 def _truthy(value: str | None) -> bool:
+    """Return True for yes-like text such as true, 1 or yes."""
     return (value or "").strip().lower() in {"true", "1", "yes", "y"}
 
 
@@ -196,9 +204,9 @@ def agreement(labels: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
     pooled: dict[str, tuple[list[str], list[str]]] = {d: ([], []) for d in DECISIONS}
     for block in BLOCKS:
         a_name, b_name = block.labellers
-        a, b = labels.get(a_name, {}), labels.get(b_name, {})
-        ids = sorted(i for i in set(a) & set(b) if block.holds(i))
-        decided = [i for i in ids if not a[i]["undecided"] and not b[i]["undecided"]]
+        labels_a, labels_b = labels.get(a_name, {}), labels.get(b_name, {})
+        ids = sorted(i for i in set(labels_a) & set(labels_b) if block.holds(i))
+        decided = [i for i in ids if not labels_a[i]["undecided"] and not labels_b[i]["undecided"]]
         entry: dict[str, Any] = {
             "labellers": [a_name, b_name],
             "adjudicator": block.adjudicator,
@@ -206,8 +214,8 @@ def agreement(labels: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
             "undecided": len(ids) - len(decided),
         }
         for decision in DECISIONS:
-            x = [a[i][decision] for i in decided]
-            y = [b[i][decision] for i in decided]
+            x = [labels_a[i][decision] for i in decided]
+            y = [labels_b[i][decision] for i in decided]
             pooled[decision][0].extend(x)
             pooled[decision][1].extend(y)
             entry[decision] = _kappa(x, y)
@@ -221,6 +229,7 @@ def agreement(labels: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
 
 
 def _kappa(x: list[str], y: list[str]) -> dict[str, Any]:
+    """Return agreement and Cohen's kappa between two label lists."""
     if not x:
         return {"n": 0, "agreement": None, "kappa": None}
     observed = sum(p == q for p, q in zip(x, y, strict=True)) / len(x)
@@ -231,26 +240,28 @@ def _kappa(x: list[str], y: list[str]) -> dict[str, Any]:
 def disagreements(labels: dict[str, dict[str, dict[str, Any]]]) -> dict[str, list[dict[str, str]]]:
     """Rows for each adjudicator: every (item, decision) where the two labels differ, or
     where either labeller marked the item undecided."""
-    out: dict[str, list[dict[str, str]]] = {b.adjudicator: [] for b in BLOCKS}
+    out: dict[str, list[dict[str, str]]] = {
+        labelling_block.adjudicator: [] for labelling_block in BLOCKS
+    }
     for block in BLOCKS:
         a_name, b_name = block.labellers
-        a, b = labels.get(a_name, {}), labels.get(b_name, {})
-        for item_id in sorted(set(a) & set(b), key=item_number):
+        labels_a, labels_b = labels.get(a_name, {}), labels.get(b_name, {})
+        for item_id in sorted(set(labels_a) & set(labels_b), key=item_number):
             if not block.holds(item_id):
                 continue
-            undecided = a[item_id]["undecided"] or b[item_id]["undecided"]
+            undecided = labels_a[item_id]["undecided"] or labels_b[item_id]["undecided"]
             for decision in DECISIONS:
-                if undecided or a[item_id][decision] != b[item_id][decision]:
+                if undecided or labels_a[item_id][decision] != labels_b[item_id][decision]:
                     out[block.adjudicator].append(
                         {
                             "item_id": item_id,
                             "decision": decision,
                             "labeller_a": a_name,
-                            "label_a": a[item_id][decision],
-                            "rule_a": a[item_id]["rule"],
+                            "label_a": labels_a[item_id][decision],
+                            "rule_a": labels_a[item_id]["rule"],
                             "labeller_b": b_name,
-                            "label_b": b[item_id][decision],
-                            "rule_b": b[item_id]["rule"],
+                            "label_b": labels_b[item_id][decision],
+                            "rule_b": labels_b[item_id]["rule"],
                             "final_label": "",
                             "final_rule": "",
                             "ambiguous": "",
@@ -261,6 +272,7 @@ def disagreements(labels: dict[str, dict[str, dict[str, Any]]]) -> dict[str, lis
 
 
 def write_csv(path: Path, columns: Iterable[str], rows: list[dict[str, str]]) -> None:
+    """Write rows to a CSV file with the given columns."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(columns))
@@ -305,14 +317,18 @@ def final_labels(
         if item_id in ambiguous:
             continue
         a_name, b_name = block_of(item_id).labellers
-        a, b = labels.get(a_name, {}).get(item_id), labels.get(b_name, {}).get(item_id)
-        if a is None or b is None:
+        label_a, label_b = labels.get(a_name, {}).get(item_id), labels.get(b_name, {}).get(item_id)
+        if label_a is None or label_b is None:
             unresolved.append(item_id)
             continue
         chosen = {}
         for decision in DECISIONS:
-            agreed = not a["undecided"] and not b["undecided"] and a[decision] == b[decision]
-            label = a[decision] if agreed else decided.get((item_id, decision))
+            agreed = (
+                not label_a["undecided"]
+                and not label_b["undecided"]
+                and label_a[decision] == label_b[decision]
+            )
+            label = label_a[decision] if agreed else decided.get((item_id, decision))
             if label is None:
                 break
             chosen[decision] = label

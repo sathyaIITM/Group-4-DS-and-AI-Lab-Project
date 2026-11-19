@@ -8,6 +8,8 @@ FailureClass = Literal["none", "caveat", "query_fault", "empty_result", "data_ab
 
 
 class CheckOutcome(Contract):
+    """Result of one consistency check on a query result, with what was expected and observed."""
+
     name: str
     passed: bool
     failure_class: FailureClass
@@ -17,6 +19,8 @@ class CheckOutcome(Contract):
 
 
 class CheckReport(Contract):
+    """All check outcomes for a result, the overall verdict, caveats and a hint for a retry."""
+
     outcomes: list[CheckOutcome]
     verdict: Literal["pass", "pass_with_caveats", "query_fault", "empty_result", "data_absent"]
     caveats: list[Caveat]
@@ -24,6 +28,8 @@ class CheckReport(Contract):
 
 
 class NumberCheck(Contract):
+    """Whether every number in the narration matches the result or a derived value."""
+
     passed: bool
     matched: list[str]
     unmatched: list[str]

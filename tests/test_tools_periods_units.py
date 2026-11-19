@@ -1,3 +1,5 @@
+"""Tests for period resolution and unit handling."""
+
 from datetime import date
 from decimal import Decimal
 

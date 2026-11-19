@@ -1,3 +1,5 @@
+"""Plain-text views of the catalogue: table descriptions and search listings."""
+
 from __future__ import annotations
 
 from typing import Any

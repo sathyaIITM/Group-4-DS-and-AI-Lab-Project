@@ -37,6 +37,7 @@ def normalise(text: str, map_digits: bool = True) -> str:
 
 
 def shingles(text: str) -> frozenset[str]:
+    """Return the character shingles of normalised text."""
     padded = f" {normalise(text)} "
     if len(padded) <= SHINGLE:
         return frozenset({padded})
@@ -51,6 +52,7 @@ def state_key(record: KevRecord) -> str:
 
 
 def load_split(path: Path) -> tuple[list[KevRecord], list[str]]:
+    """Load Kev records from a JSONL file, with errors for lines that fail validation."""
     records, errors = [], []
     for number, line in enumerate(path.read_text().splitlines(), start=1):
         if not line.strip():
@@ -64,12 +66,15 @@ def load_split(path: Path) -> tuple[list[KevRecord], list[str]]:
 
 @dataclass
 class CheckResult:
+    """Errors, report lines and record ids to drop from a quality check."""
+
     errors: list[str] = field(default_factory=list)
     lines: list[str] = field(default_factory=list)
     drop: set[str] = field(default_factory=set)  # record ids removed by --write
 
 
 def check_lengths_and_balance(splits: dict[str, list[KevRecord]], result: CheckResult) -> None:
+    """Report split sizes, state lengths and option balance."""
     result.lines.append("## Sizes, state length and option balance\n")
     result.lines.append("| Split | Records | Groups | Longest state (chars) | Over limit |")
     result.lines.append("| --- | --- | --- | --- | --- |")
@@ -97,11 +102,12 @@ def check_lengths_and_balance(splits: dict[str, list[KevRecord]], result: CheckR
 
 
 def check_leakage_and_duplicates(splits: dict[str, list[KevRecord]], result: CheckResult) -> None:
+    """Report groups that appear in several splits and duplicate records."""
     result.lines.append("\n## Group leakage and duplicates\n")
     owners: dict[str, set[str]] = defaultdict(set)
     for name, records in splits.items():
-        for r in records:
-            owners[r.meta.group_id].add(name)
+        for record in records:
+            owners[record.meta.group_id].add(name)
     leaked = [g for g, names in owners.items() if len(names) > 1]
     result.lines.append(f"- Groups in more than one split: {len(leaked)}")
     if leaked:
@@ -109,48 +115,51 @@ def check_leakage_and_duplicates(splits: dict[str, list[KevRecord]], result: Che
 
     by_state: dict[str, list[tuple[str, KevRecord]]] = defaultdict(list)
     for name, records in splits.items():
-        for r in records:
-            by_state[state_key(r)].append((name, r))
+        for record in records:
+            by_state[state_key(record)].append((name, record))
     redundant = conflicts = 0
     for entries in by_state.values():
         if len(entries) < 2:
             continue
-        labels = {(r.tool, r.domain) for _, r in entries}
+        labels = {(record.tool, record.domain) for _, record in entries}
         if len(labels) > 1:
             conflicts += 1
             result.errors.append(
                 "conflicting labels on one state: "
-                + ", ".join(f"{r.meta.id}={r.tool}/{r.domain}" for _, r in entries)
+                + ", ".join(
+                    f"{record.meta.id}={record.tool}/{record.domain}" for _, record in entries
+                )
             )
             continue
-        for _, r in entries[1:]:
+        for _, record in entries[1:]:
             redundant += 1
-            result.drop.add(r.meta.id)
+            result.drop.add(record.meta.id)
     result.lines.append(f"- Exact duplicate states (same labels), extra copies: {redundant}")
     result.lines.append(f"- Identical states with conflicting labels: {conflicts}")
 
-    train = [(r, shingles(r.state.user_message)) for r in splits.get("train", [])]
+    train = [(record, shingles(record.state.user_message)) for record in splits.get("train", [])]
     pairs: list[tuple[KevRecord, KevRecord, float]] = []
     for name in SPLITS[1:]:
-        for r in splits.get(name, []):
-            mine = shingles(r.state.user_message)
+        for record in splits.get(name, []):
+            mine = shingles(record.state.user_message)
             for other, theirs in train:
                 small, large = sorted((len(mine), len(theirs)))
                 if small < NEAR_DUP_JACCARD * large:
                     continue
                 jaccard = len(mine & theirs) / len(mine | theirs)
                 if jaccard >= NEAR_DUP_JACCARD:
-                    pairs.append((r, other, jaccard))
-                    result.drop.add(r.meta.id)
+                    pairs.append((record, other, jaccard))
+                    result.drop.add(record.meta.id)
                     break
     result.lines.append(
         f"- Evaluation-split messages within Jaccard {NEAR_DUP_JACCARD} of a training message "
         f"(character {SHINGLE}-grams after normalisation): {len(pairs)}"
     )
-    for r, other, jaccard in pairs[:10]:
+    for record, other, jaccard in pairs[:10]:
         result.lines.append(
-            f"  - {r.meta.id} ({r.meta.split}) ~ {other.meta.id} (train), J={jaccard:.2f}: "
-            f'"{r.state.user_message}" / "{other.state.user_message}"'
+            f"  - {record.meta.id} ({record.meta.split}) ~ {other.meta.id} (train), "
+            f"J={jaccard:.2f}: "
+            f'"{record.state.user_message}" / "{other.state.user_message}"'
         )
 
 
@@ -179,10 +188,10 @@ def check_shortcuts(splits: dict[str, list[KevRecord]], result: CheckResult) -> 
         base = sum(y == majority for y in y_dev) / len(y_dev)
         for input_name in ("message", "message + context"):
 
-            def text(r: KevRecord, name: str = input_name) -> str:
+            def text(record: KevRecord, name: str = input_name) -> str:
                 if name == "message":
-                    return r.state.user_message
-                return f"{r.state.context} {r.state.user_message}"
+                    return record.state.user_message
+                return f"{record.state.context} {record.state.user_message}"
 
             vectoriser = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
             x_train = vectoriser.fit_transform([text(r) for r in train])
@@ -203,6 +212,7 @@ def check_shortcuts(splits: dict[str, list[KevRecord]], result: CheckResult) -> 
 
 
 def run_checks(directory: Path, version: int, shortcuts: bool = True) -> CheckResult:
+    """Run all quality checks on the Kev splits in a directory."""
     result = CheckResult()
     splits: dict[str, list[KevRecord]] = {}
     for name in SPLITS:
@@ -223,6 +233,7 @@ def run_checks(directory: Path, version: int, shortcuts: bool = True) -> CheckRe
 
 
 def write_without(directory: Path, version: int, drop: set[str]) -> int:
+    """Rewrite the split files without the given record ids and return how many were removed."""
     removed = 0
     for name in SPLITS:
         path = directory / f"{name}.v{version}.jsonl"
@@ -239,6 +250,7 @@ def write_without(directory: Path, version: int, drop: set[str]) -> int:
 
 
 def main() -> None:
+    """Command-line entry point for the Kev record checks."""
     parser = argparse.ArgumentParser(description="Quality checks for Kev record files.")
     parser.add_argument("directory", type=Path)
     parser.add_argument("--version", type=int, default=1)

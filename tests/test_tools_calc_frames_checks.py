@@ -1,3 +1,5 @@
+"""Tests for derivations, frame operations and result checks."""
+
 from __future__ import annotations
 
 import duckdb

@@ -18,6 +18,7 @@ NOT_IN_RESULT = "not in result: "  # prefix set by compute_derivations for missi
 def run_result_checks(
     plan: InterpretationPlan, result: QueryResult, derived: Sequence[Mapping[str, Any]] = ()
 ) -> CheckReport:
+    """Run the consistency checks on a result and return the report."""
     outcomes: list[CheckOutcome] = []
     if result.row_count == 0:
         outcomes.append(

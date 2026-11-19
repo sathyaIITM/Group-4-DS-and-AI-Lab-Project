@@ -323,6 +323,8 @@ TOPIC_WORD_NON_DATA = {
 
 @dataclass
 class Draft:
+    """A generated message with its tool and domain labels before it becomes a record."""
+
     message: str
     tool: Tool
     domain: Domain
@@ -354,21 +356,24 @@ class Families:
         self.states = self.plfs.places
 
     def _template(self, prefix: str, templates: dict[str, list[str]]) -> tuple[str, str, str]:
+        """Pick a template of a family and return its kind, text and template id."""
         kind = self.rng.choice(list(templates))
         index = self.rng.randrange(len(templates[kind]))
         return kind, templates[kind][index], f"{prefix}.{kind}.{index}"
 
     def _year(self) -> int:
+        """Pick a year inside the rainfall table's range, sometimes an early one."""
         low = 1901 if self.rng.random() < 0.1 else 1980
         if self.imd.period_range is None:
             raise ValueError(f"{IMD} needs a period_range in the catalogue")
         return self.rng.randint(low, self.imd.period_range[1])
 
     def plfs_query(self) -> list[Draft]:
-        rng, t = self.rng, self.plfs
+        """Generate labour-force query messages."""
+        rng, table = self.rng, self.plfs
         kind, template, tid = self._template("plfs", PLFS_TEMPLATES)
-        place, place2 = rng.sample(t.places, 2)
-        period, period2 = sorted(rng.sample(t.periods, 2))
+        place, place2 = rng.sample(table.places, 2)
+        period, period2 = sorted(rng.sample(table.periods, 2))
         slots = {
             "place": place,
             "place2": place2,
@@ -413,7 +418,7 @@ class Families:
                 )
             )
         if kind in PLFS_SINGLE_PERIOD and rng.random() < 0.3:
-            out = {**slots, "period": rng.choice(t.out_of_range_periods)}
+            out = {**slots, "period": rng.choice(table.out_of_range_periods)}
             drafts.append(
                 Draft(
                     template.format(**out),
@@ -430,7 +435,7 @@ class Families:
         if kind == "value":
             variant = rng.random()
             if variant < 0.3:
-                extra = {**slots, "breakdown": rng.choice(t.absent_breakdowns)}
+                extra = {**slots, "breakdown": rng.choice(table.absent_breakdowns)}
                 drafts.append(
                     Draft(
                         PLFS_BREAKDOWN.format(**extra),
@@ -445,7 +450,7 @@ class Families:
                     )
                 )
             elif variant < 0.45:
-                extra = {**slots, "group": rng.choice(t.lacking_groups)}
+                extra = {**slots, "group": rng.choice(table.lacking_groups)}
                 drafts.append(
                     Draft(
                         PLFS_GROUP.format(**extra),
@@ -460,7 +465,7 @@ class Families:
                     )
                 )
             elif variant < 0.6:
-                extra = {**slots, "definition": rng.choice(t.lacking_definitions)}
+                extra = {**slots, "definition": rng.choice(table.lacking_definitions)}
                 drafts.append(
                     Draft(
                         PLFS_DEFINITION.format(**extra),
@@ -490,7 +495,8 @@ class Families:
         return drafts
 
     def imd_query(self) -> list[Draft]:
-        rng, t = self.rng, self.imd
+        """Generate rainfall query messages."""
+        rng, table = self.rng, self.imd
         kind, template, tid = self._template("imd", IMD_TEMPLATES)
         year = self._year()
         year2 = self._year()
@@ -498,7 +504,7 @@ class Families:
             year2 = self._year()
         season = rng.choice(list(SEASONS))
         slots = {
-            "place": rng.choice(t.places),
+            "place": rng.choice(table.places),
             "year": str(min(year, year2)),
             "year2": str(max(year, year2)),
             "month": rng.choice(MONTHS),
@@ -537,7 +543,7 @@ class Families:
             return drafts
         variant = rng.random()
         if kind in IMD_PLACE_SINGLE_YEAR and variant < 0.25:
-            multi = {**slots, "place": rng.choice(list(t.multi_places))}
+            multi = {**slots, "place": rng.choice(list(table.multi_places))}
             drafts.append(
                 Draft(
                     template.format(**multi),
@@ -567,7 +573,7 @@ class Families:
                 )
             )
         elif kind in IMD_PLACE_SINGLE_YEAR and variant < 0.6:
-            out = {**slots, "year": rng.choice(t.out_of_range_periods)}
+            out = {**slots, "year": rng.choice(table.out_of_range_periods)}
             drafts.append(
                 Draft(
                     template.format(**out),
@@ -582,7 +588,7 @@ class Families:
                 )
             )
         elif kind in IMD_PLACE_SINGLE_YEAR and variant < 0.72:
-            district = {**slots, "place": rng.choice(t.absent_breakdowns)}
+            district = {**slots, "place": rng.choice(table.absent_breakdowns)}
             drafts.append(
                 Draft(
                     template.format(**district),
@@ -597,7 +603,7 @@ class Families:
                 )
             )
         elif variant < 0.8:
-            alias, _ = rng.choice(list(t.place_aliases.items()))
+            alias, _ = rng.choice(list(table.place_aliases.items()))
             renamed = {**slots, "place": alias}
             drafts.append(
                 Draft(
@@ -644,7 +650,7 @@ class Families:
 
     def clarify(self) -> list[Draft]:
         """Clarification bases (R10, R12, R14), sometimes paired with the resolved question."""
-        rng, t = self.rng, self.plfs
+        rng, table = self.rng, self.plfs
         roll = rng.random()
         if roll < 0.3:
             index = rng.randrange(len(IMD_NO_PLACE))
@@ -663,11 +669,11 @@ class Families:
                 )
             ]
         slots = {
-            "place": rng.choice(t.places),
-            "period": rng.choice(t.periods),
+            "place": rng.choice(table.places),
+            "period": rng.choice(table.periods),
             "cal_year": str(rng.randint(2017, 2021)),
-            "definition": rng.choice(t.lacking_definitions),
-            "group": rng.choice(t.lacking_groups),
+            "definition": rng.choice(table.lacking_definitions),
+            "group": rng.choice(table.lacking_groups),
         }
         if roll < 0.55:
             message, tid, rule, tag = (
@@ -896,6 +902,7 @@ class Families:
         return IMD, "rainfall", slots, request, prior
 
     def chart(self) -> list[Draft]:
+        """Generate chart requests about a prior result."""
         rng = self.rng
         table, domain, slots, request, prior = self._result()
         if rng.random() < 0.3:
@@ -951,6 +958,7 @@ class Families:
         ]
 
     def followup(self) -> list[Draft]:
+        """Generate follow-up messages that change the place, period or chart."""
         rng = self.rng
         table, domain, slots, _, prior = self._result()
         pools = {"place": FOLLOWUP_PLACE, "period": FOLLOWUP_PERIOD, "plot": FOLLOWUP_PLOT}
@@ -1018,34 +1026,36 @@ class Families:
         minimal pairs: table removed (R7), period out of range (R8), breakdown absent (R9),
         place missing without a national row (R10), named group absent (R12)."""
         rng = self.rng
-        t: CatalogueTable = rng.choice(self.generic)
-        measure = rng.choice(t.measures)
+        table: CatalogueTable = rng.choice(self.generic)
+        measure = rng.choice(table.measures)
         period, period2 = (
-            sorted(rng.sample(t.periods, 2)) if len(t.periods) > 1 else (t.periods[0], t.periods[0])
+            sorted(rng.sample(table.periods, 2))
+            if len(table.periods) > 1
+            else (table.periods[0], table.periods[0])
         )
         slots = {
             "measure": measure,
             "Measure": measure[:1].upper() + measure[1:],
-            "place": rng.choice(t.places),
-            "place_kind": t.place_kind.lower(),
+            "place": rng.choice(table.places),
+            "place_kind": table.place_kind.lower(),
             "period": period,
             "period2": period2,
         }
-        national_only = t.place_kind.lower() == "national"
+        national_only = table.place_kind.lower() == "national"
         kinds = ["value", "value", "change"] + ([] if national_only else ["rank"])
-        kind = rng.choice(kinds if len(t.periods) > 1 else [k for k in kinds if k != "change"])
+        kind = rng.choice(kinds if len(table.periods) > 1 else [k for k in kinds if k != "change"])
         pool = {"value": GENERIC_VALUE, "rank": GENERIC_RANK, "change": GENERIC_CHANGE}[kind]
         index = rng.randrange(len(pool))
-        tid = f"table.{t.name}.{kind}.{index}"
+        tid = f"table.{table.name}.{kind}.{index}"
         base = Draft(
             pool[index].format(**slots),
             "run_sql",
-            t.domain,
+            table.domain,
             "R6",
             "M1",
             tid,
             slots,
-            needs=t.name,
+            needs=table.name,
             tags=["generic"],
         )
         drafts = [base]
@@ -1054,58 +1064,58 @@ class Families:
                 Draft(
                     base.message,
                     "decline_not_covered",
-                    t.domain,
+                    table.domain,
                     "R7",
                     "M1",
                     tid,
                     slots,
-                    excludes=t.name,
+                    excludes=table.name,
                     tags=["generic", "by_removal"],
                 )
             )
         variant = rng.random()
-        if variant < 0.2 and t.out_of_range_periods and kind == "value":
-            out = {**slots, "period": rng.choice(t.out_of_range_periods)}
+        if variant < 0.2 and table.out_of_range_periods and kind == "value":
+            out = {**slots, "period": rng.choice(table.out_of_range_periods)}
             drafts.append(
                 Draft(
                     pool[index].format(**out),
                     "decline_not_covered",
-                    t.domain,
+                    table.domain,
                     "R8",
                     "M1",
                     tid,
                     out,
-                    needs=t.name,
+                    needs=table.name,
                     tags=["generic", "out_of_range"],
                 )
             )
-        elif variant < 0.4 and t.absent_breakdowns:
-            extra = {**slots, "breakdown": rng.choice(t.absent_breakdowns)}
+        elif variant < 0.4 and table.absent_breakdowns:
+            extra = {**slots, "breakdown": rng.choice(table.absent_breakdowns)}
             drafts.append(
                 Draft(
                     GENERIC_BREAKDOWN.format(**extra),
                     "decline_not_covered",
-                    t.domain,
+                    table.domain,
                     "R9",
                     "M1",
-                    f"table.{t.name}.breakdown",
+                    f"table.{table.name}.breakdown",
                     extra,
-                    needs=t.name,
+                    needs=table.name,
                     tags=["generic", "absent_breakdown"],
                 )
             )
-        elif variant < 0.55 and t.lacking_groups and not national_only:
-            extra = {**slots, "group": rng.choice(t.lacking_groups)}
+        elif variant < 0.55 and table.lacking_groups and not national_only:
+            extra = {**slots, "group": rng.choice(table.lacking_groups)}
             drafts.append(
                 Draft(
                     GENERIC_GROUP.format(**extra),
                     "ask_clarification",
-                    t.domain,
+                    table.domain,
                     "R12",
                     "M1",
-                    f"table.{t.name}.group",
+                    f"table.{table.name}.group",
                     extra,
-                    needs=t.name,
+                    needs=table.name,
                     tags=["generic", "lacking_group"],
                 )
             )
@@ -1117,19 +1127,19 @@ class Families:
             siblings = [
                 o
                 for o in self.generic
-                if o is not t and o.national_row and set(o.measures) & set(t.measures)
+                if o is not table and o.national_row and set(o.measures) & set(table.measures)
             ]
-            if t.national_row or national_only:  # default D2: the national figure
+            if table.national_row or national_only:  # default D2: the national figure
                 drafts.append(
                     Draft(
                         message,
                         "run_sql",
-                        t.domain,
+                        table.domain,
                         "R6",
                         "M1",
-                        f"table.{t.name}.no_place.{index2}",
+                        f"table.{table.name}.no_place.{index2}",
                         slots,
-                        needs=t.name,
+                        needs=table.name,
                         tags=["generic", "default_place"],
                     )
                 )
@@ -1138,12 +1148,12 @@ class Families:
                     Draft(
                         message,
                         "ask_clarification",
-                        t.domain,
+                        table.domain,
                         "R10",
                         "M1",
-                        f"table.{t.name}.no_place.{index2}",
+                        f"table.{table.name}.no_place.{index2}",
                         slots,
-                        needs=t.name,
+                        needs=table.name,
                         excludes=siblings[0].name if siblings else None,
                         tags=["generic", "missing_place"],
                     )
@@ -1151,45 +1161,46 @@ class Families:
         return drafts
 
     def describe(self) -> list[Draft]:
+        """Generate requests to describe a table."""
         rng = self.rng
-        t: CatalogueTable = rng.choice(self.describable)
-        if rng.random() < 0.3 or not t.describe_templates:
-            index = rng.randrange(len(t.describe_questions))
+        table: CatalogueTable = rng.choice(self.describable)
+        if rng.random() < 0.3 or not table.describe_templates:
+            index = rng.randrange(len(table.describe_questions))
             return [
                 Draft(
-                    t.describe_questions[index],
+                    table.describe_questions[index],
                     "describe_table",
-                    t.domain,
+                    table.domain,
                     "R3",
                     "M3",
-                    f"describe.{t.name}.fixed.{index}",
+                    f"describe.{table.name}.fixed.{index}",
                     {},
-                    needs=t.name,
+                    needs=table.name,
                 )
             ]
-        index = rng.randrange(len(t.describe_templates))
+        index = rng.randrange(len(table.describe_templates))
         slots = {
-            "place": rng.choice(t.places),
+            "place": rng.choice(table.places),
             "season": rng.choice(list(SEASONS)),
-            "state": rng.choice([*t.multi_places, *t.place_aliases] or t.places),
+            "state": rng.choice([*table.multi_places, *table.place_aliases] or table.places),
         }
-        tid = f"describe.{t.name}.template.{index}"
+        tid = f"describe.{table.name}.template.{index}"
         drafts = [
             Draft(
-                t.describe_templates[index].format(**slots),
+                table.describe_templates[index].format(**slots),
                 "describe_table",
-                t.domain,
+                table.domain,
                 "R3",
                 "M3",
                 tid,
                 slots,
-                needs=t.name,
+                needs=table.name,
             )
         ]
-        if rng.random() < 0.25 and t.name in (PLFS, IMD):
+        if rng.random() < 0.25 and table.name in (PLFS, IMD):
             # Minimal pair (R3 against R6): ask for the value instead of the table's coverage.
-            if t.name == PLFS:
-                period = rng.choice(t.periods)
+            if table.name == PLFS:
+                period = rng.choice(table.periods)
                 value = f"What was the unemployment rate in {slots['place']} in {period}?"
             else:
                 period = str(self._year())
@@ -1198,17 +1209,18 @@ class Families:
                 Draft(
                     value,
                     "run_sql",
-                    t.domain,
+                    table.domain,
                     "R6",
                     "M1",
                     f"{tid}.value",
                     {**slots, "period": period},
-                    needs=t.name,
+                    needs=table.name,
                 )
             )
         return drafts
 
     def search(self) -> list[Draft]:
+        """Generate catalogue search requests for measures that are not held."""
         rng = self.rng
         measure = rng.choice(self.uncovered)
         index = rng.randrange(len(SEARCH_TEMPLATES))
@@ -1243,6 +1255,7 @@ class Families:
         return drafts
 
     def uncovered_query(self) -> list[Draft]:
+        """Generate questions about measures the catalogue does not hold."""
         rng = self.rng
         measure = rng.choice(self.uncovered)
         index = rng.randrange(len(UNCOVERED_TEMPLATES))
@@ -1267,6 +1280,7 @@ class Families:
         ]
 
     def non_data(self) -> list[Draft]:
+        """Generate messages that do not ask for data."""
         index = self.rng.randrange(len(NON_DATA))
         message = NON_DATA[index]
         tags = ["topic_word"] if message in TOPIC_WORD_NON_DATA else []
@@ -1285,6 +1299,7 @@ class Families:
 
 
 def family_weights(families: Families) -> dict[str, tuple[Callable[[], list[Draft]], float]]:
+    """Return each message family's generator and sampling weight."""
     return {
         "plfs_query": (families.plfs_query, 0.07),
         "imd_query": (families.imd_query, 0.07),
@@ -1311,6 +1326,7 @@ def group_id(family: str, draft: Draft) -> str:
 
 
 def split_of(group: str) -> Split:
+    """Assign a group to a split by a stable hash."""
     bucket = int(hashlib.sha256(group.encode()).hexdigest(), 16) % 1000
     return next(name for name, bound in SPLIT_BOUNDS if bucket < bound)
 
@@ -1319,19 +1335,19 @@ def surface(rng: random.Random, drafts: list[Draft]) -> None:
     """Family-wide surface noise, applied identically to every draft of the family."""
     roll = rng.random()
     if roll < 0.12:
-        for d in drafts:
-            d.message, d.tags = d.message.lower(), [*d.tags, "lowercase"]
+        for draft in drafts:
+            draft.message, draft.tags = draft.message.lower(), [*draft.tags, "lowercase"]
     elif roll < 0.22:
-        for d in drafts:
-            d.message, d.tags = d.message.rstrip("?."), [*d.tags, "no_punct"]
+        for draft in drafts:
+            draft.message, draft.tags = draft.message.rstrip("?."), [*draft.tags, "no_punct"]
     elif roll < 0.28 and len(drafts) == 1:
         words = drafts[0].message.split()
-        long = [i for i, w in enumerate(words) if len(w) > 5 and w.isalpha()]
+        long = [i for i, word in enumerate(words) if len(word) > 5 and word.isalpha()]
         if long:
             i = rng.choice(long)
             j = rng.randrange(1, len(words[i]) - 2)
-            w = words[i]
-            words[i] = w[:j] + w[j + 1] + w[j] + w[j + 2 :]
+            word = words[i]
+            words[i] = word[:j] + word[j + 1] + word[j] + word[j + 2 :]
             drafts[0].message, drafts[0].tags = " ".join(words), [*drafts[0].tags, "typo"]
 
 
@@ -1346,19 +1362,19 @@ def catalogue_text(
     """The top-k catalogue lines shown to the router: the tables the label depends on, then
     the best-ranked others (`ranked`, the retriever's order for the message, as at serving),
     or random others when no ranking is given. A removed table (`excludes`) never appears."""
-    pool = [t for t in tables if t.name != excludes]
-    by_name = {t.name: t for t in pool}
+    pool = [table for table in tables if table.name != excludes]
+    by_name = {table.name: table for table in pool}
     chosen = [by_name[n] for n in sorted(needs) if n in by_name]
     order = [by_name[n] for n in (ranked or []) if n in by_name]
-    rest = [t for t in pool if t not in order]
+    rest = [table for table in pool if table not in order]
     rng.shuffle(rest)
-    for t in [*order, *rest]:
+    for table in [*order, *rest]:
         if len(chosen) >= k:
             break
-        if t not in chosen:
-            chosen.append(t)
+        if table not in chosen:
+            chosen.append(table)
     rng.shuffle(chosen)
-    return "\n".join(f"{i}. {t.line}" for i, t in enumerate(chosen, start=1))
+    return "\n".join(f"{i}. {table.line}" for i, table in enumerate(chosen, start=1))
 
 
 def generate(
@@ -1397,6 +1413,7 @@ def generate(
     parent = list(range(len(accepted)))
 
     def find(i: int) -> int:
+        """Find the representative of a group in the union-find structure."""
         while parent[i] != i:
             parent[i] = parent[parent[i]]
             i = parent[i]
@@ -1453,6 +1470,7 @@ def generate(
 
 
 def write_splits(records: list[KevRecord], out_dir: Path, version: int) -> dict[str, Path]:
+    """Write records to one JSONL file per split and return the paths."""
     out_dir.mkdir(parents=True, exist_ok=True)
     paths: dict[str, Path] = {}
     for split, _ in SPLIT_BOUNDS:
@@ -1464,6 +1482,7 @@ def write_splits(records: list[KevRecord], out_dir: Path, version: int) -> dict[
 
 
 def summary(records: list[KevRecord]) -> str:
+    """Summarise records per split by tool and domain."""
     lines = []
     for split, _ in SPLIT_BOUNDS:
         part = [r for r in records if r.meta.split == split]
@@ -1477,6 +1496,7 @@ def summary(records: list[KevRecord]) -> str:
 
 
 def main() -> None:
+    """Command-line entry point for generating Kev records."""
     parser = argparse.ArgumentParser(description="Generate rule-labelled Kev records.")
     parser.add_argument("--catalogue", type=Path, default=CATALOGUE_PATH)
     parser.add_argument("--families", type=int, default=1000)

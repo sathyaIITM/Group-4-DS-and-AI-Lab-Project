@@ -48,12 +48,16 @@ class PromptError(ValueError):
 
 @dataclass(frozen=True)
 class RenderedPrompt:
+    """System and user text of a prompt with its variables filled in."""
+
     system: str
     user: str
 
 
 @dataclass(frozen=True)
 class Prompt:
+    """A versioned prompt template with its purpose, variables and content hash."""
+
     id: str
     version: int
     purpose: str
@@ -66,6 +70,7 @@ class Prompt:
 
     @property
     def prompt_id(self) -> str:
+        """Return the versioned prompt id, such as intent.v9."""
         return f"{self.id}.v{self.version}"
 
     def render(self, variables: dict[str, Any]) -> RenderedPrompt:
@@ -77,12 +82,14 @@ class Prompt:
         values = {name: _as_text(value) for name, value in variables.items()}
 
         def fill(template: str) -> str:
+            """Replace the placeholders in a template with their values."""
             return _PLACEHOLDER.sub(lambda m: values[m.group(1)], template)
 
         return RenderedPrompt(system=fill(self.system).strip(), user=fill(self.user).strip())
 
 
 def _as_text(value: Any) -> str:
+    """Render a variable value as prompt text."""
     if value is None:
         text = "none"
     elif isinstance(value, str):
@@ -110,6 +117,7 @@ def _parse_header(block: str, path: Path) -> dict[str, Any]:
 
 
 def load_prompt(path: Path) -> Prompt:
+    """Load a prompt template from a Markdown file with front matter."""
     raw = path.read_bytes()
     # Git may check these templates out with CRLF on Windows; parse a canonical newline view
     # while hashing the original bytes so run provenance still reflects the exact file.
@@ -161,6 +169,7 @@ class PromptRegistry:
             raise PromptError(f"no prompt files in {directory}")
 
     def get(self, prompt_id: str) -> Prompt:
+        """Return a prompt by versioned id, or the latest version of an id."""
         if prompt_id in self._prompts:
             return self._prompts[prompt_id]
         versions = [p for p in self._prompts.values() if p.id == prompt_id]

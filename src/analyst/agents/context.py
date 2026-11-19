@@ -1,4 +1,4 @@
-"""Retrieval context in the shape the T3 prompts expect (`inference.intent.context_payload`).
+"""Retrieval context in the shape the model prompts expect (`inference.intent.context_payload`).
 
 Built from the published catalogue (`data/processed/catalogue.json`). Indicator labels and
 category codelists come from the observation table when it is present; otherwise an indicator is
@@ -39,10 +39,12 @@ def published_catalogue(path: Path = PUBLISHED) -> dict[str, dict[str, Any]]:
 
 
 def _obs(dataset_id: str) -> Path:
+    """Return the path of the observation table for a dataset."""
     return PUBLISHED.parent / f"obs_{dataset_id}.parquet"
 
 
 def indicators_of(table: dict[str, Any]) -> list[dict[str, str]]:
+    """List a table's indicators with their source labels and units."""
     dataset_id = table["dataset_id"]
     units: dict[str, str] = table.get("indicator_units", {})
     labels: dict[str, str] = {}
@@ -95,6 +97,7 @@ def catalogue_block(path: Path = PUBLISHED) -> dict[str, Any]:
 
 @lru_cache(maxsize=2)
 def _catalogue_block(release: str, path: str) -> dict[str, Any]:
+    """Build the cached catalogue context for one published catalogue release."""
     from analyst.inference.intent import context_payload
 
     published = published_catalogue(Path(path))

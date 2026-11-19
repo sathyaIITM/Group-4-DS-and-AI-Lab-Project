@@ -10,6 +10,8 @@ from analyst.contracts.results import DerivedValue, QueryResult
 
 
 class SourceRef(Contract):
+    """The published source of a table: title, publisher, licence and version."""
+
     dataset_id: str
     title: str
     publisher: str
@@ -21,6 +23,8 @@ class SourceRef(Contract):
 
 
 class EvidenceBundle(Contract):
+    """Everything needed to trace an answer: plan, sources, SQL, result, derivations and checks."""
+
     evidence_id: str
     run_id: str
     question: str
@@ -39,6 +43,8 @@ class EvidenceBundle(Contract):
 
 
 class VerificationResult(Contract):
+    """Outcome of verifying a narrated answer against its evidence."""
+
     numbers: NumberCheck
     claims_supported: bool | None
     unsupported_claims: list[str]
@@ -49,6 +55,8 @@ class VerificationResult(Contract):
 
 
 class ConfidenceResult(Contract):
+    """The confidence badge shown with an answer and the inputs it was computed from."""
+
     probability: float | None
     badge: Literal["not_verified", "verified", "verified_with_caveats"]
     inputs: dict[str, float]

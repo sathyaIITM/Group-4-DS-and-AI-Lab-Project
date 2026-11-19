@@ -8,11 +8,15 @@ from analyst.contracts.intent import DerivationOp
 
 
 class ColumnSpec(Contract):
+    """Name and type of one result column."""
+
     name: str
     type: str
 
 
 class QueryResult(Contract):
+    """Rows returned by a read-only query, with the SQL, table versions and run time."""
+
     sql: str
     columns: list[ColumnSpec]
     rows: list[list[str | int | float | bool | None]]
@@ -23,6 +27,8 @@ class QueryResult(Contract):
 
 
 class DerivedValue(Contract):
+    """A value computed from result cells by a named operation, with its status."""
+
     id: str
     op: DerivationOp
     inputs: list[CellRef]

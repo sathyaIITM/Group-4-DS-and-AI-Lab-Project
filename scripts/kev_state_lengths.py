@@ -24,6 +24,7 @@ BASE_REVISION = "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68"
 
 
 def main() -> None:
+    """Report Kev state lengths and the records over the limit."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("files", nargs="+", type=Path)
     parser.add_argument("--max-state", type=int, default=384)

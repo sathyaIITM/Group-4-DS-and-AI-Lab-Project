@@ -46,6 +46,7 @@ def load_set(path: Path) -> list[dict[str, Any]]:
 
 
 def _bucket(item: dict[str, Any]) -> tuple[str, str]:
+    """Return the stratification bucket of an item: expected action and first dataset."""
     action = str(item.get("expected_action", "unknown"))
     ids = item.get("dataset_ids") or []
     return action, str(ids[0]) if ids else "_none"
@@ -100,6 +101,7 @@ def write_split(
     _write_jsonl(test_path, test)
 
     def path_label(path: Path) -> str:
+        """Return a path relative to the repository root when possible."""
         try:
             return path.resolve().relative_to(ROOT).as_posix()
         except ValueError:
@@ -155,6 +157,7 @@ ENTITY_COLUMNS = {
 
 
 def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
+    """Build the prediction record of one evaluation case from the final agent state."""
     evidence = state.evidence
     result = state.result
     actual_numbers: list[float] = []
@@ -215,6 +218,7 @@ def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
 
 
 def _first_event_ms(state: Any) -> int | None:
+    """Return milliseconds from the run start to its first event."""
     if not state.events:
         return None
     started = state.started_at
@@ -223,6 +227,7 @@ def _first_event_ms(state: Any) -> int | None:
 
 
 def _actual_dataset_ids(state: Any) -> list[str]:
+    """Return every dataset the run considered or used."""
     ids: set[str] = set()
     if state.plan is not None:
         ids.add(state.plan.dataset_id)
@@ -239,6 +244,7 @@ def _actual_dataset_ids(state: Any) -> list[str]:
 
 
 def _gold_rows(item: dict[str, Any]) -> list[list[Any]] | None:
+    """Run an item's gold SQL and return its rows."""
     if not item.get("gold_sql"):
         return None
     from analyst.tools.sql_runner import ReadOnlyDatabase
@@ -252,6 +258,7 @@ def _gold_rows(item: dict[str, Any]) -> list[list[Any]] | None:
 
 
 def _narrated_numbers(text: str) -> list[float]:
+    """Return the numbers stated in the narration, converted to base units."""
     from analyst.tools.units import convert_unit, parse_numbers
 
     values = []
@@ -285,6 +292,7 @@ def _run_case(
     live: bool,
     variant: str | None = None,
 ) -> dict[str, Any]:
+    """Run the agent on one evaluation item and return its prediction record."""
     from scripts.run_agent import run_one
 
     from analyst.agents.state import RunConfig
@@ -303,9 +311,9 @@ def _run_case(
     prior_calls = prior_tokens_in = prior_tokens_out = 0
     try:
         if live:
-            from analyst.agents.t3_nodes import live_t3_nodes
+            from analyst.agents.model_nodes import live_model_nodes
 
-            nodes = live_t3_nodes(version, variant)
+            nodes = live_model_nodes(version, variant)
         config = RunConfig.from_files(version, variant=variant)
         for turn_no, prior in enumerate(item.get("prior_turns", []), start=1):
             prior_state = run_one(
@@ -420,6 +428,7 @@ def run_evaluation(
 
 
 def _within_tolerance(actual: float, expected: float, tolerance: float) -> bool:
+    """Return True when a value matches the expected one within the tolerance."""
     return math.isclose(actual, expected, rel_tol=tolerance, abs_tol=1e-6)
 
 
@@ -594,6 +603,7 @@ NON_ENTITY_COLUMNS = {"period_label", "indicator_id", "unit", "quality_flag"}
 
 
 def _entity_in_rows(entity: str, case: dict[str, Any]) -> bool:
+    """Return True when a result row holds the entity, alone or as place plus category."""
     columns = [str(c).casefold() for c in case.get("result_columns", [])]
     wanted = " ".join(entity.casefold().split())
     for row in case.get("result_rows", []):
@@ -608,6 +618,7 @@ def _entity_in_rows(entity: str, case: dict[str, Any]) -> bool:
 
 
 def _tables_named(text: str) -> set[str]:
+    """Return the published dataset ids named in a text."""
     import re
 
     known = {p.stem.removeprefix("obs_") for p in DEFAULT_PROCESSED.glob("obs_*.parquet")}
@@ -667,6 +678,7 @@ def _case_checks(case: dict[str, Any]) -> dict[str, bool]:
 
 
 def _safe_precision(non_answer: list[bool], gold: list[bool]) -> float | None:
+    """Return abstention precision, or None when it is undefined."""
     from analyst.evaluation.metrics import abstention_precision
 
     value = abstention_precision(non_answer, gold)
@@ -674,6 +686,7 @@ def _safe_precision(non_answer: list[bool], gold: list[bool]) -> float | None:
 
 
 def _safe_recall(non_answer: list[bool], gold: list[bool]) -> float | None:
+    """Return abstention recall, or None when it is undefined."""
     from analyst.evaluation.metrics import abstention_recall
 
     value = abstention_recall(non_answer, gold)
@@ -681,10 +694,12 @@ def _safe_recall(non_answer: list[bool], gold: list[bool]) -> float | None:
 
 
 def _sha256(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file."""
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    """Write rows to a JSONL file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "".join(json.dumps(row, default=str, ensure_ascii=False) + "\n" for row in rows),
@@ -694,6 +709,7 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def _write_json(path: Path, row: dict[str, Any]) -> None:
+    """Write one object to a JSON file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(row, indent=2, default=str, ensure_ascii=False) + "\n", encoding="utf-8"
@@ -701,6 +717,7 @@ def _write_json(path: Path, row: dict[str, Any]) -> None:
 
 
 def main() -> int:
+    """Command-line entry point for the end-to-end evaluation."""
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     split_parser = sub.add_parser("split")

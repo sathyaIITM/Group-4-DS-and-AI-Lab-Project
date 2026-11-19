@@ -24,10 +24,12 @@ TABLE_KEYS: dict[str, tuple[str, ...]] = {
 
 
 def _json(value: Any) -> str:
+    """Serialise a value to compact, sorted JSON."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str, ensure_ascii=False)
 
 
 def _sha256(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file, read in chunks."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
@@ -36,6 +38,7 @@ def _sha256(path: Path) -> str:
 
 
 def _validate_bundle(bundle: Path) -> tuple[dict[str, Any], str]:
+    """Validate a run bundle against its manifest and return the manifest and its hash."""
     manifest_path = bundle / "manifest.json"
     if not manifest_path.is_file():
         raise ValueError("manifest.json is missing")
@@ -65,6 +68,7 @@ def _validate_bundle(bundle: Path) -> tuple[dict[str, Any], str]:
 
 
 def _ensure_warehouse(db: Any) -> None:
+    """Create the warehouse bookkeeping tables if they do not exist."""
     db.execute(
         """CREATE TABLE IF NOT EXISTS bundles (
             manifest_sha256 VARCHAR PRIMARY KEY, member VARCHAR NOT NULL,
@@ -82,10 +86,12 @@ def _ensure_warehouse(db: Any) -> None:
 
 
 def _columns(db: Any, table: str) -> list[str]:
+    """Return the column names of a table."""
     return [str(row[0]) for row in db.execute(f'DESCRIBE "{table}"').fetchall()]
 
 
 def _read_parquet(db: Any, path: Path) -> tuple[list[str], list[tuple[Any, ...]]]:
+    """Return the columns and rows of a Parquet file."""
     columns = [
         str(row[0])
         for row in db.execute("DESCRIBE SELECT * FROM read_parquet(?)", [str(path)]).fetchall()
@@ -95,6 +101,7 @@ def _read_parquet(db: Any, path: Path) -> tuple[list[str], list[tuple[Any, ...]]
 
 
 def _create_table(db: Any, table: str, path: Path, key_columns: tuple[str, ...]) -> list[str]:
+    """Create an empty table shaped like a Parquet file, with a key."""
     db.execute(
         f'CREATE TABLE "{table}" AS SELECT * FROM read_parquet(?) WHERE FALSE',  # noqa: S608 - table is allowlisted
         [str(path)],
@@ -110,6 +117,7 @@ def _create_table(db: Any, table: str, path: Path, key_columns: tuple[str, ...])
 
 
 def _row_dict(columns: list[str], row: tuple[Any, ...]) -> dict[str, Any]:
+    """Return a row as a mapping from column to value."""
     return dict(zip(columns, row, strict=True))
 
 
@@ -120,6 +128,7 @@ def _insert_table(
     table: str,
     expected_count: int,
 ) -> tuple[int, int]:
+    """Insert a bundle's rows into a table and return inserted and skipped counts."""
     path = bundle / f"{table}.parquet"
     incoming_columns, rows = _read_parquet(db, path)
     if len(rows) != expected_count:
@@ -168,11 +177,13 @@ def _insert_table(
 
 
 def _count(db: Any, sql: str) -> int:
+    """Return the integer result of a counting query."""
     row = db.execute(sql).fetchone()
     return int(row[0]) if row else 0
 
 
 def _tables(db: Any) -> set[str]:
+    """Return the table names in the warehouse."""
     return {str(row[0]) for row in db.execute("SHOW TABLES").fetchall()}
 
 
@@ -237,6 +248,7 @@ def collate_bundles(bundles_dir: Path, warehouse_path: Path) -> dict[str, Any]:
 
 
 def main() -> int:
+    """Command-line entry point for collating run bundles."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundles", type=Path, required=True)
     parser.add_argument("--warehouse", type=Path, default=Path("outputs/warehouse/runs.duckdb"))

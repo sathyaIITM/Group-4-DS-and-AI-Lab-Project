@@ -37,7 +37,7 @@ TOLERANCE = 0.05
 
 PLFS, IMD = "plfs_state_ur_usual_status", "imd_subdivision_monthly_rainfall"
 NFHS, MANDI = "nfhs5_district_indicators", "mandi_daily_prices"
-UR = IndicatorRef(
+UNEMPLOYMENT_RATE = IndicatorRef(
     indicator_id="ur_usual_ps_ss", label="Unemployment rate (usual status)", unit="percent"
 )
 RAIN = IndicatorRef(indicator_id="rainfall_mm", label="Rainfall", unit="mm")
@@ -52,6 +52,7 @@ MODAL = IndicatorRef(
 
 
 def survey_year(label: str) -> PeriodWindow:
+    """Return the window of a July-June survey year label."""
     start = int(label[:4])
     return PeriodWindow(
         requested=label,
@@ -63,6 +64,7 @@ def survey_year(label: str) -> PeriodWindow:
 
 
 def jjas(year: int) -> PeriodWindow:
+    """Return the June-September monsoon window of a year."""
     return PeriodWindow(
         requested=f"monsoon {year}",
         type="season",
@@ -73,10 +75,12 @@ def jjas(year: int) -> PeriodWindow:
 
 
 def place(name: str, level: str, code: str) -> Place:
+    """Return an exactly matched place."""
     return Place(requested=name, level=level, code=code, name=name, match="exact")  # type: ignore[arg-type]
 
 
 def plan(dataset: str, version: str, **fields: Any) -> InterpretationPlan:
+    """Return a plan for a dataset with the given fields."""
     base: dict[str, Any] = {
         "dataset_id": dataset,
         "obs_table": f"obs_{dataset}",
@@ -99,8 +103,8 @@ def plan(dataset: str, version: str, **fields: Any) -> InterpretationPlan:
 
 def cases() -> list[dict[str, Any]]:
     """Plans for rp-01 to rp-07, with the expected figure and how to check it."""
-    v = {d: json.loads((PROCESSED / "catalogue.json").read_text())["tables"] for d in [0]}[0]
-    ver = {t["dataset_id"]: t["dataset_version"] for t in v}
+    tables = json.loads((PROCESSED / "catalogue.json").read_text())["tables"]
+    ver = {t["dataset_id"]: t["dataset_version"] for t in tables}
     return [
         {
             "id": "rp-01",
@@ -109,7 +113,7 @@ def cases() -> list[dict[str, Any]]:
             "plan": plan(
                 PLFS,
                 ver[PLFS],
-                indicators=[UR],
+                indicators=[UNEMPLOYMENT_RATE],
                 all_places_level="state",
                 periods=[survey_year("2019-20")],
                 operation="ranking",
@@ -125,7 +129,7 @@ def cases() -> list[dict[str, Any]]:
             "plan": plan(
                 PLFS,
                 ver[PLFS],
-                indicators=[UR],
+                indicators=[UNEMPLOYMENT_RATE],
                 places=[place("Kerala", "state", "state:kerala")],
                 periods=[survey_year("2019-20")],
             ),
@@ -163,7 +167,7 @@ def cases() -> list[dict[str, Any]]:
             "plan": plan(
                 PLFS,
                 ver[PLFS],
-                indicators=[UR],
+                indicators=[UNEMPLOYMENT_RATE],
                 places=[place("India", "national", "IN")],
                 periods=[survey_year("2017-18"), survey_year("2021-22")],
                 operation="change",
@@ -229,17 +233,20 @@ def cases() -> list[dict[str, Any]]:
 
 
 def numbers(rows: list[tuple[Any, ...]]) -> list[float]:
+    """Return every number in the rows."""
     return [
         float(c) for r in rows for c in r if isinstance(c, int | float) and not isinstance(c, bool)
     ]
 
 
 def value_column(columns: list[str], rows: list[tuple[Any, ...]]) -> list[float]:
+    """Return the numbers of the value column."""
     i = columns.index("value") if "value" in columns else None
     return [float(r[i]) for r in rows if i is not None and r[i] is not None]
 
 
 def judge(case: dict[str, Any], columns: list[str], rows: list[tuple[Any, ...]]) -> dict[str, Any]:
+    """Score one smoke case against its expected figure."""
     expected = case["expected"]
     if case["check"] == "in_rows":
         found = any(abs(x - expected) <= TOLERANCE for x in numbers(rows))
@@ -263,6 +270,7 @@ def judge(case: dict[str, Any], columns: list[str], rows: list[tuple[Any, ...]])
 
 
 def gcloud_value(key: str) -> str:
+    """Return a gcloud configuration value."""
     result = subprocess.run(  # noqa: S603 - fixed arguments, no shell
         ["gcloud", "config", "get-value", key],  # noqa: S607
         capture_output=True,
@@ -274,6 +282,7 @@ def gcloud_value(key: str) -> str:
 
 
 def main() -> int:
+    """Run SQL generation on the hand-built smoke plans."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--yes", action="store_true", help="send the calls (spends credit)")
     parser.add_argument("--only", nargs="+")
@@ -287,7 +296,10 @@ def main() -> int:
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", gcloud_value("project"))
     client = LlmClient.from_config(max_llm_calls=3)
     plans = [c for c in cases() if not args.only or c["id"] in set(args.only)]
-    caps = {p: client.output_cap(p, client.thinking_level(p)) or 0 for p in ("sql", "sql_repair")}
+    caps = {
+        prompt: client.output_cap(prompt, client.thinking_level(prompt)) or 0
+        for prompt in ("sql", "sql_repair")
+    }
     price_in = client.price_per_mtok.get("input") or 0.0
     price_out = client.price_per_mtok.get("output") or 0.0
     worst = (
@@ -316,13 +328,13 @@ def main() -> int:
         class Counter:
             llm_calls = 0
 
-        p: InterpretationPlan = case["plan"]
-        schema = ", ".join(f"{c} {t}" for c, t in db.describe(p.obs_table))
+        plan: InterpretationPlan = case["plan"]
+        schema = ", ".join(f"{c} {t}" for c, t in db.describe(plan.obs_table))
         row: dict[str, Any] = {"id": case["id"], "expected": case["expected"]}
         records: list[Any] = []
         try:
             draft, record = generate_sql(
-                p, schema, {"cards": [], "examples": []}, None, None, client, Counter()
+                plan, schema, {"cards": [], "examples": []}, None, None, client, Counter()
             )
             records += [*record.earlier_attempts, record]
             row["sql"] = draft.sql
@@ -331,7 +343,7 @@ def main() -> int:
             except Exception as error:  # rejected or failed: one bounded repair
                 row["first_error"] = f"{type(error).__name__}: {str(error)[:160]}"
                 draft, record = repair_sql(
-                    draft, row["first_error"], schema, p.obs_table, client, Counter()
+                    draft, row["first_error"], schema, plan.obs_table, client, Counter()
                 )
                 records += [*record.earlier_attempts, record]
                 row["repaired_sql"] = draft.sql

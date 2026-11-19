@@ -45,6 +45,8 @@ ROUND = 2
 
 
 class Question(BaseModel):
+    """A v0 evaluation question with its reference SQL."""
+
     id: str
     question: str
     reference_sql: str | None = None
@@ -52,6 +54,8 @@ class Question(BaseModel):
 
 
 class Outcome(BaseModel):
+    """The scored outcome of one v0 question."""
+
     id: str
     status: (
         str  # correct | wrong_result | wrongly_declined | answered_unanswerable | rejected | error
@@ -64,6 +68,7 @@ class Outcome(BaseModel):
 
 
 def open_database() -> ReadOnlyDatabase:
+    """Open the read-only database over the v0 tables."""
     return ReadOnlyDatabase(TABLES)
 
 
@@ -117,7 +122,10 @@ def extract_sql(reply: str) -> str | None:
 
 
 def normalise(rows: list[tuple[Any, ...]]) -> list[tuple[str, ...]]:
+    """Return rows as sorted tuples of text with rounded numbers."""
+
     def cell(value: Any) -> str:
+        """Return a cell as comparable text."""
         if value is None:
             return "NULL"
         if isinstance(value, float):
@@ -132,8 +140,8 @@ def same_result(
 ) -> bool:
     """Compare rows ignoring column names; order matters only if the reference sorts."""
     ordered = sqlglot.parse_one(reference_sql, read="duckdb").find(exp.Order) is not None
-    a, b = normalise(got), normalise(expected)
-    return a == b if ordered else Counter(a) == Counter(b)
+    got_rows, expected_rows = normalise(got), normalise(expected)
+    return got_rows == expected_rows if ordered else Counter(got_rows) == Counter(expected_rows)
 
 
 def same_result_projected(
@@ -148,21 +156,32 @@ def same_result_projected(
     """
     if same_result(reference_sql, got, expected):
         return True
-    a, b = normalise(got), normalise(expected)
-    if len(a) != len(b) or not b:
+    got_rows, expected_rows = normalise(got), normalise(expected)
+    if len(got_rows) != len(expected_rows) or not expected_rows:
         return False
-    width = len(b[0])
-    columns_a = [Counter(row[k] for row in a) for k in range(len(a[0]) if a else 0)]
+    width = len(expected_rows[0])
+    columns_a = [
+        Counter(row[k] for row in got_rows) for k in range(len(got_rows[0]) if got_rows else 0)
+    ]
     options = [
-        [k for k, counts in enumerate(columns_a) if counts == Counter(row[j] for row in b)]
+        [
+            k
+            for k, counts in enumerate(columns_a)
+            if counts == Counter(row[j] for row in expected_rows)
+        ]
         for j in range(width)
     ]
     ordered = sqlglot.parse_one(reference_sql, read="duckdb").find(exp.Order) is not None
 
     def search(j: int, chosen: list[int]) -> bool:
+        """Search for a column choice of the result that equals the reference."""
         if j == width:
-            projected = [tuple(row[k] for k in chosen) for row in a]
-            return projected == b if ordered else Counter(projected) == Counter(b)
+            projected = [tuple(row[k] for k in chosen) for row in got_rows]
+            return (
+                projected == expected_rows
+                if ordered
+                else Counter(projected) == Counter(expected_rows)
+            )
         return any(search(j + 1, [*chosen, k]) for k in options[j] if k not in chosen)
 
     return search(0, [])
@@ -227,6 +246,7 @@ def run(out: Path, ask: Callable[[str, str], tuple[str, int, int]] = chat) -> No
 
 
 def score(path: Path) -> dict[str, Any]:
+    """Summarise v0 outcomes: counts, accuracy and latency."""
     outcomes = [Outcome.model_validate_json(x) for x in path.read_text().splitlines() if x]
     counts = Counter(o.status for o in outcomes)
     latencies = sorted(o.latency_s for o in outcomes)
@@ -242,6 +262,7 @@ def score(path: Path) -> dict[str, Any]:
 
 
 def main() -> None:
+    """Command-line entry point for the v0 baseline."""
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     run_parser = sub.add_parser("run")

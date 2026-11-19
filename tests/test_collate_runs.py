@@ -1,3 +1,5 @@
+"""Tests for collating exported run bundles into the warehouse."""
+
 from __future__ import annotations
 
 import hashlib

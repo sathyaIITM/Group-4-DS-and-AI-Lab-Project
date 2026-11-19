@@ -33,6 +33,7 @@ DEPTH = 12
 
 
 def main() -> None:
+    """Render dev-human items with the state shown to labellers."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--items", type=Path, default=DIR / "items.jsonl")
     parser.add_argument("--out", type=Path, default=DIR / "items_rendered.jsonl")

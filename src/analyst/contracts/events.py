@@ -21,6 +21,8 @@ EventType = Literal[
 
 
 class Event(Contract):
+    """A streamed run event with its type, sequence number, time, stage and payload."""
+
     type: EventType
     run_id: str
     seq: int

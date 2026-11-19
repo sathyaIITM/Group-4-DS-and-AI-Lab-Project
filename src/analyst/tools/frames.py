@@ -11,6 +11,7 @@ MAX_FRAME_ROWS = 1_000
 
 
 def _frame(rows: pd.DataFrame | Sequence[Mapping[str, Any]]) -> pd.DataFrame:
+    """Return rows as a data frame, rejecting frames over the row limit."""
     frame = rows.copy() if isinstance(rows, pd.DataFrame) else pd.DataFrame(rows)
     if len(frame) > MAX_FRAME_ROWS:
         raise ValueError(f"frame exceeds {MAX_FRAME_ROWS} rows")
@@ -43,6 +44,7 @@ def sort_rows(
     *,
     ascending: bool | Sequence[bool] = True,
 ) -> pd.DataFrame:
+    """Sort rows by one or more columns."""
     frame = _frame(rows)
     columns = [by] if isinstance(by, str) else list(by)
     missing = set(columns) - set(frame.columns)
@@ -56,6 +58,7 @@ def sort_rows(
 def top_k(
     rows: pd.DataFrame | Sequence[Mapping[str, Any]], k: int, by: str, *, largest: bool = True
 ) -> pd.DataFrame:
+    """Return the k rows with the largest (or smallest) values of a column."""
     if k < 0:
         raise ValueError("k must be non-negative")
     return sort_rows(rows, by, ascending=not largest).head(k).reset_index(drop=True)
@@ -69,6 +72,7 @@ def pivot(
     values: str,
     aggregate: str = "sum",
 ) -> pd.DataFrame:
+    """Pivot rows into a table of index by columns with an aggregate."""
     frame = _frame(rows)
     required = {index, columns, values}
     if missing := required - set(frame.columns):
@@ -93,6 +97,7 @@ def join_denominator(
     on: str | Sequence[str],
     population_column: str = "population",
 ) -> pd.DataFrame:
+    """Join a population column onto rows by key."""
     frame, population = _frame(rows), _frame(population_table)
     keys = [on] if isinstance(on, str) else list(on)
     if population_column not in population:
@@ -107,6 +112,7 @@ def join_denominator(
 def cap_rows(
     rows: pd.DataFrame | Sequence[Mapping[str, Any]], limit: int = MAX_FRAME_ROWS
 ) -> pd.DataFrame:
+    """Return at most a limit of rows."""
     if limit < 0 or limit > MAX_FRAME_ROWS:
         raise ValueError(f"limit must be between 0 and {MAX_FRAME_ROWS}")
     return _frame(rows).head(limit).reset_index(drop=True)

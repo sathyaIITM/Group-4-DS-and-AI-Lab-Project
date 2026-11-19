@@ -19,6 +19,7 @@ class ScriptedTransport:
     requests: list[ChatRequest] = field(default_factory=list)
 
     def __call__(self, request: ChatRequest) -> ChatReply:
+        """Record the request and return the next scripted reply, raising scripted errors."""
         self.calls.append((request.system, request.user))
         self.requests.append(request)
         if not self.replies:
@@ -34,10 +35,13 @@ class ScriptedTransport:
 
 @dataclass
 class Counters:
+    """Model-call counter used by scripted clients."""
+
     llm_calls: int = 0
 
 
 def scripted_client(*replies: Any, max_llm_calls: int = 8) -> tuple[LlmClient, ScriptedTransport]:
+    """Return a client that replays scripted replies, and its transport."""
     transport = ScriptedTransport(list(replies))
     client = LlmClient(
         "",

@@ -38,7 +38,7 @@ def test_the_run_config_records_the_variant() -> None:
 
 
 def test_jev_needs_its_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    from analyst.agents.t3_nodes import jev_client
+    from analyst.agents.model_nodes import jev_client
 
     monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
     with pytest.raises(RuntimeError, match="TYPESAFE_API_KEY"):

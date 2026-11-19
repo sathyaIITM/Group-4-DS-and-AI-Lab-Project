@@ -1,4 +1,4 @@
-"""Shared contracts (design document Section 4), with the T2 additions in `runtime.py`."""
+"""Shared contracts (design document Section 4), with the runtime additions in `runtime.py`."""
 
 from analyst.contracts.chart import ChartSpec, ChartType
 from analyst.contracts.checks import CheckOutcome, CheckReport, FailureClass, NumberCheck

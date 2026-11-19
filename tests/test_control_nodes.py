@@ -1,8 +1,10 @@
+"""Tests for the control nodes: intake, screening, retrieval and routing rules."""
+
 from __future__ import annotations
 
 import pytest
 
-from analyst.agents.nodes import (
+from analyst.agents.control_nodes import (
     receive_request,
     resolve_routing_decision,
     retrieve_catalogue_candidates,

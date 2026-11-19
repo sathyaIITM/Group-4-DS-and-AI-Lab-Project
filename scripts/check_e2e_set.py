@@ -119,6 +119,7 @@ def close(actual: float, expected: float, tolerance: float) -> bool:
 
 
 def read_items(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    """Load evaluation items, with errors for lines that are not valid JSON."""
     items: list[dict[str, Any]] = []
     errors: list[str] = []
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -137,6 +138,7 @@ def read_items(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
 
 
 def check_shape(item: dict[str, Any]) -> list[str]:
+    """Return field-type problems of an item."""
     errors: list[str] = []
     for name, kind in FIELDS.items():
         if name not in item:
@@ -176,6 +178,7 @@ def check_shape(item: dict[str, Any]) -> list[str]:
 
 
 def check_action_rules(item: dict[str, Any]) -> list[str]:
+    """Return problems with the fields an item's expected action requires."""
     errors: list[str] = []
     action = item["expected_action"]
     if action == "answer":
@@ -209,6 +212,7 @@ def check_action_rules(item: dict[str, Any]) -> list[str]:
 
 
 def tables_read(sql: str) -> set[str]:
+    """Return the tables an SQL statement reads, excluding CTE names."""
     tree = sqlglot.parse_one(sql, read="duckdb")
     cte_names = {cte.alias_or_name.lower() for cte in tree.find_all(exp.CTE)}
     return {t.name.lower() for t in tree.find_all(exp.Table)} - cte_names
@@ -256,10 +260,12 @@ def check_gold(item: dict[str, Any], database: ReadOnlyDatabase) -> list[str]:
 
 
 def published_tables(processed: Path) -> list[str]:
+    """Return the dataset ids with a published observation table."""
     return sorted(p.stem[len("obs_") :] for p in processed.glob("obs_*.parquet"))
 
 
 def summarise(items: list[dict[str, Any]], tables: list[str]) -> dict[str, Any]:
+    """Count items by action, table and operation."""
     by_action = Counter(i["expected_action"] for i in items)
     by_table = Counter(name for i in items for name in set(i["dataset_ids"]))
     by_operation = Counter(i["operation"] for i in items if i["expected_action"] == "answer")
@@ -278,6 +284,7 @@ def summarise(items: list[dict[str, Any]], tables: list[str]) -> dict[str, Any]:
 
 
 def check_quotas(summary: dict[str, Any], tables: list[str]) -> list[str]:
+    """Return quota violations of the set."""
     errors: list[str] = []
     actions = summary["by_action"]
     minimums = {"answer": MIN_ANSWER, "decline": MIN_DECLINE, "clarify": MIN_CLARIFY}
@@ -313,6 +320,7 @@ def check_quotas(summary: dict[str, Any], tables: list[str]) -> list[str]:
 
 
 def unknown_datasets(items: list[dict[str, Any]], tables: list[str]) -> list[str]:
+    """Return items that name an unpublished dataset."""
     known = set(tables)
     return [
         f"{i['id']}: unknown dataset id {name}"
@@ -323,6 +331,7 @@ def unknown_datasets(items: list[dict[str, Any]], tables: list[str]) -> list[str
 
 
 def run(set_path: Path, processed: Path) -> dict[str, Any]:
+    """Check an evaluation set and return the report."""
     items, errors = read_items(set_path)
     tables = published_tables(processed)
     shape_ok: list[dict[str, Any]] = []
@@ -354,6 +363,7 @@ def run(set_path: Path, processed: Path) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Command-line entry point for the evaluation-set check."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--set", type=Path, default=Path("data/eval/e2e_v1.jsonl"))
     parser.add_argument("--processed", type=Path, default=Path("data/processed"))

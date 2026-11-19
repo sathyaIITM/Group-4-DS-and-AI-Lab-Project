@@ -10,6 +10,7 @@ from analyst.tools.units import convert_unit, parse_numbers
 
 
 def _as_decimal(value: Any) -> Decimal | None:
+    """Return a value as a Decimal, or None if it is not numeric."""
     if value is None or isinstance(value, bool):
         return None
     try:

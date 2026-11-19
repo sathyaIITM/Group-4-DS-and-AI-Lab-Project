@@ -34,6 +34,7 @@ METRICS: list[tuple[str, str, str]] = [
 
 
 def _value(run: dict[str, Any], key: str) -> float | None:
+    """Return a metric from a run report by dotted key, latency in seconds."""
     node: Any = run
     for part in key.split("."):
         node = node.get(part) if isinstance(node, dict) else None
@@ -67,6 +68,7 @@ def by_action(report: dict[str, Any]) -> dict[str, dict[str, float | int]]:
 
 
 def summarise(report: dict[str, Any]) -> dict[str, Any]:
+    """Return the mean, minimum and maximum of each metric over a configuration's runs."""
     runs = report["runs"]
     row: dict[str, Any] = {
         "runs": len(runs),
@@ -86,6 +88,7 @@ def summarise(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def markdown(rows: dict[str, dict[str, Any]], set_name: str, scorer: str = "v2") -> str:
+    """Render the version-ladder tables as Markdown."""
     names = list(rows)
     lines = [
         f"Version ladder on `e2e_{set_name}` (scorer rules {scorer}): mean over runs"
@@ -131,6 +134,7 @@ def markdown(rows: dict[str, dict[str, Any]], set_name: str, scorer: str = "v2")
 
 
 def main() -> int:
+    """Command-line entry point for the version-ladder table."""
     parser = argparse.ArgumentParser(description="Collate a version-ladder table")
     parser.add_argument("--set", required=True, help="dev or test")
     parser.add_argument("--rows", nargs="+", required=True, help="NAME=report.json")

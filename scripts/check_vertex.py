@@ -52,6 +52,7 @@ USER = (
 
 
 def gcloud_value(key: str) -> str:
+    """Return a gcloud configuration value."""
     result = subprocess.run(  # noqa: S603 - fixed arguments, no shell
         ["gcloud", "config", "get-value", key],  # noqa: S607
         capture_output=True,
@@ -71,6 +72,7 @@ def plan_levels(requested: list[str] | None, accepted: list[str] | None) -> list
 
 
 def main() -> int:
+    """Send one test call to a Vertex AI model tier."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--tier", default=None, help="tier name in model.yaml (default tier)")
     parser.add_argument("--model", help="a Gemini model id not in the tiers (google/ is added)")

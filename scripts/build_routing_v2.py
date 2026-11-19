@@ -51,6 +51,7 @@ def hybrid_ranker() -> Any:
     cache: dict[str, list[str]] = {}
 
     def rank(message: str) -> list[str]:
+        """Return the table ids the hybrid index ranks for a message, cached."""
         if message not in cache:
             hits = index.search(message, "table", RANK_DEPTH)
             cache[message] = [h.entry.dataset_id for h in hits if h.entry.dataset_id]
@@ -60,10 +61,12 @@ def hybrid_ranker() -> Any:
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    """Load the JSON objects of a JSONL file."""
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
 def current_lines(catalogue: Any) -> dict[str, str]:
+    """Return the current catalogue line of every published table."""
     return {t.name: t.line for t in catalogue.real_tables()}
 
 
@@ -100,6 +103,7 @@ def restamp(record: dict[str, Any], lines: dict[str, str]) -> KevRecord:
 
 
 def candidates(directory: Path, lines: dict[str, str]) -> tuple[list[KevRecord], Counter[str]]:
+    """Return the model-written records the critic kept, with counts per verdict."""
     verdicts = {v["id"]: v["verdict"] for v in read_jsonl(directory / "critic_verdicts.jsonl")}
     kept: list[KevRecord] = []
     counts: Counter[str] = Counter()
@@ -113,6 +117,7 @@ def candidates(directory: Path, lines: dict[str, str]) -> tuple[list[KevRecord],
 
 
 def main() -> None:
+    """Build routing data v2."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--families", type=int, default=1300)
     parser.add_argument("--seed", type=int, default=21)

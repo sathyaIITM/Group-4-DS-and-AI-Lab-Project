@@ -1,3 +1,5 @@
+"""Tests for the scripted fakes."""
+
 from tests.fakes import FakeDecisionClient, FakeIndex, FakeLLM, FakeToolSet
 
 

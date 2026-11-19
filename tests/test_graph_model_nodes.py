@@ -1,8 +1,8 @@
-"""The graph with T3's nodes on scripted LLM replies (no network, no credit).
+"""The graph with the model-backed nodes on scripted LLM replies (no network, no credit).
 
-T4's nodes (place, period and unit resolution, SQL validation and execution, derivations and
+The tool nodes (place, period and unit resolution, SQL validation and execution, derivations and
 checks) stay stubs, except `resolve_places_periods_units`, which a small stand-in replaces here
-because T3's coverage check needs a plan that names a real table.
+because the coverage check needs a plan that names a real table.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ from typing import Any
 import pytest
 
 from analyst.agents.graph import invoke_graph
+from analyst.agents.model_nodes import ModelNodeDependencies, make_model_nodes
 from analyst.agents.state import AnalystState, RunConfig
-from analyst.agents.t3_nodes import T3Dependencies, make_t3_nodes
 from analyst.contracts import IndicatorRef, InterpretationPlan, PeriodWindow, UnresolvedSlot
 from analyst.decisions.router import Backends, RouterConfig
 from analyst.inference.scripted import ScriptedTransport, scripted_client
@@ -79,7 +79,7 @@ def intent(period: str = "2010") -> dict[str, Any]:
 
 
 def resolver(state: AnalystState) -> dict[str, Any]:
-    """Stand-in for T4's resolve_plan: one table, one calendar year; 'monsoon' is unresolved.
+    """Stand-in for the resolver: one table, one calendar year; 'monsoon' is unresolved.
     An intent with no fitting table gets the no-fit plan, as in the real resolver."""
     if state.intent is not None and state.intent.dataset_id == "none_fit":
         from analyst.agents.tool_nodes import _no_fit_plan
@@ -141,8 +141,8 @@ def run(
     **script: list[Any],
 ) -> tuple[AnalystState, ScriptedTransport]:
     client, transport = scripted_client(*replies, max_llm_calls=max_llm_calls)
-    deps = T3Dependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
-    nodes = {**make_t3_nodes(deps), "resolve_places_periods_units": resolver}
+    deps = ModelNodeDependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
+    nodes = {**make_model_nodes(deps), "resolve_places_periods_units": resolver}
     config = RunConfig(version="v0", stub_script=script)
     state = AnalystState(run_id="r1", question=question, config=config)
     return invoke_graph(state, overrides=nodes), transport
@@ -153,8 +153,8 @@ def run_with(
 ) -> tuple[AnalystState, ScriptedTransport]:
     """`run` with extra initial state fields (for example a stored result reference)."""
     client, transport = scripted_client(*replies, max_llm_calls=8)
-    deps = T3Dependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
-    nodes = {**make_t3_nodes(deps), "resolve_places_periods_units": resolver}
+    deps = ModelNodeDependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
+    nodes = {**make_model_nodes(deps), "resolve_places_periods_units": resolver}
     config = RunConfig(version="v0", stub_script=script)
     state = AnalystState(run_id="r1", question=question, config=config, **fields)
     return invoke_graph(state, overrides=nodes), transport
@@ -246,8 +246,8 @@ def test_budget_of_the_client_ends_the_run_as_budget_exhausted(workdir: Path) ->
 
 def test_graph_budget_limit_stops_before_the_next_llm_node(workdir: Path) -> None:
     client, _ = scripted_client(ROUTE, intent(), SQL, NARRATION)
-    deps = T3Dependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
-    nodes = {**make_t3_nodes(deps), "resolve_places_periods_units": resolver}
+    deps = ModelNodeDependencies(client, RouterConfig.from_files("v0"), Backends(llm=client))
+    nodes = {**make_model_nodes(deps), "resolve_places_periods_units": resolver}
     config = RunConfig(version="v0")
     config.limits.max_llm_calls = 2
     state = invoke_graph(AnalystState(run_id="r1", question="q", config=config), overrides=nodes)

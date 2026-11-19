@@ -56,6 +56,7 @@ def alias_lookup(name: str, refs: Mapping[str, Any]) -> str | None:
 
 
 def _table(dataset_id: str) -> str:
+    """Return the observation table name of a dataset after checking the id."""
     if not re.fullmatch(r"[a-z][a-z0-9_]*", dataset_id):
         raise ValueError("dataset_id must be a lowercase identifier")
     return f"obs_{dataset_id}"
@@ -192,6 +193,7 @@ NATIONAL_MENTIONS = {
 
 
 def is_national(mention: str) -> bool:
+    """Return True when a mention means India as a whole."""
     return normalise(mention) in NATIONAL_MENTIONS
 
 

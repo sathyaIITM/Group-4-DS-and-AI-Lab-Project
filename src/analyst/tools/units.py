@@ -75,6 +75,7 @@ _FACTORS: dict[str, tuple[str, Decimal]] = {
 
 
 def _unit(unit: str) -> str:
+    """Return the canonical name of a unit."""
     key = re.sub(r"\s+", " ", unit.strip().casefold())
     return _UNIT_ALIASES.get(key, key.replace(" ", "_"))
 

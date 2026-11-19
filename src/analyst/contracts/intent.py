@@ -22,11 +22,15 @@ DerivationOp = Literal[
 
 
 class DerivationRequest(Contract):
+    """A calculation the question asks for (change, share, ratio and so on) and its arguments."""
+
     op: DerivationOp
     args: dict[str, str]
 
 
 class QueryIntent(Contract):
+    """What the question asks for, extracted by the model before places and periods are resolved."""
+
     action: Literal["answer", "clarify", "decline"]
     dataset_id: str
     indicator_ids: list[str]

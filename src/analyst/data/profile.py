@@ -40,6 +40,7 @@ def profile_obs(obs: pd.DataFrame) -> dict[str, Any]:
 def compare_profiles(
     dataset_id: str, approved: dict[str, Any], current: dict[str, Any]
 ) -> list[ReviewItem]:
+    """Compare a table's profile with the approved one and report changes."""
     items: list[ReviewItem] = []
     for indicator_id, now in current["indicators"].items():
         before = approved["indicators"].get(indicator_id)
@@ -88,6 +89,7 @@ def compare_profiles(
 def load_approved(
     dataset_id: str, directory: Path = PROFILES_DIR
 ) -> tuple[list[str] | None, dict[str, Any] | None]:
+    """Load the approved column list and profile of a table, if saved."""
     columns_path = directory / f"{dataset_id}.columns.json"
     profile_path = directory / f"{dataset_id}.profile.json"
     # UTF-8 stated: headers can hold characters such as "≥", and the platform default
@@ -104,6 +106,7 @@ def load_approved(
 def save_approved(
     dataset_id: str, columns: list[str], profile: dict[str, Any], directory: Path = PROFILES_DIR
 ) -> None:
+    """Save a table's column list and profile as approved."""
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{dataset_id}.columns.json").write_text(
         json.dumps(columns, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"

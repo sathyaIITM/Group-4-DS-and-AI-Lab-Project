@@ -150,7 +150,7 @@ checks narrated numbers against executed evidence. The read-only SQL runner appl
 memory limit, one DuckDB thread, disabled external access, a 10-second timeout, a 1,000-row cap,
 and SQL column binding before execution. Live graph wiring is in
 [`src/analyst/agents/tool_nodes.py`](../../src/analyst/agents/tool_nodes.py) and
-[`src/analyst/agents/t3_nodes.py`](../../src/analyst/agents/t3_nodes.py). The targeted tool and
+[`src/analyst/agents/model_nodes.py`](../../src/analyst/agents/model_nodes.py). The targeted tool and
 graph tests cover the deterministic tools and SQL runner; end-to-end data validation remains
 pending T1.
 

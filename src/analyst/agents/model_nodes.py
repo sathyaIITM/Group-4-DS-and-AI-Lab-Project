@@ -1,6 +1,6 @@
-"""Adapters that run T3's node functions inside the graph (design document Sections 5, 7, 8).
+"""Graph adapters for the model-backed nodes (design document Sections 5, 7, 8).
 
-`make_t3_nodes` returns the nodes that replace the stubs of `route_tool_and_domain`,
+`make_model_nodes` returns the nodes that replace the stubs of `route_tool_and_domain`,
 `escalate_to_jev`, `extract_query_intent`, `check_coverage`, `define_supported_scope_and_caveats`,
 `generate_sql_with_hosted_llm`, `bounded_sql_repair` and `narrate_from_result_only`, and an
 `ask_clarification` that has the question written by the LLM. Pass the result to
@@ -20,8 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from analyst.agents import nodes as t2
-from analyst.agents import templates
+from analyst.agents import control_nodes, templates
 from analyst.agents.context import indicators_of, published_catalogue
 from analyst.agents.events import stage_event
 from analyst.agents.state import AnalystState, Counters
@@ -51,7 +50,9 @@ def default_schemas(plan: InterpretationPlan) -> Mapping[str, Any] | str:
 
 
 @dataclass
-class T3Dependencies:
+class ModelNodeDependencies:
+    """Clients and configuration the model-backed nodes need."""
+
     llm: LlmClient
     router_config: RouterConfig
     backends: Backends
@@ -62,6 +63,7 @@ class T3Dependencies:
 
 
 def _failed(state: AnalystState, node: str, counters: Counters, error: Exception) -> dict[str, Any]:
+    """Return the state update for a node whose model call failed."""
     kind = "budget_exhausted" if isinstance(error, BudgetExhaustedError) else "backend_error"
     records = list(getattr(error, "records", []))
     return {
@@ -77,6 +79,7 @@ def _failed(state: AnalystState, node: str, counters: Counters, error: Exception
 def _run(
     state: AnalystState, node: str, body: Callable[[Counters], dict[str, Any]]
 ) -> dict[str, Any]:
+    """Run a node body on a copy of the counters and turn errors into a failure update."""
     counters = state.counters.model_copy()
     try:
         update = body(counters)
@@ -125,13 +128,16 @@ def _lines(state: AnalystState) -> list[str]:
     ]
 
 
-def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
+def make_model_nodes(deps: ModelNodeDependencies) -> dict[str, NodeFn]:
+    """Return the model-backed graph nodes built on the given dependencies."""
     llm = deps.llm
 
     def route(state: AnalystState) -> dict[str, Any]:
+        """Decide tool and domain for the question."""
         context = RouterContext(has_result=state.prior_result_ref is not None)
 
         def body(counters: Counters) -> dict[str, Any]:
+            """Call the router and record its decisions."""
             result = router_mod.route(
                 state.question, context, _lines(state), deps.router_config, deps.backends, counters
             )
@@ -152,6 +158,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return _run(state, "route_tool_and_domain", body)
 
     def escalate(state: AnalystState) -> dict[str, Any]:
+        """Re-decide uncertain routing decisions on Jev."""
         if state.routing is None or state.router_state is None:
             return {"events": stage_event(state, "escalate_to_jev", escalated=False)}
         updated = router_mod.escalate(
@@ -165,7 +172,10 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         }
 
     def extract(state: AnalystState) -> dict[str, Any]:
+        """Extract the query intent from the question."""
+
         def body(counters: Counters) -> dict[str, Any]:
+            """Call intent extraction with the retrieved context and history."""
             result, record = intent.extract_intent(
                 state.question, state.retrieved, state.prior_plan, llm, counters, state.history
             )
@@ -178,6 +188,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return _run(state, "extract_query_intent", body)
 
     def coverage(state: AnalystState) -> dict[str, Any]:
+        """Check whether the catalogue covers the resolved plan."""
         if state.plan is None:
             return _failed(state, "check_coverage", state.counters, ValueError("no plan to check"))
         domain = state.routing.final_domain if state.routing else None
@@ -191,6 +202,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return update
 
     def restrict(state: AnalystState) -> dict[str, Any]:
+        """Restrict the plan to the part the catalogue supports."""
         if state.plan is None or state.coverage is None:
             return {}
         result = coverage_rules.restrict(state.plan, state.coverage)
@@ -205,6 +217,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return update
 
     def attempt(state: AnalystState, draft: SqlDraft, kind: str) -> SqlAttempt:
+        """Wrap an SQL draft as the next SQL attempt."""
         return SqlAttempt(
             attempt=len(state.sql) + 1,
             kind=kind,
@@ -216,12 +229,14 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         )
 
     def hints(state: AnalystState) -> list[str]:
+        """Collect the retry hints to pass to the next SQL attempt."""
         found = [h.change_required for h in state.retry_hints]
         if state.checks is not None and state.checks.retry_hint:
             found.append(state.checks.retry_hint)
         return found
 
     def generate(state: AnalystState) -> dict[str, Any]:
+        """Generate SQL for the plan with the hosted model."""
         if state.plan is None:
             return _failed(
                 state, "generate_sql_with_hosted_llm", state.counters, ValueError("no plan")
@@ -229,6 +244,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         plan = state.plan
 
         def body(counters: Counters) -> dict[str, Any]:
+            """Call SQL generation, regenerating when an earlier attempt failed."""
             regenerate = counters.sql_generations > 0
             draft, record = sqlgen.generate_sql(
                 plan,
@@ -251,6 +267,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return _run(state, "generate_sql_with_hosted_llm", body)
 
     def repair(state: AnalystState) -> dict[str, Any]:
+        """Repair the last SQL attempt using its error."""
         if state.plan is None or not state.sql:
             return _failed(
                 state, "bounded_sql_repair", state.counters, ValueError("nothing to repair")
@@ -258,6 +275,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         plan, last = state.plan, state.sql[-1]
 
         def body(counters: Counters) -> dict[str, Any]:
+            """Call SQL repair on the last attempt."""
             draft = SqlDraft(sql=last.sql, statement=last.statement)
             error = last.error or last.error_class
             fixed, record = sqlgen.repair_sql(
@@ -273,6 +291,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         return _run(state, "bounded_sql_repair", body)
 
     def narrate_node(state: AnalystState) -> dict[str, Any]:
+        """Narrate the answer from the result and evidence only."""
         if state.evidence is None:
             return _failed(
                 state, "narrate_from_result_only", state.counters, ValueError("no evidence")
@@ -280,6 +299,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         evidence = state.evidence
 
         def body(counters: Counters) -> dict[str, Any]:
+            """Call narration for the next attempt."""
             number = counters.narrations + 1
             standalone = state.intent.standalone_question if state.intent else None
             result, record = narrate.narrate(
@@ -299,22 +319,22 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         a short written reply that says what is covered instead. A message that is not a data
         request, or personal distress, ends as `out_of_scope` and is not logged as a data
         request; distress gets the fixed helpline line. A decline on a named table (a period
-        or place the table lacks) keeps the T2 template with the intent's reason."""
+        or place the table lacks) keeps the control-node template with the intent's reason."""
         if state.intent is not None and state.intent.dataset_id != "none_fit":
-            return t2.decline_and_log_data_request(state)
+            return control_nodes.decline_and_log_data_request(state)
         counters = state.counters.model_copy()
         # Every catalogue table, not only the retrieved candidates: for "What is the weather
         # today?" the top four held no rainfall table, and the reply named CPI (UI test, 18 Nov).
-        lines = [t.line for t in t2._catalogue().real_tables()]
+        lines = [t.line for t in control_nodes._catalogue().real_tables()]
         asked = (state.intent.standalone_question if state.intent else None) or state.question
         try:
             reply, record = replies.write_decline(asked, lines, llm, counters)
         except (LlmError, ValueError) as error:  # keep the fixed decline text
-            update = t2.decline_and_log_data_request(state)
+            update = control_nodes.decline_and_log_data_request(state)
             update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
             return update
         if reply.kind == "not_covered":
-            update = t2.decline_and_log_data_request(state)
+            update = control_nodes.decline_and_log_data_request(state)
             update.update(response_text=reply.reply.strip())
         else:
             text = reply.reply.strip()
@@ -335,7 +355,8 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         """`describe_table`: an answer from the catalogue entries and guidance cards only
         ("What is JJAS?"). The previous turn's table comes first, and the recent history is
         given, so "the categories" refers to the last answer. A message that asks for figures
-        continues on the query path. When the call fails, the T2 summary of the same tables."""
+        continues on the query path. When the call fails, the template summary of the same
+        tables."""
         prior = state.prior_plan.dataset_id if state.prior_plan else None
         ids = [str(c.get("dataset_id")) for c in state.catalogue_candidates]
         if prior and prior != "none_fit":
@@ -361,7 +382,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
                 state.question, tables, cards, llm, counters, state.history[-2:]
             )
         except (LlmError, ValueError) as error:
-            update = t2.describe_from_metadata(ordered)
+            update = control_nodes.describe_from_metadata(ordered)
             update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
             return update
         if reply.data_request and state.routing is not None:
@@ -391,7 +412,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
 
         bundle = EvidenceStore().get(state.prior_result_ref) if state.prior_result_ref else None
         if bundle is None:
-            return t2.explain_from_evidence(state)
+            return control_nodes.explain_from_evidence(state)
         documentation = {
             "result": {
                 "statement": bundle.statement,
@@ -409,7 +430,7 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
                 state.question, [documentation], [], llm, counters, state.history[-2:]
             )
         except (LlmError, ValueError) as error:
-            update = t2.explain_from_evidence(state)
+            update = control_nodes.explain_from_evidence(state)
             update.update(counters=counters, llm_records=list(getattr(error, "records", [])))
             return update
         if reply.data_request and state.routing is not None:
@@ -429,8 +450,8 @@ def make_t3_nodes(deps: T3Dependencies) -> dict[str, NodeFn]:
         }
 
     def clarification(state: AnalystState) -> dict[str, Any]:
-        """The T2 node, with the question text written by the LLM when it can be."""
-        update = t2.ask_clarification(state)
+        """The control node, with the question text written by the LLM when it can be."""
+        update = control_nodes.ask_clarification(state)
         slot = state.plan.unresolved[0] if state.plan and state.plan.unresolved else None
         options = list(slot.options) if slot else []
         counters = state.counters.model_copy()
@@ -485,8 +506,8 @@ def jev_client(model_config: Path | None = None) -> Any:
     return SystemOneClient(backend["base_url"], jev["model"], api_key=key, timeout_s=10.0)
 
 
-def live_t3_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
-    """T3 nodes on the real LLM client, built from `configs/model.yaml` and the environment.
+def live_model_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
+    """Model-backed nodes on the real LLM client, from `configs/model.yaml` and the environment.
     A `variant` from `configs/inference.yaml` (for example `jev_routing`) changes the decision
     backends; Jev is connected whenever a chain names it.
 
@@ -501,6 +522,7 @@ def live_t3_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]
     from analyst.tools.sql_runner import ReadOnlyDatabase
 
     def database_for(dataset_id: str) -> ReadOnlyDatabase:
+        """Open a read-only database over one dataset's observation table."""
         if not dataset_id.isidentifier() or dataset_id.lower() != dataset_id:
             raise ValueError("invalid dataset identifier")
         return ReadOnlyDatabase({f"obs_{dataset_id}": _obs(dataset_id)})
@@ -518,9 +540,11 @@ def live_t3_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]
         )
     )
     return {
-        **make_t3_nodes(T3Dependencies(client, config, Backends(jev=jev, llm=client), jev=jev)),
+        **make_model_nodes(
+            ModelNodeDependencies(client, config, Backends(jev=jev, llm=client), jev=jev)
+        ),
         **tool_nodes,
     }
 
 
-__all__ = ["LlmCallRecord", "T3Dependencies", "live_t3_nodes", "make_t3_nodes"]
+__all__ = ["LlmCallRecord", "ModelNodeDependencies", "live_model_nodes", "make_model_nodes"]

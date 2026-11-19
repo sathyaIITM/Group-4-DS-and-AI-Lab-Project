@@ -64,13 +64,14 @@ def agent_nodes() -> dict[str, NodeFn] | None:
         return None
     with _nodes_lock:
         if _nodes is None:
-            from analyst.agents.t3_nodes import live_t3_nodes
+            from analyst.agents.model_nodes import live_model_nodes
 
-            _nodes = live_t3_nodes(AGENT_VERSION, AGENT_VARIANT)
+            _nodes = live_model_nodes(AGENT_VERSION, AGENT_VARIANT)
     return _nodes
 
 
 def _initial_state(request: AskRequest) -> Any:
+    """Build the starting agent state for a request with the configured version and variant."""
     from analyst.agents.state import AnalystState, RunConfig
 
     return AnalystState(
@@ -133,6 +134,7 @@ def reply_payload(state: Any) -> dict[str, Any]:
 
 
 def _run(request: AskRequest) -> dict[str, Any]:
+    """Run the agent graph to completion for one request and return the reply payload."""
     from analyst.agents.graph import invoke_graph
 
     return reply_payload(invoke_graph(_initial_state(request), overrides=agent_nodes()))
@@ -157,6 +159,7 @@ async def ask(request: AskRequest) -> dict[str, Any]:
 
 
 async def _events(request: AskRequest) -> AsyncIterator[dict[str, str]]:
+    """Stream graph updates for one request as server-sent events."""
     from analyst.agents.graph import RECURSION_LIMIT, build_graph
     from analyst.agents.state import AnalystState
 
@@ -165,6 +168,7 @@ async def _events(request: AskRequest) -> AsyncIterator[dict[str, str]]:
     state = _initial_state(request)
 
     def work() -> None:
+        """Run the graph in a worker thread and pass each update to the event queue."""
         final: dict[str, Any] | None = None
         try:
             graph = build_graph(agent_nodes())

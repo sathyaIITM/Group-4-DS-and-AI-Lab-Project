@@ -32,10 +32,12 @@ class Entry(BaseModel):
 
 
 def obs_path(dataset_id: str) -> Path:
+    """Return the path of a dataset's observation table."""
     return PROCESSED / f"obs_{dataset_id}.parquet"
 
 
 def _periods(con: duckdb.DuckDBPyConnection, dataset_id: str) -> dict[str, Any]:
+    """Summarise a table's period types with counts and first and last labels."""
     rows = con.execute(
         "SELECT period_type, count(DISTINCT period_label), min(period_label), max(period_label) "
         "FROM read_parquet(?) GROUP BY ALL ORDER BY 1",
@@ -45,39 +47,41 @@ def _periods(con: duckdb.DuckDBPyConnection, dataset_id: str) -> dict[str, Any]:
 
 
 def table_entries(catalogue: dict[str, Any], con: duckdb.DuckDBPyConnection) -> list[Entry]:
+    """Build one retrieval entry per table."""
     entries = []
-    for t in catalogue["tables"]:
-        periods = _periods(con, t["dataset_id"])
+    for table in catalogue["tables"]:
+        periods = _periods(con, table["dataset_id"])
         indicators = con.execute(
             "SELECT DISTINCT indicator_label_source FROM read_parquet(?) ORDER BY 1 LIMIT 12",
-            [str(obs_path(t["dataset_id"]))],
+            [str(obs_path(table["dataset_id"]))],
         ).fetchall()
         labels = "; ".join(r[0] for r in indicators)
         text = (
-            f"{t['title']}. Domain {t['domain']}. Publisher {t['publisher']}. "
-            f"Geography: {', '.join(t['geo_levels'])}. Coverage {t['coverage_start'][:4]} to "
-            f"{t['coverage_end'][:4]}. Indicators: {labels}. Caveats: {' '.join(t['caveats'])}"
+            f"{table['title']}. Domain {table['domain']}. Publisher {table['publisher']}. "
+            f"Geography: {', '.join(table['geo_levels'])}. "
+            f"Coverage {table['coverage_start'][:4]} to {table['coverage_end'][:4]}. "
+            f"Indicators: {labels}. Caveats: {' '.join(table['caveats'])}"
         )
         payload = {
-            "dataset_id": t["dataset_id"],
-            "obs_table": t["obs_table"],
-            "title": t["title"],
-            "domain": t["domain"],
-            "publisher": t["publisher"],
-            "licence": t["licence"],
-            "dataset_version": t["dataset_version"],
-            "retrieved": t["retrieved"],
-            "source_table": t["source_table"],
-            "geo_levels": t["geo_levels"],
+            "dataset_id": table["dataset_id"],
+            "obs_table": table["obs_table"],
+            "title": table["title"],
+            "domain": table["domain"],
+            "publisher": table["publisher"],
+            "licence": table["licence"],
+            "dataset_version": table["dataset_version"],
+            "retrieved": table["retrieved"],
+            "source_table": table["source_table"],
+            "geo_levels": table["geo_levels"],
             "periods": periods,
-            "indicator_count": t["indicators"],
-            "caveats": t["caveats"],
+            "indicator_count": table["indicators"],
+            "caveats": table["caveats"],
         }
         entries.append(
             Entry(
-                id=f"table:{t['dataset_id']}",
+                id=f"table:{table['dataset_id']}",
                 kind="table",
-                dataset_id=t["dataset_id"],
+                dataset_id=table["dataset_id"],
                 text=text,
                 payload=payload,
             )
@@ -86,22 +90,23 @@ def table_entries(catalogue: dict[str, Any], con: duckdb.DuckDBPyConnection) -> 
 
 
 def indicator_entries(catalogue: dict[str, Any], con: duckdb.DuckDBPyConnection) -> list[Entry]:
+    """Build one retrieval entry per indicator."""
     entries = []
-    for t in catalogue["tables"]:
+    for table in catalogue["tables"]:
         rows = con.execute(
             "SELECT indicator_id, any_value(indicator_label_source), any_value(unit) "
             "FROM read_parquet(?) GROUP BY 1 ORDER BY 1",
-            [str(obs_path(t["dataset_id"]))],
+            [str(obs_path(table["dataset_id"]))],
         ).fetchall()
         for indicator_id, label, unit in rows:
             entries.append(
                 Entry(
-                    id=f"indicator:{t['dataset_id']}:{indicator_id}",
+                    id=f"indicator:{table['dataset_id']}:{indicator_id}",
                     kind="indicator",
-                    dataset_id=t["dataset_id"],
-                    text=f"{label} ({unit}). {t['title']}",
+                    dataset_id=table["dataset_id"],
+                    text=f"{label} ({unit}). {table['title']}",
                     payload={
-                        "dataset_id": t["dataset_id"],
+                        "dataset_id": table["dataset_id"],
                         "indicator_id": indicator_id,
                         "label": label,
                         "unit": unit,
@@ -112,6 +117,7 @@ def indicator_entries(catalogue: dict[str, Any], con: duckdb.DuckDBPyConnection)
 
 
 def card_entries(path: Path = CARDS_PATH) -> list[Entry]:
+    """Build retrieval entries from the guidance cards."""
     cards = json.loads(path.read_text(encoding="utf-8"))["cards"]
     return [
         Entry(
@@ -126,6 +132,7 @@ def card_entries(path: Path = CARDS_PATH) -> list[Entry]:
 
 
 def example_entries(path: Path = EXAMPLES_PATH) -> list[Entry]:
+    """Build retrieval entries from the verified examples."""
     entries = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.strip():

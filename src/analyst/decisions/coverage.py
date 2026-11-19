@@ -31,15 +31,18 @@ Catalogue = Mapping[str, Mapping[str, Any]]
 
 
 def load_published(path: Path = PUBLISHED) -> dict[str, dict[str, Any]]:
+    """Load the published catalogue as a mapping from dataset id to table metadata."""
     tables = json.loads(path.read_text(encoding="utf-8"))["tables"]
     return {t["dataset_id"]: t for t in tables}
 
 
 def _date(value: Any) -> date:
+    """Return a value as a date, reading ISO text when needed."""
     return value if isinstance(value, date) else date.fromisoformat(str(value)[:10])
 
 
 def _has_population(catalogue: Catalogue) -> bool:
+    """Return True when any table holds a population indicator."""
     return any(
         POPULATION_HINT in indicator
         for t in catalogue.values()
@@ -65,6 +68,7 @@ def check_coverage(
     jev: Any = None,
     domain: str | None = None,
 ) -> CoverageResult:
+    """Decide whether the catalogue covers the plan, partly covers it or does not cover it."""
     if plan.unresolved:
         return _result(
             "ambiguous",
@@ -157,6 +161,7 @@ def _result(
     left_out: list[str] | None = None,
     pointers: list[str] | None = None,
 ) -> CoverageResult:
+    """Build a coverage result with the given status and missing parts."""
     return CoverageResult(
         status=status,
         probability=None,

@@ -14,12 +14,16 @@ from analyst.contracts.intent import DerivationRequest, Operation
 
 
 class UnresolvedSlot(Contract):
+    """A slot that could not be resolved, with the user's mention and the options to offer."""
+
     slot: Literal["place", "period", "indicator", "category", "geo_level"]
     mention: str
     options: list[str]
 
 
 class InterpretationPlan(Contract):
+    """The resolved query plan: table, indicators, places, periods, categories and operation."""
+
     dataset_id: str
     obs_table: str
     dataset_version: str

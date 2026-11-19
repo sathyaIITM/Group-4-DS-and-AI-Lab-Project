@@ -59,7 +59,9 @@ class ChoiceBackend(Protocol):
 
     def ask_choice(
         self, state: str | dict[str, Any], questions: dict[str, ChoiceQuestion]
-    ) -> TimedChoice: ...
+    ) -> TimedChoice:
+        """Ask choice questions about a state and return the answers with their latency."""
+        ...
 
 
 @dataclass
@@ -73,15 +75,20 @@ class RouterContext:
 
 @dataclass
 class Band:
+    """A probability band; decisions inside it escalate to the next backend."""
+
     low: float | None = None
     high: float | None = None
 
     def contains(self, p: float) -> bool:
+        """Return True when a probability falls inside the band."""
         return self.low is not None and self.high is not None and self.low <= p < self.high
 
 
 @dataclass
 class RouterConfig:
+    """Backends per decision, calibration temperatures and escalation bands for a version."""
+
     version: str
     chains: dict[str, list[Backend]]
     kev_temperature: float | None = None
@@ -138,6 +145,8 @@ class Backends:
 
 @dataclass
 class RouteResult:
+    """The routing decision, the state it was made on and any model calls."""
+
     decision: RoutingDecision
     state: KevState
     llm_calls: list[LlmCallRecord] = field(default_factory=list)
@@ -161,6 +170,7 @@ class BackendUnavailableError(RuntimeError):
 
 
 def render_catalogue(candidate_lines: Sequence[str]) -> str:
+    """Render candidate tables as a numbered list."""
     return "\n".join(f"{i}. {line}" for i, line in enumerate(candidate_lines, start=1))
 
 
@@ -181,11 +191,13 @@ def build_state(question: str, context: RouterContext, candidate_lines: Sequence
 
 
 def _question(decision: str) -> ChoiceQuestion:
+    """Return the canonical choice question for a decision."""
     instructions, criteria = QUESTIONS[decision]
     return ChoiceQuestion(instructions=instructions, criteria=criteria)
 
 
 def scale(probabilities: dict[str, float], temperature: float | None) -> dict[str, float]:
+    """Rescale probabilities with a calibration temperature."""
     labels = list(probabilities)
     p = np.clip(np.array([probabilities[x] for x in labels], float), 1e-12, 1.0)
     p = p / p.sum()
@@ -204,6 +216,7 @@ def _ask_choice(
     config: RouterConfig,
     fallback: bool,
 ) -> DecisionRecord:
+    """Ask one decision of a choice backend and return the decision record."""
     started = time.perf_counter()
     answer = client.ask_choice(state.model_dump(), {decision: _question(decision)})
     raw = answer.answers[decision].probabilities
@@ -233,6 +246,7 @@ def _ask_llm(
     """One call answers both decisions; labels outside the options are rejected and retried."""
 
     def check(reply: LlmRouting) -> None:
+        """Check that every label in the model's reply is a valid option."""
         for decision in DECISIONS:
             if getattr(reply, decision) not in QUESTIONS[decision][1]:
                 raise ValueError(f"{decision} {getattr(reply, decision)!r} is not an option")
@@ -319,7 +333,7 @@ def route(
     """`route_tool_and_domain`. Raises `BackendUnavailableError` or `LlmError` when no backend
     can answer; the graph then ends with `failed / backend_error`."""
     state = build_state(question, context, candidate_lines)
-    llm_first = all(config.chains[d][0] == "llm" for d in DECISIONS)
+    llm_first = all(config.chains[decision][0] == "llm" for decision in DECISIONS)
     llm_answer: dict[str, DecisionRecord] | None = None
     calls: list[LlmCallRecord] = []
     if llm_first:
@@ -329,17 +343,18 @@ def route(
         calls.append(call)
     with ThreadPoolExecutor(max_workers=2) as pool:
         futures = {
-            d: pool.submit(_decide, d, state, config, backends, llm_answer) for d in DECISIONS
+            decision: pool.submit(_decide, decision, state, config, backends, llm_answer)
+            for decision in DECISIONS
         }
-        records = {d: f.result() for d, f in futures.items()}
+        records = {decision: f.result() for decision, f in futures.items()}
     if any(r is None for r in records.values()):  # a chain fell through to the LLM
         if backends.llm is None:
             raise BackendUnavailableError("fallback to the LLM, which is not configured")
         llm_answer, call = _ask_llm(backends.llm, state, counters)
         calls.append(call)
-        for d in DECISIONS:
-            if records[d] is None:
-                records[d] = llm_answer[d].model_copy(update={"fallback": True})
+        for decision in DECISIONS:
+            if records[decision] is None:
+                records[decision] = llm_answer[decision].model_copy(update={"fallback": True})
     tool, domain = records["tool"], records["domain"]
     if tool is None or domain is None:  # filled above; kept for the type checker
         raise BackendUnavailableError("routing produced no decision")
@@ -347,6 +362,7 @@ def route(
 
 
 def _routing(tool: DecisionRecord, domain: DecisionRecord) -> RoutingDecision:
+    """Combine tool and domain decisions into a routing decision."""
     return RoutingDecision(
         tool=tool,
         domain=domain,

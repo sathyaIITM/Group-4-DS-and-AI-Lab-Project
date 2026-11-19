@@ -63,6 +63,8 @@ class Counters(BaseModel):
 
 
 class Limits(BaseModel):
+    """Per-run limits on time, model calls, SQL attempts and narrations."""
+
     run_deadline_s: float = 30
     max_sql_generations: int = 3
     max_sql_repairs: int = 2
@@ -90,6 +92,8 @@ class RagPaths(BaseModel):
 
 
 class RunConfig(BaseModel):
+    """Configuration of one run: version, variant, limits and retrieval paths."""
+
     version: str = "v0"
     variant: str | None = None  # an `inference.yaml` variant, such as jev_routing
     limits: Limits = Field(default_factory=Limits)
@@ -108,6 +112,7 @@ class RunConfig(BaseModel):
         config_path: str = "configs/agent.yaml",
         variant: str | None = None,
     ) -> RunConfig:
+        """Load the run configuration for a version from the configuration files."""
         from analyst.config import load_run_config
 
         return load_run_config(version=version, config_path=config_path, variant=variant)

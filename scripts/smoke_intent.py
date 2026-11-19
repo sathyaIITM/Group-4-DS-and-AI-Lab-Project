@@ -37,6 +37,7 @@ INPUT_TOKENS_GUESS = 2500  # per call, for the worst-case estimate
 
 
 def gcloud_value(key: str) -> str:
+    """Return a gcloud configuration value."""
     result = subprocess.run(  # noqa: S603 - fixed arguments, no shell
         ["gcloud", "config", "get-value", key],  # noqa: S607
         capture_output=True,
@@ -89,6 +90,7 @@ def codelists(dataset_id: str, columns: list[str], question: str) -> dict[str, l
 
 
 def main() -> int:
+    """Run intent extraction on the smoke questions."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--yes", action="store_true", help="send the calls (spends credit)")
     parser.add_argument("--limit", type=int, help="first N questions only")

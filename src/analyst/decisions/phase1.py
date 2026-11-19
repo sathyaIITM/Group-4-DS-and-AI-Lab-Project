@@ -39,6 +39,7 @@ def to_domain_record(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def read_jsonl(path: Path) -> Iterator[dict[str, Any]]:
+    """Yield the JSON objects of a JSONL file."""
     with path.open(encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
@@ -53,6 +54,7 @@ def convert_split(source: Path, target: Path) -> int:
 
 
 def write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
+    """Write JSON objects to a JSONL file, creating its directory."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         for record in records:

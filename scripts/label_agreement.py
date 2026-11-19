@@ -25,6 +25,7 @@ FROZEN = Path("data/splits/kev/dev_human.v1.jsonl")
 
 
 def load_labels(directory: Path) -> dict:
+    """Load every member's label file."""
     return {
         p.stem.removeprefix("labels_"): dh.read_labels(p)
         for p in sorted(directory.glob("labels_T*.csv"))
@@ -32,6 +33,7 @@ def load_labels(directory: Path) -> dict:
 
 
 def load_adjudications(directory: Path) -> list[dict[str, str]]:
+    """Load the adjudication rows."""
     import csv
 
     rows: list[dict[str, str]] = []
@@ -42,6 +44,7 @@ def load_adjudications(directory: Path) -> list[dict[str, str]]:
 
 
 def main() -> int:
+    """Command-line entry point for label agreement."""
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--dir", type=Path, default=LABEL_DIR)
     sub = parser.add_subparsers(dest="command", required=True)

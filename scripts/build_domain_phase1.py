@@ -32,6 +32,7 @@ LAYA_TARGET = ROOT / "data" / "splits" / "laya_domain"
 
 
 def main() -> None:
+    """Build the phase-1 domain training and evaluation files."""
     parser = argparse.ArgumentParser(description="Build the phase-1 domain files.")
     parser.add_argument("--version", default="v2", choices=["v1", "v2"])
     parser.add_argument("--laya", action="store_true", help="also write Laya training rows")

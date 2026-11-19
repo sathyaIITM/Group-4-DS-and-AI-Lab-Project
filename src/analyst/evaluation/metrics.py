@@ -204,6 +204,7 @@ MappingLike = dict[str, Any]
 
 
 def _same_length(a: Sequence[Any] | np.ndarray, b: Sequence[Any] | np.ndarray) -> None:
+    """Check that two inputs have the same, non-zero length."""
     if len(a) != len(b):
         raise ValueError("inputs must have the same length")
     if not len(a):
@@ -211,5 +212,6 @@ def _same_length(a: Sequence[Any] | np.ndarray, b: Sequence[Any] | np.ndarray) -
 
 
 def _probabilities(value: np.ndarray, name: str) -> None:
+    """Check that values are finite probabilities."""
     if np.any(~np.isfinite(value)) or np.any((value < 0) | (value > 1)):
         raise ValueError(f"{name} values must be finite and in [0, 1]")
