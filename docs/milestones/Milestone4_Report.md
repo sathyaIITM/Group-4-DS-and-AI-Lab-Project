@@ -25,6 +25,7 @@ that holds it and the command that produced it (Appendix A).
 | 0.1 | 12 Nov 2026 | Skeleton: structure, requirement map, training configuration facts |
 | 0.2 | 17 Nov 2026 | Hosted LLM layer configuration and the Vertex AI access and thinking check (Section A2) |
 | 0.3 | 19 Nov 2026 | Part B under the twelve guideline headings (training, selection, test results, gate, cascade); Section 2.3 (`dev_human`) |
+| 0.4 | 19 Nov 2026 | Section A6: version ladder v0 to v2 on the development and test sets, error analysis, sample outputs |
 
 ## 1. Introduction
 
@@ -191,9 +192,174 @@ with bootstrap intervals per run. Measured spread is pending validated inputs an
 
 ### A6. Results and error analysis
 
-*Pending measured results (T4, T1, T2).* The harness refuses unvalidated gold and verifies the
-gold SQL before spending model credit. T1 validation and the processed observation tables are
-prerequisites for reportable results.
+#### A6.1 Set-up
+
+**Measured (19 November 2026).** All runs use one frozen commit, `a2c8c7d` on `docs/milestone-4`,
+the hosted model `gemini-3.5-flash-lite` on the Vertex AI global endpoint (Section A2), and the
+limits in [`configs/agent.yaml`](../../configs/agent.yaml) (at most 8 model calls and 45 seconds
+per question). The three versions differ only in retrieved knowledge and in the routing backend:
+
+| Version | Retrieved context | Tool and domain routing |
+| --- | --- | --- |
+| v0 | Catalogue entries of the top four tables | Hosted LLM |
+| v1 | v0 plus guidance cards ([`guidance_cards.v3.json`](../../configs/rag/guidance_cards.v3.json)) | Hosted LLM |
+| v2 | v1 plus verified question-and-SQL examples ([`rag_verified_examples.v2.jsonl`](../../data/sample/rag_verified_examples.v2.jsonl)) | Jev, with the hosted LLM as fallback ([`configs/inference.yaml`](../../configs/inference.yaml)) |
+
+| Set | Items | Runs per version | Use |
+| --- | --- | --- | --- |
+| Development: `e2e_dev.v1` (40) and its supplement `e2e_dev_extra.v1` (20) | 60 | 1 | Configuration and fixes; the supplement adds describe, search and clarify items, which the 40-item split held too few of |
+| Test: `e2e_test.v1` | 60 | 3 | Reported once, after the commit was frozen; never used for tuning |
+
+Questions ran one at a time. A case counts as a success when the outcome matches the expected
+action: an answer must reproduce every gold value within tolerance, in the result and in the
+narration, name the expected entities and pass the number check; a clarification must ask about
+the gold slot; a decline is correct when the agent declines or reports the request as out of
+scope; a description or search must use the outcome expected and retrieve the gold tables.
+Execution accuracy is the share of answer items whose executed result matches the gold result.
+Scoring code: [`src/analyst/evaluation/e2e_eval.py`](../../src/analyst/evaluation/e2e_eval.py).
+
+The gold answers of `e2e_v1` were checked by T3; validation by T1 is pending, and the runs
+therefore used the harness flag `--allow-unvalidated`. The development set was used to find and
+fix faults in the agent during the week, so development figures are optimistic.
+
+#### A6.2 Results
+
+Test set, mean over three runs (minimum to maximum)
+([`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md)):
+
+| Measure | v0 | v1 | v2 |
+| --- | --- | --- | --- |
+| Success | 0.683 (0.667 to 0.700) | 0.689 (0.667 to 0.700) | 0.694 (0.667 to 0.717) |
+| Success, 95% interval of the first run | 0.55 to 0.80 | 0.58 to 0.82 | 0.60 to 0.82 |
+| Execution accuracy | 0.433 (0.425 to 0.450) | 0.525 | 0.633 (0.625 to 0.650) |
+| Wrong-answer rate | 0.038 (0.037 to 0.038) | 0.012 (0.000 to 0.037) | 0.083 (0.069 to 0.107) |
+| Abstention precision | 0.610 (0.591 to 0.619) | 0.544 (0.542 to 0.545) | 0.568 (0.522 to 0.591) |
+| Abstention recall | 1.000 | 0.949 (0.923 to 1.000) | 0.974 (0.923 to 1.000) |
+| Latency p50 (s) | 6.9 (6.7 to 7.1) | 6.7 (6.4 to 6.9) | 6.0 (5.8 to 6.5) |
+| Latency p95 (s) | 13.0 (10.5 to 17.1) | 11.9 (10.4 to 13.6) | 10.0 (9.5 to 10.5) |
+| Cost per answered question (USD, estimate) | 0.0269 | 0.0296 | 0.0190 |
+| Model calls per answered question | 8.75 | 8.56 | 6.05 |
+| Run-to-run instability | 0.050 | 0.083 | 0.083 |
+
+Success by expected action on the test set, all runs pooled (cases in brackets):
+
+| Expected action | v0 | v1 | v2 |
+| --- | --- | --- | --- |
+| answer | 0.642 (120) | 0.667 (120) | 0.650 (120) |
+| clarify | 0.444 (18) | 0.278 (18) | 0.278 (18) |
+| decline | 1.000 (21) | 1.000 (21) | 1.000 (21) |
+| describe | 0.667 (12) | 0.750 (12) | 1.000 (12) |
+| search | 1.000 (9) | 1.000 (9) | 1.000 (9) |
+
+Development set, one run per version
+([`version_ladder_dev.md`](../../outputs/reports/version_ladder_dev.md)):
+
+| Measure | v0 | v1 | v2 |
+| --- | --- | --- | --- |
+| Success | 0.933 | 0.917 | 0.967 |
+| Execution accuracy | 0.703 | 0.703 | 0.865 |
+| Wrong-answer rate | 0.029 | 0.029 | 0.000 |
+| Cost per answered question (USD, estimate) | 0.0220 | 0.0227 | 0.0174 |
+| Model calls per answered question | 7.09 | 7.06 | 5.17 |
+
+The twelve runs cost about USD 8.3 of the cloud credit (estimate from token counts: development
+USD 2.2, test USD 6.2).
+
+#### A6.3 Reading of the results
+
+1. **Execution accuracy rises with each version on the test set**, from 0.433 (v0) to 0.525 (v1)
+   and 0.633 (v2), with little spread between runs. Guidance cards and verified examples help the
+   model write the correct query once the question reaches the query path.
+2. **Success is flat across versions** (0.683 to 0.694; the intervals overlap). The failures that
+   limit success arise before the query is written, mainly in place resolution (Section A6.4),
+   and no version changes that step.
+3. **v2 is the cheapest and fastest version**: about 30% lower cost per answered question than v0,
+   2.7 fewer model calls, and a p95 latency of 10.0 s against 13.0 s, because Jev replaces the
+   routing call to the hosted model.
+4. **v2 gives more wrong answers than v1** (0.083 against 0.012). The difference comes from two
+   items: a follow-up that asked for a five-year series received only its end points and their
+   change (e2e-076, all three runs), and in one run the narration of a comparison follow-up left
+   out one of its two values (e2e-004).
+5. **The development set over-states quality** by 0.25 to 0.27 success: 0.93 to 0.97 on
+   development against 0.68 to 0.69 on test. The development set was used for fixes; the test
+   figures are the ones to quote.
+6. **Declines and searches are reliable** (1.000 in every version). Clarification is the weakest
+   action (0.28 to 0.44), for the reasons in Section A6.4.
+
+#### A6.4 Error analysis (test set)
+
+The test items were read only after the runs, to classify failures; no change was made from
+them. In each version 21 distinct items fail in at least one run; across the three versions,
+26 items fail at least once. Grouped by cause:
+
+| Cause | Items | Versions affected | What happens |
+| --- | --- | --- | --- |
+| Place resolution | e2e-015, 016, 020, 029, 035, 040 | All | A State is not mapped to its IMD rainfall sub-divisions (Karnataka; Odisha to "Orissa"; Delhi to "Haryana Delhi & Chandigarh"); a mandi name is not matched to its listed name (Azadpur to "APMC Azadpur"); an urban-rural question on a State is asked about; a State named with a district ("Aurangabad, Maharashtra") is not used to choose between two districts of that name. The agent asks or declines instead of answering |
+| Periods | e2e-039, 041, 092 | All | "Right now" is declined instead of taking the latest period; a question is asked with a single period option; a value suppressed by the publisher ends in a period question or an abstention |
+| Calculation and checks | e2e-006, 055, 097, 098, 099 | All but e2e-098 (v0 and v1 only) | The national total row is excluded before a comparison with it; a State's share of the India total fails the result check; one request reaches the limit of 8 model calls; one answer in bales fails the number check |
+| Clarification slot or content | e2e-031, 044 | All | The agent asks which Aurangabad (a place) where the gold note names the slot as "State"; for a price question the agent asks for the market where the gold asks for the commodity |
+| Expected action disputed | e2e-008, 013 | All | Gold expects a clarification; the agent declines with a correct reason (calendar-year figures cannot be derived from July-June survey years; the participation table is urban only). Both are referred to T1 validation; the gold is not changed |
+| Follow-up scope | e2e-076, 004, 071 | v2 (076, 004), v1 (071) | A series follow-up is answered with its end points only (e2e-076, every v2 run); a comparison follow-up states or returns only one of its two values (e2e-004 and e2e-071, one run each) |
+| Missing place, then a provider error | e2e-021 | v1 (two runs), v2 (one run) | A rainfall question without a place is sent to the query path instead of being asked about, and the run ends in a provider error |
+| Describe or search routed elsewhere | e2e-026, 049 | v0, v1 | A describe question is answered with a catalogue search |
+| Single-run failures | e2e-037, 056 | v2, v0 | A narration that does not state the value it was given ends in abstention (e2e-037); one runner exception (e2e-056) |
+
+Place resolution is the largest cause and affects every version equally, which explains why
+success does not follow execution accuracy. The fixes are general (State to sub-division mapping,
+market-name aliases, use of a stated State to choose among same-named districts, "now" as the
+latest period, no question with one option). They will be developed on new development items of
+the same kinds, never on the test items, and measured with v3 in the following week.
+
+#### A6.5 Sample outputs
+
+Replies of v2, first test run, copied from
+[`final_test_v2_r1.jsonl`](../../outputs/predictions/final_test_v2_r1.jsonl):
+
+| Item | Question | Reply |
+| --- | --- | --- |
+| e2e-065 (answer with a derivation) | By what percent did Karnataka's per capita GSDP grow from 2019-20 to 2022-23? | "Karnataka's per capita GSDP at current prices grew by 37.55 percent from fiscal year 2019-20 to fiscal year 2022-23, according to the Per capita GSDP (rupees) at current prices, 28 States, 2019-20 to 2023-24 dataset by Rajya Sabha answer on data.gov.in." |
+| e2e-018 (follow-up) | Same for the 2017 monsoon season. | "During the 2017-JJAS season, Vidarbha received 731.5 millimeters of rainfall, according to the IMD rainfall (mm) by month, season and year for 36 meteorological sub-divisions dataset." |
+| e2e-073 (clarification) | What is the MSP of cotton in 2023-24? | "Please specify whether you are looking for the MSP of Long Staple or Medium Staple cotton. Options: 1. Long Staple; 2. Medium Staple." |
+| e2e-080 (decline) | How has urban labour force participation changed over the last five years? | "The catalogue does not contain the requested data. Missing: period (The PLFS urban LFPR table only covers the survey year 2023-24 and does not contain data for the last five years). Related tables: plfs_lfpr_urban_state, plfs_state_ur_usual_status. The request has been recorded as a data request." |
+| e2e-049 (description) | Is the national crime data broken down by state? | "The table 'NCRB national crime incidence and rates, 2022-2024' (CII 2024 Table 1.1(ii)) provides national totals only and contains no State or district breakdown." |
+
+The figures in these replies are correct, but the wording has faults that the success measure
+does not score: period labels repeated beside values ("2020-21 19.2, 2020-21 13.4" in e2e-002),
+the MSP crop year described as a "July-June survey year" (e2e-069), a default-period note joined
+awkwardly to the sentence (e2e-009) and source names copied in full. Narration wording is
+reviewed with v3.
+
+#### A6.6 Limitations
+
+- 60 test items give wide intervals (about plus or minus 0.12 on success); differences of one
+  point between versions are not separable.
+- The gold answers are checked by T3 only; T1 validation is pending, and two expected actions are
+  disputed (Section A6.4).
+- One hosted model tier was run; the comparison with the larger tier (E2) is not yet run.
+- Verification is pass-through in v0 to v2, so the confidence badge reads "not verified" on every
+  answer; calibrated verification arrives with v5.
+
+#### A6.7 Reproduction
+
+From the repository root at commit `a2c8c7d`, with Vertex AI credentials and `TYPESAFE_API_KEY`
+(for Jev in v2) set, for each version `v` in v0, v1, v2:
+
+```bash
+python -m analyst.evaluation.e2e_eval run --live --yes --allow-unvalidated --workers 1 \
+    --version v2 --experiment final_test_v2_r1 --member T3 \
+    --set data/eval/e2e_test.v1.jsonl --out outputs/predictions/final_test_v2_r1.jsonl
+python -m analyst.evaluation.e2e_eval score \
+    --predictions outputs/predictions/final_test_v2_r{1,2,3}.jsonl \
+    --out outputs/reports/final_test_v2.json
+python scripts/version_ladder.py --set test --rows v0=outputs/reports/final_test_v0.json \
+    v1=outputs/reports/final_test_v1.json v2=outputs/reports/final_test_v2.json \
+    --out outputs/reports/version_ladder_test
+```
+
+The development runs use `--set data/eval/e2e_dev.v1.jsonl data/eval/e2e_dev_extra.v1.jsonl`.
+Predictions: [`outputs/predictions/`](../../outputs/predictions/), files `final_dev_*` and
+`final_test_*`; score reports and tables: [`outputs/reports/`](../../outputs/reports/), files
+`final_*.json` and `version_ladder_*`.
 
 ## Part B. The decision models
 
