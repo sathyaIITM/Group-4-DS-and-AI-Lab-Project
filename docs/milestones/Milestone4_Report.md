@@ -1,7 +1,7 @@
 # Milestone 4: Model Training, Configuration and Evaluation
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.8.
+Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.9.
 
 **Status of this file.** Complete for submission; each member's sign-off is recorded in the
 Sign-off section. Every
@@ -30,6 +30,7 @@ Section A6.7).
 | 0.6 | 19 Nov 2026 | Sections A4 and A5 brought in line with A6; evaluation-set wording; scoring rules (A6.1) |
 | 0.7 | 19 Nov 2026 | Two-tier comparison (E2) closed; Laya plan; calibration wording in B8 and Section 4 corrected; slides |
 | 0.8 | 19 Nov 2026 | Sections 2.1, 2.2, A1 and A2 written; hosted LLM configuration (A2.x) brought up to the evaluated configuration; A3 and A4 updated; contribution log and sign-off |
+| 0.9 | 19 Nov 2026 | Status wording and test count corrected; two sample conversations in A6.5; slide edits |
 
 ## 1. Introduction
 
@@ -468,6 +469,18 @@ does not score: period labels repeated beside values ("2020-21 19.2, 2020-21 13.
 the MSP crop year described as a "July-June survey year" (e2e-069), a default-period note joined
 awkwardly to the sentence (e2e-009) and source names copied in full. Narration wording is
 reviewed with v3.
+
+Two conversations, with both turns, are in
+[`sample_conversations.json`](../../outputs/reports/sample_conversations.json), exported unedited
+from the run log (`outputs/runs/runs.sqlite`, not in git; the `runs` rows of the experiments
+`final_test_v2_r1` and `final_dev_v2_r1` for the two item identifiers and their `:prior-1` turns).
+Both ran on version v2 at commit `a2c8c7d`. In e2e-004 (test set), "What was the unemployment rate
+in Gujarat in 2021-22?" is answered with 2.0 percent; the follow-up "And how does Maharashtra
+compare with that?" keeps the measure and the survey year and returns 2.0 and 3.5 percent. In
+e2e-081 (development set), "What was the monsoon rainfall in Vidarbha in 2016?" is answered with
+1045.4 mm; the follow-up "And in 2021?" is declined because the table ends in 2017, a data request
+is logged and the nearest year is not substituted. The slides show both as the sample
+conversation flow.
 
 #### A6.6 Limitations
 
