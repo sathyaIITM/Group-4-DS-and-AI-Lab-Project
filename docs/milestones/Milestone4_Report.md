@@ -24,6 +24,7 @@ that holds it and the command that produced it (Appendix A).
 | --- | --- | --- |
 | 0.1 | 12 Nov 2026 | Skeleton: structure, requirement map, training configuration facts |
 | 0.2 | 17 Nov 2026 | Hosted LLM layer configuration and the Vertex AI access and thinking check (Section A2) |
+| 0.3 | 19 Nov 2026 | Part B under the twelve guideline headings (training, selection, test results, gate, cascade); Section 2.3 (`dev_human`) |
 
 ## 1. Introduction
 
@@ -36,10 +37,10 @@ development set, and measuring it end to end.
 
 | Course requirement | Part A: agent system | Part B: decision models |
 | --- | --- | --- |
-| Training configuration | Section A2; [`configs/agent.yaml`](../../configs/agent.yaml), [`configs/model.yaml`](../../configs/model.yaml), [`configs/inference.yaml`](../../configs/inference.yaml), [`configs/prompts/`](../../configs/prompts/) | Section B1; [`configs/train.yaml`](../../configs/train.yaml) |
-| Hyperparameter experiments | Section A4 | Section B2 |
-| Generalisation and stability | Section A5 | Section B3 |
-| Results and sample outputs | Section A6 | Section B4 |
+| Training configuration | Section A2; [`configs/agent.yaml`](../../configs/agent.yaml), [`configs/model.yaml`](../../configs/model.yaml), [`configs/inference.yaml`](../../configs/inference.yaml), [`configs/prompts/`](../../configs/prompts/) | Sections B2-B5; [`configs/train.yaml`](../../configs/train.yaml) |
+| Hyperparameter experiments | Section A4 | Sections B6-B8 |
+| Generalisation and stability | Section A5 | Sections B6, B8 and B12 (seeds, horizon, option order) |
+| Results and sample outputs | Section A6 | Sections B9, B10 and B12 |
 | Training artifacts | Appendix A | Appendix A; [`models/registry.json`](../../models/registry.json) |
 | Key findings | Section 4 | Section 4 |
 
@@ -65,10 +66,27 @@ measurement.
 
 ### 2.3 Human-labelled routing set `dev_human`
 
-*Pending (T3).* Items prepared by T3; labelled independently and by hand by T1, T2 and T4,
-two labellers per item and the third adjudicating; Cohen's kappa per decision; share removed
-as ambiguous; near-duplicate check against the training data (character 5-gram Jaccard at
-least 0.8). Code: [`src/analyst/evaluation/dev_human.py`](../../src/analyst/evaluation/dev_human.py),
+**Measured.** 200 routing items prepared by T3 to quotas per tool and domain
+([`data/labels/dev_human_v1/README.md`](../../data/labels/dev_human_v1/README.md)). Each item was
+labelled independently and by hand by two of T1, T2 and T4 under the labelling guide
+([`docs/specs/labelling_guide_v1.md`](../../docs/specs/labelling_guide_v1.md), version 1.0); the
+third member adjudicated. No model or assistant chose or suggested a label. T3's intended labels
+were sealed before labelling (SHA-256 posted to the team) and are compared only after the freeze.
+
+| Quantity | Value |
+| --- | --- |
+| Near-duplicates against the training data (character 5-gram Jaccard at least 0.8) | None ([`overlap_check.json`](../../data/labels/dev_human_v1/overlap_check.json)) |
+| Agreement, Cohen's kappa ([`agreement.json`](../../data/labels/dev_human_v1/agreement.json)) | Domain 0.88 (blocks 0.86, 0.84, 0.95); tool 0.70 (0.68, 0.68, 0.73), below the 0.80 target |
+| Adjudicated rows | 72 (27, 28, 17) |
+| Removed as ambiguous | 2 of 200 (dh-086, dh-195) |
+| Frozen set | 198 items, [`data/splits/kev/dev_human.v1.jsonl`](../../data/splits/kev/dev_human.v1.jsonl), SHA-256 `a2094350…` ([`freeze.json`](../../data/labels/dev_human_v1/freeze.json)) |
+
+Deviation: block A was adjudicated by T3 instead of T4, so that the freeze could be met while T4
+labelled blocks B and C; T3 states that the items and the sealed labels were not read beforehand.
+The deviation is recorded in the `dev_human` README and on every adjudicated row. Commands:
+`python scripts/label_agreement.py agree`, then `freeze --items
+data/labels/dev_human_v1/items_rendered.jsonl`. Code:
+[`src/analyst/evaluation/dev_human.py`](../../src/analyst/evaluation/dev_human.py),
 [`scripts/label_agreement.py`](../../scripts/label_agreement.py),
 [`scripts/check_dev_human_overlap.py`](../../scripts/check_dev_human_overlap.py).
 
@@ -179,49 +197,271 @@ prerequisites for reportable results.
 
 ## Part B. The decision models
 
-### B1. Training configuration
+Part B follows the twelve headings of the Milestone 4 guideline. Protocol, fixed before any
+planned run was trained and before the `dev_human` labels were frozen:
+[`docs/specs/kev_training_protocol.md`](../../docs/specs/kev_training_protocol.md) (version 1.1).
+Every figure below is **Measured** unless tagged otherwise, and names the committed file that
+holds it.
 
-**Built.** Configuration: [`configs/train.yaml`](../../configs/train.yaml). Run plan:
-`python -m analyst.models.kev_runs plan`. Training notebook:
-[`notebooks/kev_train_t4.ipynb`](../../notebooks/kev_train_t4.ipynb).
+### B1. Introduction
+
+Phase 1 of the Kev adoption (decision of 5 November) puts one control decision of the agent on a
+fine-tuned decision model: the **domain** of a user message, a closed choice among eight labels
+(`labour`, `agriculture`, `rainfall`, `prices_economy`, `health`, `other`, `multiple`,
+`unspecified`). The domain ranks retrieval; it never filters it. Tool selection stays on Jev until
+phase 2. The model is Kev-0.8B: the base language model `Qwen/Qwen3.5-0.8B-Base` with a LoRA
+adapter and a pointer head that scores the options of a question. Kev is fine-tuned on our routing
+data, calibrated by temperature scaling, and adopted only if it passes a gate fixed in advance
+against Jev, the hosted decision model used as the reference: accuracy within 3 points of Jev and
+expected calibration error (ECE) at most 0.10 after calibration, both on human labels.
+
+Outcome in one line: the selected run `ep3` scores 0.980 accuracy on the 198 human-labelled test
+items against 0.783 for Kev zero-shot and 0.970 for Jev; the gate passes; at a 5% error budget the
+cascade leaves every item with Kev (Section B12).
+
+### B2. Training dataset
+
+**Built.** The domain files are derived from routing data v2 (`data/splits/kev/*.v2.jsonl`,
+tracked) by `python scripts/build_domain_phase1.py --version v2 --laya`. Hashes:
+[`data/MANIFEST.md`](../../data/MANIFEST.md) and [`configs/train.yaml`](../../configs/train.yaml);
+`python -m analyst.models.kev_runs check-data` compares local files with them.
+
+| Split | Records | Labels | Use |
+| --- | --- | --- | --- |
+| `train.v2` | 1,876 | Rules 1,287; paraphrases 324; teacher model 265 | Training |
+| `calibration.v2` | 322 | Rules and teacher, checked by hand | Temperature fit; validation loss |
+| `dev_synthetic.v2` | 355 | Rules and teacher, checked by hand | Checkpoint selection |
+| `dev_human.v1` | 198 | Human, two labellers per item and an adjudicator | Test set, scored once |
+
+Each record is a router state (the top-4 catalogue candidates, the conversation context and the
+message) and one choice question with the eight domain options. Augmentation is applied on the
+fly by `kev.train` and does not change the files (Section B8).
+
+**Coverage** ([`kev_data_coverage_v2.md`](../../outputs/reports/kev_data_coverage_v2.md),
+`python -m analyst.models.kev_report coverage`). Every one of the 14 catalogue tables appears in
+every split. All eight labels are present in every split; in train the shares range from 5.0%
+(`multiple`) to 31.8% (`labour`), and `labour` and `rainfall` together make up 57%. The skew is
+reported, not reweighted; per-label F1 keeps minority labels visible. Census 2011 is not in the
+published catalogue and is not covered.
+
+**State length** ([`kev_state_lengths_v2.json`](../../outputs/reports/kev_state_lengths_v2.json)):
+median 248 and maximum 318 Qwen tokens, below `--max_state 384`; no record is dropped or
+truncated.
+
+**Test set `dev_human`.** See Section 2.3. It was never used for training, selection, tuning or
+calibration.
+
+### B3. Model configuration
+
+**Built.** [`configs/train.yaml`](../../configs/train.yaml); Kev source at commit `2074cc44`.
+
+| Item | Value | Source |
+| --- | --- | --- |
+| Base model | `Qwen/Qwen3.5-0.8B-Base`, revision `dc7cdfe2` | `configs/train.yaml` |
+| Warm start | `jaredpalmer/kev-0.8b@bf75a6a8…` (released Kev-0.8B: LoRA rank 16, pointer head 256). `kev.train` has no revision flag, so the revision is part of the `--init_from` value; the resolved snapshot is recorded per run (`init_source`) | `kev/checkpoint.py:38-45` |
+| Adapter | LoRA rank 16, alpha 32, dropout 0.05, all linear modules | `kev/model.py:274` |
+| Output | Pointer head over the options; softmax over the eight options | Kev |
+| Calibration | One temperature per run, fitted on `calibration` by NLL, applied unchanged to dev and test | `src/analyst/evaluation/decision_eval.py` |
+
+Under `--init_from`, the LoRA rank, head dimension and base revision must equal those of the
+released checkpoint (`kev/checkpoint.py`, `COMPAT_FIELDS`). A different rank is possible only from
+the base model; the one from-base run (`base_r16`) therefore measures the value of the warm start.
+
+### B4. Training environment
+
+**Measured** ([`outputs/reports/kev_runs/<run>/environment.json`](../../outputs/reports/kev_runs/)
+and `pip_freeze.txt` per run).
 
 | Item | Value |
 | --- | --- |
-| Decision | Domain (phase 1); tool selection stays on Jev until phase 2 |
-| Base model | `Qwen/Qwen3.5-0.8B-Base`, revision `dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68` |
-| Warm start | `--init_from jaredpalmer/kev-0.8b`, revision `bf75a6a8848ea6960ff2ed108d9ed44c2941174f` (LoRA rank 16, pointer head 256) |
-| Training code | Kev, commit `2074cc44256200bb37540103fa4572901faa10f3` |
-| Adapter | LoRA rank 16 on all modules (rank fixed by the warm start) |
-| Optimiser and schedule | AdamW; OneCycle schedule with 10% warm-up; global gradient-norm clipping at 1.0 (constants of `kev.train`) |
-| Base configuration B0 | Learning rate 2e-5, 2 epochs, batch 1, gradient accumulation 8, seed 0 |
-| Precision | fp32 weights and compute. `kev.train` offers fp32 or bf16 only, and the T4 has no bf16 |
-| Hardware | Colab and Kaggle T4 (16 GB) |
-| Data | `train.v2`, `calibration.v2`, `dev_synthetic.v2`; hashes in [`data/MANIFEST.md`](../../data/MANIFEST.md) (*Pending*, routing data v2) |
-| Calibration | One temperature fitted on the calibration split by NLL; applied unchanged to dev |
+| Hardware | Kaggle, two Tesla T4 GPUs per session (16 GB each; one run per GPU); Colab, one Tesla T4 (`base_r16`) |
+| Software | Python 3.13.16, PyTorch 2.8.0+cu128 (CUDA 12.8), transformers 5.17.0, peft 0.21.0; locked with `uv sync --python 3.13 --frozen --no-dev` |
+| Precision | fp32 weights and compute: `kev.train` offers fp32 or bf16 only, and the T4 has no bf16 |
+| Memory and time | Peak GPU memory 6.7-6.8 GB; about 0.56 s per record; 17.6 min (1 epoch) to 53.0 min (3 epochs) per run |
+| Notebook | [`notebooks/kev_train_t4.ipynb`](../../notebooks/kev_train_t4.ipynb): checks CUDA and disk before downloading, finds the data by SHA-256, runs one queue per GPU, validates and saves each run as soon as it ends |
+| Scoring backend | One local machine (Apple M5, 16 GB, MPS) for every run, so accuracy and ECE come from one backend |
 
-Constraint found while preparing the sweep: under `--init_from`, `kev.train` requires the LoRA
-rank, head dimension and base revision to equal those of the released checkpoint
-(`kev/checkpoint.py`, `COMPAT_FIELDS`). The LoRA-rank runs (8, 16, 32) therefore start from the
-base model and are compared with each other, not with B0.
+Reproducibility: the three T4 smoke runs (Colab and both Kaggle GPUs) saved byte-identical
+adapters and the same loss (0.906 at step 10); the records are in
+[`outputs/reports/kev_runs/smoke_colab/`](../../outputs/reports/kev_runs/smoke_colab/).
 
-### B2. Hyperparameter experiments
+### B5. Training methodology
 
-*Pending (T3).* One factor at a time from B0: learning rate (1e-5, 2e-5, 4e-5), epochs (1, 2,
-3), training-set size (250, 500, 1,000, full), seeds (0, 1, 2); LoRA rank from the base model.
+1. **Smoke run per platform** (32 records, 16 optimizer steps): exit code 0, a loss line, and all
+   output files written.
+2. **Planned runs** on Kaggle and Colab from `python -m analyst.models.kev_runs plan` (sessions
+   `kaggle_1` to `kaggle_3` and `colab_1` in `configs/train.yaml`).
+3. **Scoring** of each checkpoint on `calibration` and `dev_synthetic`:
+   `scripts/score_kev_run.sh <run>`; output `outputs/reports/score_domain_<run>.json`.
+4. **Registration**: `python -m analyst.models.kev_runs register …` updates
+   [`models/registry.json`](../../models/registry.json) and archives the run records.
+5. **Selection** by the rule of Section B10, then **one** score on the frozen `dev_human`, the gate
+   and the cascade (protocol Section 6).
 
-### B3. Generalisation and stability
+Loss: cross-entropy over the options' pointer logits (`kev/train.py:41-61`). The comparison is one
+factor at a time from the base configuration B0: learning rate 2e-5, 2 epochs, batch 1 with
+gradient accumulation 8 (effective batch 8), warm start, seed 0.
 
-*Pending (T3).* Warm start against the base model; held-out-table split; clipped steps per
-epoch; seed spread; temperature scaling; option-order flip rate; early stop by epoch count on
-calibration NLL.
+### B6. Hyperparameter experiments
 
-### B4. Results
+Eight runs were planned and trained. The protocol set five further runs (training-set size 250,
+500 and 1,000; LoRA rank 8 and 32 from the base model) as conditional on remaining compute.
+Compute remained, but they were not run: the eight runs met the selection rule, with the seed
+spread as noise floor, and the selected run then passed the gate on human labels (Section B12).
+The next test of the domain decision is inside the agent, in the end-to-end evaluation. The
+deferred runs are kept as an option if that evaluation shows domain errors caused by the model.
+The training-set-size runs then measure how much data the decision needs, and the rank runs
+measure whether capacity limits it. Source:
+[`kev_runs_table.md`](../../outputs/reports/kev_runs_table.md)
+(`python -m analyst.models.kev_report table`); `dev` is `dev_synthetic` (355 items); NLL and ECE
+after the run's temperature.
 
-*Pending (T3).* Per decision on `dev_human`: Kev zero-shot and fine-tuned, Jev, Laya zero-shot
-and fine-tuned, v0 LLM; accuracy with a bootstrap 95% interval, macro-F1, per-label F1, NLL,
-Brier, ECE before and after temperature scaling, AUROC of correctness, reliability diagrams,
-latency and cost per 1,000 decisions; the Kev-to-Jev cascade; the gate outcome, reported
-either way. Code: [`src/analyst/evaluation/decision_eval.py`](../../src/analyst/evaluation/decision_eval.py).
+| Run | Varies | lr | Epochs | Seed | Minutes | Dev accuracy | Dev macro-F1 | Dev NLL | Dev ECE |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `b0_s0` | B0 | 2e-5 | 2 | 0 | 35.1 | 0.992 | 0.986 | 0.035 | 0.013 |
+| `b0_s1` | Seed | 2e-5 | 2 | 1 | 34.6 | 0.992 | 0.986 | 0.037 | 0.020 |
+| `b0_s2` | Seed | 2e-5 | 2 | 2 | 35.2 | 0.992 | 0.986 | 0.053 | 0.016 |
+| `lr1e-05` | Learning rate | 1e-5 | 2 | 0 | 35.8 | 0.986 | 0.979 | 0.076 | 0.037 |
+| `lr4e-05` | Learning rate | 4e-5 | 2 | 0 | 34.6 | 0.994 | 0.991 | 0.025 | 0.007 |
+| `ep1` | Epochs | 2e-5 | 1 | 0 | 17.6 | 0.966 | 0.948 | 0.140 | 0.055 |
+| `ep3` | Epochs | 2e-5 | 3 | 0 | 53.0 | 0.994 | 0.991 | 0.024 | 0.009 |
+| `base_r16` | From base model | 2e-4 | 2 | 0 | 37.0 | 0.989 | 0.980 | 0.033 | 0.006 |
+| Kev zero-shot | Reference | - | - | - | - | 0.823 | 0.626 | 0.621 | 0.074 |
+
+Findings: a lower learning rate (1e-5) and a shorter horizon (1 epoch) under-train; a higher rate
+and a longer horizon give the best validation NLL. The three B0 seeds give identical accuracy and
+an NLL range of 0.035 to 0.053, which is the noise floor of Section B10. Batch size and scheduler
+were not varied: the effective batch is fixed at 8 and the OneCycle schedule is a constant of
+`kev.train`.
+
+### B7. Optimization methods
+
+AdamW with weight decay 0.01 on the LoRA and head parameters (`kev/train.py:377`, `:580`);
+OneCycle learning-rate schedule with 10% warm-up over all optimizer steps (`:588`); global
+gradient-norm clipping at 1.0 (`:632`). The share of clipped optimizer steps per run is in
+`kev_runs_table.md`: 0.33 (`ep3`) to 0.77 (`ep1`); B0 0.44-0.45; lower learning rate 0.71. Runs
+with more optimizer steps have a lower share.
+
+Early stopping: `kev.train` saves per-epoch snapshots only for full-weight training, and a LoRA
+run cannot resume. `ep1`, B0 and `ep3` are therefore separate runs, each with a OneCycle schedule
+over its own length. They compare training horizons and are not reported as early stopping.
+
+### B8. Regularization
+
+| Method | Setting |
+| --- | --- |
+| Low-rank adaptation | Rank 16; the base model stays frozen |
+| LoRA dropout | 0.05 |
+| Weight decay | 0.01 |
+| Data augmentation, on the fly per record and epoch (`kev/data.py:320-343`) | Option order always shuffled; a 'none' option added as a wrong alternative with probability 0.12; an unrelated option with probability 0.15; label replacement by 'none of the above' switched off (`--p_none 0`), since serving never offers that option |
+| Paraphrased records | 324 of the 1,876 training records |
+| Not used | Label smoothing, class weights, cross-validation (three seeds instead) |
+
+Overfitting check: the training loss of the longer runs approaches zero (final 10-step mean 0.001
+for `ep3` and `lr4e-05`), but validation NLL keeps falling with the horizon (Section B9), and the
+test accuracy on human labels (0.980) is close to the validation accuracy on `dev_synthetic`
+(0.994). Temperatures of 2.6 to 3.9 show that the raw probabilities are over-confident;
+temperature scaling corrects this (Section B12).
+
+### B9. Training progress
+
+Training loss every 10 steps, all runs:
+[`kev_train_loss.png`](../../outputs/figures/kev_train_loss.png) (data
+[`kev_train_loss.csv`](../../outputs/reports/kev_train_loss.csv)). Validation loss against the
+training horizon: [`kev_validation_by_epoch.png`](../../outputs/figures/kev_validation_by_epoch.png)
+([`kev_validation_by_epoch.json`](../../outputs/reports/kev_validation_by_epoch.json)); command
+`python -m analyst.models.kev_report curves`.
+
+| Horizon (run) | Calibration NLL, raw | Dev NLL, after temperature | Dev accuracy |
+| --- | --- | --- | --- |
+| 1 epoch (`ep1`) | 0.349 | 0.140 | 0.966 |
+| 2 epochs (`b0_s0`) | 0.254 | 0.035 | 0.992 |
+| 3 epochs (`ep3`) | 0.234 | 0.024 | 0.994 |
+
+`kev.train` measures no validation loss during LoRA training; validation NLL is measured on each
+saved checkpoint.
+
+### B10. Model selection
+
+Rule, fixed in the protocol before any `dev_human` score: the temperature of each run is fitted on
+`calibration`; the checkpoint with the lowest `dev_synthetic` NLL after temperature is selected,
+macro-F1 breaking ties; only planned runs compete; a setting other than B0 is selected only if its
+NLL is below the mean of the three B0 seeds by more than their range, otherwise the best B0 seed is
+kept. This is a conservative range heuristic, not a significance test. Implementation:
+`python -m analyst.models.kev_report select`; output
+[`kev_selection.json`](../../outputs/reports/kev_selection.json), committed before the test set was
+scored.
+
+| Quantity | Value |
+| --- | --- |
+| B0 seeds, dev NLL | 0.0351, 0.0371, 0.0525 |
+| Mean and range | 0.0416 and 0.0175; threshold 0.0241 |
+| Best other setting | `ep3`, 0.0237 (below the threshold by 0.0004) |
+| Next | `lr4e-05`, 0.0253 (above the threshold) |
+| **Selected** | **`ep3`** |
+
+`ep3` and `lr4e-05` are close; the fixed rule decides between them. The selected checkpoint is
+registered in [`models/registry.json`](../../models/registry.json); weights are kept on the shared
+drive (`Group4/checkpoints/ep3`), not in git.
+
+### B11. Challenges
+
+The full log is protocol Section 8; the main items:
+
+| Issue | Handling |
+| --- | --- |
+| No fp16 in `kev.train` and no bf16 on the T4 | All runs in fp32 |
+| LoRA rank fixed by the warm start | Rank runs only from the base model; two of them deferred |
+| No validation loss during LoRA training; no resume | Validation on each saved checkpoint; horizon runs instead of early stopping; runs under one hour |
+| Free compute: one account per platform per person | The eight runs fitted within the free-tier sessions, two GPUs at a time on Kaggle; the five deferred runs were not needed (Section B6) |
+| External code review (17 November): unpinned warm start, augmentation defaults, from-base learning rate, run persistence, strict evaluation checks | All valid findings fixed before the planned runs; protocol Section 9 |
+| Laya, the planned comparator, ran out of memory on the local machine (its internal evaluation uses a fixed batch of 16) | A Kaggle notebook is prepared; the fine-tuned Laya row was not run for Milestone 4. Laya zero-shot on `dev_synthetic`: accuracy 0.473 ([`score_domain_laya_zeroshot_v2.json`](../../outputs/reports/score_domain_laya_zeroshot_v2.json)) |
+| Scoring of one batch took about 7 hours instead of about 45 minutes, most likely because the local machine slept | Later scoring runs keep the machine awake (`caffeinate`) |
+| Labelling: one labeller's file used non-option names (`economy`, `missing`) | Corrected for format only, mapped by the labeller's own cited rule, and confirmed by the labeller; recorded in the `dev_human` README |
+| Tool-selection agreement below target (Cohen's kappa 0.70 against 0.80) | Every disagreement adjudicated; reported. The domain decision, the one trained here, has kappa 0.88 |
+| Before adjudication, a provisional score of `ep3` against one labeller's labels (133 items) was taken, after the selection was committed | It changed no decision; the reported test score is the single score on the frozen set |
+
+### B12. Summary
+
+Test set: frozen `dev_human`, 198 items (Section 2.3). Kev rows are scored on the local machine;
+Jev through its hosted API (latency includes the network). Accuracy with a bootstrap 95% interval;
+NLL, Brier and ECE after the temperature fitted on `calibration`.
+
+| Model | Accuracy (95% CI) | Macro-F1 | NLL | Brier | ECE raw / calibrated | AUROC of correctness | Latency p50 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Kev-0.8B zero-shot | 0.783 (0.727-0.838) | 0.625 | 0.754 | 0.350 | 0.068 / 0.081 | 0.777 | 0.57 s |
+| **Kev-0.8B fine-tuned (`ep3`)** | **0.980 (0.960-0.995)** | **0.973** | **0.070** | **0.034** | 0.017 / **0.040** | **0.978** | 0.57 s |
+| Jev (reference) | 0.970 (0.944-0.990) | 0.962 | 0.102 | 0.047 | 0.033 / 0.034 | 0.905 | 0.34 s |
+
+Sources: [`score_domain_ep3_dev_human.json`](../../outputs/reports/score_domain_ep3_dev_human.json),
+[`score_domain_zeroshot_v2_dev_human.json`](../../outputs/reports/score_domain_zeroshot_v2_dev_human.json),
+[`score_domain_jev_dev_human.json`](../../outputs/reports/score_domain_jev_dev_human.json);
+reliability diagrams `outputs/figures/reliability_domain_<run>_dev_human.png`.
+
+Per-label F1 of `ep3` ranges from 0.91 (`multiple`, 12 items) to 1.00; zero-shot Kev scores 0 on
+`multiple` and `unspecified`, the two labels that depend on the project's own conventions.
+
+**Gate: passed** ([`gate_domain.json`](../../outputs/reports/gate_domain.json)). Kev minus Jev
+accuracy +1.0 point (95% CI -2.0 to +3.5) against a margin of 3 points; the point estimate decides
+(`configs/inference.yaml`), and the non-inferiority test (lower bound above -3 points) also passes.
+Kev ECE after calibration 0.040 against a limit of 0.10.
+
+**Cascade** ([`cascade_domain.json`](../../outputs/reports/cascade_domain.json)). At a 5% error
+budget, the confidence threshold set on `calibration` is 0.446 (error on the 322 accepted items
+1.6%, one-sided 95% upper bound 3.2%). On `dev_human`, Kev handles 100% of the items with an error
+of 2.0%, and no call is escalated to Jev. Cost per 1,000 decisions is unknown, because the Jev API
+does not report it.
+
+**Option-order robustness** ([`flips_domain_ep3_dev_human.json`](../../outputs/reports/flips_domain_ep3_dev_human.json)):
+across three option orders, 1 of 198 predictions changes (flip rate 0.5%).
+
+**Conclusion.** Fine-tuning raises Kev-0.8B from 0.783 to 0.980 accuracy on human labels for the
+domain decision and brings its calibrated ECE to 0.040. It matches Jev within the pre-set margin;
+its lead of one point is not statistically separable from Jev. Under the adoption rule, the domain decision moves to
+Kev, with the cascade to Jev kept for items below the threshold. Limits: one decision, one test set of
+198 items written by T3 and labelled by the team, five conditional runs not run (Section B6), no fine-tuned
+Laya row, no row for the v0 hosted LLM on this decision, and no held-out-table split (deferred in
+`configs/train.yaml`).
 
 ## 3. Drift baseline and log collation
 
