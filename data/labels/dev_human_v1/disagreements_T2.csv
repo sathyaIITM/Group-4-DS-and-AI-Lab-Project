@@ -1,0 +1,18 @@
+item_id,decision,labeller_a,label_a,rule_a,labeller_b,label_b,rule_b,final_label,final_rule,ambiguous,note
+dh-137,tool,T4,run_sql,"R6, M1",T1,decline_not_covered,R7; M1,decline_not_covered,R7,false,General health spending is not covered (catalogue only holds NFHS-5 out-of-pocket childbirth cost).
+dh-146,tool,T4,run_sql,"R6, C4, M7",T1,describe_table,R3; M3; C1,describe_table,"R3, C1",false,Multi-intent (table unit + figure); R3 precedes R6 under Section 2.2 and C1.
+dh-150,tool,T4,ask_clarification,"R10, M8",T1,decline_not_covered,R7; M8,ask_clarification,R10,false,No measure named and no prior result; H2 routes unspecified data requests to R10.
+dh-153,tool,T4,explain_result,"R17, M4",T1,search_catalog,R2; M2,explain_result,R17,false,Result exists and user asks where its two figures come from; no external/other sources requested.
+dh-153,domain,T4,multiple,"R17, M4",T1,labour,R2; M2,multiple,"M4, M7",false,Existing result holds unemployment (labour) and IMR (health) on equal terms.
+dh-158,tool,T4,run_sql,"R6, D1, D2, M1",T1,ask_clarification,R10; M1,ask_clarification,R10,false,Mandi table is market-level with no All-India row; place/market is missing (D2 does not apply).
+dh-159,tool,T4,search_catalog,"R2, M2",T1,describe_table,R3; M3,describe_table,R3,false,NFHS-5 district table is a published/shown table; asking about geographic coverage (Ladakh) is R3.
+dh-170,tool,T4,ask_clarification,"R10, M8",T1,search_catalog,R2; M8,ask_clarification,R10,false,"No prior result and no measure named (matches rb-052, H2)."
+dh-172,tool,T4,ask_clarification,"R10, M8",T1,search_catalog,R2; M8,ask_clarification,R10,false,No prior result and no measure named (H2).
+dh-173,tool,T4,decline_not_covered,"R9, M1",T1,run_sql,R6; M1,decline_not_covered,R9,false,PLFS unemployment is annual (July-June); monthly grain is not available.
+dh-174,tool,T4,ask_clarification,"R10, M8",T1,decline_not_covered,R1; M8,ask_clarification,R10,false,"Data request without a named measure or prior result (H2), not non-data chit-chat (R1)."
+dh-185,domain,T4,other,"R1, M5",T1,unspecified,R1; M5,other,M5,false,"Non-data request ('thanks', R1) takes domain other under M5."
+dh-187,tool,T4,decline_not_covered,"R16, C11, M7",T1,make_chart,R4; M4,make_chart,R4,false,2-row result already exists and periods overlap (2022-23 includes March 2023); charting existing rows is R4.
+dh-189,tool,T4,run_sql,"R6, D1, M1",T1,decline_not_covered,R8; M1,run_sql,"R6, D1",false,"CPI urban general index is covered; 'latest month' uses the latest available period (D1), not out-of-range (R8)."
+dh-195,domain,T4,other,"R7, M1",T1,agriculture,R7; M1,agriculture,M1,true,"Tractors fit 'farm inputs' (machinery) under agriculture, though vehicle sales border on other (transport)."
+dh-198,tool,T4,decline_not_covered,"R7, C5, M1",T1,run_sql,R6; M1,decline_not_covered,"R7, C5",false,Absolute headcount ('in lakh') requested where the table holds rates only (C5).
+dh-199,tool,T4,decline_not_covered,"R8, M1",T1,run_sql,R6; M1,decline_not_covered,R8,false,"IMD sub-division rainfall table ends in 2017 (R16, D1); August 2018 is outside range."
