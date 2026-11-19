@@ -1,7 +1,7 @@
 # Milestone 4: Model Training, Configuration and Evaluation
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.5 (draft).
+Course: DS & AI Lab, GenAI track, Group 4. Date: 19 November 2026. Version 0.7 (draft).
 
 **Status of this file.** Skeleton with the section structure, the requirement map and the
 facts already fixed. Sections marked *Pending* are written by the named member once the
@@ -27,6 +27,8 @@ that holds it and the command that produced it (Appendix A).
 | 0.3 | 19 Nov 2026 | Part B under the twelve guideline headings (training, selection, test results, gate, cascade); Section 2.3 (`dev_human`) |
 | 0.4 | 19 Nov 2026 | Section A6: version ladder v0 to v2 on the development and test sets, error analysis, sample outputs |
 | 0.5 | 19 Nov 2026 | Response to the Milestone 3 review (1.2), status (1.3), key findings (4), artifacts and reproduction (Appendix A) |
+| 0.6 | 19 Nov 2026 | Sections A4 and A5 brought in line with A6; evaluation-set wording; scoring rules (A6.1) |
+| 0.7 | 19 Nov 2026 | Two-tier comparison (E2) closed; Laya plan; calibration wording in B8 and Section 4 corrected; slides |
 
 ## 1. Introduction
 
@@ -53,7 +55,7 @@ The Milestone 3 report moved eight items to Milestone 4. Their state on 19 Novem
 | Item promised in Milestone 3 | State | Where |
 | --- | --- | --- |
 | 1. Human-labelled routing set (two labellers, agreement, results per label) | **Done.** 200 items, two labellers per item and an adjudicator; 198 kept; Cohen's kappa domain 0.88, tool 0.70; per-label F1 reported | Sections 2.3 and B12 |
-| 2. About 100 evaluation questions with outcomes fixed in advance by a member who did not write the pipeline, at least 20 to decline or clarify | **Done, validation pending.** `e2e_v1`: 100 questions written by T1, 12 to decline and 8 to clarify; gold checked by T3; T1's own validation flag is not yet set (0 of 100) | Section 2.2; [`data/eval/e2e_v1.jsonl`](../../data/eval/e2e_v1.jsonl) |
+| 2. About 100 evaluation questions with outcomes fixed in advance by a member who did not write the pipeline, at least 20 to decline or clarify | **Done.** `e2e_v1`: 100 questions written by T1, 12 to decline and 8 to clarify. Validation and extension of the set are required to enhance the agent and to test it extensively | Section 2.2; [`data/eval/e2e_v1.jsonl`](../../data/eval/e2e_v1.jsonl) |
 | 3. v0 and the retrieval configurations on that set, three runs each | **Done.** v0, v1 and v2, 3 runs x 60 test questions each | Sections A4-A6; [`version_ladder_test.md`](../../outputs/reports/version_ladder_test.md) |
 | 4. Fair Kev and Laya comparison (same split, same calibration, human labels) | **Done for Kev; Laya in the following week.** Kev zero-shot, Kev fine-tuned and Jev on the same human labels with the same calibration procedure. Kev was taken forward because its zero-shot accuracy on `dev_synthetic` was well above Laya's (0.823 against 0.473); a fine-tuned Laya run is planned for the following week and will be reported then | Sections B11 and B12 |
 | 5. Full graph merged, with result checks tied to the intent | **Built.** Graph, control, model and tool nodes merged; intent-tied result checks and the narrated-number check run in the live graph | Section A3; [`src/analyst/agents/`](../../src/analyst/agents/) |
@@ -198,14 +200,16 @@ parallel questions to two, retries provider 429 responses through the existing c
 the agent-level outcomes, and reports per-case predictions and repeat spread. The shared metric
 implementations are in [`src/analyst/evaluation/metrics.py`](../../src/analyst/evaluation/metrics.py).
 Split hashes and run targets are recorded in [`configs/evaluation.yaml`](../../configs/evaluation.yaml).
-The source set is still marked unvalidated by T1 and the published Parquet tables are not present
-in this checkout, so no live runs or score claims are reported yet. Retrieval recall and MRR are
-owned by T3.
+The version ladder run with this harness, and its results, are in Section A6. Retrieval recall
+and MRR are reported in Section 1.2 (item 6).
 
 ### A5. Stability
 
 **Framework built (T4).** Three-run scoring reports which case outcomes change across repeats,
-with bootstrap intervals per run. Measured spread is pending validated inputs and completed runs.
+with bootstrap intervals per run. **Measured:** run-to-run instability on `e2e_test` is 0.050 (v0)
+and 0.083 (v1, v2), the share of questions scored correct in some runs and wrong in others; p95
+latency varies from 10.5 to 17.1 s across the v0 runs and from 9.5 to 10.5 s across the v2 runs
+(Section A6.2).
 
 ### A6. Results and error analysis
 
@@ -227,17 +231,36 @@ per question). The three versions differ only in retrieved knowledge and in the 
 | Development: `e2e_dev.v1` (40) and its supplement `e2e_dev_extra.v1` (20) | 60 | 1 | Configuration and fixes; the supplement adds describe, search and clarify items, which the 40-item split held too few of |
 | Test: `e2e_test.v1` | 60 | 3 | Reported once, after the commit was frozen; never used for tuning |
 
-Questions ran one at a time. A case counts as a success when the outcome matches the expected
-action: an answer must reproduce every gold value within tolerance, in the result and in the
-narration, name the expected entities and pass the number check; a clarification must ask about
-the gold slot; a decline is correct when the agent declines or reports the request as out of
-scope; a description or search must use the outcome expected and retrieve the gold tables.
-Execution accuracy is the share of answer items whose executed result matches the gold result.
-Scoring code: [`src/analyst/evaluation/e2e_eval.py`](../../src/analyst/evaluation/e2e_eval.py).
+Questions ran one at a time. The evaluation set requires validation and extension, in order to
+enhance the agent and to test it extensively. The development set was used to find and fix
+faults in the agent during the week, so development figures are optimistic.
 
-The gold answers of `e2e_v1` were checked by T3; validation by T1 is pending, and the runs
-therefore used the harness flag `--allow-unvalidated`. The development set was used to find and
-fix faults in the agent during the week, so development figures are optimistic.
+**Scoring.** Scoring is deterministic: no language model judges the replies. The scorer compares
+each saved prediction with its gold record, so scoring the same predictions again gives the same
+figures and spends no credit. The only models in the loop are those of the agent under test
+(`gemini-3.5-flash-lite`, and Jev for routing in v2). Code: `_case_success` and `_case_checks` in
+[`src/analyst/evaluation/e2e_eval.py`](../../src/analyst/evaluation/e2e_eval.py).
+
+| Expected action | A case is a success when |
+| --- | --- |
+| Answer | The agent answered; every gold value appears among the numbers of the result rows within a relative tolerance of 0.5%; the same values appear in the reply text (for a series of more than three values, its first and last); the expected places or categories appear in the result rows, alone or as a place with a category ("Bihar Rural"); and the agent's own number check passed |
+| Clarify | The agent asked a question, and the slot it asked about (place, period, category) matches the missing slot named in the gold record |
+| Decline | The agent declined, or replied that the request is out of scope |
+| Describe or search | The agent took that path, and every gold table is among the tables it retrieved or named in its reply |
+
+| Measure | Definition |
+| --- | --- |
+| Success | Share of cases that meet the rule of their expected action |
+| Execution accuracy | Share of answer cases whose result rows contain the rows of the gold SQL, executed by the scorer on the same DuckDB tables; extra columns and rounding are allowed |
+| Wrong-answer rate | Share of released answers that fail the success rule |
+| Abstention precision and recall | Precision and recall of the agent's non-answers (decline, clarify, abstain) against the cases whose gold expects a decline or a clarification |
+| Run-to-run instability | Share of questions scored correct in some runs and wrong in others |
+
+Two limits follow from deterministic scoring. Wording is not judged: a reply with every correct
+number and awkward phrasing passes, so wording faults are listed separately (Section A6.5). Labels
+are read literally: in e2e-031 the gold names the missing slot "State", which the scorer reads as
+the geographic level, while the agent asks which of two districts named Aurangabad is meant, a
+place question with Bihar and Maharashtra as options; the case is scored as a failure.
 
 #### A6.2 Results
 
@@ -315,7 +338,7 @@ them. In each version 21 distinct items fail in at least one run; across the thr
 | Periods | e2e-039, 041, 092 | All | "Right now" is declined instead of taking the latest period; a question is asked with a single period option; a value suppressed by the publisher ends in a period question or an abstention |
 | Calculation and checks | e2e-006, 055, 097, 098, 099 | All but e2e-098 (v0 and v1 only) | The national total row is excluded before a comparison with it; a State's share of the India total fails the result check; one request reaches the limit of 8 model calls; one answer in bales fails the number check |
 | Clarification slot or content | e2e-031, 044 | All | The agent asks which Aurangabad (a place) where the gold note names the slot as "State"; for a price question the agent asks for the market where the gold asks for the commodity |
-| Expected action disputed | e2e-008, 013 | All | Gold expects a clarification; the agent declines with a correct reason (calendar-year figures cannot be derived from July-June survey years; the participation table is urban only). Both are referred to T1 validation; the gold is not changed |
+| Expected action disputed | e2e-008, 013 | All | Gold expects a clarification; the agent declines with a correct reason (calendar-year figures cannot be derived from July-June survey years; the participation table is urban only). Both are referred to the validation of the set; the gold is not changed |
 | Follow-up scope | e2e-076, 004, 071 | v2 (076, 004), v1 (071) | A series follow-up is answered with its end points only (e2e-076, every v2 run); a comparison follow-up states or returns only one of its two values (e2e-004 and e2e-071, one run each) |
 | Missing place, then a provider error | e2e-021 | v1 (two runs), v2 (one run) | A rainfall question without a place is sent to the query path instead of being asked about, and the run ends in a provider error |
 | Describe or search routed elsewhere | e2e-026, 049 | v0, v1 | A describe question is answered with a catalogue search |
@@ -350,8 +373,8 @@ reviewed with v3.
 
 - 60 test items give wide intervals (about plus or minus 0.12 on success); differences of one
   point between versions are not separable.
-- The gold answers are checked by T3 only; T1 validation is pending, and two expected actions are
-  disputed (Section A6.4).
+- The evaluation set requires validation and extension to enhance the agent and to test it
+  extensively; two expected actions are disputed (Section A6.4).
 - One hosted model tier was run; the two-tier comparison (E2) was closed as not required (Section 1.2).
 - Verification is pass-through in v0 to v2, so the confidence badge reads "not verified" on every
   answer; calibrated verification arrives with v5.
