@@ -21,6 +21,7 @@ Providers (`configs/model.yaml`, `hosted_llm.provider`):
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import threading
@@ -253,18 +254,29 @@ TOKEN_TIMEOUT_S = 20
 
 
 def _fetch_gcloud_token() -> str:
-    """Run gcloud in its own process group, so a hung child cannot hold the pipes open."""
-    process = subprocess.Popen(
-        ["gcloud", "auth", "application-default", "print-access-token"],  # noqa: S607
+    """Run gcloud in its own process group, so a hung child cannot hold the pipes open.
+
+    The executable is resolved on PATH first: on Windows gcloud is `gcloud.cmd`, which a bare
+    `gcloud` argument does not find.
+    """
+    executable = shutil.which("gcloud")
+    if executable is None:
+        msg = "gcloud not found on PATH: install the Google Cloud CLI"
+        raise LlmError(msg)
+    process = subprocess.Popen(  # noqa: S603  # fixed arguments; executable resolved on PATH
+        [executable, "auth", "application-default", "print-access-token"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        start_new_session=True,
+        start_new_session=True,  # ignored on Windows
     )
     try:
         out, _ = process.communicate(timeout=TOKEN_TIMEOUT_S)
     except subprocess.TimeoutExpired as error:
-        os.killpg(process.pid, signal.SIGKILL)
+        if hasattr(os, "killpg"):
+            os.killpg(process.pid, signal.SIGKILL)
+        else:  # Windows: no process groups in the POSIX sense
+            process.kill()
         process.communicate()
         msg = f"gcloud did not return a token within {TOKEN_TIMEOUT_S} s"
         raise LlmError(msg) from error

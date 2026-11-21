@@ -175,7 +175,7 @@ Kev-to-Jev cascade keeps every item on Kev.
 
 ## Setup
 
-Python 3.12 or 3.13.
+Python 3.12 or 3.13. On Windows, follow [docs/setup_windows.md](docs/setup_windows.md).
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
