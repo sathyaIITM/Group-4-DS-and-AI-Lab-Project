@@ -221,7 +221,7 @@ The routing variant with Jev (`$env:AGENT_VARIANT = "jev_routing"`) also needs
 only by Docker Compose.
 
 Live mode on Windows needs the `gcloud` lookup fix in `src\analyst\inference\llm.py` (branch
-`fix/windows-setup`, until it is merged into `main`). Without it, every live call fails with
+`fix/wind-eval`, until it is merged into `main`). Without it, every live call fails with
 "no Vertex AI token" even after a successful login, because Windows installs `gcloud` as
 `gcloud.cmd`, which a direct process launch does not find.
 
@@ -230,7 +230,7 @@ Live mode on Windows needs the `gcloud` lookup fix in `src\analyst\inference\llm
 | Difference | Effect | Handled by |
 | --- | --- | --- |
 | Default text encoding is cp1252, not UTF-8 | `UnicodeDecodeError` when reading configs, prompts and data | `PYTHONUTF8=1` (Section 2) |
-| `gcloud` is a `.cmd` script | Live calls report "no Vertex AI token" | Lookup fix on `fix/windows-setup` (Section 7.2) |
+| `gcloud` is a `.cmd` script | Live calls report "no Vertex AI token" | Lookup fix on `fix/wind-eval` (Section 7.2) |
 | PowerShell blocks unsigned scripts | `Activate.ps1` does not run | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | Environment variables are set with `$env:NAME = "value"` | `NAME=value command` (bash syntax in the README) fails | PowerShell syntax throughout this guide |
 | Paths use `\` | None in the code (it uses `pathlib`); only in typed commands | Either separator works in Python arguments |
@@ -242,7 +242,7 @@ Live mode on Windows needs the `gcloud` lookup fix in `src\analyst\inference\llm
 | `UnicodeDecodeError: 'charmap' codec can't decode` | UTF-8 mode is off | Section 2; open a new window |
 | `FileNotFoundError: data/processed/catalogue.json` or `configs/...` | Command run outside the repository root, or data missing | `cd` to the repository root; Section 4 |
 | `LocalEntryNotFoundError` or "offline mode is enabled" | Embedding model not downloaded | Section 5 |
-| "no Vertex AI token" | Not logged in, or the `gcloud` lookup fix is missing | `gcloud auth application-default login`; use `fix/windows-setup` |
+| "no Vertex AI token" | Not logged in, or the `gcloud` lookup fix is missing | `gcloud auth application-default login`; use `fix/wind-eval` |
 | `403 PERMISSION_DENIED` from Vertex AI | The account has no access to the project | Ask T3 for access |
 | Port 8000 already in use | Another server is running | `uvicorn app.api.main:app --port 8010` and open that port |
 | `pip` fails to build a package | Python 3.14 or a 32-bit Python | Install 64-bit Python 3.13 |
