@@ -196,7 +196,12 @@ def smoke_runs(config: dict[str, Any], platform: str) -> list[RunSpec]:
 def check_data(config: dict[str, Any], root: Path = ROOT) -> dict[str, str]:
     """Compare each data file with the hash in the config; a missing file is a failure too."""
     status: dict[str, str] = {}
-    sections = [("", config["data"]), ("phase2.", config.get("phase2") or {})]
+    held = (config.get("parity") or {}).get("held_out") or {}
+    sections = [
+        ("", config["data"]),
+        ("phase2.", config.get("phase2") or {}),
+        ("parity.held_out.", {k: v for k, v in held.items() if k in ("train", "train_sha256")}),
+    ]
     for prefix, data in sections:
         for key in ("train", "calibration", "dev_synthetic", "smoke"):
             if key not in data:
@@ -228,6 +233,9 @@ def recorded_hashes(config: dict[str, Any]) -> dict[str, str | None]:
     for key in ("train", "smoke"):
         if key in phase2:
             recorded[phase2[key]] = phase2.get(f"{key}_sha256")
+    held = (config.get("parity") or {}).get("held_out") or {}
+    if "train" in held:
+        recorded[held["train"]] = held.get("train_sha256")
     return recorded
 
 
@@ -298,6 +306,30 @@ def full_sweep(config: dict[str, Any], train: Path | None = None) -> list[RunSpe
     if phase2:  # one model for tool and domain (Milestone 5): the ep3 recipe on the joint file
         for seed in phase2["seeds"]:
             add(f"joint_ep3_s{seed}", "joint", data=phase2["train"], seed=seed, **phase2["recipe"])
+    parity = config.get("parity")
+    if parity:  # Kev-Laya parity phase (docs/specs/kev_laya_parity_protocol.md)
+        recipes = parity["recipes"]
+        joint_train = config["phase2"]["train"]  # the parity joint runs use the phase 2 file
+        for name, seeds in parity["domain_seeds"].items():
+            for seed in seeds:
+                add(f"{name}_s{seed}", "parity_seed", seed=seed, **recipes[name])
+        for name, seeds in parity["joint_seeds"].items():
+            for seed in seeds:
+                add(
+                    f"joint_{name}_s{seed}",
+                    "parity_joint",
+                    data=joint_train,
+                    seed=seed,
+                    **recipes[name],
+                )
+        held = parity["held_out"]
+        add(
+            f"heldout_joint_{held['recipe']}_s{held['seed']}",
+            "held_out_table",
+            data=held["train"],
+            seed=held["seed"],
+            **recipes[held["recipe"]],
+        )
     from_base = sweep["from_base"]
     for rank in from_base["lora"]:
         # A fresh adapter and a fresh head: the library's from-base learning rate, not B0's

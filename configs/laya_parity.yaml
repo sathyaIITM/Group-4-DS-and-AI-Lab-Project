@@ -1,0 +1,54 @@
+# Laya runs of the Kev-Laya parity phase (Milestone 5). Protocol: docs/specs/kev_laya_parity_protocol.md
+# (fixed 24 Nov 2026 before any run under it). Plans: python scripts/laya_parity_plan.py.
+laya_version: 0.4.23
+base:
+  repo: convaiinnovations/laya
+  revision: fd4f9dbcf4fde222fd43174bdd4c3b08b789e4e1
+
+# Library defaults (laya-train --help), except: no internal hold-out (calib_frac 0, rule P1) and a
+# question budget that fits the tool question (head_max_len 320, rule P3). Training data are the
+# Kev-augmented variants of scripts/build_parity_data.py: `epochs` selects the file with that many
+# epoch variants, and Laya trains one pass over it (rule P2).
+default:
+  encoder_lr: 2.5e-5
+  head_lr: 1.0e-4
+  epochs: 4
+  micro_batch: 8
+  grad_accum: 8
+  loss: rlcd
+  calib_frac: 0.0
+  head_max_len: 320
+
+# One factor at a time from the default, as Kev's sweep (learning rate x0.5 and x2, epochs x0.5
+# and x1.5). The default runs with seeds 0, 1, 2; every other setting with seed 0.
+sweep:
+  lr1.25e-05: {encoder_lr: 1.25e-5}
+  lr5e-05: {encoder_lr: 5.0e-5}
+  ep2: {epochs: 2}
+  ep6: {epochs: 6}
+seeds: [0, 1, 2]
+
+# Selection (synthetic data only): the two sweep settings with the lowest dev_synthetic NLL after
+# temperature (seed 0) get seeds 1 and 2 in the domain cell and seeds 0-2 in the joint cell; the
+# first-ranked one also gets the held-out-table run (srs_imr_state, joint, seed 0).
+selection:
+  fit_temperature_on: calibration
+  select_on: dev_synthetic
+  metric: nll_after_temperature
+  tie_break: macro_f1
+
+# Evaluation files predicted on the Kaggle GPU after each run (decision_eval run format).
+# dev_human tool predictions are written as SEALED_* and stay unopened until the D17 re-adjudication.
+evaluation:
+  domain:
+    - {split: calibration, file: data/splits/kev_domain/calibration.v2.jsonl, decisions: [domain]}
+    - {split: dev_synthetic, file: data/splits/kev_domain/dev_synthetic.v2.jsonl, decisions: [domain]}
+    - {split: dev_human, file: data/splits/kev_domain/dev_human.v1.jsonl, decisions: [domain]}
+  joint:
+    - {split: calibration, file: data/splits/kev/calibration.v2.jsonl, decisions: [domain, tool]}
+    - {split: dev_synthetic, file: data/splits/kev/dev_synthetic.v2.jsonl, decisions: [domain, tool]}
+    - {split: dev_human, file: data/splits/kev_domain/dev_human.v1.jsonl, decisions: [domain, tool], sealed: [tool]}
+
+# Minutes on one T4 per 1,000 item passes, measured on laya_s0 (6,756 passes, 15.8 min with
+# loading): used only to balance the two GPU queues.
+minutes_per_1000_passes: 2.3

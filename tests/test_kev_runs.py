@@ -14,7 +14,8 @@ def test_plan_follows_the_flag_constraints() -> None:
     runs = kev_runs.plan(config, include_all=True)
     ids = [r.run_id for r in runs]
     assert ids[0] == "b0_s0"
-    assert len(ids) == 15  # 13 of the Milestone 4 sweep and 2 phase 2 runs
+    assert len(ids) == 24  # 13 of the Milestone 4 sweep, 3 phase 2 runs, 8 parity runs
+    assert {"ep3_s1", "lr4e-05_s2", "joint_lr4e-05_s0", "heldout_joint_ep3_s0"} <= set(ids)
     assert {"lr1e-05", "lr4e-05", "ep1", "ep3", "n250", "n500", "n1000", "b0_s1", "b0_s2"} <= set(
         ids
     )
@@ -82,7 +83,7 @@ def test_planned_runs_carry_platform_and_device() -> None:
     config = kev_runs.load_config()
     runs = kev_runs.plan(config)
     assert [r.run_id for r in runs] == list(config["planned"])
-    assert len(runs) == 10  # 8 of Milestone 4 and the 2 phase 2 runs
+    assert len(runs) == 19  # 8 of Milestone 4, 2 of phase 2 and 9 of the parity phase
     by_id = {r.run_id: r for r in runs}
     assert all(r.device == "cuda" for r in runs)  # every Kev run on a CUDA T4
     assert by_id["base_r16"].init_from is None and by_id["base_r16"].platform == "colab"
@@ -113,8 +114,10 @@ def test_smoke_run_is_one_epoch_on_the_smoke_file() -> None:
 
 def test_check_data_reports_mismatch(tmp_path: Path) -> None:
     config = kev_runs.load_config()
-    for section in (config["data"], config["phase2"]):
+    for section in (config["data"], config["phase2"], config["parity"]["held_out"]):
         for key in ("train", "calibration", "dev_synthetic", "smoke"):
+            if key not in section:
+                continue
             path = tmp_path / section[key]
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("x\n")
@@ -228,3 +231,19 @@ def test_phase2_split_keeps_state_and_labels() -> None:
     assert tool["state"] == domain["state"] == record["state"]
     assert list(tool["questions"]) == ["tool"] and list(domain["questions"]) == ["domain"]
     assert tool["_meta"] == {"family": "f", "question": "tool", "source_index": 7}
+
+
+def test_parity_runs_follow_the_protocol() -> None:
+    """Parity protocol: seeds of the two top settings, the joint cell, one held-out run."""
+    config = kev_runs.load_config()
+    by_id = {r.run_id: r for r in kev_runs.plan(config)}
+    ep3, lr4 = by_id["ep3_s1"], by_id["lr4e-05_s2"]
+    assert (ep3.epochs, ep3.lr, ep3.seed) == (3, 2.0e-5, 1)
+    assert (lr4.epochs, lr4.lr, lr4.seed) == (2, 4.0e-5, 2)
+    assert config["phase2"]["seeds"] == [0, 1]  # the phase 2 rule is not changed
+    assert by_id["joint_ep3_s2"].factor == "parity_joint"
+    assert by_id["joint_lr4e-05_s1"].data == config["phase2"]["train"]
+    held = by_id["heldout_joint_ep3_s0"]
+    assert held.data == config["parity"]["held_out"]["train"] and held.epochs == 3
+    colab = ("ep3_s1", "ep3_s2", "lr4e-05_s1", "lr4e-05_s2")
+    assert all(by_id[r].platform == "colab" for r in colab)

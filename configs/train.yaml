@@ -64,6 +64,24 @@ phase2:
   seeds: [0, 1]
 
 # Base configuration B0 (docs/Kev_Training_Plan.md Section 6, corrected for the flags above).
+# Parity phase (Milestone 5; docs/specs/kev_laya_parity_protocol.md, fixed 24 Nov 2026 before any
+# run under it). The two best sweep settings by dev_synthetic NLL (ep3, lr4e-05) get seeds 1 and 2
+# in the domain cell and seeds 0-2 in the joint cell; one held-out-table run (first-ranked setting).
+parity:
+  recipes:
+    ep3: {epochs: 3}
+    lr4e-05: {lr: 4.0e-5}
+  domain_seeds: {ep3: [1, 2], lr4e-05: [1, 2]}
+  # Joint cell: three seeds per setting. joint_ep3_s0 and _s1 are the phase 2 runs (phase2 above,
+  # fixed before any score and unchanged); the parity phase adds the runs below under its own rule.
+  joint_seeds: {ep3: [2], lr4e-05: [0, 1, 2]}
+  held_out:
+    table: srs_imr_state
+    recipe: ep3
+    seed: 0
+    train: data/splits/kev/phase2_split/train_heldout_srs_imr_state.v2.jsonl   # scripts/build_parity_data.py
+    train_sha256: ba57c49b538eab573bbc96a45407584301f7d33455e86972dcf14acd56a7ef71
+
 b0:
   lr: 2.0e-5
   epochs: 2
@@ -138,6 +156,13 @@ sessions:
   kaggle_3: [[ep3], [b0_s2, ep1]]
   colab_1: [[base_r16]]
   kaggle_4: [[joint_ep3_s0], [joint_ep3_s1]]   # phase 2 (Milestone 5)
+  # Parity phase (docs/specs/kev_laya_parity_protocol.md): Colab one run per session (each < 1 h),
+  # Kaggle for the joint and held-out runs (measured: joint ep3 128 min; 2-epoch joint estimated 85).
+  colab_2: [[lr4e-05_s1]]
+  colab_3: [[lr4e-05_s2]]
+  colab_4: [[ep3_s1]]
+  colab_5: [[ep3_s2]]
+  kaggle_5: [[joint_ep3_s2, heldout_joint_ep3_s0], [joint_lr4e-05_s0, joint_lr4e-05_s1, joint_lr4e-05_s2]]
 planned:
   b0_s0: kaggle
   lr1e-05: kaggle
@@ -149,6 +174,16 @@ planned:
   base_r16: colab
   joint_ep3_s0: kaggle
   joint_ep3_s1: kaggle
+  # parity phase
+  lr4e-05_s1: colab
+  lr4e-05_s2: colab
+  ep3_s1: colab
+  ep3_s2: colab
+  joint_ep3_s2: kaggle
+  joint_lr4e-05_s0: kaggle
+  joint_lr4e-05_s1: kaggle
+  joint_lr4e-05_s2: kaggle
+  heldout_joint_ep3_s0: kaggle
 # Priority if sessions fail: b0_s0, then lr1e-05 and lr4e-05, then the seeds, ep3 and ep1,
 # base_r16.
 
