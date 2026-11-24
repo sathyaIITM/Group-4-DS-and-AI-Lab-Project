@@ -82,9 +82,15 @@ hosted_llm:
 kev:
   model: jaredpalmer/kev-0.8b
   revision: bf75a6a8848ea6960ff2ed108d9ed44c2941174f
-  checkpoint: null             # fine-tuned run id from models/registry.json, once the gate is run
-  temperature: null            # fitted on the calibration split; null serves raw probabilities
+  # Fine-tuned run selected in Milestone 4 (outputs/reports/kev_selection.json) and gated on
+  # dev_human (outputs/reports/gate_domain.json). Served with scripts/serve_kev.sh
+  # models/checkpoints/ep3. Phase 1: the adapter is trained on the domain decision only.
+  checkpoint: ep3
+  # Fitted on the calibration split by NLL (outputs/reports/cascade_domain.json, kev_temperature).
+  temperature: 3.763404352848288
   serve:
+    model: kev-latest          # model name the Kev server answers to
+    default_base_url: http://127.0.0.1:8009
     base_url_env: KEV_BASE_URL
     api_key_env: KEV_API_KEY
     dtype: fp32
