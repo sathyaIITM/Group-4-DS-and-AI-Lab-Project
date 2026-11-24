@@ -85,7 +85,7 @@ def test_v4_uses_jev_for_tool_and_kev_for_domain_with_temperature() -> None:
         "What columns?",
         r.RouterContext(),
         [LINE],
-        _config(kev_temperature=2.0),
+        _config(kev_temperatures={"domain": 2.0}),
         r.Backends(kev=kev, jev=jev),
         Counters(),
     )
@@ -170,7 +170,8 @@ def test_v4_configuration_from_files() -> None:
     assert config.chains["domain"] == ["kev", "jev", "llm"]
     assert config.chains["tool"] == ["jev", "llm"]  # the ep3 adapter knows only the domain
     assert config.kev_revision == "ep3"
-    assert config.kev_temperature == pytest.approx(3.7634, abs=1e-4)
+    assert config.temperature_for("domain") == pytest.approx(3.7634, abs=1e-4)
+    assert config.temperature_for("tool") is None  # set only after the phase 2 tool gate
     band = config.bands["domain"]
     assert band.contains(0.30) and not band.contains(0.45) and not band.contains(0.9)
     assert config.bands["tool"].low is None
@@ -206,3 +207,29 @@ def test_kev_client_reads_the_environment(monkeypatch: pytest.MonkeyPatch) -> No
     assert client._model == "kev-latest"
     monkeypatch.delenv("KEV_BASE_URL")
     assert str(kev_client()._client.base_url).startswith("http://127.0.0.1:8009")
+
+
+def test_kev_temperature_per_decision() -> None:
+    tool_raw = _probs(TOOL_OPTIONS, "run_sql", 0.9)
+    domain_raw = _probs(DOMAIN_OPTIONS, "labour", 0.9)
+    kev = FakeBackend({"tool": tool_raw, "domain": domain_raw})
+    config = _config(
+        kev_temperature=None,
+        kev_temperatures={"tool": 1.5, "domain": 3.0},
+        chains={"tool": ["kev", "jev", "llm"], "domain": ["kev", "jev", "llm"]},
+    )
+    d = r.route("x", r.RouterContext(), [LINE], config, r.Backends(kev=kev), Counters()).decision
+    assert d.tool.temperature == 1.5 and d.domain.temperature == 3.0
+    assert d.tool.probabilities == pytest.approx(r.scale(tool_raw, 1.5))
+    assert d.domain.probabilities == pytest.approx(r.scale(domain_raw, 3.0))
+
+
+def test_kev_temperature_forms_in_model_yaml() -> None:
+    assert r._kev_temperatures(2.5) == {"kev_temperature": 2.5}
+    assert r._kev_temperatures(None) == {"kev_temperature": None}
+    both = r._kev_temperatures({"domain": 3.0, "tool": None})
+    assert both == {"kev_temperatures": {"domain": 3.0, "tool": None}}
+    single = r.RouterConfig(version="v4", chains={}, kev_temperature=2.0)
+    assert single.temperature_for("tool") == single.temperature_for("domain") == 2.0
+    with pytest.raises(ValueError, match="unknown decisions"):
+        r._kev_temperatures({"coverage": 1.0})

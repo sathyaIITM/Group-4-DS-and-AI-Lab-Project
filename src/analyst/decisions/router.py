@@ -85,16 +85,37 @@ class Band:
         return self.low is not None and self.high is not None and self.low <= p < self.high
 
 
+def _kev_temperatures(value: Any) -> dict[str, Any]:
+    """`kev.temperature` of model.yaml: one number for every decision, or one per decision."""
+    if isinstance(value, dict):
+        unknown = set(value) - set(DECISIONS)
+        if unknown:
+            raise ValueError(f"kev.temperature names unknown decisions: {sorted(unknown)}")
+        return {
+            "kev_temperatures": {k: (None if v is None else float(v)) for k, v in value.items()}
+        }
+    return {"kev_temperature": None if value is None else float(value)}
+
+
 @dataclass
 class RouterConfig:
     """Backends per decision, calibration temperatures and escalation bands for a version."""
 
     version: str
     chains: dict[str, list[Backend]]
-    kev_temperature: float | None = None
+    kev_temperature: float | None = None  # one temperature for every decision (Milestone 4)
+    # One temperature per decision (phase 2: a joint checkpoint is calibrated per decision);
+    # a decision listed here overrides `kev_temperature`.
+    kev_temperatures: dict[str, float | None] = field(default_factory=dict)
     kev_revision: str | None = None
     jev_model: str | None = None
     bands: dict[str, Band] = field(default_factory=dict)
+
+    def temperature_for(self, decision: str) -> float | None:
+        """The calibration temperature of Kev for one decision (None: raw probabilities)."""
+        if decision in self.kev_temperatures:
+            return self.kev_temperatures[decision]
+        return self.kev_temperature
 
     @classmethod
     def from_files(
@@ -127,7 +148,7 @@ class RouterConfig:
         return cls(
             version=version,
             chains=chains,
-            kev_temperature=mod["kev"].get("temperature"),
+            **_kev_temperatures(mod["kev"].get("temperature")),
             kev_revision=mod["kev"].get("checkpoint") or mod["kev"].get("revision"),
             jev_model=mod["jev"].get("model"),
             bands=bands,
@@ -220,7 +241,7 @@ def _ask_choice(
     started = time.perf_counter()
     answer = client.ask_choice(state.model_dump(), {decision: _question(decision)})
     raw = answer.answers[decision].probabilities
-    temperature = config.kev_temperature if backend == "kev" else None
+    temperature = config.temperature_for(decision) if backend == "kev" else None
     probabilities = scale(raw, temperature)
     label = max(probabilities, key=lambda k: probabilities[k])
     if label not in QUESTIONS[decision][1]:
