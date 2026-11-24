@@ -92,6 +92,43 @@ Produced by `scripts/build_manifest.py` on 2026-11-17. Recompute after regenerat
 | `data/splits/laya_domain/train.v2.jsonl` | 1,876 | - | 2,905,996 | `5234bcedfb1512243c8ec1c10203ce3064db1ad0458a8dee77765cc45cfe5892` |
 | `data/splits/laya_domain/train250.v2.jsonl` | 250 | - | 389,111 | `60b4b976bc1f195a52a59320980ebb2bc8f43105ad7c45622e74f285ed0508c7` |
 
+## Parity phase training files (Milestone 5; not tracked)
+
+Written by `~/kev-src/.venv/bin/python -I scripts/build_parity_data.py --kev-src ~/kev-src --root .`
+(protocol `docs/specs/kev_laya_parity_protocol.md`). The Laya files hold the Kev-augmented variants of
+every epoch (gzip-compressed JSONL); every hash is also in `data/splits/laya_parity/hashes.json`.
+
+| File | Rows | Columns | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `data/splits/kev/phase2_split/train_heldout_srs_imr_state.v2.jsonl` | 3,656 | - | 8,381,306 | `ba57c49b538eab573bbc96a45407584301f7d33455e86972dcf14acd56a7ef71` |
+| `data/splits/laya_parity/domain/s0_e2.jsonl.gz` | 3,752 | - | 229,435 | `20a399442b6e6ece0a99942bb562403b8d98cd7588c66d8438bc79642fa58a86` |
+| `data/splits/laya_parity/domain/s0_e4.jsonl.gz` | 7,504 | - | 458,268 | `ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157` |
+| `data/splits/laya_parity/domain/s0_e6.jsonl.gz` | 11,256 | - | 686,668 | `75d2a0c55bdfec9f2a5217ab1f8124abb6e5a25fac53ad0ad6887c744119594f` |
+| `data/splits/laya_parity/domain/s1_e2.jsonl.gz` | 3,752 | - | 228,946 | `819d6afc71b9acfc0f57ee7074ec87af3ac0f2bf8a4df6f47cb35900b7161a65` |
+| `data/splits/laya_parity/domain/s1_e4.jsonl.gz` | 7,504 | - | 457,744 | `9f6bbd8733d01e1c2274ca26b3283e7f406f3afe8f52fd276c917c1298a1a93a` |
+| `data/splits/laya_parity/domain/s1_e6.jsonl.gz` | 11,256 | - | 685,955 | `760095acd4e9192ad3511e03938b25327bcaba576a27a5549bf721187c67c883` |
+| `data/splits/laya_parity/domain/s2_e2.jsonl.gz` | 3,752 | - | 229,655 | `032dc8ab8538ba42dcaf1d95f9adbd2d0575090b96c76001ac59ee00ebfe6dfe` |
+| `data/splits/laya_parity/domain/s2_e4.jsonl.gz` | 7,504 | - | 457,894 | `9cf598cf5572730f050a90fa4ac234ab7cd233dd008dc4ca00fc2aa7faec0bed` |
+| `data/splits/laya_parity/domain/s2_e6.jsonl.gz` | 11,256 | - | 686,677 | `08156067c80d83910ceccced4c031fd4156cbaa5c4c2ebe87f658b30d04e00ed` |
+| `data/splits/laya_parity/joint/s0_e2.jsonl.gz` | 7,504 | - | 430,576 | `5115bc34a87665ae1b499e42a81e4d6d027aeb1047a3682e7b45364cb48c2a55` |
+| `data/splits/laya_parity/joint/s0_e4.jsonl.gz` | 15,008 | - | 860,085 | `26d41dbf7693dfe70d09885677f9111d93af9abb8f8309405c856094c2cd1db8` |
+| `data/splits/laya_parity/joint/s0_e6.jsonl.gz` | 22,512 | - | 1,289,361 | `fa1055634ae523b423ba9b471e66b3c05f7244a96dd69acb4568806f450f4a45` |
+| `data/splits/laya_parity/joint/s1_e2.jsonl.gz` | 7,504 | - | 429,491 | `d77fdf0e15d83171edc52fa23a41e84dbafd8f84bf6f1d7a5856bfc8719682bf` |
+| `data/splits/laya_parity/joint/s1_e4.jsonl.gz` | 15,008 | - | 859,124 | `d2613151a07968cbbafba4f7ebd5993fe91b62d8a74304ede96044a17482b287` |
+| `data/splits/laya_parity/joint/s1_e6.jsonl.gz` | 22,512 | - | 1,287,993 | `c5369b9b6595a28476bb3a76c61a38d7824dfb4983bc73bfca90e936882caff1` |
+| `data/splits/laya_parity/joint/s2_e2.jsonl.gz` | 7,504 | - | 430,865 | `04283967ff2ec197b99408dc2b4a2adc2b40efc725682022522e0dd303e6a4a4` |
+| `data/splits/laya_parity/joint/s2_e4.jsonl.gz` | 15,008 | - | 859,824 | `0ec582fd084090aa6f541bbb9ed645d2d584f6fb0b53510aea601f066a37ebf4` |
+| `data/splits/laya_parity/joint/s2_e6.jsonl.gz` | 22,512 | - | 1,288,932 | `517e829f4f81c2390cf8f113073820010d57236d970da9f1ffaf646ec2839603` |
+| `data/splits/laya_parity/joint_heldout/s0_e2.jsonl.gz` | 7,312 | - | 420,082 | `3a21ece98719d8c24f17f9224fb4608e6e3a21d74f7b7a177a3042cd03c8859f` |
+| `data/splits/laya_parity/joint_heldout/s0_e4.jsonl.gz` | 14,624 | - | 839,024 | `b7f9535286466218771aed2d274b01b91b41c25b36709720977a7344e43eec85` |
+| `data/splits/laya_parity/joint_heldout/s0_e6.jsonl.gz` | 21,936 | - | 1,257,751 | `d2db5dacc898a0b43eb9f8bc9459dd8880c45cffe272c368ee34399ee2ec2a2d` |
+| `data/splits/laya_parity/joint_heldout/s1_e2.jsonl.gz` | 7,312 | - | 419,403 | `4b168f89a5612632516d826aeda10bab80cf86ccfbdcc6b1770395e70debcc55` |
+| `data/splits/laya_parity/joint_heldout/s1_e4.jsonl.gz` | 14,624 | - | 838,660 | `1b7feddaa0912cd0ee87157d8e839428142156ff3a7fb0258950f01932b7ab6c` |
+| `data/splits/laya_parity/joint_heldout/s1_e6.jsonl.gz` | 21,936 | - | 1,257,114 | `2cded0377063364a94a83ca108bd3a9b59c050ebccb46b17862c706fde1fb700` |
+| `data/splits/laya_parity/joint_heldout/s2_e2.jsonl.gz` | 7,312 | - | 420,464 | `ca1a38e9b127ba6dee118f82413f15175fe06460a5d4d9d79984cc7cd77fd177` |
+| `data/splits/laya_parity/joint_heldout/s2_e4.jsonl.gz` | 14,624 | - | 838,813 | `94486525262aefa77d13230f8a2b4199c18958804ebce4b2326a1b0de1d7701e` |
+| `data/splits/laya_parity/joint_heldout/s2_e6.jsonl.gz` | 21,936 | - | 1,257,636 | `542edfc1b57fc57e051fa83ac644f624189c7219ca877f09d164d9e80a1ecac8` |
+
 ## dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
