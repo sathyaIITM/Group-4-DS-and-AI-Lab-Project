@@ -531,19 +531,8 @@ def kev_client(model_config: Path | None = None) -> Any:
     )
 
 
-def live_model_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
-    """Model-backed nodes on the real LLM client, from `configs/model.yaml` and the environment.
-    A `variant` from `configs/inference.yaml` (for example `jev_routing`) changes the decision
-    backends; Jev is connected whenever a chain names it.
-
-    Calling a node with this client spends the project's cloud credit (and Jev credit).
-    """
-    client = LlmClient.from_config()
-    config = RouterConfig.from_files(version, variant=variant)
-    uses_jev = any("jev" in chain for chain in config.chains.values())
-    jev = jev_client() if uses_jev else None
-    uses_kev = any("kev" in chain for chain in config.chains.values())
-    kev = kev_client() if uses_kev else None
+def live_tool_nodes() -> dict[str, NodeFn]:
+    """The deterministic tool nodes on the published tables and `configs/reference` files."""
     from analyst.agents.context import _obs, published_catalogue
     from analyst.agents.tool_nodes import ToolNodeDependencies, make_tool_nodes
     from analyst.tools.sql_runner import ReadOnlyDatabase
@@ -566,6 +555,28 @@ def live_model_nodes(version: str, variant: str | None = None) -> dict[str, Node
             database_for=database_for,
         )
     )
+    return tool_nodes
+
+
+def live_model_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
+    """Model-backed nodes on the real LLM client, from `configs/model.yaml` and the environment.
+    A `variant` from `configs/inference.yaml` (for example `jev_routing`) changes the decision
+    backends; Jev is connected whenever a chain names it.
+
+    Calling a node with this client spends the project's cloud credit (and Jev credit).
+    """
+    from analyst.inference.prompts import PinnedPromptRegistry, prompt_pins
+
+    client = LlmClient.from_config()
+    pins = prompt_pins(version)
+    if pins:  # v3 and later may pin optimised prompts (configs/model.yaml, prompt_pins)
+        client.registry = PinnedPromptRegistry(pins)
+    config = RouterConfig.from_files(version, variant=variant)
+    uses_jev = any("jev" in chain for chain in config.chains.values())
+    jev = jev_client() if uses_jev else None
+    uses_kev = any("kev" in chain for chain in config.chains.values())
+    kev = kev_client() if uses_kev else None
+    tool_nodes = live_tool_nodes()
     return {
         **make_model_nodes(
             ModelNodeDependencies(client, config, Backends(kev=kev, jev=jev, llm=client), jev=jev)

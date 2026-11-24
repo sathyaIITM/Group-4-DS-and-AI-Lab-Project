@@ -109,3 +109,15 @@ websockets==17.4
 xlsxwriter==3.3.1
 xxhash==4.1.0
 zstandard==0.25.0
+
+# Added 2026-11-25 for v3 (GEPA optimisation of the intent prompt; extra "optimise")
+attrs==26.1.0
+cachetools==8.0.2
+diskcache==5.6.3
+dspy==3.5.0
+gepa==0.1.4
+json-repair==0.64.9
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.9.1

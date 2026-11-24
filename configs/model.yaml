@@ -29,6 +29,7 @@ hosted_llm:
     route: 300
     decline: 800              # 2026-11-19: thinking used about 290 tokens even at minimal
     describe: 1200            # 2026-11-19: a 300 cap cut the reply after the thinking
+    reflect: 6000             # GEPA reflection (v3 prompt optimisation): a full new instruction
   # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
   # on Gemini 3). Starting values, to be tuned on e2e_dev. Thinking tokens are billed as output.
   thinking:
@@ -41,6 +42,7 @@ hosted_llm:
       clarify: minimal
       decline: minimal
       describe: minimal
+      reflect: low              # GEPA reflection, on the large tier
     on_regenerate:              # a query regenerated after a failed result check
       sql: low                  # medium until 19 Nov: about 10 s against a 12 s timeout
     # Tokens added to the purpose's output cap for each level (option (a), 2026-11-17). On a
@@ -110,3 +112,9 @@ embedding:
   model: BAAI/bge-small-en-v1.5
   revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
   dim: 384
+
+# Prompt pins per agent version (Milestone 5). A version listed here uses the given versioned
+# prompt for a prompt id; other ids, and every version not listed, use the highest version in
+# configs/prompts/. v3 pins the intent prompt chosen by GEPA (scripts/optimise_prompts.py) once
+# it is reviewed; v4 adds Kev on top of v3, so it carries the same pins.
+prompt_pins: {}

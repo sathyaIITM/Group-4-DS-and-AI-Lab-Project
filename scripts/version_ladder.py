@@ -139,7 +139,7 @@ def main() -> int:
     parser.add_argument("--set", required=True, help="dev or test")
     parser.add_argument("--rows", nargs="+", required=True, help="NAME=report.json")
     parser.add_argument("--out", type=Path, required=True, help="output path without suffix")
-    parser.add_argument("--scorer", choices=["v1", "v2"], default="v2", help="scorer rules")
+    parser.add_argument("--scorer", choices=["v1", "v2", "v3"], default="v2", help="scorer rules")
     args = parser.parse_args()
     from analyst.evaluation import e2e_eval
 

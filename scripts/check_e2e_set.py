@@ -99,6 +99,26 @@ FIELDS: dict[str, type | tuple[type, ...]] = {
     "validated": bool,
     "written_on": str,
 }
+# Structured gold fields added in Milestone 5 (data/eval/README.md, "Fields added in Milestone
+# 5"); optional, so the Milestone 4 file still passes. None is allowed while unfilled.
+OPTIONAL_FIELDS: dict[str, tuple[type, ...]] = {
+    "domain": (str,),
+    "clarify_slot": (str,),
+    "clarify_options": (list,),
+    "expected_places": (list,),
+    "expected_periods": (list,),
+    "indicator_ids": (list,),
+    "unit": (str,),
+    "n_values": (int,),
+    "gold_lineage": (str,),
+    "validated_by": (str,),
+    "gold_version": (int,),
+}
+DOMAINS = {
+    "labour", "agriculture", "rainfall", "prices_economy", "health", "other", "multiple",
+    "unspecified",
+}  # fmt: skip
+SLOTS = {"place", "period", "indicator", "category", "geo_level"}
 
 
 def derive(kind: str, values: list[float]) -> list[float]:
@@ -147,9 +167,19 @@ def check_shape(item: dict[str, Any]) -> list[str]:
             isinstance(item[name], bool) and name != "validated"
         ):
             errors.append(f"field {name} has the wrong type")
-    extra = set(item) - set(FIELDS)
+    extra = set(item) - set(FIELDS) - set(OPTIONAL_FIELDS)
     if extra:
         errors.append(f"unknown fields {sorted(extra)}")
+    for name, kinds in OPTIONAL_FIELDS.items():
+        value = item.get(name)
+        if value is not None and (not isinstance(value, kinds) or isinstance(value, bool)):
+            errors.append(f"field {name} has the wrong type")
+    if item.get("domain") is not None and item["domain"] not in DOMAINS:
+        errors.append(f"domain must be one of {sorted(DOMAINS)}")
+    if item.get("clarify_slot") is not None and item["clarify_slot"] not in SLOTS:
+        errors.append(f"clarify_slot must be one of {sorted(SLOTS)}")
+    if item.get("clarify_slot") is not None and item.get("expected_action") != "clarify":
+        errors.append("clarify_slot is set on an item that is not a clarify item")
     if errors:
         return errors
     if not re.fullmatch(r"e2e-\d{3}", item["id"]):

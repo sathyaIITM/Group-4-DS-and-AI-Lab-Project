@@ -7,7 +7,10 @@ import pytest
 
 from analyst.inference.prompts import PROMPT_DIR, PromptError, PromptRegistry, load_prompt
 
-EXPECTED = {"intent", "sql", "sql_repair", "narrate", "clarify", "route", "decline", "describe"}
+EXPECTED = {
+    "intent", "sql", "sql_repair", "narrate", "clarify", "route", "decline", "describe",
+    "reflect",  # GEPA reflection for the v3 prompt optimisation (Milestone 5)
+}  # fmt: skip
 
 
 @pytest.fixture(scope="module")
