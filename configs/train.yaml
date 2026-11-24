@@ -40,6 +40,29 @@ data:
   # Routing data v2 itself (tool and domain): data/splits/kev/*.v2.jsonl, hashes in MANIFEST.
   subsets_dir: data/splits/kev_domain/subsets   # train-size runs; written by `kev_runs subsets`
 
+# Phase 2 (Milestone 5, decided 2026-11-24): one Kev model for tool selection and domain, trained
+# on routing data v2 (both questions, as one record per question), from the same pinned warm start. The
+# recipe is the Milestone 4 selection (`ep3`: B0 with 3 epochs), fixed before any phase 2 score;
+# two seeds show the spread. Selection, fixed in advance: one temperature per decision fitted on
+# `calibration`; the seed with the lower mean `dev_synthetic` NLL over the two decisions after
+# temperature. Adoption: the gate of configs/inference.yaml on the tool labels of dev_human v1.1
+# (labelling guide 1.1) and on the domain labels of dev_human.
+phase2:
+  # One single-question record per decision (scripts/build_phase2_split.py): both questions on
+  # one record made the 32-record smoke run grow to about 18 GB on the local machine (24 Nov).
+  train: data/splits/kev/phase2_split/train.v2.jsonl   # 3,752 records from the 1,876 of v2
+  train_sha256: 1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747
+  joint_source: data/splits/kev/train.v2.jsonl
+  joint_source_sha256: 4829691c1b21b5243185fb308e882e7e490e199bf1a67d649e6eeaf6f29ca427
+  calibration: data/splits/kev/calibration.v2.jsonl
+  calibration_sha256: f1a8fafc64fa829e3fde12375a262366658cec7b9d0faa43af3ce58c4c4b5c2f
+  dev_synthetic: data/splits/kev/dev_synthetic.v2.jsonl
+  dev_synthetic_sha256: 3a249faf05ac85c099a45a4c6a0d522cbd17df7918186a80f3edfc7f7db9fac3
+  smoke: data/splits/kev/phase2_split/overfit32.v2.jsonl   # 64 = 32 joint records split
+  smoke_sha256: 3b223d51db5bc1854dc4a437294b61eb54aae903f0b414090314e25b0b6772b8
+  recipe: {epochs: 3}
+  seeds: [0, 1]
+
 # Base configuration B0 (docs/Kev_Training_Plan.md Section 6, corrected for the flags above).
 b0:
   lr: 2.0e-5
@@ -114,6 +137,7 @@ sessions:
   kaggle_2: [[lr4e-05], [b0_s1]]
   kaggle_3: [[ep3], [b0_s2, ep1]]
   colab_1: [[base_r16]]
+  kaggle_4: [[joint_ep3_s0], [joint_ep3_s1]]   # phase 2 (Milestone 5)
 planned:
   b0_s0: kaggle
   lr1e-05: kaggle
@@ -123,6 +147,8 @@ planned:
   b0_s2: kaggle
   ep1: kaggle
   base_r16: colab
+  joint_ep3_s0: kaggle
+  joint_ep3_s1: kaggle
 # Priority if sessions fail: b0_s0, then lr1e-05 and lr4e-05, then the seeds, ep3 and ep1,
 # base_r16.
 

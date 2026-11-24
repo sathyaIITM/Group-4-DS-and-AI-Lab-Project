@@ -1,6 +1,7 @@
 """Run one planned Kev training run on the local machine (Apple MPS) and keep its records.
 
     caffeinate -i .venv/bin/python scripts/run_kev_local.py smoke   # 32 records, 1 epoch
+    caffeinate -i .venv/bin/python scripts/run_kev_local.py smoke_joint   # phase 2 smoke file
     caffeinate -i .venv/bin/python scripts/run_kev_local.py <run>   # a run planned for "local"
 
 No Kev run is planned for the local machine at present (all train on CUDA T4s); the script
@@ -31,6 +32,7 @@ from analyst.models.kev_runs import (  # noqa: E402
     load_config,
     plan,
     plan_meta,
+    recorded_hashes,
     sha256_file,
     smoke_run,
 )
@@ -46,11 +48,13 @@ VERSIONS = (
 def main() -> None:
     """Run a planned Kev training run on the local machine."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("run_id", help="a run planned for the local platform, or 'smoke'")
+    parser.add_argument(
+        "run_id", help="a run planned for the local platform, 'smoke' or 'smoke_joint'"
+    )
     args = parser.parse_args()
     config = load_config()
-    if args.run_id == "smoke":
-        run = smoke_run(config, "local")
+    if args.run_id in ("smoke", "smoke_joint"):
+        run = smoke_run(config, "local", joint=args.run_id == "smoke_joint")
     else:
         runs = {r.run_id: r for r in plan(config)}
         run = runs[args.run_id]
@@ -69,8 +73,7 @@ def main() -> None:
         raise SystemExit(f"the Kev clone at {kev_dir} has local changes")
     data = ROOT / run.data
     digest = sha256_file(data)
-    expected = {config["data"][k]: config["data"][f"{k}_sha256"] for k in ("train", "smoke")}
-    if digest != expected.get(run.data):
+    if digest != recorded_hashes(config).get(run.data):
         raise SystemExit(f"hash mismatch for {run.data}")
     out = ROOT / "models" / "checkpoints" / run.run_id
     if out.exists():  # kev.train refuses an existing --out; so does this script

@@ -163,15 +163,19 @@ def pinned_init(config: dict[str, Any]) -> str:
     return f"{config['init_from']['model']}@{config['init_from']['revision']}"
 
 
-def smoke_run(config: dict[str, Any], platform: str, suffix: str = "") -> RunSpec:
+def smoke_run(
+    config: dict[str, Any], platform: str, suffix: str = "", joint: bool = False
+) -> RunSpec:
     """One epoch of B0 on the 32-record smoke file with accumulation 2 (16 optimizer steps,
-    so kev.train prints at least one loss line): checks set-up, memory and speed."""
+    so kev.train prints at least one loss line): checks set-up, memory and speed. With
+    `joint`, the phase 2 smoke file (both questions per record)."""
     b0 = dict(config["b0"])
     b0.update(epochs=1, accum=2, device=config["platforms"][platform])
+    data = config["phase2"]["smoke"] if joint else config["data"]["smoke"]
     return RunSpec(
-        run_id=f"smoke_{platform}{suffix}",
+        run_id=f"smoke_{platform}{'_joint' if joint else ''}{suffix}",
         factor="smoke",
-        data=config["data"]["smoke"],
+        data=data,
         init_from=pinned_init(config),
         base=config["base"]["model"],
         base_revision=config["base"]["revision"],
@@ -191,17 +195,21 @@ def smoke_runs(config: dict[str, Any], platform: str) -> list[RunSpec]:
 
 def check_data(config: dict[str, Any], root: Path = ROOT) -> dict[str, str]:
     """Compare each data file with the hash in the config; a missing file is a failure too."""
-    data = config["data"]
     status: dict[str, str] = {}
-    for key in ("train", "calibration", "dev_synthetic", "smoke"):
-        expected = data.get(f"{key}_sha256")
-        path = root / data[key]
-        if not path.exists():
-            status[key] = "missing"
-        elif expected is None:
-            status[key] = "no hash in config"
-        else:
-            status[key] = "ok" if sha256_file(path) == expected else "HASH MISMATCH"
+    sections = [("", config["data"]), ("phase2.", config.get("phase2") or {})]
+    for prefix, data in sections:
+        for key in ("train", "calibration", "dev_synthetic", "smoke"):
+            if key not in data:
+                continue
+            expected = data.get(f"{key}_sha256")
+            path = root / data[key]
+            if not path.exists():
+                status[prefix + key] = "missing"
+            elif expected is None:
+                status[prefix + key] = "no hash in config"
+            else:
+                ok = sha256_file(path) == expected
+                status[prefix + key] = "ok" if ok else "HASH MISMATCH"
     return status
 
 
@@ -210,8 +218,17 @@ def _data_hash(config: dict[str, Any], data: str) -> str | None:
     path = ROOT / data
     if path.exists():
         return sha256_file(path)
+    return recorded_hashes(config).get(data)
+
+
+def recorded_hashes(config: dict[str, Any]) -> dict[str, str | None]:
+    """Training and smoke files with the hash recorded in the config, phase 2 included."""
     recorded = {config["data"][k]: config["data"].get(f"{k}_sha256") for k in ("train", "smoke")}
-    return recorded.get(data)
+    phase2 = config.get("phase2") or {}
+    for key in ("train", "smoke"):
+        if key in phase2:
+            recorded[phase2[key]] = phase2.get(f"{key}_sha256")
+    return recorded
 
 
 def plan_meta(config: dict[str, Any], config_path: Path = TRAIN_CONFIG) -> dict[str, Any]:
@@ -277,6 +294,10 @@ def full_sweep(config: dict[str, Any], train: Path | None = None) -> list[RunSpe
     for seed in sweep["seeds"]:
         if seed != b0["seed"]:
             add(f"b0_s{seed}", "seed", seed=seed)
+    phase2 = config.get("phase2")
+    if phase2:  # one model for tool and domain (Milestone 5): the ep3 recipe on the joint file
+        for seed in phase2["seeds"]:
+            add(f"joint_ep3_s{seed}", "joint", data=phase2["train"], seed=seed, **phase2["recipe"])
     from_base = sweep["from_base"]
     for rank in from_base["lora"]:
         # A fresh adapter and a fresh head: the library's from-base learning rate, not B0's
@@ -491,6 +512,7 @@ def main() -> None:
     plan_cmd.add_argument("--out", type=Path)
     plan_cmd.add_argument("--all", action="store_true", help="the full sweep, deferred runs too")
     plan_cmd.add_argument("--smoke", metavar="PLATFORM", help="only the smoke run of a platform")
+    plan_cmd.add_argument("--joint", action="store_true", help="with --smoke: phase 2 smoke file")
     sub.add_parser("check-data")
     subsets_cmd = sub.add_parser("subsets")
     subsets_cmd.add_argument("--data", type=Path)
@@ -509,7 +531,11 @@ def main() -> None:
             raise SystemExit(1)
     elif args.command == "plan":
         if args.smoke:
-            runs = smoke_runs(config, args.smoke)
+            runs = (
+                [smoke_run(config, args.smoke, joint=True)]
+                if args.joint
+                else smoke_runs(config, args.smoke)
+            )
         else:
             runs = plan(config, args.data, include_all=args.all)
         if args.out:
