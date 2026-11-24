@@ -506,6 +506,31 @@ def jev_client(model_config: Path | None = None) -> Any:
     return SystemOneClient(backend["base_url"], jev["model"], api_key=key, timeout_s=10.0)
 
 
+def kev_client(model_config: Path | None = None) -> Any:
+    """The Kev client from `configs/model.yaml` (`kev.serve`) and the environment.
+
+    The server address is `KEV_BASE_URL` (default `kev.serve.default_base_url`); `KEV_API_KEY` is
+    optional (the server is local). The server returns raw probabilities; the router applies the
+    fitted temperature.
+    """
+    import os
+
+    import yaml
+
+    from analyst.decisions.system_one import SystemOneClient
+
+    path = model_config or Path("configs/model.yaml")
+    kev = yaml.safe_load(path.read_text(encoding="utf-8"))["kev"]
+    serve = kev["serve"]
+    base_url = os.environ.get(serve["base_url_env"]) or serve["default_base_url"]
+    return SystemOneClient(
+        base_url,
+        serve.get("model", "kev-latest"),
+        api_key=os.environ.get(serve["api_key_env"]),
+        timeout_s=10.0,
+    )
+
+
 def live_model_nodes(version: str, variant: str | None = None) -> dict[str, NodeFn]:
     """Model-backed nodes on the real LLM client, from `configs/model.yaml` and the environment.
     A `variant` from `configs/inference.yaml` (for example `jev_routing`) changes the decision
@@ -517,6 +542,8 @@ def live_model_nodes(version: str, variant: str | None = None) -> dict[str, Node
     config = RouterConfig.from_files(version, variant=variant)
     uses_jev = any("jev" in chain for chain in config.chains.values())
     jev = jev_client() if uses_jev else None
+    uses_kev = any("kev" in chain for chain in config.chains.values())
+    kev = kev_client() if uses_kev else None
     from analyst.agents.context import _obs, published_catalogue
     from analyst.agents.tool_nodes import ToolNodeDependencies, make_tool_nodes
     from analyst.tools.sql_runner import ReadOnlyDatabase
@@ -541,7 +568,7 @@ def live_model_nodes(version: str, variant: str | None = None) -> dict[str, Node
     )
     return {
         **make_model_nodes(
-            ModelNodeDependencies(client, config, Backends(jev=jev, llm=client), jev=jev)
+            ModelNodeDependencies(client, config, Backends(kev=kev, jev=jev, llm=client), jev=jev)
         ),
         **tool_nodes,
     }
