@@ -214,7 +214,30 @@ def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
         "tokens_out": sum(record.tokens_out for record in state.llm_records),
         "cost_usd_est": sum(record.cost_usd_est or 0.0 for record in state.llm_records),
         "run_id": state.run_id,
+        # Every routing decision in order (route, then escalation): backend, label, calibrated
+        # and raw probabilities, escalation, fallback, latency. Used to check Kev's confidence
+        # inside the agent (v4) against the gold domain.
+        "decisions": [_decision_record(record) for record in state.decision_log],
     }
+
+
+def _decision_record(record: Any) -> dict[str, Any]:
+    """Dump a routing decision with the backend's raw probabilities restored.
+
+    The router stores calibrated probabilities, p_cal proportional to p_raw ** (1 / T); the raw
+    ones are p_raw proportional to p_cal ** T, exact up to the router's clipping at 1e-12.
+    """
+    row: dict[str, Any] = record.model_dump(mode="json")
+    temperature = record.temperature
+    if record.calibrated and temperature:
+        powered = {
+            k: max(float(v), 1e-12) ** float(temperature) for k, v in record.probabilities.items()
+        }
+        total = sum(powered.values())
+        row["raw_probabilities"] = {k: v / total for k, v in powered.items()}
+    else:
+        row["raw_probabilities"] = dict(record.probabilities)
+    return row
 
 
 def _first_event_ms(state: Any) -> int | None:
