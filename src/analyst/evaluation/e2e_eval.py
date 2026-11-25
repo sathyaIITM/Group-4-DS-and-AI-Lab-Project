@@ -664,8 +664,12 @@ def compare_runs(
     gold: list[dict[str, Any]] | None = None,
     resamples: int = 10_000,
     seed: int = 0,
+    only_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     """Paired comparison of two configurations on the same items (B minus A).
+
+    `only_ids` restricts both sides to those items (for example the new test items, when one
+    configuration was run on them only).
 
     Per item, the success rate over its repeated runs; the mean difference has a bootstrap 95%
     interval over items. An exact McNemar test compares majority success (at least half of the
@@ -679,6 +683,8 @@ def compare_runs(
         scores: dict[str, list[bool]] = {}
         for cases in runs:
             for case in cases:
+                if only_ids is not None and str(case["id"]) not in only_ids:
+                    continue
                 scores.setdefault(str(case["id"]), []).append(_case_success(case))
         return {k: sum(v) / len(v) for k, v in scores.items()}
 
@@ -977,6 +983,7 @@ def main() -> int:
     compare_parser.add_argument("--b", type=Path, nargs="+", required=True, help="new runs")
     compare_parser.add_argument("--scorer", choices=["v1", "v2", "v3"], default="v3")
     compare_parser.add_argument("--gold", type=Path, nargs="+")
+    compare_parser.add_argument("--only", type=Path, help="compare only the items of this set")
     compare_parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "split":
@@ -1011,7 +1018,8 @@ def main() -> int:
     SCORER_RULES = args.scorer
     gold = [item for path in args.gold for item in load_set(path)] if args.gold else None
     if args.command == "compare":
-        comparison = compare_runs(args.a, args.b, gold)
+        only = {str(i["id"]) for i in load_set(args.only)} if args.only else None
+        comparison = compare_runs(args.a, args.b, gold, only_ids=only)
         comparison.update(
             a=[str(p) for p in args.a],
             b=[str(p) for p in args.b],

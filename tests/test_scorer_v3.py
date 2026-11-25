@@ -225,3 +225,16 @@ def test_compare_runs_paired(tmp_path: Path) -> None:
         "only_b_succeeds": 6,
         "p_value_exact": pytest.approx(0.03125),
     }
+
+
+def test_compare_runs_only_ids(tmp_path: Path) -> None:
+    a_cases = [_answer_case(id=f"e2e-{i}", narrated_numbers=[10.0]) for i in range(4)]
+    b_cases = [_answer_case(id=f"e2e-{i}") for i in range(6)]
+    a, b = tmp_path / "a.jsonl", tmp_path / "b.jsonl"
+    a.write_text("".join(json.dumps(c) + "\n" for c in a_cases))
+    b.write_text("".join(json.dumps(c) + "\n" for c in b_cases))
+    with pytest.raises(ValueError, match="different items"):
+        e2e_eval.compare_runs([a], [b], resamples=100)
+    only = {f"e2e-{i}" for i in range(4)}
+    result = e2e_eval.compare_runs([a], [b], resamples=100, only_ids=only)
+    assert result["items"] == 4 and result["difference_b_minus_a"] == pytest.approx(1.0)

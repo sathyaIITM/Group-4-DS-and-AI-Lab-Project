@@ -1,0 +1,161 @@
+{
+  "note": "Temperatures fitted on calibration.v2 (Laya: on top of its own internal temperature).",
+  "systems": {
+    "Kev zero-shot": {
+      "temperature": 1.0356,
+      "macro_auroc": 0.9021,
+      "macro_average_precision": 0.6973,
+      "per_label": {
+        "labour": {
+          "auroc": 0.991,
+          "average_precision": 0.9566
+        },
+        "agriculture": {
+          "auroc": 0.9912,
+          "average_precision": 0.9448
+        },
+        "rainfall": {
+          "auroc": 0.9998,
+          "average_precision": 0.9987
+        },
+        "prices_economy": {
+          "auroc": 0.961,
+          "average_precision": 0.8345
+        },
+        "health": {
+          "auroc": 0.9752,
+          "average_precision": 0.8563
+        },
+        "other": {
+          "auroc": 0.8991,
+          "average_precision": 0.7515
+        },
+        "multiple": {
+          "auroc": 0.625,
+          "average_precision": 0.0801
+        },
+        "unspecified": {
+          "auroc": 0.7745,
+          "average_precision": 0.1559
+        }
+      }
+    },
+    "Kev ep3": {
+      "temperature": 3.7634,
+      "macro_auroc": 0.9997,
+      "macro_average_precision": 0.9976,
+      "per_label": {
+        "labour": {
+          "auroc": 0.9997,
+          "average_precision": 0.9987
+        },
+        "agriculture": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "rainfall": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "prices_economy": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "health": {
+          "auroc": 0.9998,
+          "average_precision": 0.9988
+        },
+        "other": {
+          "auroc": 0.9993,
+          "average_precision": 0.9946
+        },
+        "multiple": {
+          "auroc": 0.9996,
+          "average_precision": 0.9936
+        },
+        "unspecified": {
+          "auroc": 0.9996,
+          "average_precision": 0.9952
+        }
+      }
+    },
+    "Jev": {
+      "temperature": 1.0151,
+      "macro_auroc": 0.9991,
+      "macro_average_precision": 0.9918,
+      "per_label": {
+        "labour": {
+          "auroc": 0.9992,
+          "average_precision": 0.9966
+        },
+        "agriculture": {
+          "auroc": 0.9998,
+          "average_precision": 0.9985
+        },
+        "rainfall": {
+          "auroc": 0.9998,
+          "average_precision": 0.9987
+        },
+        "prices_economy": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "health": {
+          "auroc": 0.9998,
+          "average_precision": 0.9988
+        },
+        "other": {
+          "auroc": 0.9998,
+          "average_precision": 0.9982
+        },
+        "multiple": {
+          "auroc": 0.9946,
+          "average_precision": 0.9433
+        },
+        "unspecified": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        }
+      }
+    },
+    "Laya laya_s0": {
+      "temperature": 1.2154,
+      "macro_auroc": 0.9947,
+      "macro_average_precision": 0.9495,
+      "per_label": {
+        "labour": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "agriculture": {
+          "auroc": 0.9977,
+          "average_precision": 0.9843
+        },
+        "rainfall": {
+          "auroc": 0.9996,
+          "average_precision": 0.9973
+        },
+        "prices_economy": {
+          "auroc": 0.9973,
+          "average_precision": 0.9879
+        },
+        "health": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "other": {
+          "auroc": 0.9983,
+          "average_precision": 0.9899
+        },
+        "multiple": {
+          "auroc": 0.9695,
+          "average_precision": 0.6879
+        },
+        "unspecified": {
+          "auroc": 0.995,
+          "average_precision": 0.949
+        }
+      }
+    }
+  }
+}
