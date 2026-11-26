@@ -46,8 +46,9 @@ escalation:
   # Calibrated maximum probability inside [low, high) is re-asked to Jev. Set on the
   # calibration split for the 5% error budget; null disables escalation.
   # Domain: band [0, threshold) from the cascade fitted on the calibration split at a 5% error
-  # budget (outputs/reports/cascade_domain.json: threshold 0.4458 after temperature 3.7634).
-  domain: {low: 0.0, high: 0.4458168112457468}
+  # budget, for ep3_s2 (outputs/reports/cascade_domain_ep3_s2.json: threshold 0.4080 after
+  # temperature 3.6522; ep3 was 0.4458 after 3.7634).
+  domain: {low: 0.0, high: 0.40796539941722326}
   tool: {low: null, high: null}
 
 gate:

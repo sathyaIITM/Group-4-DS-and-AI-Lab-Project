@@ -168,12 +168,12 @@ def test_escalation_inside_the_band_only() -> None:
 def test_v4_configuration_from_files() -> None:
     config = r.RouterConfig.from_files("v4")
     assert config.chains["domain"] == ["kev", "jev", "llm"]
-    assert config.chains["tool"] == ["jev", "llm"]  # the ep3 adapter knows only the domain
-    assert config.kev_revision == "ep3"
-    assert config.temperature_for("domain") == pytest.approx(3.7634, abs=1e-4)
+    assert config.chains["tool"] == ["jev", "llm"]  # the ep3_s2 adapter knows only the domain
+    assert config.kev_revision == "ep3_s2"
+    assert config.temperature_for("domain") == pytest.approx(3.6522, abs=1e-4)
     assert config.temperature_for("tool") is None  # set only after the phase 2 tool gate
     band = config.bands["domain"]
-    assert band.contains(0.30) and not band.contains(0.45) and not band.contains(0.9)
+    assert band.contains(0.30) and not band.contains(0.41) and not band.contains(0.9)
     assert config.bands["tool"].low is None
 
 
