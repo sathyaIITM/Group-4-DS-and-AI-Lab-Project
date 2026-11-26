@@ -1,13 +1,14 @@
 """Plan and stage the Laya runs of the parity phase (configs/laya_parity.yaml).
 
     python scripts/laya_parity_plan.py --stage sweep
-    python scripts/laya_parity_plan.py --stage finals --top2 lr5e-05 ep6 \
-        --selection outputs/reports/laya_parity/sweep_selection.json
+    python scripts/laya_parity_plan.py --stage finals --top2 lr5e-05 ep6 --parts 3 \
+        --selection outputs/reports/laya_parity/selection_laya_sweep.json
 
-Writes `<stage dir>/laya_parity_plan_<stage>.json` (runs, two balanced GPU queues, file hashes,
+Writes `<stage dir>/laya_parity_plan_<stage>.json` (runs, balanced GPU queues, file hashes,
 repository commit) and copies every file the stage needs into the stage directory under a flat
 name (Kaggle datasets are flat). Upload the directory as the private Kaggle dataset
-`group4-laya-parity` (a new version for the finals stage).
+`group4-laya-parity` (a new version for the finals stage). With `--parts N` the runs are
+balanced over N Kaggle sessions of two GPUs each (`parts`); the notebook's `PART` picks one.
 """
 
 from __future__ import annotations
@@ -91,6 +92,7 @@ def main() -> int:
     ap.add_argument("--stage", choices=["sweep", "finals"], required=True)
     ap.add_argument("--top2", nargs=2, metavar="SETTING")
     ap.add_argument("--selection", type=Path, help="the scored sweep the top 2 come from")
+    ap.add_argument("--parts", type=int, default=1, help="Kaggle sessions (2 GPUs each)")
     ap.add_argument("--out", type=Path, default=STAGE_DIR)
     a = ap.parse_args()
     cfg = yaml.safe_load(CONFIG.read_text())
@@ -124,6 +126,8 @@ def main() -> int:
             shutil.copyfile(src, a.out / flat(item["file"]))
             files[flat(item["file"])] = sha256(src)
 
+    queues = balance(runs, 2 * a.parts)
+    parts = [queues[2 * i : 2 * i + 2] for i in range(a.parts)]
     plan = {
         "meta": {
             "stage": a.stage,
@@ -139,17 +143,16 @@ def main() -> int:
         "base": cfg["base"],
         "evaluation": {cell: cfg["evaluation"][cell] for cell in sorted(cells)},
         "runs": runs,
-        "queues": balance(runs),
+        "queues": [q for part in parts for q in part],
+        "parts": parts,
         "files": files,
     }
     (a.out / f"laya_parity_plan_{a.stage}.json").write_text(json.dumps(plan, indent=2) + "\n")
-    est = {
-        i: sum(r["est_minutes"] for r in runs if r["run_id"] in q)
-        for i, q in enumerate(plan["queues"])
-    }
+    minutes = {r["run_id"]: r["est_minutes"] for r in runs}
+    est = [[round(sum(minutes[x] for x in q), 1) for q in part] for part in parts]
     print(
         json.dumps(
-            {"runs": [r["run_id"] for r in runs], "queues": plan["queues"], "est_minutes": est},
+            {"runs": [r["run_id"] for r in runs], "parts": parts, "est_minutes": est},
             indent=2,
         )
     )
