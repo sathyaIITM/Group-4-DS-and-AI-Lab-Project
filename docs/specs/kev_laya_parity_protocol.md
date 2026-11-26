@@ -60,9 +60,10 @@ it competes in the cell selection of Section 5 with those three seeds. Kev's `ba
 (adapter trained from the base model) has no Laya counterpart (`laya-train` starts only from a
 Laya checkpoint) and is reported as a Milestone 4 exploratory run.
 
-Platforms: Laya on Kaggle (2 x T4, one queue per GPU); Kev joint and held-out runs on Kaggle
-(2 x T4); Kev domain seeds on Colab (one T4, one run at a time; each under one hour: 35 and 54
-minutes measured). Laya starts from `convaiinnovations/laya` at revision
+Platforms: all runs on Kaggle (2 x T4, one queue per GPU). Laya in stages K1 and K3; Kev joint
+and held-out runs in session `kaggle_5`; Kev domain seeds in session `kaggle_6` (first planned as
+four one-run Colab sessions, 35 and 54 minutes measured; moved to Kaggle on 26 November with the
+same settings and seeds). Laya starts from `convaiinnovations/laya` at revision
 `fd4f9dbcf4fde222fd43174bdd4c3b08b789e4e1`; Kev from `jaredpalmer/kev-0.8b` at `bf75a6a8`.
 
 ## 5. Selection (synthetic data only)
@@ -103,7 +104,7 @@ end-to-end test.
 
 | When | What |
 | --- | --- |
-| Tue 24 Nov, evening | Kaggle K1: Laya sweep (7 runs, about 70 min); Colab: Kev domain `lr4e-05_s1`, `_s2`, `ep3_s1`, `_s2` |
+| Tue 24 Nov, evening | Kaggle K1: Laya sweep (7 runs, about 70 min); Kev domain `lr4e-05_s1`, `_s2`, `ep3_s1`, `_s2` (moved to Kaggle `kaggle_6` on 26 November) |
 | Tue 24 Nov, night | Kaggle K2: Kev joint and held-out (5 runs, about 4.5 h, unattended) |
 | Wed 25 Nov, early | Laya sweep scored; top-2 settings fixed; Kaggle K3: Laya seeds, joint and held-out (11 runs, about 3 h) |
 | Wed 25 Nov, day | Scoring; D17; tool scoring; choice per decision by 17:00 |
