@@ -2,7 +2,7 @@
 
 GEPA (the `gepa` library, which DSPy's `dspy.GEPA` optimiser wraps) evolves the text of a prompt
 from scored runs and written feedback. Here it evolves one component: the instruction text of
-the intent prompt's system section (`configs/prompts/intent.v9.md`, before the catalogue block).
+the intent prompt's system section (`configs/prompts/intent.v10.md`, before the catalogue block).
 The catalogue block, the user section and every placeholder stay fixed, so a candidate cannot
 drop an input, and the provider's cache of the catalogue prefix still applies.
 
