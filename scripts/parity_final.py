@@ -247,9 +247,9 @@ def main() -> int:
     for name, path in (
         ("Kev joint_lr4e-05_s1 (served joint)", PRED / "domain_joint_lr4e-05_s1_dev_human.jsonl"),
         ("Kev heldout_joint_ep3_s0", PRED / "domain_heldout_joint_ep3_s0_dev_human.jsonl"),
-        ("Kev joint_ep3_s2 (same setting)", PRED / "domain_joint_ep3_s2_dev_human.jsonl"),
+        ("Kev joint_ep3_s0 (same setting and seed)", PRED / "domain_joint_ep3_s0_dev_human.jsonl"),
         (
-            "Laya laya_joint_ep6_s0 (same setting)",
+            "Laya laya_joint_ep6_s0 (same setting and seed)",
             LAYA / "laya_joint_ep6_s0" / "domain_dev_human.jsonl",
         ),
         (
@@ -262,6 +262,14 @@ def main() -> int:
         held_out[name] = {"items": len(ids), "correct": sum(c[i] for i in ids)}
     for name, path in (
         ("Kev heldout_joint_ep3_s0", PRED / "tool_heldout_joint_ep3_s0_dev_human.jsonl"),
+        (
+            "Kev joint_ep3_s0 (same setting and seed)",
+            PRED / "tool_joint_ep3_s0_dev_human.jsonl",
+        ),
+        (
+            "Laya laya_joint_ep6_s0 (same setting and seed)",
+            LAYA / "laya_joint_ep6_s0" / "SEALED_tool_dev_human.jsonl",
+        ),
         (
             "Laya laya_heldout_joint_ep6_s0",
             LAYA / "laya_heldout_joint_ep6_s0" / "SEALED_tool_dev_human.jsonl",

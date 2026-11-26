@@ -340,17 +340,29 @@
       "items": 15,
       "correct": 14
     },
-    "Kev joint_ep3_s2 (same setting)": {
+    "Kev joint_ep3_s0 (same setting and seed)": {
       "items": 15,
       "correct": 14
     },
-    "Laya laya_joint_ep6_s0 (same setting)": {
+    "Laya laya_joint_ep6_s0 (same setting and seed)": {
       "items": 15,
       "correct": 13
     },
     "Laya laya_heldout_joint_ep6_s0": {
       "items": 15,
       "correct": 10
+    },
+    "Kev heldout_joint_ep3_s0 tool": {
+      "items": 15,
+      "correct": 11
+    },
+    "Kev joint_ep3_s0 (same setting and seed) tool": {
+      "items": 15,
+      "correct": 11
+    },
+    "Laya laya_joint_ep6_s0 (same setting and seed) tool": {
+      "items": 15,
+      "correct": 9
     },
     "Laya laya_heldout_joint_ep6_s0 tool": {
       "items": 15,
