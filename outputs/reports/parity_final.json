@@ -255,6 +255,56 @@
     "laya_joint_lr5e-05_s1/tool/dev_synthetic": 0.969,
     "laya_joint_lr5e-05_s1/tool/dev_human": 0.9242
   },
+  "stress_v1_domain": {
+    "Kev ep3_s2": {
+      "n": 80,
+      "accuracy": 0.838,
+      "accuracy_ci95": [
+        0.75,
+        0.912
+      ],
+      "macro_f1": 0.839,
+      "ece": 0.117,
+      "nll": 0.9397,
+      "temperature": 3.652
+    },
+    "Jev": {
+      "n": 80,
+      "accuracy": 0.925,
+      "accuracy_ci95": [
+        0.863,
+        0.975
+      ],
+      "macro_f1": 0.927,
+      "ece": 0.063,
+      "nll": 0.1701,
+      "temperature": 1.015
+    },
+    "Laya laya_dom_ep6_s1": {
+      "n": 80,
+      "accuracy": 0.787,
+      "accuracy_ci95": [
+        0.688,
+        0.875
+      ],
+      "macro_f1": 0.782,
+      "ece": 0.172,
+      "nll": 1.0297,
+      "temperature": 4.785
+    },
+    "Laya laya_joint_lr5e-05_s1": {
+      "n": 80,
+      "accuracy": 0.738,
+      "accuracy_ci95": [
+        0.637,
+        0.825
+      ],
+      "macro_f1": 0.732,
+      "ece": 0.167,
+      "nll": 1.2684,
+      "temperature": 3.956
+    }
+  },
   "held_out_table": {
     "table": "srs_imr_state",
     "dev_human_ids": [

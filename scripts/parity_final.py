@@ -203,6 +203,22 @@ def main() -> int:
                 a = {r["id"]: r["predicted"] for r in rows(k)}
                 b = {r["id"]: r["predicted"] for r in rows(m)}
                 agreement[f"{run}/{dec}/{split}"] = round(sum(a[i] == b[i] for i in a) / len(a), 4)
+    stress = {}
+    for name, cal, path in (
+        ("Kev ep3_s2", "domain_ep3_s2_calibration.jsonl", "domain_ep3_s2_stress_v1.jsonl"),
+        ("Jev", "domain_jev_v2_calibration.jsonl", "domain_jev_stress_v1.jsonl"),
+        (
+            "Laya laya_dom_ep6_s1",
+            "domain_laya_dom_ep6_s1_mac_calibration.jsonl",
+            "domain_laya_dom_ep6_s1_mac_stress_v1.jsonl",
+        ),
+        (
+            "Laya laya_joint_lr5e-05_s1",
+            "domain_laya_joint_lr5e-05_s1_mac_calibration.jsonl",
+            "domain_laya_joint_lr5e-05_s1_mac_stress_v1.jsonl",
+        ),
+    ):
+        stress[name] = summary(report(PRED / cal, PRED / path, "domain"))
     held = held_out_ids()
     held_out = {}
     for name, path in (
@@ -240,6 +256,7 @@ def main() -> int:
         "tool": tool,
         "tool_mcnemar": tool_tests,
         "laya_kaggle_vs_local_agreement": agreement,
+        "stress_v1_domain": stress,
         "held_out_table": {"table": "srs_imr_state", "dev_human_ids": sorted(held), **held_out},
     }
     (ROOT / "outputs" / "reports" / "parity_final.json").write_text(
