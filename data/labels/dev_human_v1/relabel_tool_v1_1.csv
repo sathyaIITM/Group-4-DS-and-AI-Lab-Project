@@ -1,0 +1,51 @@
+item_id,label_v1,label_v1_1,rule,note
+dh-001,ask_clarification,ask_clarification,R12,The requested current weekly status definition is not the definition held by the unemployment table; clarify and offer the table’s usual-status measure.
+dh-003,ask_clarification,ask_clarification,R10; K4; M8,"A number is requested, but no measure is identified; ask what figure is wanted."
+dh-004,ask_clarification,ask_clarification,R10; K4; M8,A comparison is requested without identifying the measure; ask what should be compared.
+dh-007,run_sql,run_sql,R13; K11,"The follow-up asks for another place, so it needs new Tamil Nadu rows rather than an edit to the existing result."
+dh-014,search_catalog,search_catalog,R2,The user asks whether vehicle-registration data exists; an existence/catalogue question is a search even when the topic is outside the five core domains.
+dh-018,ask_clarification,ask_clarification,R14; H11b,January–December 2019 cannot be reconstructed from the July–June PLFS survey-year grain; clarify and offer the relevant survey year(s).
+dh-020,run_sql,run_sql,C4; R6; K3,"These are two independent requested figures, not a joint comparison; retrieve each covered measure separately."
+dh-021,ask_clarification,ask_clarification,R10; K4; M8,The north–south comparison has no named measure or prior result; ask what should be compared.
+dh-022,ask_clarification,ask_clarification,R10; K4; M8,A ranking is requested without naming the measure; ask what “best” refers to.
+dh-023,decline_not_covered,decline_not_covered,R7,Daily wages are not a measure in the shown catalogue candidates; the requested measure is absent.
+dh-030,decline_not_covered,decline_not_covered,R7,"School-enrolment ratio is not covered by a shown table; this is a request for a figure, not a request to search for table metadata."
+dh-034,ask_clarification,ask_clarification,R12,The requested girls-specific IMR is a population split not held by the shown IMR table; clarify and offer the table’s available total.
+dh-042,decline_not_covered,decline_not_covered,R16; C11,Overlaying unemployment on the rainfall result requires a joint analysis across the non-overlapping rainfall and PLFS periods; decline before charting.
+dh-048,decline_not_covered,decline_not_covered,R7,The IMR table is not among the candidates shown in this state; absence from the shown catalogue takes precedence over the full published catalogue.
+dh-050,ask_clarification,ask_clarification,R10; K9,“Bangalore” maps to two district rows (Bangalore Urban and Bangalore Rural); ask which district is intended.
+dh-052,ask_clarification,ask_clarification,C7,“The lockdown” is a named event without a date; ask which period is intended.
+dh-065,decline_not_covered,decline_not_covered,R7,Road-accident deaths are not a measure in the shown tables; decline the uncovered figure request.
+dh-067,search_catalog,search_catalog,R17 fallback; K7,There is no prior result and no table or topic is named; the provenance question falls back to catalogue search.
+dh-068,search_catalog,search_catalog,R2; K6,The user asks whether literacy data exists; data-existence questions are searches even when the topic is outside the five domains.
+dh-071,decline_not_covered,decline_not_covered,R7,No MGNREGA person-days table exists in the published catalogue; the requested measure is absent.
+dh-074,ask_clarification,ask_clarification,R10; K5,"The rainfall table has no All-India row, so the missing place cannot default to All India; ask which place or sub-division."
+dh-075,run_sql,run_sql,R6; K1,Maharashtra per-capita GSDP for 2020–21 is within the shown table’s 2019–20 to 2023–24 coverage.
+dh-077,ask_clarification,ask_clarification,C7; K5,“During demonetisation” names an event but gives no date; ask which period to use.
+dh-078,decline_not_covered,decline_not_covered,R7,Maternal mortality ratio is not held by a shown table; the published health tables do not supply this measure.
+dh-086,ask_clarification,ask_clarification,R10; K8,“Best” is not a defined rainfall criterion; ask whether the user means wettest or closest to normal before highlighting a row.
+dh-087,search_catalog,search_catalog,R17 fallback; K7,There is no result and no table or topic is named; the calculation/provenance question falls back to catalogue search.
+dh-094,search_catalog,search_catalog,R15; H9,"The hospital-beds table is not shown, but health is within the five domains; search the catalogue for the table."
+dh-095,ask_clarification,ask_clarification,R14; H11b,An April–March financial year cannot be rebuilt from the July–June PLFS survey-year grain; clarify and offer the available survey-year alternatives.
+dh-109,search_catalog,search_catalog,R15; H9,"The fertiliser table is not shown, but agriculture/farm inputs is within the five domains; search the catalogue."
+dh-113,ask_clarification,ask_clarification,R10,"A district-level stunting figure requires a district, and the district table has no national default; ask which district."
+dh-116,ask_clarification,ask_clarification,R12; K5,The named female split is absent from the PLFS unemployment table; clarify and offer the persons-15+ figure available in the table.
+dh-120,run_sql,run_sql,R6; D2; D3; D4; D7; K5,"Defaults resolve the omissions: All India, survey year 2019–20, usual status (ps+ss), and persons aged 15+; state these assumptions in the answer."
+dh-123,decline_not_covered,decline_not_covered,R16; K3,"The requested comparison needs 2020 mandi prices, but the shown mandi table is a one-day 2026 snapshot; the joint analysis is not covered."
+dh-125,decline_not_covered,decline_not_covered,R9,The CPI table is national-only and has no Tamil Nadu/state grain; the requested geographic level is unavailable.
+dh-130,run_sql,run_sql,R6; K15; D1,NFHS-5 covers out-of-pocket childbirth spending in a public facility at district level; use the NFHS-5 round as the period and retrieve Patna.
+dh-131,decline_not_covered,decline_not_covered,R8; K1,The PLFS unemployment table ends in 2021–22; 2023–24 is outside its period coverage.
+dh-137,decline_not_covered,decline_not_covered,R7; K15,General health spending is not covered; the available NFHS indicator is limited to out-of-pocket childbirth cost in a public facility.
+dh-146,describe_table,describe_table,R3; C1; K10,The message asks for the shown IMR table’s unit as well as a figure; the higher-precedence table-metadata intent decides.
+dh-150,ask_clarification,ask_clarification,R10; K4; M8,A lowest-value ranking is requested without naming a measure and there is no prior result; ask which figure to rank.
+dh-153,explain_result,explain_result,R17,A result exists and the user asks for the sources of those two figures; explain the provenance of the stored result.
+dh-158,ask_clarification,ask_clarification,R10; C6,The mandi table is market-level and has no All-India row; the market/place is required and cannot default.
+dh-159,describe_table,describe_table,R3,The user asks about the geographic coverage of the named NFHS district file; this is a question about a shown table’s coverage.
+dh-170,ask_clarification,ask_clarification,R10; K7; M8,"There is no prior result to resolve “that”, and no measure is named; ask which figure to repeat for Jharkhand."
+dh-172,ask_clarification,ask_clarification,R10; K7; M8,There is no prior result or named measure for “the national figure”; ask which measure is intended.
+dh-173,decline_not_covered,decline_not_covered,R9,"The PLFS unemployment table is at July–June survey-year grain, not monthly; the requested month-level figure is unavailable."
+dh-174,ask_clarification,ask_clarification,R10; K4; M8,The message asks for a figure in 2021 but identifies no measure or prior result; ask what value is wanted.
+dh-187,make_chart,make_chart,R4,Both series are already present in the result table and the requested action is to chart those existing rows together.
+dh-189,run_sql,run_sql,R6; D1; K2,"“Latest month” for a published CPI statistic means the latest period available in the table, not a real-time value."
+dh-198,decline_not_covered,decline_not_covered,R7; C5,"The user requests an absolute unemployed headcount in lakh, while the available table holds rates; the requested measure is absent."
+dh-199,decline_not_covered,decline_not_covered,R8,August 2018 is outside the IMD sub-division rainfall table’s 1901–2017 coverage.
