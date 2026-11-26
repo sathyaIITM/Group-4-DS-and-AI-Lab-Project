@@ -29,7 +29,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "outputs" / "reports"
 KEV_SWEEP = ["lr1e-05", "lr4e-05", "ep1", "ep3"]  # one factor at a time around B0 (b0_s0..s2)
 KEV_CELLS = {
-    "domain": {
+    "domain": {  # the default B0 competes with its three seeds (protocol Section 4)
+        "b0": ["b0_s0", "b0_s1", "b0_s2"],
         "ep3": ["ep3", "ep3_s1", "ep3_s2"],
         "lr4e-05": ["lr4e-05", "lr4e-05_s1", "lr4e-05_s2"],
     },
@@ -117,9 +118,11 @@ def cell_choice(cells: dict[str, dict[str, list[dict[str, dict[str, Any]]]]]) ->
     return out
 
 
-def kev_report(run_id: str, decisions: tuple[str, ...]) -> dict[str, dict[str, Any]]:
+def kev_report(
+    run_id: str, decisions: tuple[str, ...], reports: Path = REPORTS
+) -> dict[str, dict[str, Any]]:
     """Kev reports of one run, as written by scripts/score_kev_run.sh and decision_eval score."""
-    return {d: json.loads((REPORTS / f"score_{d}_{run_id}.json").read_text()) for d in decisions}
+    return {d: json.loads((reports / f"score_{d}_{run_id}.json").read_text()) for d in decisions}
 
 
 def main() -> int:
@@ -132,6 +135,9 @@ def main() -> int:
         "--pred-root", type=Path, default=ROOT / "outputs" / "predictions" / "laya_parity"
     )
     ap.add_argument("--out", type=Path, default=REPORTS / "laya_parity")
+    ap.add_argument(
+        "--kev-reports", type=Path, default=REPORTS, help="where the Kev score_*.json reports are"
+    )
     a = ap.parse_args()
     a.out.mkdir(parents=True, exist_ok=True)
 
@@ -168,19 +174,19 @@ def main() -> int:
                         )
             result = cell_choice(cells)
     elif a.stage == "sweep":
-        result = top2({rid: kev_report(rid, ("domain",)) for rid in KEV_SWEEP})
+        result = top2({rid: kev_report(rid, ("domain",), a.kev_reports) for rid in KEV_SWEEP})
         result["default_seed_nll"] = [
-            round(run_nll(kev_report(f"b0_s{s}", ("domain",))), 5) for s in (0, 1, 2)
+            round(run_nll(kev_report(f"b0_s{s}", ("domain",), a.kev_reports)), 5) for s in (0, 1, 2)
         ]
     else:
         result = cell_choice(
             {
                 "domain": {
-                    k: [kev_report(r, ("domain",)) for r in v]
+                    k: [kev_report(r, ("domain",), a.kev_reports) for r in v]
                     for k, v in KEV_CELLS["domain"].items()
                 },
                 "joint": {
-                    k: [kev_report(r, ("domain", "tool")) for r in v]
+                    k: [kev_report(r, ("domain", "tool"), a.kev_reports) for r in v]
                     for k, v in KEV_CELLS["joint"].items()
                 },
             }
