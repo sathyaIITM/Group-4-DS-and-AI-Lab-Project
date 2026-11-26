@@ -1,0 +1,240 @@
+{
+  "calibration_n": 322,
+  "fitted_temperature": 4.416568691862133,
+  "calibration_raw": {
+    "n": 322,
+    "temperature": 1.0,
+    "accuracy": 0.9596273291925466,
+    "accuracy_ci95": [
+      0.9378105590062111,
+      0.9813664596273292
+    ],
+    "macro_f1": 0.9375486538813025,
+    "per_label_f1": {
+      "labour": 0.983957219251337,
+      "agriculture": 1.0,
+      "rainfall": 0.9672131147540983,
+      "prices_economy": 1.0,
+      "health": 0.9772727272727273,
+      "other": 0.8928571428571429,
+      "multiple": 0.8695652173913043,
+      "unspecified": 0.8095238095238095
+    },
+    "support": {
+      "labour": 93,
+      "agriculture": 21,
+      "rainfall": 63,
+      "prices_economy": 42,
+      "health": 43,
+      "other": 27,
+      "multiple": 12,
+      "unspecified": 21
+    },
+    "nll": 0.43360380700336554,
+    "brier": 0.06354026580787486,
+    "ece": 0.028976137414331034,
+    "auroc_correct": 0.8404281802340055,
+    "mean_confidence": 0.9861223725968303,
+    "reliability": [
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "n": 2,
+        "confidence": 0.3892300569943006,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "n": 2,
+        "confidence": 0.4641219321932193,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "n": 3,
+        "confidence": 0.5326333333312553,
+        "accuracy": 0.3333333333333333
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 1,
+        "confidence": 0.6722999999959661,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "n": 1,
+        "confidence": 0.7216999999956698,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "n": 1,
+        "confidence": 0.866999999994798,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "n": 312,
+        "confidence": 0.9998903846084107,
+        "accuracy": 0.9807692307692307
+      }
+    ],
+    "latency_s_p50": 0.03480040940627305,
+    "latency_s_p95": 0.03572498390624901,
+    "cost_usd_per_1000": null
+  },
+  "dev_raw": {
+    "n": 198,
+    "temperature": 1.0,
+    "accuracy": 0.9444444444444444,
+    "accuracy_ci95": [
+      0.9090909090909091,
+      0.9747474747474747
+    ],
+    "macro_f1": 0.9217944312598363,
+    "per_label_f1": {
+      "labour": 1.0,
+      "agriculture": 0.9411764705882353,
+      "rainfall": 0.9818181818181818,
+      "prices_economy": 0.9508196721311475,
+      "health": 1.0,
+      "other": 0.8636363636363636,
+      "multiple": 0.7619047619047619,
+      "unspecified": 0.875
+    },
+    "support": {
+      "labour": 38,
+      "agriculture": 25,
+      "rainfall": 27,
+      "prices_economy": 31,
+      "health": 28,
+      "other": 23,
+      "multiple": 12,
+      "unspecified": 14
+    },
+    "nll": 1.1984279342935193,
+    "brier": 0.11125279154161603,
+    "ece": 0.05815918513687634,
+    "auroc_correct": 0.6178901312591152,
+    "mean_confidence": 0.9937378625056799,
+    "reliability": [
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 1,
+        "confidence": 0.6345,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "n": 2,
+        "confidence": 0.7438945297557812,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "n": 1,
+        "confidence": 0.8609139086091391,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "n": 194,
+        "confidence": 0.9988499680824945,
+        "accuracy": 0.9484536082474226
+      }
+    ],
+    "latency_s_p50": 0.03675661059375557,
+    "latency_s_p95": 0.03712774446873368,
+    "cost_usd_per_1000": null
+  },
+  "dev_calibrated": {
+    "n": 198,
+    "temperature": 4.416568691862133,
+    "accuracy": 0.9444444444444444,
+    "accuracy_ci95": [
+      0.9090909090909091,
+      0.9747474747474747
+    ],
+    "macro_f1": 0.9217944312598363,
+    "per_label_f1": {
+      "labour": 1.0,
+      "agriculture": 0.9411764705882353,
+      "rainfall": 0.9818181818181818,
+      "prices_economy": 0.9508196721311475,
+      "health": 1.0,
+      "other": 0.8636363636363636,
+      "multiple": 0.7619047619047619,
+      "unspecified": 0.875
+    },
+    "support": {
+      "labour": 38,
+      "agriculture": 25,
+      "rainfall": 27,
+      "prices_economy": 31,
+      "health": 28,
+      "other": 23,
+      "multiple": 12,
+      "unspecified": 14
+    },
+    "nll": 0.33099559067602913,
+    "brier": 0.11127020614194777,
+    "ece": 0.048407889049234654,
+    "auroc_correct": 0.61934856587263,
+    "mean_confidence": 0.9582624075700771,
+    "reliability": [
+      {
+        "low": 0.2,
+        "high": 0.30000000000000004,
+        "n": 4,
+        "confidence": 0.2865674276004457,
+        "accuracy": 0.75
+      },
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "n": 3,
+        "confidence": 0.3118091218285093,
+        "accuracy": 0.6666666666666666
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "n": 1,
+        "confidence": 0.4939002576760827,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 1,
+        "confidence": 0.6648818818699562,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "n": 189,
+        "confidence": 0.9867485581134492,
+        "accuracy": 0.9576719576719577
+      }
+    ],
+    "latency_s_p50": 0.03675661059375557,
+    "latency_s_p95": 0.03712774446873368,
+    "cost_usd_per_1000": null
+  },
+  "inputs_sha256": {
+    "calibration": "2b771f480ddb0df6b6d39394291dceece236a05a56470e2ccaf2321901d292fa",
+    "dev": "62462cbcf9addaacc12b48507bdee209cfe3fba0a3bc8673c9432f4bcc2fb408"
+  }
+}

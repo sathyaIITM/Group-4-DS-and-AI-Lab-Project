@@ -1,0 +1,15 @@
+{
+  "run_id": "laya_dom_ep6_s1_mac",
+  "decision": "domain",
+  "checkpoint": "models/checkpoints/laya_dom_ep6_s1",
+  "weights_sha256": {
+    "model.safetensors": "6b20ef096e3d5d7b1759a67acf5b67883d4cf1e22db1a7f897e9ac55e301f711"
+  },
+  "server": "laya-serve (laya[serve]==0.4.23), LAYA_EXTRA_MODELS laya_dom_ep6_s1, model=laya_dom_ep6_s1",
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "77381ecd565be643cbad02088996b1270f6cc5e515a0eee7bd975ea6c0f6afdf",
+  "device": "mps",
+  "n_predictions": 355,
+  "created_utc": "2026-11-26T13:24:42+00:00"
+}

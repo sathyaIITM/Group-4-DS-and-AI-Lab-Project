@@ -1,0 +1,262 @@
+{
+  "calibration_n": 322,
+  "fitted_temperature": 8.129604088234107,
+  "calibration_raw": {
+    "n": 322,
+    "temperature": 1.0,
+    "accuracy": 0.7111801242236024,
+    "accuracy_ci95": [
+      0.6614906832298136,
+      0.7577639751552795
+    ],
+    "macro_f1": 0.6723221917845956,
+    "per_label_f1": {
+      "run_sql": 0.696969696969697,
+      "make_chart": 0.5,
+      "describe_table": 0.7804878048780488,
+      "search_catalog": 0.7868852459016393,
+      "ask_clarification": 0.6888888888888889,
+      "decline_not_covered": 0.8427672955974843,
+      "explain_result": 0.41025641025641024
+    },
+    "support": {
+      "run_sql": 95,
+      "make_chart": 21,
+      "describe_table": 21,
+      "search_catalog": 33,
+      "ask_clarification": 52,
+      "decline_not_covered": 77,
+      "explain_result": 23
+    },
+    "nll": 4.262780622028536,
+    "brier": 0.48748911029295044,
+    "ece": 0.20333565370137227,
+    "auroc_correct": 0.7459266563365733,
+    "mean_confidence": 0.9081428949844579,
+    "reliability": [
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "n": 10,
+        "confidence": 0.3771114251411608,
+        "accuracy": 0.2
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "n": 20,
+        "confidence": 0.459915813832293,
+        "accuracy": 0.4
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "n": 21,
+        "confidence": 0.5348266817357449,
+        "accuracy": 0.47619047619047616
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 3,
+        "confidence": 0.6579886155255875,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "n": 4,
+        "confidence": 0.7551439093871632,
+        "accuracy": 0.0
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "n": 2,
+        "confidence": 0.8371500000000001,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "n": 262,
+        "confidence": 0.9982915261693202,
+        "accuracy": 0.7824427480916031
+      }
+    ],
+    "latency_s_p50": 0.04210837287500624,
+    "latency_s_p95": 0.042435619343748954,
+    "cost_usd_per_1000": null
+  },
+  "dev_raw": {
+    "n": 355,
+    "temperature": 1.0,
+    "accuracy": 0.8,
+    "accuracy_ci95": [
+      0.7549295774647887,
+      0.8394366197183099
+    ],
+    "macro_f1": 0.7104645325143498,
+    "per_label_f1": {
+      "run_sql": 0.844106463878327,
+      "make_chart": 0.6031746031746031,
+      "describe_table": 0.8148148148148148,
+      "search_catalog": 0.9655172413793104,
+      "ask_clarification": 0.71875,
+      "decline_not_covered": 0.8450704225352113,
+      "explain_result": 0.18181818181818182
+    },
+    "support": {
+      "run_sql": 132,
+      "make_chart": 24,
+      "describe_table": 16,
+      "search_catalog": 29,
+      "ask_clarification": 35,
+      "decline_not_covered": 105,
+      "explain_result": 14
+    },
+    "nll": 3.4167617651451865,
+    "brier": 0.3369429566619381,
+    "ece": 0.1457972831609659,
+    "auroc_correct": 0.6738742313033129,
+    "mean_confidence": 0.9336667820966392,
+    "reliability": [
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "n": 12,
+        "confidence": 0.3766385411443789,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "n": 17,
+        "confidence": 0.45770354493779286,
+        "accuracy": 0.29411764705882354
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "n": 10,
+        "confidence": 0.5343252225201149,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 4,
+        "confidence": 0.6553918816855473,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.7000000000000001,
+        "high": 0.8,
+        "n": 2,
+        "confidence": 0.7271367836747322,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "n": 1,
+        "confidence": 0.8729,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.9,
+        "high": 1.0,
+        "n": 309,
+        "confidence": 0.9995439856548191,
+        "accuracy": 0.8511326860841424
+      }
+    ],
+    "latency_s_p50": 0.04275171256250587,
+    "latency_s_p95": 0.043034429843757493,
+    "cost_usd_per_1000": null
+  },
+  "dev_calibrated": {
+    "n": 355,
+    "temperature": 8.129604088234107,
+    "accuracy": 0.8,
+    "accuracy_ci95": [
+      0.7549295774647887,
+      0.8394366197183099
+    ],
+    "macro_f1": 0.7104645325143498,
+    "per_label_f1": {
+      "run_sql": 0.844106463878327,
+      "make_chart": 0.6031746031746031,
+      "describe_table": 0.8148148148148148,
+      "search_catalog": 0.9655172413793104,
+      "ask_clarification": 0.71875,
+      "decline_not_covered": 0.8450704225352113,
+      "explain_result": 0.18181818181818182
+    },
+    "support": {
+      "run_sql": 132,
+      "make_chart": 24,
+      "describe_table": 16,
+      "search_catalog": 29,
+      "ask_clarification": 35,
+      "decline_not_covered": 105,
+      "explain_result": 14
+    },
+    "nll": 0.7296237857686675,
+    "brier": 0.3145492262727261,
+    "ece": 0.05850357139286131,
+    "auroc_correct": 0.688925808371355,
+    "mean_confidence": 0.7561237124334598,
+    "reliability": [
+      {
+        "low": 0.2,
+        "high": 0.30000000000000004,
+        "n": 3,
+        "confidence": 0.26122895546603697,
+        "accuracy": 0.6666666666666666
+      },
+      {
+        "low": 0.30000000000000004,
+        "high": 0.4,
+        "n": 45,
+        "confidence": 0.3334094706049277,
+        "accuracy": 0.4222222222222222
+      },
+      {
+        "low": 0.4,
+        "high": 0.5,
+        "n": 2,
+        "confidence": 0.48540901674940184,
+        "accuracy": 1.0
+      },
+      {
+        "low": 0.5,
+        "high": 0.6000000000000001,
+        "n": 4,
+        "confidence": 0.5712295033495532,
+        "accuracy": 0.5
+      },
+      {
+        "low": 0.6000000000000001,
+        "high": 0.7000000000000001,
+        "n": 8,
+        "confidence": 0.6639281082217221,
+        "accuracy": 0.375
+      },
+      {
+        "low": 0.8,
+        "high": 0.9,
+        "n": 293,
+        "confidence": 0.8330021978074661,
+        "accuracy": 0.8737201365187713
+      }
+    ],
+    "latency_s_p50": 0.04275171256250587,
+    "latency_s_p95": 0.043034429843757493,
+    "cost_usd_per_1000": null
+  },
+  "inputs_sha256": {
+    "calibration": "11a8f377eff6a667e707bd8dd13b2752a2ea2dedbdf26d9273c4e679b517368f",
+    "dev": "56fd10c304db7b8df09306ac6c839299d37adb2da275787ef51f7ec2ee355bc2"
+  }
+}

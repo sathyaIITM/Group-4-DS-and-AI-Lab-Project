@@ -1,0 +1,191 @@
+{
+  "run_id": "laya_dom_lr1.25e-05_s0",
+  "spec": {
+    "run_id": "laya_dom_lr1.25e-05_s0",
+    "cell": "domain",
+    "setting": "lr1.25e-05",
+    "seed": 0,
+    "params": {
+      "encoder_lr": 1.25e-05,
+      "head_lr": 0.0001,
+      "epochs": 4,
+      "micro_batch": 8,
+      "grad_accum": 8,
+      "loss": "rlcd",
+      "calib_frac": 0.0,
+      "head_max_len": 320
+    },
+    "data": "data/splits/laya_parity/domain/s0_e4.jsonl.gz",
+    "data_file": "laya_parity__domain__s0_e4.jsonl.gz",
+    "data_sha256": "ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157",
+    "item_passes": 7504,
+    "est_minutes": 17.3,
+    "evaluation": "domain"
+  },
+  "train_config": {
+    "epochs": 1,
+    "micro_batch": 8,
+    "grad_accum": 8,
+    "encoder_lr": 1.25e-05,
+    "head_lr": 0.0001,
+    "min_lr": 1e-06,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "loss": "rlcd",
+    "rl_samples": 4,
+    "sigma_start": 0.4,
+    "sigma_end": 0.1,
+    "w_sph": 0.75,
+    "w_rps": 1.0,
+    "shuffle_options": [],
+    "option_layout": null,
+    "freeze_encoder": false,
+    "calib_max": 400,
+    "calib_frac": 0.0,
+    "calib_seed": 20260922,
+    "seed": 0,
+    "max_len": null,
+    "head_max_len": 320,
+    "amp": null,
+    "gradient_checkpointing": null,
+    "log_every": 100,
+    "label_smoothing": 0.0,
+    "text_column": "text",
+    "label_column": "label",
+    "question_id": "label",
+    "instructions": null,
+    "eval_data": null,
+    "target_error": 0.1,
+    "min_abstain_n": 10
+  },
+  "base": {
+    "repo": "convaiinnovations/laya",
+    "revision": "fd4f9dbcf4fde222fd43174bdd4c3b08b789e4e1"
+  },
+  "base_weights_sha256": "891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c",
+  "python": "3.13.16",
+  "torch": "2.11.0+cu130",
+  "cuda": "13.0",
+  "gpu": "Tesla T4",
+  "laya": "0.4.23",
+  "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+  "started_utc": "2026-11-26T08:09:26+00:00",
+  "exit": "ok",
+  "train_seconds": 905.3,
+  "ended_utc": "2026-11-26T08:24:31+00:00",
+  "summary": {
+    "train_items": 7504,
+    "calibration_items": 0,
+    "eval_items": 0,
+    "skipped": {},
+    "epoch_loss": [
+      0.44563362488487385
+    ],
+    "temperature": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "temperature_by_options": {},
+    "n_by_bucket": {},
+    "calibration": {
+      "choice": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      },
+      "score": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      },
+      "noul": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      }
+    },
+    "abstention_thresholds": {},
+    "train_report": {
+      "eval_source": null,
+      "eval_mode": null,
+      "is_held_out": false,
+      "eval_items": 0,
+      "note": "No evaluation performed (0 calibration items and no --eval set was provided).",
+      "before": null,
+      "after": null,
+      "comparison": null,
+      "calibration": {
+        "choice": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        },
+        "score": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        },
+        "noul": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        }
+      },
+      "abstention_thresholds": {},
+      "training": {
+        "epochs": 1,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "encoder_lr": 1.25e-05,
+        "head_lr": 0.0001,
+        "min_lr": 1e-06,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "loss": "rlcd",
+        "rl_samples": 4,
+        "sigma_start": 0.4,
+        "sigma_end": 0.1,
+        "w_sph": 0.75,
+        "w_rps": 1.0,
+        "shuffle_options": [],
+        "option_layout": null,
+        "freeze_encoder": false,
+        "calib_max": 400,
+        "calib_frac": 0.0,
+        "calib_seed": 20260922,
+        "seed": 0,
+        "max_len": null,
+        "head_max_len": 320,
+        "amp": null,
+        "gradient_checkpointing": null,
+        "log_every": 100,
+        "label_smoothing": 0.0,
+        "text_column": "text",
+        "label_column": "label",
+        "question_id": "label",
+        "instructions": null,
+        "eval_data": null,
+        "target_error": 0.1,
+        "min_abstain_n": 10
+      }
+    },
+    "output_dir": "/tmp/work_laya_dom_lr1.25e-05_s0"
+  },
+  "weights_sha256": "e313c7f231713194e2f050f1fad384877f7fdab24d0479c1169b8f830c7dd460",
+  "served_config": {
+    "trained_temperature": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "removed_keys": [],
+    "head_max_len": 320
+  },
+  "predictions": {
+    "domain_calibration.jsonl": 322,
+    "domain_dev_synthetic.jsonl": 355,
+    "domain_dev_human.jsonl": 198
+  },
+  "predict_seconds": 28.1
+}

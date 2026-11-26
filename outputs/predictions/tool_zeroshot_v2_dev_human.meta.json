@@ -1,0 +1,13 @@
+{
+  "run_id": "zeroshot_v2",
+  "decision": "tool",
+  "checkpoint": "released",
+  "weights_sha256": {},
+  "server": "kev.serve (scripts/serve_kev.sh), mps",
+  "data": "data/splits/kev_domain/dev_human.v1.jsonl",
+  "data_sha256": "2479f6026cdb1dd08de07199ceec0be4e32c39490415c672ecdd2caa56472f9a",
+  "predictions_sha256": "005a436c7912b718324fcf9a4a3833b36e1a89059e7bc0510e5f688f85f6f363",
+  "device": "mps",
+  "n_predictions": 198,
+  "created_utc": "2026-11-26T13:08:32+00:00"
+}

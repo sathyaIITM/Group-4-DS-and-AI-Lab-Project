@@ -1,0 +1,14 @@
+{
+  "run_id": "heldout_joint_ep3_s0",
+  "checkpoint": "models/checkpoints/heldout_joint_ep3_s0",
+  "weights_sha256": {
+    "adapter_model.safetensors": "55ac66e24c4ea0c23dfd42e919f97cd6b8ebe7ef792d239db03c9b68b6ea4a0b",
+    "head.pt": "ee0a160dae74fa73a55e84f2ec7210a8b5ec7fa28e48379f05f34e7106cdcee9",
+    "adapter_config.json": "dd15d01e35f4f19db50521b5cc467c6759c649118fc6f339763313ed7f6a9e29"
+  },
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "808c77bb6b6011bce2a0b1c6f95368052b728e8dcdc8febe14b7c62d2a1d6b5f",
+  "device": "mps",
+  "created_utc": "2026-11-26T09:21:13+00:00"
+}

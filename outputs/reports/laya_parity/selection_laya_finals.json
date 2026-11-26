@@ -1,0 +1,66 @@
+{
+  "domain": {
+    "settings": {
+      "def": {
+        "seed_nll": [
+          0.05641,
+          0.15503,
+          0.11123
+        ],
+        "mean_nll": 0.10756,
+        "range": 0.09862,
+        "mean_macro_f1": 0.9711
+      },
+      "ep6": {
+        "seed_nll": [
+          0.06035,
+          0.05018,
+          0.09351
+        ],
+        "mean_nll": 0.06802,
+        "range": 0.04333,
+        "mean_macro_f1": 0.9848
+      },
+      "lr5e-05": {
+        "seed_nll": [
+          0.07306,
+          0.20637,
+          0.13995
+        ],
+        "mean_nll": 0.13979,
+        "range": 0.13331,
+        "mean_macro_f1": 0.9612
+      }
+    },
+    "chosen": "ep6",
+    "served_seed_index": 1
+  },
+  "joint": {
+    "settings": {
+      "ep6": {
+        "seed_nll": [
+          0.40625,
+          0.41956,
+          0.42211
+        ],
+        "mean_nll": 0.41597,
+        "range": 0.01586,
+        "mean_macro_f1": 0.8532
+      },
+      "lr5e-05": {
+        "seed_nll": [
+          0.39589,
+          0.3543,
+          0.38401
+        ],
+        "mean_nll": 0.37806,
+        "range": 0.04159,
+        "mean_macro_f1": 0.8662
+      }
+    },
+    "chosen": "lr5e-05",
+    "served_seed_index": 1
+  },
+  "model": "laya",
+  "stage": "finals"
+}

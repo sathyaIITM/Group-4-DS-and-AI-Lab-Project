@@ -1,0 +1,194 @@
+{
+  "run_id": "laya_joint_lr5e-05_s1",
+  "spec": {
+    "run_id": "laya_joint_lr5e-05_s1",
+    "cell": "joint",
+    "setting": "lr5e-05",
+    "seed": 1,
+    "params": {
+      "encoder_lr": 5e-05,
+      "head_lr": 0.0001,
+      "epochs": 4,
+      "micro_batch": 8,
+      "grad_accum": 8,
+      "loss": "rlcd",
+      "calib_frac": 0.0,
+      "head_max_len": 320
+    },
+    "data": "data/splits/laya_parity/joint/s1_e4.jsonl.gz",
+    "data_file": "laya_parity__joint__s1_e4.jsonl.gz",
+    "data_sha256": "d2613151a07968cbbafba4f7ebd5993fe91b62d8a74304ede96044a17482b287",
+    "item_passes": 15008,
+    "est_minutes": 34.5,
+    "evaluation": "joint"
+  },
+  "train_config": {
+    "epochs": 1,
+    "micro_batch": 8,
+    "grad_accum": 8,
+    "encoder_lr": 5e-05,
+    "head_lr": 0.0001,
+    "min_lr": 1e-06,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "loss": "rlcd",
+    "rl_samples": 4,
+    "sigma_start": 0.4,
+    "sigma_end": 0.1,
+    "w_sph": 0.75,
+    "w_rps": 1.0,
+    "shuffle_options": [],
+    "option_layout": null,
+    "freeze_encoder": false,
+    "calib_max": 400,
+    "calib_frac": 0.0,
+    "calib_seed": 20260922,
+    "seed": 1,
+    "max_len": null,
+    "head_max_len": 320,
+    "amp": null,
+    "gradient_checkpointing": null,
+    "log_every": 100,
+    "label_smoothing": 0.0,
+    "text_column": "text",
+    "label_column": "label",
+    "question_id": "label",
+    "instructions": null,
+    "eval_data": null,
+    "target_error": 0.1,
+    "min_abstain_n": 10
+  },
+  "base": {
+    "repo": "convaiinnovations/laya",
+    "revision": "fd4f9dbcf4fde222fd43174bdd4c3b08b789e4e1"
+  },
+  "base_weights_sha256": "891102d372688fc2a094dac56a384bc537b87c63f21f9f3dac0be2b7cbc8d86c",
+  "python": "3.13.16",
+  "torch": "2.11.0+cu130",
+  "cuda": "13.0",
+  "gpu": "Tesla T4",
+  "laya": "0.4.23",
+  "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+  "started_utc": "2026-11-26T09:32:09+00:00",
+  "exit": "ok",
+  "train_seconds": 2392.7,
+  "ended_utc": "2026-11-26T10:12:01+00:00",
+  "summary": {
+    "train_items": 15008,
+    "calibration_items": 0,
+    "eval_items": 0,
+    "skipped": {},
+    "epoch_loss": [
+      0.4908296813137645
+    ],
+    "temperature": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "temperature_by_options": {},
+    "n_by_bucket": {},
+    "calibration": {
+      "choice": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      },
+      "score": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      },
+      "noul": {
+        "items": 0,
+        "temperature": 1.0,
+        "issues": []
+      }
+    },
+    "abstention_thresholds": {},
+    "train_report": {
+      "eval_source": null,
+      "eval_mode": null,
+      "is_held_out": false,
+      "eval_items": 0,
+      "note": "No evaluation performed (0 calibration items and no --eval set was provided).",
+      "before": null,
+      "after": null,
+      "comparison": null,
+      "calibration": {
+        "choice": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        },
+        "score": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        },
+        "noul": {
+          "items": 0,
+          "temperature": 1.0,
+          "issues": []
+        }
+      },
+      "abstention_thresholds": {},
+      "training": {
+        "epochs": 1,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "encoder_lr": 5e-05,
+        "head_lr": 0.0001,
+        "min_lr": 1e-06,
+        "weight_decay": 0.01,
+        "grad_clip": 1.0,
+        "loss": "rlcd",
+        "rl_samples": 4,
+        "sigma_start": 0.4,
+        "sigma_end": 0.1,
+        "w_sph": 0.75,
+        "w_rps": 1.0,
+        "shuffle_options": [],
+        "option_layout": null,
+        "freeze_encoder": false,
+        "calib_max": 400,
+        "calib_frac": 0.0,
+        "calib_seed": 20260922,
+        "seed": 1,
+        "max_len": null,
+        "head_max_len": 320,
+        "amp": null,
+        "gradient_checkpointing": null,
+        "log_every": 100,
+        "label_smoothing": 0.0,
+        "text_column": "text",
+        "label_column": "label",
+        "question_id": "label",
+        "instructions": null,
+        "eval_data": null,
+        "target_error": 0.1,
+        "min_abstain_n": 10
+      }
+    },
+    "output_dir": "/tmp/work_laya_joint_lr5e-05_s1"
+  },
+  "weights_sha256": "df7ca7d73a58a04c359d206531a7f8ca69a012c466ebc8a84c55c04a5025c8ee",
+  "served_config": {
+    "trained_temperature": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "removed_keys": [],
+    "head_max_len": 320
+  },
+  "predictions": {
+    "domain_calibration.jsonl": 322,
+    "tool_calibration.jsonl": 322,
+    "domain_dev_synthetic.jsonl": 355,
+    "tool_dev_synthetic.jsonl": 355,
+    "domain_dev_human.jsonl": 198,
+    "SEALED_tool_dev_human.jsonl": 198
+  },
+  "predict_seconds": 68.0
+}

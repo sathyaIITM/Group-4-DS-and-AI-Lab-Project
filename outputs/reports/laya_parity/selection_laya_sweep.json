@@ -1,0 +1,35 @@
+{
+  "ranking": [
+    {
+      "setting": "ep6",
+      "nll": 0.06035,
+      "macro_f1": 0.9863
+    },
+    {
+      "setting": "lr5e-05",
+      "nll": 0.07306,
+      "macro_f1": 0.9815
+    },
+    {
+      "setting": "lr1.25e-05",
+      "nll": 0.21264,
+      "macro_f1": 0.9128
+    },
+    {
+      "setting": "ep2",
+      "nll": 0.26318,
+      "macro_f1": 0.8225
+    }
+  ],
+  "top2": [
+    "ep6",
+    "lr5e-05"
+  ],
+  "default_seed_nll": [
+    0.05641,
+    0.15503,
+    0.11123
+  ],
+  "model": "laya",
+  "stage": "sweep"
+}

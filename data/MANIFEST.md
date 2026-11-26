@@ -129,12 +129,27 @@ every epoch (gzip-compressed JSONL); every hash is also in `data/splits/laya_par
 | `data/splits/laya_parity/joint_heldout/s2_e4.jsonl.gz` | 14,624 | - | 838,813 | `94486525262aefa77d13230f8a2b4199c18958804ebce4b2326a1b0de1d7701e` |
 | `data/splits/laya_parity/joint_heldout/s2_e6.jsonl.gz` | 21,936 | - | 1,257,636 | `542edfc1b57fc57e051fa83ac644f624189c7219ca877f09d164d9e80a1ecac8` |
 
+### Run plans of the parity phase (`outputs/reports/parity_plans`, tracked)
+
+The plan each Kaggle session ran, copied unchanged from the staged upload folder
+(`outputs/drive_stage/Group4/...`). Each plan records the repository commit it was made from and
+the SHA-256 of every file it uses; the notebooks refuse any file whose hash differs. Commits are
+the pre-rebase hashes, kept on branch `archive/t3-m5-parity-runs`.
+
+| File | Session | Runs | Made from | Bytes | SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| `outputs/reports/parity_plans/laya_K1_sweep.json` | Laya K1 (sweep) | 7 | `3833177`, clean | 6,767 | `d0fb9bee1f834174c4546c621c1f5015ec2b8b219ac5041e06aab84400e50a7c` |
+| `outputs/reports/parity_plans/laya_K3_finals.json` | Laya K3 (finals, 3 parts) | 11 | `57d6124`, clean | 11,656 | `73f73814d4ab2665468b532a3c08745fe4c8edcb4a4236b79f4f58bf5c082030` |
+| `outputs/reports/parity_plans/kev_kaggle_5.json` | Kev `kaggle_5` (joint, held-out) | 5 of 19 listed | `3833177`, clean | 24,718 | `d8980132a679bc216e477198c6f9829a5cab210eb9c8ab33c244f414cbc7c407` |
+| `outputs/reports/parity_plans/kev_kaggle_6.json` | Kev `kaggle_6` (domain seeds) | 4 of 19 listed | `3833177`, working tree holding exactly the change committed as `802b1a0` | 24,601 | `498b0329a661da38aed3726ae1663e0902af36719aeb693eca9d408eb3a0bed9` |
+
 ## dev_human items and rendered states (`data/labels/dev_human_v1`, tracked)
 
 | File | Rows | Columns | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |
 | `data/labels/dev_human_v1/items.jsonl` | 200 | - | 34,145 | `190f75f034add0d9d6fc8ca9169c82f4d1bd3b121a13d1b28a35a9cc90e23d39` |
 | `data/labels/dev_human_v1/items_rendered.jsonl` | 200 | - | 183,904 | `4b13e28f4b3345eabb967a9cda2f844fe9d1621ba42ab9dd7c558dce38ac4c17` |
+| `data/labels/dev_human_v1/relabel_tool_v1_1.csv` (D17: tool re-adjudication under guide 1.1; 50 items, 0 changed, so the v1.1 tool labels equal v1) | 50 | 5 | 8,386 | `d2b4c9b8b05fd9f9792cd95c45dfa781b85d73362f6b81d9bce1b8e196110409` |
 
 ## Text-to-SQL ground truth (`data/ground_truths`, tracked)
 
