@@ -1,6 +1,7 @@
 """Tests for src/analyst/data: contract, generic operations, configs, source rules, catalogue."""
 
 from datetime import date
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -11,6 +12,8 @@ from analyst.data.contract import EMPTY_VALUE_FLAGS, FLAG_RANK, Flag
 from analyst.data.publish import build_catalogue_entry, build_dim_period
 from analyst.data.source_rules import RULES, SourceRule, register
 from tests.data_fixtures import BUILDERS, approved, config, run
+
+MANDI = Path("data/processed/obs_mandi_daily_prices.parquet")
 
 NFHS_READ = ReadSection(
     missing_markers={"": "missing_in_source", "*": "suppressed"},
@@ -110,8 +113,15 @@ def test_place_matching_distinguishes_exact_alias_total_and_unmatched() -> None:
 
 
 def test_alias_table_points_only_at_canonical_names() -> None:
+    """Each alias names a State or UT, or a market of the Mandi table (Milestone 5)."""
     canonical = set(ops.load_reference("states"))
-    assert set(ops.load_aliases().values()) <= canonical
+    others = set(ops.load_aliases().values()) - canonical
+    if not others:
+        return
+    if not MANDI.exists():
+        pytest.skip("market aliases need the published Mandi table")
+    markets = set(pd.read_parquet(MANDI, columns=["geo_name"])["geo_name"])
+    assert others <= markets, sorted(others - markets)
 
 
 def test_all_configs_load_and_name_distinct_tables() -> None:
