@@ -32,6 +32,7 @@ from analyst.tools.calc import (
 )
 from analyst.tools.checks import NOT_IN_RESULT, run_result_checks, verify_numbers
 from analyst.tools.codelists import codelist
+from analyst.tools.periods import is_now_mention, now_phrase
 from analyst.tools.resolve import resolve_plan, total_value
 from analyst.tools.sql_runner import ReadOnlyDatabase, SqlRejectedError, SqlTimeoutError, check_sql
 
@@ -357,6 +358,22 @@ def _period_options(
 
 
 SINGLE_PLACE_OPERATIONS = {"lookup", "change", "trend", "share"}
+# Units whose values add up across places (a sum over all districts is a national total); a
+# rainfall depth, a price or a rate does not, so an aggregate of it needs a place.
+ADDITIVE_UNITS = {
+    "tonne", "hectare", "bale_170kg", "bale_180kg", "count", "lakh", "mixed_nuts_or_tonne",
+}  # fmt: skip
+
+
+def _needs_one_place(plan: InterpretationPlan, table: Mapping[str, Any]) -> bool:
+    """A lookup, change, trend or share is about one place; so is an aggregate of a measure
+    that does not add up across places ("total rainfall in 2015" on the sub-division table)."""
+    if plan.operation in SINGLE_PLACE_OPERATIONS:
+        return True
+    units = table.get("indicator_units") or {}
+    return plan.operation == "aggregate" and any(
+        units.get(i.indicator_id) not in ADDITIVE_UNITS for i in plan.indicators
+    )
 
 
 def _missing_place(
@@ -371,12 +388,98 @@ def _missing_place(
         or plan.places
         or plan.all_places_level
         or plan.unresolved
-        or plan.operation not in SINGLE_PLACE_OPERATIONS
+        or not _needs_one_place(plan, table)
         or "national" in (table.get("geo_levels") or [])
     ):
         return plan
     slot = UnresolvedSlot(slot="place", mention="no place was named", options=[])
     return plan.model_copy(update={"unresolved": [slot]})
+
+
+# Rule sheet S1: with several details missing, the first in this order is asked. The measure is
+# settled before where and when (for a Mandi price, the commodity before the market).
+SLOT_ORDER = ("indicator", "category", "place", "period", "geo_level")
+# Category columns that define the measure itself: a price or a production figure means
+# nothing without its commodity or crop, and no total value exists to default to.
+MEASURE_COLUMNS = ("commodity_name", "crop")
+MEASURE_FREE_OPERATIONS = {"ranking", "list"}
+SINGLE_CROP_UNITS = {"bale_170kg", "bale_180kg", "mixed_nuts_or_tonne"}  # cotton, jute, coconut
+
+
+def _missing_measure_category(
+    plan: InterpretationPlan, intent: QueryIntent, table: Mapping[str, Any]
+) -> InterpretationPlan:
+    """A price or production question that names no commodity or crop is asked for it, before
+    any missing place (rule sheet S1; Milestone 4 error analysis: the market was asked first).
+    A ranking or list across commodities needs none, and a follow-up keeps the previous one."""
+    if (
+        intent.action != "answer"
+        or plan.unresolved
+        or plan.operation in MEASURE_FREE_OPERATIONS
+        or intent.changed_slots
+    ):
+        return plan
+    units = table.get("indicator_units") or {}
+    if plan.indicators and all(
+        units.get(i.indicator_id) in SINGLE_CROP_UNITS for i in plan.indicators
+    ):
+        return plan
+    dataset_id = str(table.get("dataset_id"))
+    for column in MEASURE_COLUMNS:
+        if column not in (table.get("categories") or {}) or plan.categories.get(column):
+            continue
+        if total_value(dataset_id, column) is not None:
+            continue
+        slot = UnresolvedSlot(
+            slot="category",
+            mention=f"{column} was not named",
+            options=codelist_of(table, column),
+        )
+        return plan.model_copy(update={"unresolved": [slot]})
+    return plan
+
+
+def _order_slots(plan: InterpretationPlan) -> InterpretationPlan:
+    """Unresolved slots in the order of rule S1, so the first one asked is the measure."""
+    ordered = sorted(plan.unresolved, key=lambda s: SLOT_ORDER.index(s.slot))
+    return plan.model_copy(update={"unresolved": ordered}) if ordered != plan.unresolved else plan
+
+
+def _rainfall(table: Mapping[str, Any]) -> bool:
+    """A weather table: "right now" there asks for today's conditions, which no table holds."""
+    return str(table.get("domain") or "") == "rainfall" or "rainfall" in str(
+        table.get("dataset_id") or ""
+    )
+
+
+def review_intent(
+    intent: QueryIntent, table: Mapping[str, Any] | None, question: str
+) -> QueryIntent:
+    """Correct two decline intents that the rule sheet says are not declines, when a listed
+    table holds the measure:
+
+    - a group or definition the table lacks ("youth" on a persons-15+ table) is `clarify`,
+      slot `category`, offering the table's own group (rule E9; guide R12);
+    - "now", "currently", "latest" on a statistical table ask for the latest published period,
+      stated (rule D1b). Only today's weather and forecasts stay declined (rule E6).
+    """
+    if intent.action != "decline" or table is None:
+        return intent
+    if intent.missing_slot == "category":
+        return intent.model_copy(update={"action": "clarify"})
+    if intent.missing_slot == "period" and not _rainfall(table):
+        mentions = list(intent.period_mentions)
+        phrase = now_phrase(question)
+        if (mentions and all(is_now_mention(m) for m in mentions)) or (not mentions and phrase):
+            return intent.model_copy(
+                update={
+                    "action": "answer",
+                    "missing_slot": None,
+                    "reason": None,
+                    "period_mentions": mentions or [phrase],
+                }
+            )
+    return intent
 
 
 MAX_CATEGORY_OPTIONS = 6
@@ -558,72 +661,81 @@ def check_plan_indicators(sql: str, plan: InterpretationPlan) -> None:
         raise ValueError(f"indicator_id {unknown} is not in the plan; use only {sorted(allowed)}")
 
 
+def check_missing_values_kept(sql: str, plan: InterpretationPlan) -> None:
+    """A value the publisher suppressed or did not report is answered as "not published", with
+    its flag (rule sheet E14). A query that drops such rows (`value IS NOT NULL`, or a filter on
+    `quality_flag` other than excluding 'implausible') turns that answer into an empty result,
+    so it is sent to repair. A ranking (or a highest or lowest value) may drop missing values:
+    it orders the published ones."""
+    if plan.operation == "ranking":
+        return
+    import sqlglot
+    from sqlglot import exp
+
+    tree = sqlglot.parse_one(sql, read="duckdb")
+    orders = any(
+        isinstance(o.this, exp.Column) and o.this.name == "value"
+        for o in tree.find_all(exp.Ordered)
+    )
+    if orders or any(True for _ in tree.find_all(exp.Window, exp.Max, exp.Min)):
+        return  # the query ranks or picks the highest or lowest published value
+    for where in tree.find_all(exp.Where):
+        for negation in where.find_all(exp.Not):
+            inner = negation.this
+            if (
+                isinstance(inner, exp.Is)
+                and isinstance(inner.expression, exp.Null)
+                and isinstance(inner.this, exp.Column)
+                and inner.this.name == "value"
+            ):
+                raise ValueError(
+                    "do not filter value IS NOT NULL: a missing or suppressed value is "
+                    "reported with its quality_flag"
+                )
+        for test in where.find_all(exp.EQ, exp.NEQ, exp.In):
+            if not any(c.name == "quality_flag" for c in test.find_all(exp.Column)):
+                continue
+            sides = test.expressions if isinstance(test, exp.In) else [test.expression]
+            literals = {s.this for s in sides if isinstance(s, exp.Literal) and s.is_string}
+            excludes_implausible = isinstance(test, exp.NEQ) and literals == {"implausible"}
+            negated_in = isinstance(test.parent, exp.Not) and literals == {"implausible"}
+            if not (excludes_implausible or negated_in):
+                raise ValueError(
+                    "filter quality_flag only with quality_flag <> 'implausible': suppressed "
+                    "and missing values are reported, not dropped"
+                )
+
+
 def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
     """Return graph node overrides; callers combine them with the control and model nodes."""
 
-    def resolve(state: AnalystState) -> dict[str, Any]:
-        """Resolve places, periods and units of the intent into a plan."""
-        if state.intent is None:
-            return {
-                "node_error": "backend_error",
-                "events": stage_event(
-                    state, "resolve_places_periods_units", "failure", detail="no parsed intent"
-                ),
-            }
-        table = deps.catalogue.get(state.intent.dataset_id)
-        if table is None or state.intent.action == "decline":
-            # No listed table fits, or the intent declines: coverage reports it as not covered.
-            # A clarify intent without a table ("during demonetisation": no dates) keeps its
-            # missing slot, which coverage turns into a clarification before any table check.
-            plan = _no_fit_plan(state.intent)
-            if state.intent.action == "clarify":
-                slot = UnresolvedSlot(
-                    slot=_missing_slot(state.intent), mention=state.intent.reason or "", options=[]
-                )
-                plan = plan.model_copy(update={"unresolved": [slot]})
-            return {
-                "plan": plan,
-                "events": stage_event(
-                    state,
-                    "resolve_places_periods_units",
-                    dataset_id=plan.dataset_id,
-                    unresolved=len(plan.unresolved),
-                ),
-            }
+    def plan_for(
+        intent: QueryIntent, state: AnalystState, table: Mapping[str, Any]
+    ) -> InterpretationPlan:
+        """The plan of one intent: resolution, follow-up inheritance and the slot rules."""
+        db = deps.database_for(intent.dataset_id)
         try:
-            db = deps.database_for(state.intent.dataset_id)
-            try:
-                plan = resolve_plan(
-                    state.intent,
-                    dataset=table,
-                    indicators=indicators_of(dict(table)),
-                    db=db,
-                    refs=deps.refs,
-                    catalogue=deps.catalogue,
-                )
-            finally:
-                db.close()
-        except Exception as error:  # a resolution fault ends the run as a backend error
-            return {
-                "node_error": "backend_error",
-                "events": stage_event(
-                    state,
-                    "resolve_places_periods_units",
-                    "failure",
-                    error=type(error).__name__,
-                    detail=str(error)[:300],
-                ),
-            }
+            plan = resolve_plan(
+                intent,
+                dataset=table,
+                indicators=indicators_of(dict(table)),
+                db=db,
+                refs=deps.refs,
+                catalogue=deps.catalogue,
+            )
+        finally:
+            db.close()
         if state.prior_plan is not None:
-            plan = inherit_from_prior(plan, state.intent, state.prior_plan, table)
-        plan = _period_options(plan, state.intent, table, deps)
-        plan = _missing_place(plan, state.intent, table)
-        plan = _ambiguous_category(plan, state.intent, table, deps)
-        if state.intent.action == "clarify" and not plan.unresolved:
+            plan = inherit_from_prior(plan, intent, state.prior_plan, table)
+        plan = _period_options(plan, intent, table, deps)
+        plan = _missing_measure_category(plan, intent, table)
+        plan = _missing_place(plan, intent, table)
+        plan = _ambiguous_category(plan, intent, table, deps)
+        if intent.action == "clarify" and not plan.unresolved:
             # The intent asks for a detail the question leaves out; coverage turns an
             # unresolved slot into a clarification.
-            missing = _missing_slot(state.intent)
-            stated = bool(state.intent.period_mentions)
+            missing = _missing_slot(intent)
+            stated = bool(intent.period_mentions)
             snapshot = table.get("coverage_start") == table.get("coverage_end") is not None
             if missing == "period" and plan.periods and (stated or snapshot):
                 # A period rule already applies: the period the user stated resolved (a bare
@@ -643,7 +755,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
                         }
                     )
             elif _single_measure(
-                missing, options := _clarify_options(missing, state.intent, table, deps), plan
+                missing, options := _clarify_options(missing, intent, table, deps), plan
             ):
                 # Only one measure fits and the plan already holds it (dev run 3, e2e-047:
                 # "Options: Crime rate, total"): answer with it and say so.
@@ -664,13 +776,75 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
                     update={
                         "unresolved": [
                             UnresolvedSlot(
-                                slot=missing, mention=state.intent.reason or "", options=options
+                                slot=missing, mention=intent.reason or "", options=options
                             )
                         ]
                     }
                 )
+        elif intent.action == "clarify" and intent.missing_slot and plan.unresolved:
+            first = min(SLOT_ORDER.index(u.slot) for u in plan.unresolved)
+            if SLOT_ORDER.index(intent.missing_slot) < first:
+                # The commodity is asked before an unmatched market (rule S1).
+                asked = UnresolvedSlot(
+                    slot=intent.missing_slot,
+                    mention=intent.reason or "",
+                    options=_clarify_options(intent.missing_slot, intent, table, deps),
+                )
+                plan = plan.model_copy(update={"unresolved": [asked, *plan.unresolved]})
+        return _order_slots(plan)
+
+    def resolve(state: AnalystState) -> dict[str, Any]:
+        """Resolve places, periods and units of the intent into a plan."""
+        if state.intent is None:
+            return {
+                "node_error": "backend_error",
+                "events": stage_event(
+                    state, "resolve_places_periods_units", "failure", detail="no parsed intent"
+                ),
+            }
+        table = deps.catalogue.get(state.intent.dataset_id)
+        reviewed = review_intent(
+            state.intent, table, state.intent.standalone_question or state.question
+        )
+        changed_intent = {"intent": reviewed} if reviewed != state.intent else {}
+        state = state.model_copy(update=changed_intent) if changed_intent else state
+        intent = reviewed
+        if table is None or intent.action == "decline":
+            # No listed table fits, or the intent declines: coverage reports it as not covered.
+            # A clarify intent without a table ("during demonetisation": no dates) keeps its
+            # missing slot, which coverage turns into a clarification before any table check.
+            plan = _no_fit_plan(intent)
+            if intent.action == "clarify":
+                slot = UnresolvedSlot(
+                    slot=_missing_slot(intent), mention=intent.reason or "", options=[]
+                )
+                plan = plan.model_copy(update={"unresolved": [slot]})
+            return {
+                "plan": plan,
+                **changed_intent,
+                "events": stage_event(
+                    state,
+                    "resolve_places_periods_units",
+                    dataset_id=plan.dataset_id,
+                    unresolved=len(plan.unresolved),
+                ),
+            }
+        try:
+            plan = plan_for(intent, state, table)
+        except Exception as error:  # a resolution fault ends the run as a backend error
+            return {
+                "node_error": "backend_error",
+                "events": stage_event(
+                    state,
+                    "resolve_places_periods_units",
+                    "failure",
+                    error=type(error).__name__,
+                    detail=str(error)[:300],
+                ),
+            }
         return {
             "plan": plan,
+            **changed_intent,
             "events": stage_event(
                 state, "resolve_places_periods_units", unresolved=len(plan.unresolved)
             ),
@@ -692,6 +866,7 @@ def make_tool_nodes(deps: ToolNodeDependencies) -> dict[str, NodeFn]:
                 check_sql(attempt.sql, db.table_names)
                 db.check_columns(attempt.sql)
                 check_plan_indicators(attempt.sql, state.plan)
+                check_missing_values_kept(attempt.sql, state.plan)
             finally:
                 db.close()
         except (SqlRejectedError, ValueError) as error:
