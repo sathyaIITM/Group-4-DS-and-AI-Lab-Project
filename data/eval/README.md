@@ -83,6 +83,7 @@ Fields added in Milestone 5 (used by scorer v3):
 | `n_values` | Non-null values of the gold result before any derivation: the number of values a complete answer covers. Filled by the script |
 | `gold_lineage` | `rows` when the place, period and indicator fields describe the gold rows; `inputs` when they describe the input rows of an aggregate (an average over States lists every State). Filled by the script |
 | `validated_by`, `gold_version` | Validator (`T1`, `T2` or `T3`) and `2` once the item is validated against the rules below |
+| `gold_changes` | One entry per change accepted in validation: `field`, `old`, `new`, `rule`, `decided_by`. Written by `scripts/apply_validation.py` from the sheets in `data/eval/validation/` |
 
 Rules applied when writing the gold SQL: filters on `period_start` and `period_end` (never on
 labels), `NOT is_total_row` where places are ranked, `quality_flag` stated or filtered, survey years
@@ -219,6 +220,22 @@ A `clarify` item has exactly one expected slot (`clarify_slot`), one of the valu
 | V5 | A ranking over fewer than three units, or with ties, expects a list, not a ranking | Design Phase E |
 | V6 | Units are those of the table (cotton in bales of 170 kg; no conversion unless the question asks for one) | e2e-099 judgement |
 
+### Rules added on 26 November 2026 (rule gaps found in validation)
+
+The ground-truth audit (`data/eval/validation/alignment_audit.csv`, `alignment_test_ext.csv`)
+found six cases no rule above decided. Each was settled once, as a general rule, by Sathya Prakash
+(T3), Shaoni Samanta (T1) and Shivanshu Gupta (T2), and applied to every item alike
+(`data/eval/validation/rule_gaps_draft.csv`). None was decided from agent output.
+
+| Id | Rule | Gap |
+| --- | --- | --- |
+| E6a | A period stated relative to today ("last year", "this year") is read against the date the question is asked (for the evaluation sets, 26 November 2026). If it falls after the table's last period, the action is `decline` (E6) and the answer names the last period. "Latest", "most recent" and "now" are D1b, not relative periods | RG-1 |
+| D6c | Widely used abbreviations of State and UT names (UP, MP, TN, AP, HP, WB, J&K) and misspellings with exactly one plausible match are alias forms under D6: `answer`, with the mapping stated. A mention with several plausible matches, or none, is S3 (`clarify`, slot `place`) | RG-2 |
+| D6d | A region whose members are fixed by an official list (the eight North Eastern States) or by the question itself (a count that matches one common list, such as "the five southern States") maps to that list, stated; otherwise `clarify`, slot `place`, with the candidate lists as options | RG-3 |
+| E9b | When the measure exists only for sub-groups and the question names none, the action is `clarify`, slot `category`, with the published groups as options; groups are never summed or averaged. E5 applies only when no group-level figure exists | RG-4 |
+| E2a | When several tables hold the measure and the question names no source, the gold uses the table built for the measure (SRS vital statistics for infant mortality), and the answer states the source | RG-5 (option A) |
+| V7 | A ranking of commodities counts each commodity once, at its highest-valued variety, and the answer names the variety; a ranking of varieties is asked as such | RG-6 |
+
 ### How to use this section when validating
 
 1. Read the question (and `prior_turns`) only. Walk Section E in order; apply Section D before
@@ -235,6 +252,23 @@ A `clarify` item has exactly one expected slot (`clarify_slot`), one of the valu
 Milestone 4 (17-19 November 2026): the procedure below was planned; no item was marked
 `validated`. Milestone 5 validates every dev and test item against the rules of the previous
 section.
+
+Milestone 5 (26 November 2026): all 190 items of `e2e_v1` (100), `e2e_dev_extra` (20),
+`e2e_dev_m5` (30) and `e2e_test_ext` (40) were validated against expected-action rules v2 and
+the six rules added on 26 November. Each item was checked three ways: the gold, the action the
+rules require from the question and the tables alone, and the action the frozen agent (commit
+86a36a7) takes by design (`data/eval/validation/alignment_audit.csv` and
+`alignment_test_ext.csv`). A gold field changed only where a rule says the gold is wrong; where
+the gold follows the rules and the agent does not, the item is an agent error and the gold is
+unchanged. Proposed changes were drafted with the rule they cite and decided row by row by Sathya
+Prakash (T3), Shaoni Samanta (T1) and Shivanshu Gupta (T2); every change is recorded on its item
+(`gold_changes`, `gold_version` 2). Changed items: e2e-075 (tie, V5), e2e-113 (decline to
+clarify, E9b), e2e-108 and e2e-095 (tables listed for a search, E2), e2e-070 (each crop once,
+V7), e2e-031 (slot named `place`, S2), e2e-227 (follow-up gives the new crop only, F1). The four
+items disputed in Milestone 4 were settled by rule: e2e-008 (E10), e2e-013 (E9) and e2e-044
+(S1) keep their gold; e2e-031 as above. The hand-filled fields `domain`, `clarify_slot` and
+`clarify_options` were drafted from labelling guide 1.1 and decided the same way (e2e-089 set to
+`multiple`, M7).
 
 
 T1 reviews every item against the publisher's table or the source page, and in particular the

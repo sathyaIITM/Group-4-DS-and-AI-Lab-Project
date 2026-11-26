@@ -113,6 +113,7 @@ OPTIONAL_FIELDS: dict[str, tuple[type, ...]] = {
     "gold_lineage": (str,),
     "validated_by": (str,),
     "gold_version": (int,),
+    "gold_changes": (list,),  # one entry per change accepted in validation (apply_validation.py)
 }
 DOMAINS = {
     "labour", "agriculture", "rainfall", "prices_economy", "health", "other", "multiple",

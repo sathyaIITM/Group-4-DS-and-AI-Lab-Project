@@ -1,17 +1,30 @@
-# Frozen end-to-end evaluation plan. The data set is not reportable until T1 validates it.
+# Frozen end-to-end evaluation plan. All sets validated on 26 November 2026 (data/eval/README.md,
+# "Validation and judgement items"); hashes are of the validated files.
 sets:
   source:
     path: data/eval/e2e_v1.jsonl
-    sha256: 94c697f564ed695da178dbfe138ee6e878821833d2c1c2e49f7f521ccf6fc8e7
-    validated_by_t1: false
+    sha256: 7e2678f96a58ebc23b8f57bd24f8739be8c72ca6db855dd6d4757082c283ddac
+    validated_by_t1: true
   dev:
     path: data/eval/e2e_dev.v1.jsonl
-    sha256: ea6b91d276f8fafbd7b08b9dd98345f5d597dc291373faaf848a0445f4221242
+    sha256: 6fcdced910eb64186fbd80d9282810ac1528483171e50d810c35ced8e4e02da6
     size: 40
   test:
     path: data/eval/e2e_test.v1.jsonl
-    sha256: 82b2b5b559f10fc1fa89e44c3006de97346819e89c04df7ddfb97881267f6817
+    sha256: 14a8d20c8ad9898ab348c228a789c51349aeedc74d094fe930137cbd53b122a0
     size: 60
+  dev_extra:
+    path: data/eval/e2e_dev_extra.v1.jsonl
+    sha256: df8c16ea2eff9a41c34ecea3fe222175e78f8abbe7a0f2b55f9ea32bbb616fe5
+    size: 20
+  dev_m5:
+    path: data/eval/e2e_dev_m5.v1.jsonl
+    sha256: 5b04fc6405c7555c8e527bf064d8e39d037b041e2b87f10e28d7527088c9a25c
+    size: 30
+  test_ext:
+    path: data/eval/e2e_test_ext.v1.jsonl
+    sha256: f9444f860c23fd23de113dc5c0610361e41c6720c46fdff7170aaa4d5a2a1803
+    size: 40
 # Split membership is frozen as made on 2026-11-17 (seed 0). On 2026-11-18 two labels changed
 # (e2e-079 in dev, e2e-092 in test: decline -> answer, value not published); the three files were
 # edited in place. They are not regenerated with `e2e_eval split`, because re-stratifying on the
