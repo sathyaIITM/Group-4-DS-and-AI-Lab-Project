@@ -89,13 +89,13 @@ kev:
   # against 0.0237 for seeds 0 and 1) and gated on dev_human (outputs/reports/gate_domain_ep3_s2.json:
   # 0.975 against Jev 0.970, ECE 0.024). Served with scripts/serve_kev.sh
   # models/checkpoints/ep3_s2. Phase 1: the adapter is trained on the domain decision only.
-  checkpoint: ep3_s2
+  checkpoint: joint_lr4e-05_s1   # joint-model evaluation branch (26 Nov); docs/milestone-5 serves ep3_s2
   # One temperature per decision, fitted on the calibration split by NLL; null serves raw
   # probabilities. Domain: outputs/reports/cascade_domain_ep3_s2.json (kev_temperature). Tool:
   # set only if the phase 2 joint checkpoint passes the tool gate (configs/inference.yaml).
   temperature:
-    domain: 3.652152156668675
-    tool: null
+    domain: 4.159306736985751   # score_domain_joint_lr4e-05_s1.json
+    tool: 4.551106615111194     # score_tool_joint_lr4e-05_s1.json
   serve:
     model: kev-latest          # model name the Kev server answers to
     default_base_url: http://127.0.0.1:8009

@@ -10,7 +10,7 @@ decisions:
     v3: [jev, llm]
     # Phase 1: tool selection stays on Jev. The ep3 adapter is trained on the domain decision
     # only, so Kev is not a fallback for tools (changed 2026-11-24 from [jev, kev, llm]).
-    v4: [jev, llm]
+    v4: [kev, jev, llm]        # joint-model evaluation (26 Nov): joint_lr4e-05_s1 serves tool and domain
     v5: [jev, llm]
     v6: [jev, llm]
   domain:
@@ -48,8 +48,10 @@ escalation:
   # Domain: band [0, threshold) from the cascade fitted on the calibration split at a 5% error
   # budget, for ep3_s2 (outputs/reports/cascade_domain_ep3_s2.json: threshold 0.4080 after
   # temperature 3.6522; ep3 was 0.4458 after 3.7634).
-  domain: {low: 0.0, high: 0.40796539941722326}
-  tool: {low: null, high: null}
+  # Joint-model evaluation (26 Nov): joint_lr4e-05_s1, cascades fitted on the calibration split
+  # (outputs/reports/cascade_{domain,tool}_joint_lr4e-05_s1.json).
+  domain: {low: 0.0, high: 0.3248317524492287}
+  tool: {low: 0.0, high: 0.6894736959161849}
 
 gate:
   margin_points: 3             # fine-tuned Kev accuracy may trail Jev's by at most 3 points

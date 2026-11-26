@@ -42,6 +42,8 @@ def _config(version: str = "v4", **kw: Any) -> r.RouterConfig:
     return config
 
 
+PHASE1_CHAINS = {"tool": ["jev", "llm"], "domain": ["kev", "jev", "llm"]}  # v4 on docs/milestone-5
+
 LLM_REPLY = {
     "tool": "run_sql",
     "domain": "labour",
@@ -85,7 +87,7 @@ def test_v4_uses_jev_for_tool_and_kev_for_domain_with_temperature() -> None:
         "What columns?",
         r.RouterContext(),
         [LINE],
-        _config(kev_temperatures={"domain": 2.0}),
+        _config(kev_temperatures={"domain": 2.0}, chains=PHASE1_CHAINS),
         r.Backends(kev=kev, jev=jev),
         Counters(),
     )
@@ -106,9 +108,9 @@ def test_failed_backend_hands_over_to_the_next() -> None:
             "domain": _probs(DOMAIN_OPTIONS, "labour", 0.9),
         }
     )
-    d = r.route(
-        "x", r.RouterContext(), [LINE], _config(), r.Backends(kev=kev, jev=jev), Counters()
-    ).decision
+    config = _config(chains=PHASE1_CHAINS)
+    d = r.route("x", r.RouterContext(), [LINE], config, r.Backends(kev=kev, jev=jev), Counters())
+    d = d.decision
     assert d.domain.backend == "jev" and d.domain.fallback  # Kev down: Jev answers the domain
     assert d.tool.backend == "jev" and not d.tool.fallback
 
@@ -168,13 +170,13 @@ def test_escalation_inside_the_band_only() -> None:
 def test_v4_configuration_from_files() -> None:
     config = r.RouterConfig.from_files("v4")
     assert config.chains["domain"] == ["kev", "jev", "llm"]
-    assert config.chains["tool"] == ["jev", "llm"]  # the ep3_s2 adapter knows only the domain
-    assert config.kev_revision == "ep3_s2"
-    assert config.temperature_for("domain") == pytest.approx(3.6522, abs=1e-4)
-    assert config.temperature_for("tool") is None  # set only after the phase 2 tool gate
+    assert config.chains["tool"] == ["kev", "jev", "llm"]  # joint model serves both decisions
+    assert config.kev_revision == "joint_lr4e-05_s1"
+    assert config.temperature_for("domain") == pytest.approx(4.1593, abs=1e-4)
+    assert config.temperature_for("tool") == pytest.approx(4.5511, abs=1e-4)
     band = config.bands["domain"]
-    assert band.contains(0.30) and not band.contains(0.41) and not band.contains(0.9)
-    assert config.bands["tool"].low is None
+    assert band.contains(0.30) and not band.contains(0.33) and not band.contains(0.9)
+    assert config.bands["tool"].contains(0.6) and not config.bands["tool"].contains(0.7)
 
 
 def test_v4_escalates_a_low_confidence_domain_to_jev() -> None:
