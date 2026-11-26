@@ -4,6 +4,28 @@ Entries follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions track the evaluation ladder: `v0` baseline through `v6` retraining and
 recalibration, as defined in [docs/milestones/Milestone1_Report.md](docs/milestones/Milestone1_Report.md).
 
+## [Milestone 5] - 2026-11-26
+
+### Added
+
+- Expected-action rules v2 and seven added rules (`data/eval/README.md`); validation of 230
+  evaluation items with recorded gold changes (`scripts/apply_validation.py`, `data/eval/validation/`).
+- Test set of 140 items: 60 continuity, 40 new (`e2e_test_ext`), 40 written blind (`e2e_test_t1`).
+- Scorer v3 with interpretation, completeness, unit, period, evidence and clarification-slot checks.
+- Reference data for place resolution (`configs/reference/`).
+- v3: intent prompt optimised by GEPA (`configs/prompts/intent_gepa.v1.md`).
+- v4: Kev `ep3_s2` on the domain decision with a cascade to Jev (`configs/model.yaml`,
+  `configs/inference.yaml`).
+- Kev and Laya under one matched fine-tuning protocol (`docs/specs/kev_laya_parity_protocol.md`).
+- `stress_v1` hard-case set; analysis and figure scripts (`scripts/m5_*.py`,
+  `scripts/score_stress_v1.py`, `scripts/score_rating.py`, `scripts/v5_verifier_check.py`).
+- Milestone 5 report and slides (`docs/milestones/`).
+
+### Changed
+
+- Agent: place resolution (IMD sub-divisions, aliases, duplicate districts), clarification and
+  abstention rules, "now" periods (intent prompt v10, clarify prompt v3).
+
 ## [Unreleased]
 
 ### Added

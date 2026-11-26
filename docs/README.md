@@ -8,6 +8,7 @@
 | M2 Dataset identification and preparation (29 October 2026) | [Milestone2_Report.md](milestones/Milestone2_Report.md) | [Milestone2_TA_Presentation.pptx](milestones/Milestone2_TA_Presentation.pptx) |
 | M3 Model architecture and end-to-end pipeline (5 November 2026) | [Milestone3_Report.md](milestones/Milestone3_Report.md) | [Milestone3_TA_Presentation.pptx](milestones/Milestone3_TA_Presentation.pptx) |
 | M4 Model training, configuration and evaluation (19 November 2026) | [Milestone4_Report.md](milestones/Milestone4_Report.md) | [Milestone4_TA_Presentation.pptx](milestones/Milestone4_TA_Presentation.pptx) |
+| M5 Evaluation and analysis of results (26 November 2026) | [Milestone5_Report.md](milestones/Milestone5_Report.md) | [Milestone5_TA_Presentation.pptx](milestones/Milestone5_TA_Presentation.pptx) |
 
 Figures used by the reports are in [milestones/figures/](milestones/figures/).
 

@@ -27,16 +27,17 @@ text must be written (query intent, SQL, narration, clarifying questions).
 
 ## Status
 
-Milestone 4 (training, configuration and evaluation) was submitted on 19 November 2026.
+Milestone 5 (evaluation and analysis of results) was submitted on 26 November 2026.
 
 | Area | State |
 | --- | --- |
-| Data catalogue | 14 tables frozen, 723,169 observations, built by a configuration-driven pipeline |
-| Agent | LangGraph graph of 36 nodes, built and tested (569 tests); runs end to end with Gemini on Vertex AI |
-| Versions measured | v0, v1, v2 on the held-out test set, 3 runs x 60 questions |
-| Decision model | Kev-0.8B fine-tuned for the domain decision; passes the gate against Jev on 198 human labels |
+| Data catalogue | 14 tables frozen, 723,169 observations, built by a configuration-driven pipeline; reference files for place resolution (IMD sub-divisions, aliases, duplicate district names) |
+| Ground truth | 230 development and test items validated against written expected-action rules; 10 corrected, 7 rules added |
+| Agent | LangGraph graph, built and tested; runs end to end with Gemini on Vertex AI |
+| Versions measured | v0-v2 (Milestone 4); v2 with the Milestone 5 fixes, v3 (GEPA-optimised intent prompt) and v4 (Kev on the domain decision) on 140 test items |
+| Decision models | Kev-0.8B `ep3_s2` serves the domain decision (passes the gate against Jev); Kev and Laya compared under one matched fine-tuning protocol; tool selection stays on Jev |
 | Demonstration app | FastAPI service with a streaming browser page (`app/api`, `app/ui`) |
-| Next (Milestones 5 and 6) | Optimised prompts (v3), Kev inside the agent (v4), calibrated verification and the confidence badge (v5), deployment, evidence and data provenance report |
+| Next (Milestone 6) | Deployment, user interface, evidence and data provenance report, guardrails, v5 (light: code check of every stated value and the confidence badge), v6 (recalibration procedure) |
 
 ## Problem and users
 
@@ -100,9 +101,9 @@ its configuration: [Milestone 4 report](docs/milestones/Milestone4_Report.md), S
 | v0 | Hosted LLM routes and writes SQL; catalogue only | Measured |
 | v1 | v0 plus guidance cards in the retrieved context | Measured |
 | v2 | v1 plus verified question and SQL examples; Jev routes | Measured |
-| v3 | Optimised prompts (DSPy, GEPA) | Milestone 5 |
-| v4 | Fine-tuned Kev takes the domain decision | Kev trained and gated; not yet in the agent |
-| v5 | Calibrated answer verification and the confidence badge | Milestone 5 |
+| v3 | v2 plus the intent prompt optimised by GEPA on development items | Measured (Milestone 5) |
+| v4 | v3 with fine-tuned Kev `ep3_s2` on the domain decision, cascade to Jev | Measured (Milestone 5) |
+| v5 | Calibrated answer verification and the confidence badge | Milestone 6 (baseline measured in Milestone 5) |
 | v6 | Recalibration and human-approved retraining after drift | Milestone 6 |
 
 ## Models
@@ -113,8 +114,9 @@ alternatives: [Milestone 4 report](docs/milestones/Milestone4_Report.md), Sectio
 | Role | Model | How it is used |
 | --- | --- | --- |
 | Query intent, SQL, narration, clarification | `gemini-3.5-flash-lite` on Vertex AI | Temperature 0, JSON-schema replies validated by code, thinking level set per purpose ([configs/model.yaml](configs/model.yaml)) |
-| Domain decision | Kev-0.8B (Qwen3.5-0.8B base, LoRA rank 16, pointer head) | Fine-tuned on 1,876 routing records; one temperature fitted for calibration ([configs/train.yaml](configs/train.yaml)) |
-| Tool selection, reference decision model | Jev (hosted, TypeSafe AI) | Zero-shot; routes in v2; reference for the Kev gate and the fallback of the cascade |
+| Domain decision | Kev-0.8B `ep3_s2` (Qwen3.5-0.8B base, LoRA rank 16, pointer head) | Fine-tuned on 1,876 routing records; checkpoint chosen by a fixed rule on synthetic data; one temperature fitted for calibration; escalates low-confidence decisions to Jev ([configs/model.yaml](configs/model.yaml), [configs/train.yaml](configs/train.yaml)) |
+| Tool selection, reference decision model | Jev (hosted, TypeSafe AI) | Zero-shot; reference for the Kev gate and the fallback of the cascade |
+| Comparator | Laya, fine-tuned under the same protocol as Kev | Compared on both decisions; not served ([protocol](docs/specs/kev_laya_parity_protocol.md)) |
 | Retrieval embeddings | `BAAI/bge-small-en-v1.5` | CPU, fused with BM25 |
 
 ## Data
@@ -137,41 +139,46 @@ Sources, units and quirks of each table: [docs/specs/candidate_tables.md](docs/s
 
 | Evaluation material | Size | Use |
 | --- | --- | --- |
-| `e2e_v1` ([data/eval/](data/eval/)) | 100 questions: 40 development, 60 test (+20 development only) | End-to-end evaluation of the agent; outcomes fixed in advance |
+| End-to-end sets ([data/eval/](data/eval/)) | Test: 140 items (60 continuity, 40 new, 40 written blind); development: 90 items | End-to-end evaluation of the agent; every item validated against the expected-action rules in [data/eval/README.md](data/eval/README.md) |
 | Routing data v2 ([data/splits/kev/](data/splits/kev/)) | 1,876 train, 322 calibration, 355 validation | Kev training, calibration and checkpoint selection |
-| `dev_human` ([data/labels/dev_human_v1/](data/labels/dev_human_v1/)) | 198 items, two labellers and an adjudicator | Test set for the decision models, scored once |
+| `dev_human` ([data/labels/dev_human_v1/](data/labels/dev_human_v1/)) | 198 items, two labellers and an adjudicator; tool labels re-adjudicated under guide 1.1 | Test set for the decision models |
+| `stress_v1` ([data/labels/stress_v1/](data/labels/stress_v1/)) | 80 ambiguous, code-mixed and unfamiliar messages | Calibration of the domain decision on hard cases |
 
 ## Results
 
-Milestone 4 results. All figures come from committed files under [outputs/](outputs/); costs
-are estimates from token counts.
+Milestone 5 results ([Milestone 5 report](docs/milestones/Milestone5_Report.md)). All figures
+come from committed files under [outputs/](outputs/); costs are estimates from token counts.
 
-**Agent, held-out test set** (`e2e_test`, 3 runs x 60 questions;
-[version_ladder_test.md](outputs/reports/version_ladder_test.md)):
+**Agent, test set of 140 items** (scorer v3; v3 and v4 are the mean of two runs;
+[outputs/reports/m5_test/](outputs/reports/m5_test/)):
 
-| Measure | v0 | v1 | v2 |
+| Measure | v2 | v3 | v4 |
 | --- | --- | --- | --- |
-| End-to-end success | 0.683 | 0.689 | 0.694 |
-| Execution accuracy | 0.433 | 0.525 | 0.633 |
-| Wrong-answer rate | 0.038 | 0.012 | 0.083 |
-| Latency p95 (s) | 13.0 | 11.9 | 10.0 |
-| Model calls per answer | 8.75 | 8.56 | 6.05 |
-| Cost per answer (USD, estimate) | 0.0269 | 0.0296 | 0.0190 |
+| End-to-end success, 140 items | 0.650 | 0.700 | 0.682 |
+| End-to-end success, 40 blind items | 0.650 | 0.738 | 0.700 |
+| Abstention precision (100 items) | 0.657 | 0.704 | 0.738 |
+| Cost per answered question (USD, estimate) | 0.027 | 0.025 | 0.024 |
 
-Execution accuracy rises with each version; end-to-end success stays flat because most failures
-occur before the query is written, mainly in place resolution (report Section A6.4). Declines and
-searches succeed in every run; clarification is the weakest action.
+- The Milestone 5 fixes (places, periods, clarification) raise v2 on the blind items from 0.30 at
+  the Milestone 4 commit to 0.60 (12 items better, none worse; p = 0.0005).
+- The optimised prompt (v3) adds a likely gain; Kev on the domain decision (v4) matches v3 within
+  run-to-run variation, replacing Jev at no loss.
 
-**Domain decision, human-labelled test set** (`dev_human`, 198 items; report Section B12):
+**Decision models, human-labelled test set** (`dev_human`, 198 items):
 
-| Model | Accuracy (95% CI) | Macro-F1 | ECE after calibration |
+| Model | Domain accuracy | Domain ECE | Tool accuracy |
 | --- | --- | --- | --- |
-| Kev-0.8B zero-shot | 0.783 (0.727-0.838) | 0.625 | 0.081 |
-| Kev-0.8B fine-tuned (`ep3`) | 0.980 (0.960-0.995) | 0.973 | 0.040 |
-| Jev (reference) | 0.970 (0.944-0.990) | 0.962 | 0.034 |
+| Kev-0.8B zero-shot | 0.783 | 0.081 | 0.369 |
+| Kev-0.8B `ep3_s2` (served) | 0.975 | 0.024 | - |
+| Kev-0.8B joint (tool and domain) | 0.960 | 0.021 | 0.798 |
+| Laya, matched protocol | 0.955-0.965 | 0.030-0.035 | 0.641 |
+| Jev (reference) | 0.970 | 0.034 | 0.763 |
 
-The gate (accuracy within 3 points of Jev, ECE at most 0.10) passes. At a 5% error budget the
-Kev-to-Jev cascade keeps every item on Kev.
+- Kev `ep3_s2` passes the gate (within 3 points of Jev, ECE at most 0.10).
+- On 80 hard messages (`stress_v1`) Kev falls to 0.838 (ECE 0.117) against Jev's 0.925.
+
+Milestone 4 results (v0-v2 on 60 test items): [Milestone 4 report](docs/milestones/Milestone4_Report.md)
+and [version_ladder_test.md](outputs/reports/version_ladder_test.md).
 
 ## Setup
 
@@ -226,15 +233,22 @@ AGENT_LLM=stub uvicorn app.api.main:app --port 8000
 The full stack (UI, API, admin, Postgres with pgvector, Caddy) runs with `docker compose up --build`;
 see [infra/README.md](infra/README.md).
 
-**Evaluation of the agent** (report Section A6.7):
+**Evaluation of the agent** (Milestone 5 report, Appendix F):
 
 ```bash
-python -m analyst.evaluation.e2e_eval run --live --yes --allow-unvalidated --version v2 \
-    --experiment test_v2_r1 --set data/eval/e2e_test.v1.jsonl \
-    --out outputs/predictions/test_v2_r1.jsonl
-python -m analyst.evaluation.e2e_eval score \
-    --predictions outputs/predictions/test_v2_r1.jsonl --out outputs/reports/test_v2.json
+python -m analyst.evaluation.e2e_eval run --live --yes --workers 1 --version v4 \
+    --experiment test_v4_r1 --set data/eval/e2e_test.v1.jsonl data/eval/e2e_test_ext.v1.jsonl \
+    --out outputs/predictions/test_v4_r1.jsonl
+python -m analyst.evaluation.e2e_eval score --scorer v3 \
+    --predictions outputs/predictions/test_v4_r1.jsonl \
+    --gold data/eval/e2e_test.v1.jsonl data/eval/e2e_test_ext.v1.jsonl \
+    --out outputs/reports/test_v4.json
+python -m analyst.evaluation.e2e_eval compare --scorer v3 --a <runs> --b <runs> --gold <sets> --out <report>
+python scripts/m5_agent_analyses.py        # clarification, Kev inside the agent, v3 against v4
+python scripts/m5_decision_figures.py      # decision-model figures
 ```
+
+v4 needs Kev served locally: `scripts/serve_kev.sh models/checkpoints/ep3_s2`.
 
 Scoring is deterministic: saved predictions are compared with the gold records, so re-scoring
 gives the same figures and calls no model.
@@ -271,14 +285,15 @@ src/analyst/
   pipelines/   RAG proof of concept of Milestone 3
   retrieval/   hybrid catalogue retrieval, guidance cards, verified examples
   tools/       read-only SQL, resolvers, derivations, checks, charts
-tests/         569 tests
+tests/         unit and integration tests
 ```
 
 ## Documents
 
 | Document | Content |
 | --- | --- |
-| [Milestone 4 report](docs/milestones/Milestone4_Report.md), [slides](docs/milestones/Milestone4_TA_Presentation.pptx) | Training, configuration and evaluation (current) |
+| [Milestone 5 report](docs/milestones/Milestone5_Report.md), [slides](docs/milestones/Milestone5_TA_Presentation.pptx) | Evaluation and analysis of results (current) |
+| [Milestone 4 report](docs/milestones/Milestone4_Report.md), [slides](docs/milestones/Milestone4_TA_Presentation.pptx) | Training, configuration and evaluation |
 | [Milestone 3 report](docs/milestones/Milestone3_Report.md) | Architecture and end-to-end pipeline design |
 | [Milestone 2 report](docs/milestones/Milestone2_Report.md) | Dataset identification and preparation |
 | [Milestone 1 report](docs/milestones/Milestone1_Report.md) | Problem definition and literature review |
