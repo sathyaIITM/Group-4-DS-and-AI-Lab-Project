@@ -2429,6 +2429,398 @@
     }
   },
   {
+    "run_id": "joint_ep3_s0",
+    "created_at": "2026-11-24T13:01:00+00:00",
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "base": "Qwen/Qwen3.5-0.8B-Base",
+    "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+    "data": "data/splits/kev/phase2_split/train.v2.jsonl",
+    "data_sha256": "1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747",
+    "flags": {
+      "n_per_source": 1000,
+      "epochs": 3,
+      "lr": 2e-05,
+      "head_lr": 0.0,
+      "weight_decay": 0.01,
+      "lora": 16,
+      "accum": 8,
+      "holdout": "",
+      "perm_kl": 0.0,
+      "perm_frac": 0.3,
+      "ord_w": 0.0,
+      "label_smoothing": 0.0,
+      "brier_w": 0.0,
+      "focal_gamma": 0.0,
+      "suite": null,
+      "train_sources": "",
+      "device": "cuda",
+      "batch": 1,
+      "dtype": "fp32",
+      "weights_dtype": "fp32",
+      "checkpointing": 0,
+      "option_isolation": 0,
+      "special_embeddings": 0,
+      "head_dim": 256,
+      "lora_targets": "all",
+      "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+      "p_none": 0.0,
+      "p_none_distract": 0.12,
+      "p_distract": 0.15,
+      "p_none_pair": 0.0,
+      "none_pair_max_state": null,
+      "synthetic_repeat": 1,
+      "public_frac": 1.0,
+      "anchor": "",
+      "anchor_w": 0.0,
+      "anchor_sources": "",
+      "max_state": 384,
+      "replay": 0,
+      "full_ft": 0,
+      "row_budget": 0,
+      "shared_prefix": 0,
+      "length_sort": 0,
+      "pass_tokens_max": 0,
+      "max_steps": 0,
+      "save_every_steps": 0,
+      "save_every_minutes": 0,
+      "resume": 0,
+      "stop_after": 0,
+      "snapshot_fractions": "",
+      "snapshot_every_steps": 0,
+      "snapshot_dir": "",
+      "seed": 0
+    },
+    "seed": 0,
+    "weights_sha256": {
+      "adapter_model.safetensors": "29df22f7a78811fa8139efb8c22aeb18e792f5fda3c031eeb53a14dd9b4689c8",
+      "head.pt": "d995dfb1f6c8bb656894de3f13d9dae4fe28ccdbf9dada587683f07443250bcb",
+      "adapter_config.json": "01090b84c95748393fdf5e4e6538933793a10ce063ccafedf2a0494a97cf8fab"
+    },
+    "grad_norm": [
+      {
+        "epoch": 0,
+        "steps": 469,
+        "mean": 22.008441441364607,
+        "max": 100.766624,
+        "clipped_steps": 466
+      },
+      {
+        "epoch": 1,
+        "steps": 469,
+        "mean": 24.166385068230277,
+        "max": 216.672485,
+        "clipped_steps": 334
+      },
+      {
+        "epoch": 2,
+        "steps": 469,
+        "mean": 15.86498473987207,
+        "max": 144.251389,
+        "clipped_steps": 179
+      }
+    ],
+    "wall_seconds": 7647.6113913059235,
+    "device": "cuda",
+    "temperature": null,
+    "scores": {},
+    "drive_path": null,
+    "notes": "",
+    "platform": "kaggle",
+    "environment": {
+      "run_id": "joint_ep3_s0",
+      "platform": "kaggle",
+      "session": "kaggle_4",
+      "gpu": "Tesla T4, 15360 MiB, 580.178.04",
+      "gpu_index": 0,
+      "parallel_queues": 2,
+      "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+      "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+      "python": "3.13.16",
+      "torch": "2.8.0+cu128",
+      "cuda": "12.8",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "cuda_devices": 2,
+      "device_names": [
+        "Tesla T4",
+        "Tesla T4"
+      ],
+      "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+      "data_repo_path": "data/splits/kev/phase2_split/train.v2.jsonl",
+      "data_sha256": "1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747",
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "plan_meta": {
+        "created_utc": "2026-11-24T09:42:30+00:00",
+        "train_yaml_sha256": "4d86ca733082183fa5ddcec8ac3ac2b1827306b6fbb0b175bab4a05cf7184389",
+        "repo_commit": "f93b7627e39ba35216a66b5c07285bb415c3e84f",
+        "repo_dirty": false,
+        "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+        "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+        "data_sha256": {
+          "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+          "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+        },
+        "sessions": {
+          "kaggle_1": [
+            [
+              "b0_s0"
+            ],
+            [
+              "lr1e-05"
+            ]
+          ],
+          "kaggle_2": [
+            [
+              "lr4e-05"
+            ],
+            [
+              "b0_s1"
+            ]
+          ],
+          "kaggle_3": [
+            [
+              "ep3"
+            ],
+            [
+              "b0_s2",
+              "ep1"
+            ]
+          ],
+          "colab_1": [
+            [
+              "base_r16"
+            ]
+          ],
+          "kaggle_4": [
+            [
+              "joint_ep3_s0"
+            ],
+            [
+              "joint_ep3_s1"
+            ]
+          ]
+        }
+      },
+      "command": "/tmp/kev_work/kev/.venv/bin/python -m kev.train --data /kaggle/input/datasets/<kaggle-user>/group4-kev-m5/kev_phase2_train.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --init_from jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f --lr 2e-05 --epochs 3 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 0 --device cuda --out /tmp/kev_work/kev/runs/joint_ep3_s0",
+      "started_utc": "2026-11-24T10:23:44+00:00",
+      "ended_utc": "2026-11-24T12:31:45+00:00",
+      "exit_code": 0
+    },
+    "records_seen": 11256,
+    "truncated_records": 0,
+    "optimizer_steps": 1407,
+    "peak_device_bytes": 7661422080,
+    "peak_rss_bytes": 5845102592,
+    "trainable_params_m": 11.3,
+    "final_train_loss": 0.125,
+    "log_sha256": "1abcedd56c9886e69b885aae928960323ed52b3336e8525bef445ada4d58a030",
+    "dropped_records": 0,
+    "init_source": {
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "resolved": "/root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "weights_sha256": "9b908623acb162118575f4e7a94524f9c139c335be4bfb74d6cfceca01e1885a",
+      "head_sha256": "f400bd12802b2b105ae45d6b03774a158a3db4fccff42413734ddca2e5c920b6",
+      "tensors": 372
+    }
+  },
+  {
+    "run_id": "joint_ep3_s1",
+    "created_at": "2026-11-24T13:01:00+00:00",
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "base": "Qwen/Qwen3.5-0.8B-Base",
+    "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+    "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+    "data": "data/splits/kev/phase2_split/train.v2.jsonl",
+    "data_sha256": "1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747",
+    "flags": {
+      "n_per_source": 1000,
+      "epochs": 3,
+      "lr": 2e-05,
+      "head_lr": 0.0,
+      "weight_decay": 0.01,
+      "lora": 16,
+      "accum": 8,
+      "holdout": "",
+      "perm_kl": 0.0,
+      "perm_frac": 0.3,
+      "ord_w": 0.0,
+      "label_smoothing": 0.0,
+      "brier_w": 0.0,
+      "focal_gamma": 0.0,
+      "suite": null,
+      "train_sources": "",
+      "device": "cuda",
+      "batch": 1,
+      "dtype": "fp32",
+      "weights_dtype": "fp32",
+      "checkpointing": 0,
+      "option_isolation": 0,
+      "special_embeddings": 0,
+      "head_dim": 256,
+      "lora_targets": "all",
+      "base_revision": "dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68",
+      "p_none": 0.0,
+      "p_none_distract": 0.12,
+      "p_distract": 0.15,
+      "p_none_pair": 0.0,
+      "none_pair_max_state": null,
+      "synthetic_repeat": 1,
+      "public_frac": 1.0,
+      "anchor": "",
+      "anchor_w": 0.0,
+      "anchor_sources": "",
+      "max_state": 384,
+      "replay": 0,
+      "full_ft": 0,
+      "row_budget": 0,
+      "shared_prefix": 0,
+      "length_sort": 0,
+      "pass_tokens_max": 0,
+      "max_steps": 0,
+      "save_every_steps": 0,
+      "save_every_minutes": 0,
+      "resume": 0,
+      "stop_after": 0,
+      "snapshot_fractions": "",
+      "snapshot_every_steps": 0,
+      "snapshot_dir": "",
+      "seed": 1
+    },
+    "seed": 1,
+    "weights_sha256": {
+      "adapter_model.safetensors": "d8d0e0a10d3dfcb1fec3d6ec99b7ad6052a39799dccec7a2e09b57569173dfd5",
+      "head.pt": "c0b6ddb0ad47c822e58ee3b3b77f0a486f4a4b694459f92d3d016d2e3d0de282",
+      "adapter_config.json": "883b34cc4649663b203790c0f6958c476bf1f43f0414009aabd75383e7b4aac8"
+    },
+    "grad_norm": [
+      {
+        "epoch": 0,
+        "steps": 469,
+        "mean": 24.504024313432836,
+        "max": 134.906952,
+        "clipped_steps": 465
+      },
+      {
+        "epoch": 1,
+        "steps": 469,
+        "mean": 23.993231938166314,
+        "max": 222.661728,
+        "clipped_steps": 341
+      },
+      {
+        "epoch": 2,
+        "steps": 469,
+        "mean": 16.373563863539445,
+        "max": 166.182556,
+        "clipped_steps": 183
+      }
+    ],
+    "wall_seconds": 7369.115583658218,
+    "device": "cuda",
+    "temperature": null,
+    "scores": {},
+    "drive_path": null,
+    "notes": "",
+    "platform": "kaggle",
+    "environment": {
+      "run_id": "joint_ep3_s1",
+      "platform": "kaggle",
+      "session": "kaggle_4",
+      "gpu": "Tesla T4, 15360 MiB, 580.178.04",
+      "gpu_index": 1,
+      "parallel_queues": 2,
+      "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+      "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+      "python": "3.13.16",
+      "torch": "2.8.0+cu128",
+      "cuda": "12.8",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "cuda_devices": 2,
+      "device_names": [
+        "Tesla T4",
+        "Tesla T4"
+      ],
+      "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+      "data_repo_path": "data/splits/kev/phase2_split/train.v2.jsonl",
+      "data_sha256": "1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747",
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "plan_meta": {
+        "created_utc": "2026-11-24T09:42:30+00:00",
+        "train_yaml_sha256": "4d86ca733082183fa5ddcec8ac3ac2b1827306b6fbb0b175bab4a05cf7184389",
+        "repo_commit": "f93b7627e39ba35216a66b5c07285bb415c3e84f",
+        "repo_dirty": false,
+        "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+        "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+        "data_sha256": {
+          "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+          "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+        },
+        "sessions": {
+          "kaggle_1": [
+            [
+              "b0_s0"
+            ],
+            [
+              "lr1e-05"
+            ]
+          ],
+          "kaggle_2": [
+            [
+              "lr4e-05"
+            ],
+            [
+              "b0_s1"
+            ]
+          ],
+          "kaggle_3": [
+            [
+              "ep3"
+            ],
+            [
+              "b0_s2",
+              "ep1"
+            ]
+          ],
+          "colab_1": [
+            [
+              "base_r16"
+            ]
+          ],
+          "kaggle_4": [
+            [
+              "joint_ep3_s0"
+            ],
+            [
+              "joint_ep3_s1"
+            ]
+          ]
+        }
+      },
+      "command": "/tmp/kev_work/kev/.venv/bin/python -m kev.train --data /kaggle/input/datasets/<kaggle-user>/group4-kev-m5/kev_phase2_train.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --init_from jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f --lr 2e-05 --epochs 3 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 1 --device cuda --out /tmp/kev_work/kev/runs/joint_ep3_s1",
+      "started_utc": "2026-11-24T10:23:44+00:00",
+      "ended_utc": "2026-11-24T12:27:15+00:00",
+      "exit_code": 0
+    },
+    "records_seen": 11256,
+    "truncated_records": 0,
+    "optimizer_steps": 1407,
+    "peak_device_bytes": 7664002560,
+    "peak_rss_bytes": 5849739264,
+    "trainable_params_m": 11.3,
+    "final_train_loss": 0.094,
+    "log_sha256": "b6e80153f430219f9276c82eec40f7d39d877085b8f4d2b0a1d43eaffd0f907a",
+    "dropped_records": 0,
+    "init_source": {
+      "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "resolved": "/root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+      "weights_sha256": "9b908623acb162118575f4e7a94524f9c139c335be4bfb74d6cfceca01e1885a",
+      "head_sha256": "f400bd12802b2b105ae45d6b03774a158a3db4fccff42413734ddca2e5c920b6",
+      "tensors": 372
+    }
+  },
+  {
     "run_id": "lr1e-05",
     "created_at": "2026-11-17T19:49:07+00:00",
     "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
