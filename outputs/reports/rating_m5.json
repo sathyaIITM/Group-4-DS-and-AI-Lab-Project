@@ -1,0 +1,44 @@
+{
+  "n": 30,
+  "scales": {
+    "interpretation_0_2": {
+      "exact_agreement": 0.967,
+      "kappa_linear": 0.659,
+      "mean_by_rater": {
+        "T1": 1.933,
+        "T3": 1.967
+      },
+      "mean_by_version": {
+        "v2": 2.0,
+        "v3": 1.85,
+        "v4": 2.0
+      }
+    },
+    "completeness_0_2": {
+      "exact_agreement": 0.833,
+      "kappa_linear": 0.414,
+      "mean_by_rater": {
+        "T1": 1.767,
+        "T3": 1.933
+      },
+      "mean_by_version": {
+        "v2": 1.85,
+        "v3": 1.7,
+        "v4": 2.0
+      }
+    },
+    "wording_0_2": {
+      "exact_agreement": 0.667,
+      "kappa_linear": 0.409,
+      "mean_by_rater": {
+        "T1": 1.667,
+        "T3": 1.467
+      },
+      "mean_by_version": {
+        "v2": 1.65,
+        "v3": 1.4,
+        "v4": 1.65
+      }
+    }
+  }
+}

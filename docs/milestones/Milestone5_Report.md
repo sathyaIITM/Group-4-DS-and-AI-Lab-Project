@@ -1,10 +1,10 @@
 # Milestone 5: Evaluation and Analysis of Results
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 26 November 2026. Version 0.9.
+Course: DS & AI Lab, GenAI track, Group 4. Date: 26 November 2026. Version 1.0.
 
 **Status of this file.** Every result cites the committed file that holds it and the command
-that produced it (Appendix F). Items still open are marked *Pending*.
+that produced it (Appendix F).
 
 **Scope of the evidence.** As in Milestones 3 and 4, every statement is tagged:
 
@@ -22,6 +22,7 @@ that produced it (Appendix F). Items still open are marked *Pending*.
 | --- | --- | --- |
 | 0.1 | 25 Nov 2026 | Skeleton: sixteen sections, owners, response map to the Milestone 4 review, evaluation sets and configurations |
 | 0.9 | 26 Nov 2026 | Results of the validated ground truth, the three test parts, v2-v4, decision models and `stress_v1`; Sections 1-16 drafted |
+| 1.0 | 26 Nov 2026 | Kev-Laya parity and tool results on re-adjudicated labels; v4 with the joint Kev model end to end; GEPA prompt changes; blind human rating; sign-off |
 
 ---
 
@@ -64,9 +65,9 @@ Two parts, as in Milestone 4:
 | --- | --- | --- | --- | --- |
 | 1 | End-to-end success flat; failures before SQL | General fixes on development items only; paired comparison on the frozen test set | 6, 7, 9, 10 | Done: +0.30 on blind items (p = 0.0005); Sections 7, 10 |
 | 2 | Clarification 0.278, abstention precision 0.55-0.57; disputed gold | Expected-action rules v2; validation of every development and test item; Milestone 4 runs re-scored on validated gold; clarification slot scored | 4, 6, 10 | Done: 230 items validated, 10 corrected, 7 rules added; abstention precision 0.66-0.74 |
-| 3 | Test set too small; scoring too lenient | 80 new test items, 40 of them blind (140 in all); scorer v3 checks interpretation, completeness, unit, period and evidence; blind human rating | 4, 5, 6 | Done: 140 items in three parts, including 40 blind; scorer v3; human rating *Pending* |
+| 3 | Test set too small; scoring too lenient | 80 new test items, 40 of them blind (140 in all); scorer v3 checks interpretation, completeness, unit, period and evidence; blind human rating | 4, 5, 6 | Done: 140 items in three parts, including 40 blind; scorer v3; human rating of 30 answers by two raters (interpretation agreement 0.97) |
 | 4 | Kev not evaluated inside the agent | v4 against v3 and v2 on the same frozen test set | 6, 7 | Done: v4 with Kev `ep3_s2` on the test set (0.70, scorer v3) |
-| 5 | Limits of the decision-model evaluation | Laya fine-tuned; phase 2 joint model gated on re-adjudicated tool labels (guide 1.1); limits kept in the conclusions | Part B, 13 | Partly: Laya with defaults; tool labels under re-adjudication, so the joint model is a component result |
+| 5 | Limits of the decision-model evaluation | Laya fine-tuned; phase 2 joint model gated on re-adjudicated tool labels (guide 1.1); limits kept in the conclusions | Part B, 13 | Done: Kev and Laya under a matched protocol (27 runs); tool scored on re-adjudicated `dev_human`; held-out table |
 | 6 | Calibration and cascade on hard cases and inside the agent | `stress_v1` (80 items); Kev confidence logged in agent runs | 6, 11 | Done: `stress_v1` shows calibration degrading out of distribution (ECE 0.117) |
 
 ---
@@ -174,17 +175,44 @@ records), seeds 0 and 1; one temperature per decision. Selection fixed in advanc
 the two decisions selects seed 1 (0.2013 against 0.2120). Training: 122.8 minutes on one T4, 1,407
 optimiser steps over 11,256 records, peak device memory 7.7 GB. On `dev_human` the domain accuracy
 of seed 1 is 0.960 (ECE 0.040), within the 3-point margin of Jev (0.970); seed 0 scores 0.934.
-On 25 November the team kept tool selection on Jev for Milestone 5: the tool labels of
-`dev_human` are being re-adjudicated under labelling guide 1.1, and no tool score on `dev_human`
-is reported before that. The joint model is therefore a component result, not part of v4.
+Under the matched protocol of Section 3.3 the joint cell was extended to three seeds of two
+settings; it selects `lr4e-05` (mean NLL 0.188 against 0.204 for `ep3`) and serves
+`joint_lr4e-05_s1`. The phase-2 result above is reported as that rule's outcome. On
+25 November the team kept tool selection on Jev for Milestone 5 whatever the result; the joint
+model is therefore a component result, not part of v4. Its tool score on `dev_human`, after the
+tool labels were re-adjudicated, is in Section 6.2.
 
-### 3.3 Laya comparator
+### 3.3 Kev and Laya under a matched fine-tuning protocol
 
-Laya (`laya` 0.4.23) fine-tuned with the library defaults (4 epochs, micro-batch 8 x
-accumulation 8) in 15.8 minutes on a Colab T4 (`laya_s0`). On `dev_human` (domain), after a
-temperature of 1.215 fitted on the calibration split: accuracy 0.949, macro-F1 0.930, ECE 0.021,
-median latency 0.15 s per decision on the Mac. A parity sweep of Laya settings under the same
-selection rule as Kev is in progress and is reported in Milestone 6.
+Milestone 4 compared a tuned Kev against Laya trained once with its library defaults
+(`laya_s0`: 0.949 on `dev_human`, domain). To compare the two models on equal terms, both were
+trained under one protocol fixed on 24 November before any run under it started
+([`kev_laya_parity_protocol.md`](../../docs/specs/kev_laya_parity_protocol.md)), and a model was
+chosen per decision by a rule fixed in advance. Every run the protocol lists was completed: 27
+new runs (9 Kev, 18 Laya; 10.7 and 8.6 T4-hours), plus 9 earlier Kev runs reused in the cells.
+
+| Rule | Content |
+| --- | --- |
+| Same rows | Domain cell: the 1,876 records of `kev_domain/train.v2`; joint cell: the 3,752 single-question records of `kev/phase2_split/train.v2`. Laya keeps no internal hold-out |
+| Same augmentation | Laya trains on the exact option-permuted and distractor variants that `kev.train` draws for the same seed and epoch (0 mismatches in 1,072 sampled variants) |
+| Same visible text | Laya question budget raised from 192 to 320 tokens so no option description is cut; no state is truncated in either model |
+| Same calibration | Both served at temperature 1; one temperature per decision fitted on `calibration.v2` by the same code |
+| Same search | One factor at a time around each model's default: learning rate x0.5 and x2, epochs x0.5 and x1.5; the default with seeds 0-2, every other setting with seed 0 |
+| Same selection | The two settings with the lowest `dev_synthetic` NLL get seeds 1-2 (domain) and 0-2 (joint); a cell's setting is the lowest mean NLL over three seeds; the served seed has the lowest NLL |
+| Same hardware | NVIDIA T4 for every run (Kaggle) |
+
+| Model | Cell | Settings (mean `dev_synthetic` NLL, three seeds) | Chosen | Served checkpoint |
+| --- | --- | --- | --- | --- |
+| Kev-0.8B | Domain | `ep3` 0.0220; `lr4e-05` 0.0235; default 0.0416 | `ep3` | `ep3_s2` |
+| Kev-0.8B | Joint | `lr4e-05` 0.188; `ep3` 0.204 | `lr4e-05` | `joint_lr4e-05_s1` |
+| Laya | Domain | `ep6` 0.068; default 0.108; `lr5e-05` 0.140 | `ep6` | `laya_dom_ep6_s1` |
+| Laya | Joint | `lr5e-05` 0.378; `ep6` 0.416 | `lr5e-05` | `laya_joint_lr5e-05_s1` |
+
+Selection used only `dev_synthetic`. Every run, with its setting, seed, Kaggle session, wall
+time and selection score, is in [`parity_runs.md`](../../outputs/reports/parity_runs.md); the
+plan each Kaggle session ran, with the commit it was made from and the hash of every input file,
+is in [`outputs/reports/parity_plans/`](../../outputs/reports/parity_plans/); the selections are
+in [`outputs/reports/laya_parity/`](../../outputs/reports/laya_parity/).
 
 ### 3.4 Prompt optimisation for v3 (GEPA)
 
@@ -200,6 +228,31 @@ selection rule as Kev is in progress and is reported in Milestone 6.
 
 Record: [`outputs/reports/gepa_v3.json`](../../outputs/reports/gepa_v3.json); command:
 `python scripts/optimise_prompts.py --yes`.
+
+**What GEPA changed in the prompt.** The optimised instructions
+([`intent_gepa.v1.md`](../../configs/prompts/intent_gepa.v1.md)) keep the rules of
+[`intent.v10.md`](../../configs/prompts/intent.v10.md), some reworded, and add five, each written by
+the reflection model from failures on the training items:
+
+| Added rule (abridged from `intent_gepa.v1`) | Failure it addresses |
+| --- | --- |
+| Nationally set measures (MSP, CPI, WPI, national GDP or inflation) asked without a sub-national place: set `place_mentions` to `["India"]` | The plan had no place for a national question, so the place was not stated or checked |
+| Datasets without a national row (sub-division rainfall, markets, districts) cannot default to India; a single value with no place is `clarify`, slot `place` | Rainfall or price questions with no place went to the query path |
+| Never substitute absolute counts for rates or the reverse: a count asked of a table of rates is `decline`, with the reason that only the rate is published | "Number of unemployed" answered with the unemployment rate |
+| "Highest" or "maximum" prices select the maximum-price indicator, "lowest" the minimum, not the modal price | Peak prices answered with modal prices |
+| Keep the user's period wording ("2010 monsoon", not the table code "2010-JJAS"); never return action "error" | Period mentions rewritten into table codes |
+
+Example on the test set (one run each, so a single item may also reflect run-to-run variation):
+
+| | v2 (`intent.v10`) | v3 (`intent_gepa.v1`) |
+| --- | --- | --- |
+| Question (e2e-422, blind) | "Common paddy MSP from 2019-20 to 2024-25" | same |
+| Places in the plan | none | `India` |
+| Answer | "The minimum support price in rupees per quintal for common paddy was 1815.0 for ... 2019-20, and 2300.0 for ... 2024-25" | "In India, the minimum support price for common paddy ... from 2019-20 to 2024-25 was ..." |
+
+The national-place rule makes the plan of a national question (MSP, CPI, crime totals) name India,
+so the answer states the place. Scorer v3 already accepts a national question without a place
+(Section 6.1), so this rule improves the answers' wording rather than their score.
 
 ---
 
@@ -296,7 +349,7 @@ Files: [`alignment_audit.csv`](../../data/eval/validation/alignment_audit.csv),
 November, and added to the rule sheet: E6a (periods relative to today),
 D6c (State abbreviations and misspellings with one plausible match), D6d (regions fixed by an
 official list or by the question), E9b (a measure published only for sub-groups is a
-clarification, not a decline), E2a (when two tables hold a measure, the table built for it) V7 (a commodity is ranked once, at its highest-valued variety) and, while validating the blind
+clarification, not a decline), E2a (when two tables hold a measure, the table built for it), V7 (a commodity is ranked once, at its highest-valued variety) and, while validating the blind
 items, E9c (a table with a single group still gives a clarification naming that group)
 ([`rule_gaps_draft.csv`](../../data/eval/validation/rule_gaps_draft.csv)). None was decided from
 agent output.
@@ -441,6 +494,36 @@ completeness, unit, period, evidence and clarification-slot checks.
 | Blind, scorer v3 | 40 | - | 0.650 | 0.700 | 0.700 |
 | All 140, scorer v3 | 140 | - | 0.650 | 0.671 | 0.700 |
 
+**Blind human rating (Measured).** Two members rated 30 answers alone, 10 drawn at random (seed 0)
+from each of v2, v3 and v4 among items the agent answered and the gold expects an answer, with the
+version hidden (key opened after both files were returned). Scales 0-2; agreement as exact share
+and Cohen's kappa with linear weights
+([`rating_m5.json`](../../outputs/reports/rating_m5.json), `python scripts/score_rating.py`,
+files in [`data/labels/rating_m5/`](../../data/labels/rating_m5/)).
+
+| Scale | Exact agreement | Kappa (linear) | Mean, v2 | Mean, v3 | Mean, v4 |
+| --- | --- | --- | --- | --- | --- |
+| Interpretation | 0.967 | 0.66 | 2.00 | 1.85 | 2.00 |
+| Completeness | 0.833 | 0.41 | 1.85 | 1.70 | 2.00 |
+| Wording | 0.667 | 0.41 | 1.65 | 1.40 | 1.65 |
+
+Released answers are rated as correctly interpreted and complete almost throughout (means 1.7-2.0
+of 2); wording is the weakest scale (1.4-1.65): the raters' notes point to verbose period phrasing,
+templated sentences stating defaults and assumptions, and the table's long indicator names. Kappa is moderate where nearly all ratings are 2, because the expected
+chance agreement is then high; exact agreement is reported beside it. Ten answers per version are
+too few to rank the versions.
+
+**v4 with the joint Kev model (Measured; branch `feature/t3-m5-v4-joint`, commit `5a85612`, not
+merged).** The same v4 with `joint_lr4e-05_s1` serving both decisions, each with its calibrated
+cascade to Jev (domain threshold 0.325, tool 0.689; `cascade_{domain,tool}_joint_lr4e-05_s1.json`),
+run once on the 140 items: 0.700 on the 100 items (v4 with `ep3_s2`: 0.700; 5 items better, 5
+worse, p = 1.0) and 0.725 on the blind items (0.700; 3 better, 2 worse, p = 1.0), 0.707 on all
+140; scorer v2 0.73 on the 100 items. Kev answered every decision first; about half of the tool
+decisions were escalated to Jev (19 of 40 on the blind items). The tool cascade's gain on
+`dev_human` (0.833 against 0.763) does not translate into a measurable end-to-end gain on this
+test set. Files: `outputs/predictions/m5_test{,_t1}_v4joint_r1.jsonl`,
+`outputs/reports/m5_test/score_*v4joint*.json`, `compare_{,t1_}v4_v4joint.json`.
+
 The Milestone 4 code records no plan fields, so it is scored under scorer v2 only. Its score on
 the continuity items is the mean of the three Milestone 4 runs re-scored on the validated gold
 (the as-run Milestone 4 figure was 0.689).
@@ -485,10 +568,49 @@ Confusion matrices, macro one-vs-rest ROC and precision-recall curves for zero-s
 0.9995, 0.9991 and 0.9947; macro average precision 0.697, 0.996, 0.992 and 0.950; table in
 [`auc_domain_dev_human.json`](figures/m5/auc_domain_dev_human.json)).
 
-**Tool selection.** No `dev_human` tool score is reported in this milestone: the tool labels are
-being re-adjudicated under labelling guide 1.1, and the tool predictions on `dev_human` stay
-unopened until that is complete. Tool selection stays on Jev in v4. On the synthetic development
-split the joint model's tool accuracy is 0.870 (ECE 0.041 after temperature 4.93).
+**Tool selection on `dev_human` (Measured).** The 50 tool items on which the two labellers
+disagreed were re-adjudicated under labelling guide 1.1, item by item, before any tool
+prediction on `dev_human` was opened. No label changed, so the v1.1 tool labels equal v1
+([`relabel_tool_v1_1.csv`](../../data/labels/dev_human_v1/relabel_tool_v1_1.csv)). Temperatures
+are fitted on the calibration split; Jev and zero-shot Kev are scored raw. Gate: accuracy at
+least 0.733 (3 points below Jev) and ECE at most 0.10.
+
+| System | Accuracy | 95% interval | Macro-F1 | ECE | Gate |
+| --- | --- | --- | --- | --- | --- |
+| Jev (zero-shot) | 0.763 | 0.707-0.818 | 0.799 | 0.063 | Reference |
+| Kev-0.8B zero-shot | 0.369 | 0.303-0.429 | 0.362 | 0.060 | Fail |
+| Kev joint `lr4e-05`, seeds 0 / 1 / 2 | 0.732 / **0.798** / 0.763 | 0.742-0.854 (seed 1) | 0.735 / 0.816 / 0.783 | 0.075 / 0.067 / 0.078 | Fail / **Pass** / Pass |
+| Kev joint `ep3_s1` (phase 2) | 0.773 | 0.712-0.828 | 0.791 | 0.056 | Pass |
+| Laya joint `lr5e-05`, seeds 0 / 1 / 2 | 0.652 / 0.641 / 0.657 | 0.576-0.707 (seed 1) | 0.614 / 0.586 / 0.651 | 0.138 / 0.144 / 0.141 | Fail |
+
+On `dev_synthetic` (selection set, after temperature) the same checkpoints score 0.893 / 0.901
+/ 0.907 (Kev `lr4e-05`) and 0.775 / 0.817 / 0.820 (Laya `lr5e-05`).
+
+- Fine-tuning drives Kev's tool result: zero-shot Kev scores 0.369, the fine-tuned joint models
+  0.73-0.80.
+- Kev matches Jev but does not beat it significantly. The served seed is 3.5 points above Jev
+  (exact McNemar, 33 against 26 discordant items, p = 0.44), but the three-seed mean (0.764)
+  equals Jev's 0.763, and the test cannot separate them.
+- Laya is clearly weaker on tool, by about 10-15 points against Kev on both sets (served
+  checkpoints on `dev_human`: 44 against 13 discordant items, p < 0.001), and it is poorly
+  calibrated on `dev_human` (ECE about 0.14, above the 0.10 limit).
+- Every model drops sharply from synthetic to human items: Kev from about 0.90 to about 0.76,
+  Laya from about 0.80 to about 0.65. The synthetic set therefore overstates tool accuracy for
+  both.
+
+**Kev-to-Jev cascade on tool (Measured).** With the threshold set on the calibration split at a
+5% error budget (calibrated confidence 0.689), Kev `joint_lr4e-05_s1` answers 66.7% of the
+`dev_human` items and escalates the rest to Jev. The cascade reaches 0.833 (95% interval
+0.778-0.884), against 0.763 for Jev alone and 0.798 for Kev alone, and is significantly more
+accurate than Jev alone (exact McNemar, 22 against 8 discordant items, p = 0.016). The error on
+the items Kev keeps is 10.6%, above the 5% budget the threshold was set for (upper bound 7.5% on
+calibration): the calibration split understates the error on human-written messages.
+Files: [`gate_tool_joint_lr4e-05_s1.json`](../../outputs/reports/gate_tool_joint_lr4e-05_s1.json),
+[`cascade_tool_joint_lr4e-05_s1.json`](../../outputs/reports/cascade_tool_joint_lr4e-05_s1.json),
+[`parity_final.json`](../../outputs/reports/parity_final.json) (`tool_mcnemar`).
+
+Tool selection stays on Jev (Section 6.2, choice of models). Source:
+[`parity_final.json`](../../outputs/reports/parity_final.json).
 
 **Domain decision on `stress_v1` (80 hard and unfamiliar messages; Measured).** Labels are the set
 author's intended labels, written and sealed (SHA-256 recorded in the set's README) before any model was run;
@@ -507,7 +629,59 @@ the escalation threshold, fitted on the in-distribution calibration split, sends
 Jev. The threshold is not refitted on `stress_v1`, which would make it training data; a
 calibration split with code-mixed and out-of-catalogue messages is planned for Milestone 6. Files:
 [`score_domain_stress_v1.json`](../../outputs/reports/score_domain_stress_v1.json), predictions
-`outputs/predictions/domain_{ep3_s2,jev}_stress_v1.jsonl`. Laya was not run on `stress_v1`.
+`outputs/predictions/domain_{ep3_s2,jev}_stress_v1.jsonl`.
+
+**Choice of a model for the domain decision (Measured; `dev_human`, local machine).**
+Candidates: the served checkpoints of both models in both cells (Section 3.3). Rule fixed in
+advance (protocol Section 6): (1) gate: within 3 points of Jev and ECE at most 0.10; (2) among
+those that pass, the most accurate is chosen only if an exact McNemar test against each other
+candidate gives p < 0.05; (3) otherwise, in order: one checkpoint serving both decisions, lower
+p95 latency, lower peak memory.
+
+| Candidate | Accuracy | 95% interval | ECE | Gate | Against `ep3_s2`: only `ep3_s2` / only other, p | Latency p50 / p95 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Kev `ep3_s2` | 0.975 | 0.949-0.995 | 0.024 | Pass | - | 0.61 / 0.72 s |
+| Kev `joint_lr4e-05_s1` | 0.960 | 0.929-0.985 | 0.021 | Pass | 4 / 1, 0.38 | 0.63 / 0.73 s |
+| Laya `laya_joint_lr5e-05_s1` | 0.965 | 0.939-0.990 | 0.035 | Pass | 7 / 5, 0.77 | 0.19 / 0.20 s |
+| Laya `laya_dom_ep6_s1` | 0.955 | 0.924-0.980 | 0.030 | Pass | 8 / 4, 0.39 | 0.20 / 0.22 s |
+
+All four pass the gate (Jev 0.970), and no candidate is significantly more accurate than
+another. The Kev joint checkpoint with the best tool score (`joint_lr4e-05_s1`) is 1.5 points
+below `ep3_s2` on the domain decision (0.960 against 0.975 on `dev_human`, p = 0.38; 0.992
+against 0.997 on `dev_synthetic`, NLL 0.029 against 0.019); on the tool decision it is 3.5
+points above Jev, also not significant (p = 0.44).
+
+**Decision (team, 26 November).** Kev `ep3_s2` serves the domain decision and Jev serves tool
+selection, as in v4. On its own the joint model is not significantly better than Jev on tool or
+than `ep3_s2` on domain. With escalation to Jev, the joint model's tool decisions are
+significantly more accurate than Jev alone (0.833 against 0.763, p = 0.016). Evaluated end to end
+(Section 6.1), the agent with the joint model scores the same as v4 (0.707 against 0.700 on 140
+items, not significant), so v4 keeps `ep3_s2` and Jev for this milestone. This departs from the
+tie-break order of the protocol (Section 6, step 3), which after the tests would have compared
+latency, where Laya answers in about a third of Kev's time on the Mac (p95 0.20 s against
+0.72 s); the team preferred the most accurate candidate on `dev_human` and continuity with the
+configuration evaluated end to end in v4. Peak memory was sampled but is not used: the resident
+size excludes memory the GPU holds on Apple silicon and varied twofold between runs of the same
+model.
+
+On `stress_v1` (80 hard and unfamiliar messages, same temperatures) the ranking holds: Kev
+`ep3_s2` 0.838 (0.750-0.912, ECE 0.117), Laya `laya_dom_ep6_s1` 0.787 (0.688-0.875, ECE 0.172),
+Laya `laya_joint_lr5e-05_s1` 0.738 (0.637-0.825, ECE 0.167), against Jev 0.925 (ECE 0.063).
+Both models fall behind Jev on hard cases, and Laya's calibration degrades more than Kev's.
+
+Laya's selection used predictions made on the Kaggle GPU; the figures above are from the local
+machine. Top answers agree on 98.0-99.7% of items for the domain and 91.0-96.9% for tool
+between the two backends, so a cross-backend comparison of Laya's tool predictions carries
+that uncertainty.
+
+**Held-out table.** One joint run per model was trained without the 96 records of
+`srs_imr_state` (infant mortality). On the 15 `dev_human` items about that table, compared with the run of the same setting and
+seed trained with the table's records (Kev `joint_ep3_s0`, Laya `laya_joint_ep6_s0`), Kev
+answers 14 with and 14 without on domain and 11 with and 11 without on tool; Laya answers 13 and
+10 on domain and 9 and 8 on tool. Kev's decisions transfer to an unseen table without loss;
+Laya's degrade, mostly on domain. Fifteen items allow no significance test; the result is
+indicative. Source: [`parity_final.json`](../../outputs/reports/parity_final.json)
+(`held_out_table`).
 
 ---
 
@@ -563,6 +737,23 @@ seed 2 has the lowest NLL. The temperature is fitted per run (3.47-3.92 for B0 a
 cascade threshold at a 5% error budget on the calibration split (0.408 for `ep3_s2`). Phase 2: two
 seeds of the joint model, selected by the mean NLL over both decisions. GEPA: one budget (300
 metric calls, minibatch 4); the best of 9 candidates was found at the fifth candidate.
+
+**Laya, domain decision (Measured; same metric and procedure as Kev).**
+
+| Run | Change from the Laya default (encoder lr 2.5e-5, head lr 1e-4, 4 epochs) | NLL | Accuracy |
+| --- | --- | --- | --- |
+| Default, seeds 0 / 1 / 2 | - | 0.056 / 0.155 / 0.111 (mean 0.108) | 0.992 / 0.975 / 0.983 |
+| `lr1.25e-05` | encoder lr 1.25e-5 | 0.213 | 0.955 |
+| `lr5e-05`, seeds 0 / 1 / 2 | encoder lr 5e-5 | 0.073 / 0.206 / 0.140 (mean 0.140) | 0.989 / 0.963 / 0.972 |
+| `ep2` | 2 epochs | 0.263 | 0.932 |
+| `ep6`, seeds 0 / 1 / 2 | 6 epochs | 0.060 / 0.050 / 0.094 (mean 0.068) | 0.992 / 0.994 / 0.986 |
+
+Laya's seed spread is wide: the default seeds range from 0.056 to 0.155, more than the gap
+between settings, and `lr5e-05` ranked second on seed 0 but last on the three-seed mean. Kev's
+`lr4e-05` seeds 1 and 2 score 0.021 and 0.024 (mean 0.0235 with seed 0), against `ep3` 0.0220.
+Joint cell, three seeds each (mean of the domain and tool NLL): Kev `lr4e-05` 0.175 / 0.174 /
+0.216, `ep3` 0.212 / 0.201 / 0.199; Laya `lr5e-05` 0.396 / 0.354 / 0.384, `ep6` 0.406 / 0.420 /
+0.422.
 
 ---
 
@@ -649,10 +840,11 @@ higher median of v3 and v4 coincides with slower Vertex responses during those r
 attributed to the versions. Objective O5 (first event at most 1.5 s, p95 at most 20 s) holds for
 the first event and is missed by 3 s for the p95 latency.
 
-**Decision models.** Kev `ep3_s2`: 53.9 minutes of training on one T4, peak 6.8 GB; inference on
-the Mac (MPS, fp32) about 0.6 s per decision; adapter of rank 16 on a 0.8 B base. Laya `laya_s0`:
-15.8 minutes of training on a T4; 0.15 s per decision on the Mac. Jev: hosted, about 0.3 s per
-decision from India.
+**Decision models.** Kev `ep3_s2`: 53.9 minutes of training on one T4, peak 6.8 GB; adapter of
+rank 16 on a 0.8 B base. Laya `laya_dom_ep6_s1`: 23.8 minutes on one T4. Inference on the Mac
+(`dev_human`, one request at a time, no other model server running): Kev p50 / p95 0.61 / 0.72 s
+per decision, Laya 0.19-0.20 / 0.20-0.22 s. The parity phase used 10.7 T4-hours for Kev (9 runs)
+and 8.6 for Laya (18 runs). Jev: hosted, about 0.3 s per decision from India.
 
 ---
 
@@ -671,9 +863,11 @@ decision from India.
   runs still contain five timeouts, scored as failures.
 - **Agent.** The remaining errors of Section 10 (declines before place resolution, missing State
   abbreviations and regions, unit checks for bales, call budget).
-- **Decision models.** Tool selection is not evaluated on human labels in this milestone; the
-  domain decision is evaluated on 198 items from one labelling round; Laya is evaluated with its
-  defaults only.
+- **Decision models.** Both decisions are evaluated on 198 items from one labelling round; the
+  tool re-adjudication had one adjudicator, who also wrote the items. The matched protocol
+  equalises data, augmentation, search, seeds, selection and hardware, not pre-training: the two
+  starting checkpoints differ. Kev's run from the base model has no Laya counterpart. One plan
+  (`kaggle_6`) was generated from a working tree that held exactly the change committed next, and its run records carry the flag `repo_dirty`.
 - **Data.** 14 tables; many end before 2023 (crop production 2015-16, rainfall 2017), so "latest"
   answers can be old; the Mandi table is a one-day snapshot.
 - **Ethics.** Answers are restricted to published government tables and state their source and
@@ -740,11 +934,21 @@ Live runs spend cloud credit and need `--yes`.
 | Serve Kev (v4) | `scripts/serve_kev.sh models/checkpoints/ep3_s2` | port 8009 (set `KEV_BASE_URL` for another port) |
 | Test run | `python -m analyst.evaluation.e2e_eval run --live --yes --workers 1 --version <v2/v3/v4> --set data/eval/e2e_test.v1.jsonl data/eval/e2e_test_ext.v1.jsonl --out outputs/predictions/m5_test_<v>_r1.jsonl` (and `--set data/eval/e2e_test_t1.v1.jsonl` for the T1 part) | predictions |
 | Milestone 4 baseline | the same at commit `a2c8c7d`, on `outputs/e2e_test_new80_m4fields.jsonl` (the 80 new items with the fields that commit knows) | `m5_test_v2m4_new80_r1.jsonl` |
+| Human rating | `python scripts/score_rating.py` | `outputs/reports/rating_m5.json` |
 | Score | `python -m analyst.evaluation.e2e_eval score --scorer <v2/v3> --predictions <runs> --gold <sets> --out <report>` | `outputs/reports/m5_test/score_*.json` |
 | Paired comparison | `python -m analyst.evaluation.e2e_eval compare --scorer <v2/v3> --a <runs> --b <runs> --gold <sets> [--only <set>] --out <report>` | `outputs/reports/m5_test/compare_*.json` |
 | Gate and cascade (domain) | `python -m analyst.evaluation.decision_eval {gate,cascade} --decision domain --kev-calibration ... --kev-dev ... --jev-dev ... --out ...` | `gate_domain_ep3_s2.json`, `cascade_domain_ep3_s2.json` |
 | `stress_v1` | `python scripts/score_stress_v1.py build`; `domain_eval run --split stress_v1`; `python scripts/score_stress_v1.py score` | `score_domain_stress_v1.json` |
 | Figures | `python scripts/m5_decision_figures.py` | `docs/milestones/figures/m5/` |
+| Parity data (Laya training files from Kev's augmentation) | `~/kev-src/.venv/bin/python -I scripts/build_parity_data.py --kev-src ~/kev-src --root .` | `data/splits/laya_parity/`, `hashes.json` |
+| Parity run plans and Kaggle staging | `python scripts/laya_parity_plan.py --stage sweep`; `python scripts/laya_parity_plan.py --stage finals --top2 ep6 lr5e-05 --parts 3 --selection outputs/reports/laya_parity/selection_laya_sweep.json`; `python -m analyst.models.kev_runs plan --out <stage>/kev_plan.json` | `outputs/reports/parity_plans/` |
+| Parity training (Kaggle, 2 x T4) | `notebooks/laya_parity_kaggle.ipynb` (`STAGE`, `PART`); `notebooks/kev_train_t4.ipynb` (`SESSION` `kaggle_5`, `kaggle_6`) | run folders; `environment.json` per run |
+| Parity selection | `python scripts/score_laya_parity.py laya --stage sweep\|finals --plan outputs/reports/parity_plans/laya_K1_sweep.json\|laya_K3_finals.json`; `python scripts/score_laya_parity.py kev --stage finals --kev-reports outputs/reports` | `outputs/reports/laya_parity/selection_*.json` |
+| Register Kev runs | `python -m analyst.models.kev_runs register models/checkpoints/<run> --run-id <run> [--scores outputs/reports/score_domain_<run>.json]` | `models/registry.json`, `outputs/reports/kev_runs/<run>/` |
+| Serve Laya (local) | `LAYA_PORT=8012 LAYA_MODELS=<run> LAYA_EXTRA_MODELS='{"<run>":"<abs path>"}' uvx --from "laya[serve]==0.4.23" laya-serve` | port 8012 |
+| Decision predictions | `python -m analyst.evaluation.decision_eval run --decision <domain\|tool> --file <split> --out <predictions> [--base-url ... --model ...]` | `outputs/predictions/<decision>_<run>_<split>.jsonl` |
+| Gate and cascade (tool) | `python -m analyst.evaluation.decision_eval {gate,cascade} --decision tool --kev-calibration outputs/predictions/tool_joint_lr4e-05_s1_calibration.jsonl --kev-dev outputs/predictions/tool_joint_lr4e-05_s1_dev_human.jsonl --jev-dev outputs/predictions/tool_jev_dev_human.jsonl --out ...` | `gate_tool_joint_lr4e-05_s1.json`, `cascade_tool_joint_lr4e-05_s1.json` |
+| Final comparison and run table | `python scripts/parity_final.py`; `python scripts/parity_run_table.py` | `outputs/reports/parity_final.json`, `outputs/reports/parity_runs.{csv,md}` |
 
 ## Contribution log
 
@@ -765,7 +969,7 @@ submission.
 
 | Member | Track | Sign-off |
 | --- | --- | --- |
-| Shaoni Samanta | T1 | To be confirmed |
-| Shivanshu Gupta | T2 | To be confirmed |
-| Sathya Prakash | T3 | To be confirmed |
-| Ashmit Ghose | T4 | To be confirmed |
+| Shaoni Samanta | T1 | Confirmed, 26 November 2026 |
+| Shivanshu Gupta | T2 | Confirmed, 26 November 2026 |
+| Sathya Prakash | T3 | Confirmed, 26 November 2026 |
+| Ashmit Ghose | T4 | Confirmed, 26 November 2026 |
