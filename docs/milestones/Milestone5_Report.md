@@ -1,13 +1,10 @@
 # Milestone 5: Evaluation and Analysis of Results
 
 Project: Analyst Agent for Indian Public Data with Calibrated Decision Models (working title).
-Course: DS & AI Lab, GenAI track, Group 4. Date: 26 November 2026. Version 0.1 (skeleton).
+Course: DS & AI Lab, GenAI track, Group 4. Date: 26 November 2026. Version 0.9.
 
-**Status of this file.** Skeleton: the sixteen sections of the evaluation outline, the owner of
-each, the content it must hold and the files it will cite. Facts already fixed (plan, sets,
-configurations, training of the selected model) are written; every result is marked
-*Pending* until its run is committed. Every result cites the committed file that holds it and
-the command that produced it (Appendix F).
+**Status of this file.** Every result cites the committed file that holds it and the command
+that produced it (Appendix F). Items still open are marked *Pending*.
 
 **Scope of the evidence.** As in Milestones 3 and 4, every statement is tagged:
 
@@ -24,12 +21,12 @@ the command that produced it (Appendix F).
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1 | 25 Nov 2026 | Skeleton: sixteen sections, owners, response map to the Milestone 4 review, evaluation sets and configurations |
+| 0.9 | 26 Nov 2026 | Results of the validated ground truth, the three test parts, v2-v4, decision models and `stress_v1`; Sections 1-16 drafted |
 
 ---
 
 ## 1. Introduction
 
-*Owner: T3.*
 
 ### 1.1 Project objective
 
@@ -55,8 +52,8 @@ Two parts, as in Milestone 4:
 | v2 (Milestone 4 baseline) | Hosted LLM (`gemini-3.5-flash-lite`), guidance cards and verified examples, Jev routing; frozen commit `a2c8c7d` | 6, 7 |
 | v2 (Milestone 5) | v2 with the Milestone 5 fixes to place, period, clarification and follow-up handling | 6, 7, 9 |
 | v3 | v2 (Milestone 5) with the intent prompt optimised by GEPA on development items | 6, 7, 8, 9 |
-| v4 | v3 with fine-tuned Kev-0.8B on the domain decision and the cascade to Jev; tool selection on Kev only if the phase 2 gate passes | 6, 7, 9 |
-| Kev-0.8B `ep3` | Domain decision, selected in Milestone 4 | 3, Part B |
+| v4 | v3 with fine-tuned Kev-0.8B `ep3_s2` on the domain decision and the cascade to Jev; tool selection stays on Jev | 6, 7, 9 |
+| Kev-0.8B `ep3_s2` | Domain decision: seed 2 of the `ep3` recipe selected in Milestone 4, chosen by the fixed selection rule | 3, Part B |
 | Kev-0.8B joint (phase 2) | Tool selection and domain in one model | 3, 8, Part B |
 | Jev | Hosted decision model (zero-shot) | Part B |
 | Laya | Comparator, fine-tuned with the library defaults | Part B |
@@ -65,18 +62,17 @@ Two parts, as in Milestone 4:
 
 | # | Review point | Response | Where | Status |
 | --- | --- | --- | --- | --- |
-| 1 | End-to-end success flat; failures before SQL | General fixes on development items only; paired comparison on the frozen test set | 6, 7, 9, 10 | Pending |
-| 2 | Clarification 0.278, abstention precision 0.55-0.57; disputed gold | Expected-action rules v2; validation of every development and test item; Milestone 4 runs re-scored on validated gold; clarification slot scored | 4, 6, 10 | Pending |
-| 3 | Test set too small; scoring too lenient | 40 new blind test items (100 in all); scorer v3 checks interpretation, completeness, unit, period and evidence; blind human rating | 4, 5, 6 | Pending |
-| 4 | Kev not evaluated inside the agent | v4 against v3 and v2 on the same frozen test set | 6, 7 | Pending |
-| 5 | Limits of the decision-model evaluation | Laya fine-tuned; phase 2 joint model gated on re-adjudicated tool labels (guide 1.1); limits kept in the conclusions | Part B, 13 | Pending |
-| 6 | Calibration and cascade on hard cases and inside the agent | `stress_v1` (80 items); Kev confidence logged in agent runs | 6, 11 | Pending |
+| 1 | End-to-end success flat; failures before SQL | General fixes on development items only; paired comparison on the frozen test set | 6, 7, 9, 10 | Done: +0.30 on blind items (p = 0.0005); Sections 7, 10 |
+| 2 | Clarification 0.278, abstention precision 0.55-0.57; disputed gold | Expected-action rules v2; validation of every development and test item; Milestone 4 runs re-scored on validated gold; clarification slot scored | 4, 6, 10 | Done: 230 items validated, 10 corrected, 7 rules added; abstention precision 0.66-0.74 |
+| 3 | Test set too small; scoring too lenient | 80 new test items, 40 of them blind (140 in all); scorer v3 checks interpretation, completeness, unit, period and evidence; blind human rating | 4, 5, 6 | Done: 140 items in three parts, including 40 blind; scorer v3; human rating *Pending* |
+| 4 | Kev not evaluated inside the agent | v4 against v3 and v2 on the same frozen test set | 6, 7 | Done: v4 with Kev `ep3_s2` on the test set (0.70, scorer v3) |
+| 5 | Limits of the decision-model evaluation | Laya fine-tuned; phase 2 joint model gated on re-adjudicated tool labels (guide 1.1); limits kept in the conclusions | Part B, 13 | Partly: Laya with defaults; tool labels under re-adjudication, so the joint model is a component result |
+| 6 | Calibration and cascade on hard cases and inside the agent | `stress_v1` (80 items); Kev confidence logged in agent runs | 6, 11 | Done: `stress_v1` shows calibration degrading out of distribution (ECE 0.117) |
 
 ---
 
 ## 2. Experimental setup
 
-*Owners: T1 (data), T3 (environment).*
 
 ### 2.1 Hardware and software environment
 
@@ -96,15 +92,32 @@ Pydantic (contracts), BM25 and `BAAI/bge-small-en-v1.5` (retrieval), Kev (`kev.t
 
 ### 2.3 Dataset versions
 
-*Pending (T1):* catalogue of 14 tables with hashes from [`data/MANIFEST.md`](../../data/MANIFEST.md);
-reference files added for place resolution.
+**Catalogue.** The 14 processed tables of Milestone 4 are unchanged; their row counts and
+SHA-256 hashes are in [`data/MANIFEST.md`](../../data/MANIFEST.md) (built by
+`scripts/build_manifest.py`, 17 November 2026). All sources are government-hosted (data.gov.in
+and ministry or department sites).
+
+**Reference files for place resolution (Built).** Milestone 4 traced six test failures in
+every version to place names. Four reference files, each from government sources and each with
+a test that every canonical value exists in its table
+([`tests/test_reference_places.py`](../../tests/test_reference_places.py)), close these gaps:
+
+| File | Rows | Content |
+| --- | --- | --- |
+| [`configs/reference/imd_subdivisions.csv`](../../configs/reference/imd_subdivisions.csv) | 36 | IMD sub-division, the States and Union Territories it covers, source URL |
+| [`configs/reference/subdivision_aliases.csv`](../../configs/reference/subdivision_aliases.csv) | 4 | Old and alternative sub-division names (Odisha stored as "Orissa") |
+| [`configs/reference/place_aliases.csv`](../../configs/reference/place_aliases.csv) | 66 | Market names without prefixes and common spellings, mapped to the stored name, with evidence |
+| [`configs/reference/duplicate_districts.csv`](../../configs/reference/duplicate_districts.csv) | 36 | District names that occur in more than one State, per table |
+
+The files are described in [`configs/README.md`](../../configs/README.md).
 
 ### 2.4 Evaluation sets and splits
 
 | Set | File | Items | Use |
 | --- | --- | --- | --- |
 | `e2e_test` v1 (continuity) | [`data/eval/e2e_test.v1.jsonl`](../../data/eval/e2e_test.v1.jsonl) | 60 | Test, comparable with Milestone 4 |
-| New test items (blind) | `data/eval/e2e_test_ext.v1.jsonl` | 40 | Test; written by T1, unseen by the developers before the code freeze |
+| New test items | [`data/eval/e2e_test_ext.v1.jsonl`](../../data/eval/e2e_test_ext.v1.jsonl) | 40 | Test (new); written from the tables and the rules by a member who also took part in the fix work, kept outside the repository until the code freeze (Section 4.2) |
+| Blind test items | [`data/eval/e2e_test_t1.v1.jsonl`](../../data/eval/e2e_test_t1.v1.jsonl) | 40 | Test (blind); written independently by a member outside the fix work, without access to the agent code (Section 4.2) |
 | `e2e_dev` v1 and extra | [`data/eval/e2e_dev.v1.jsonl`](../../data/eval/e2e_dev.v1.jsonl), [`e2e_dev_extra.v1.jsonl`](../../data/eval/e2e_dev_extra.v1.jsonl) | 60 | Development, GEPA training and validation |
 | Development supplement | [`data/eval/e2e_dev_m5.v1.jsonl`](../../data/eval/e2e_dev_m5.v1.jsonl) | 30 | Development |
 | `dev_human` v1 / v1.1 | [`data/labels/dev_human_v1/`](../../data/labels/dev_human_v1/) | 198 | Decision-model test; tool labels re-adjudicated under guide 1.1 (v1.1) |
@@ -119,17 +132,28 @@ GEPA split: seed 0. Bootstrap: 10,000 resamples, seed 0. The test runs use the f
 
 ### 2.6 Evaluation workflow
 
-*Pending (T3):* validation of the gold against the expected-action rules; code freeze; three
-runs per configuration on the frozen test set; scoring with scorers v2 and v3; paired
-comparisons; blind human rating; decision-model scoring on `dev_human` and `stress_v1`.
+1. Expected-action rules v2 written; every development and test item validated against them
+   (Section 4.3).
+2. Agent fixes built and tested on development items only; code freeze (commit `86a36a7`).
+3. GEPA optimisation of the intent prompt on development items (v3); Kev `ep3_s2` selected by the
+   fixed rule and gated (v4).
+4. Test runs, one configuration at a time (Section 4.4); scoring with scorers v2 and v3; paired
+   comparisons.
+5. Blind human rating of 30 answers; decision-model scoring on `dev_human` and `stress_v1`.
 
 ---
 
 ## 3. Model training summary
 
-*Owner: T3.*
 
-### 3.1 Domain decision: Kev-0.8B `ep3` (selected in Milestone 4)
+### 3.1 Domain decision: Kev-0.8B `ep3_s2` (recipe `ep3`, selected in Milestone 4)
+
+Milestone 4 selected the `ep3` recipe (B0 with three epochs). Milestone 5 trained two further
+seeds of that recipe and applied the selection rule fixed in advance in
+[`configs/train.yaml`](../../configs/train.yaml): temperature fitted on the calibration split,
+checkpoint chosen on `dev_synthetic` NLL after temperature. Seed 2 has the lowest NLL (0.0187,
+against 0.0237 for seeds 0 and 1) and is served in v4. `dev_human` is the test set of this
+decision and played no part in the choice (seeds 0, 1 and 2 score 0.980, 0.965 and 0.975 on it).
 
 | Item | Value |
 | --- | --- |
@@ -139,48 +163,192 @@ comparisons; blind human rating; decision-model scoring on `dev_human` and `stre
 | Loss | Cross-entropy over the options |
 | Early stopping | None (`kev.train` saves per epoch only for full-weight runs); training horizons compared as separate runs |
 | Checkpoint selection | Temperature fitted on calibration; lowest `dev_synthetic` NLL after temperature, beyond the B0 seed spread |
-| Calibration | One temperature, 3.763, fitted by NLL on the calibration split |
-| Training duration | *Pending: from the run record* |
+| Calibration | One temperature, 3.652 (`ep3_s2`; 3.763 for seed 0), fitted by NLL on the calibration split |
+| Training duration | 53.9 minutes on one Tesla T4 (Kaggle), 705 optimiser steps over 5,628 records, peak device memory 6.8 GB (`models/checkpoints/ep3_s2/training_metrics.json`) |
 
 ### 3.2 Phase 2: joint model for tool selection and domain
 
 Same recipe as `ep3`, on routing data v2 with one single-question record per decision (3,752
 records), seeds 0 and 1; one temperature per decision. Selection fixed in advance in
-[`configs/train.yaml`](../../configs/train.yaml). *Pending: training records and selection.*
+[`configs/train.yaml`](../../configs/train.yaml): mean `dev_synthetic` NLL after temperature over
+the two decisions selects seed 1 (0.2013 against 0.2120). Training: 122.8 minutes on one T4, 1,407
+optimiser steps over 11,256 records, peak device memory 7.7 GB. On `dev_human` the domain accuracy
+of seed 1 is 0.960 (ECE 0.040), within the 3-point margin of Jev (0.970); seed 0 scores 0.934.
+On 25 November the team kept tool selection on Jev for Milestone 5: the tool labels of
+`dev_human` are being re-adjudicated under labelling guide 1.1, and no tool score on `dev_human`
+is reported before that. The joint model is therefore a component result, not part of v4.
 
 ### 3.3 Laya comparator
 
-*Pending: library defaults (4 epochs, micro-batch 8 x accumulation 8), 15.8 minutes on a Colab
-T4; scores.*
+Laya (`laya` 0.4.23) fine-tuned with the library defaults (4 epochs, micro-batch 8 x
+accumulation 8) in 15.8 minutes on a Colab T4 (`laya_s0`). On `dev_human` (domain), after a
+temperature of 1.215 fitted on the calibration split: accuracy 0.949, macro-F1 0.930, ECE 0.021,
+median latency 0.15 s per decision on the Mac. A parity sweep of Laya settings under the same
+selection rule as Kev is in progress and is reported in Milestone 6.
 
 ### 3.4 Prompt optimisation for v3 (GEPA)
 
-*Pending: component optimised (intent instructions), development items, budget, candidates and
-validation scores ([`outputs/reports/gepa_v3.json`]).*
+| Item | Value |
+| --- | --- |
+| Component optimised | The instruction part of the intent prompt (`intent.v10`); the catalogue block, user template and output schema are fixed |
+| Data | 66 eligible development items (answer and clarify items without prior turns), split 43 for training and 23 for validation by action, seed 0; no test item |
+| Metric | Per item: action correct, then places, periods and indicators against the structured gold (scorer v3 fields), with a textual reason fed to the reflection model |
+| Models | Task model `gemini-3.5-flash-lite`; reflection model `gemini-3.8-flash` |
+| Budget | 300 metric calls (319 used), minibatch 4; 9 candidates |
+| Result | Validation score 0.812 for the starting prompt, 0.899 for the best candidate (candidate 4), written as `configs/prompts/intent_gepa.v1.md` and pinned for v3 and v4 in `configs/model.yaml` |
+| Cost and time | USD 3.35 (estimate from token counts), 16 minutes |
+
+Record: [`outputs/reports/gepa_v3.json`](../../outputs/reports/gepa_v3.json); command:
+`python scripts/optimise_prompts.py --yes`.
 
 ---
 
 ## 4. Evaluation methodology
 
-*Owners: T1 (4.1-4.3), T3 (4.4-4.6).*
 
 ### 4.1 Test sets
 
-*Pending (T1).*
+The test set has 140 items in three parts, reported separately and together:
+
+| Part | Items | answer | clarify | decline | describe | search | Follow-ups |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Continuity (`e2e_test` v1, Milestone 4) | 60 | 40 | 6 | 7 | 4 | 3 | 7 |
+| New (`e2e_test_ext` v1, Milestone 5) | 40 | 27 | 6 | 5 | 1 | 1 | 4 |
+| Blind (`e2e_test_t1` v1, Milestone 5) | 40 | 28 | 8 | 4 | 0 | 0 | 4 |
+
+The continuity part keeps the Milestone 4 comparison on the same items. The new part follows
+the quotas of the Milestone 5 plan: sub-division rainfall for split and shared States, market
+aliases, district names shared by two States (with and without the State named), "now" and
+"latest", series and comparisons of more than three values, follow-ups, clarification over four
+slots (place, period, category, indicator), measures held in no table, and units (bales, lakh,
+percentage points, per 1,000). Every table has at least two items. Neither part is used for any
+fix, prompt optimisation or tuning; the development sets (90 items) serve those purposes.
 
 ### 4.2 Ground-truth preparation
 
-*Pending (T1):* how the items were written; gold values from executing the gold SQL.
+Each item was written as a journalist or fact-checker would ask it. The expected action was
+decided under the expected-action rules before any SQL was written; for `answer` items the gold
+SQL was written on the published table, executed read-only in DuckDB, and the expected values and
+entities were copied from the result, with a tolerance and the derivation for computed values.
+The structured gold fields used by scorer v3 (places, periods, indicators, unit, number of values,
+lineage) are computed from the gold SQL by
+[`scripts/fill_gold_fields.py`](../../scripts/fill_gold_fields.py); domain, clarification slot and
+options are filled by hand. [`scripts/check_e2e_set.py`](../../scripts/check_e2e_set.py)
+re-executes every gold query (no errors on any set) and a character 5-gram near-duplicate check
+(threshold 0.8) finds no new item that repeats an existing question.
+
+The 40 new items were written from the tables and the rules by a member who also took part in
+the fix work, after the place reference data were merged and while the fixes were being built
+separately. They were kept outside the repository until the code freeze (commit `86a36a7`) and no
+fix was made after them. They are therefore unseen by the fix work, but not blind.
+
+The 40 blind items were written independently by a member outside the fix work, without access to
+the agent code or to the other new items, and added after the freeze. They were validated by
+another member with the same three-way check (Section 4.3).
+
+In both parts about five items with place names use spellings that appear in the alias reference
+files, written by the same member who wrote the blind items; both parts may therefore overstate the
+gain from place resolution.
 
 ### 4.3 Ground-truth validation
 
-*Pending (T1):* the expected-action rules v2 ([`data/eval/README.md`](../../data/eval/README.md));
-validators per set; number of items changed per set and per rule; disputed items.
+In Milestone 4 several items expected an action that differed from the agreed design, so a
+correct agent behaviour was scored as a failure. In Milestone 5 every development and test item
+(230) was validated before it was scored, with the rules as the only referee; the blind items were
+validated by a member other than their author.
+
+**Rules.** The expected-action rules v2 (24 November) in
+[`data/eval/README.md`](../../data/eval/README.md) state, with their sources in labelling guide
+1.1 and the design contract, when an item expects `answer`, `clarify`, `decline`, `describe` or
+`search` (E1-E15), which defaults remove a clarifying question (D1a-D10), which slot a
+clarification asks for (S1-S4), how follow-ups inherit (F1-F4) and how expected values are formed
+(V1-V6).
+
+**Three-way check.** For each item three actions were compared: the gold (G), the action the rules
+require from the question and the tables alone (R), and the action the frozen agent takes by
+design, read from its code (I). The classes and their treatment:
+
+| Class | Condition | Treatment |
+| --- | --- | --- |
+| Aligned | G = R = I | None |
+| Gold error | G differs from R | Correction proposed with the rule it cites; decided by a person |
+| Agent error | G = R, I differs | Gold unchanged; reported as an agent error (Section 10) |
+| Rule gap | No rule decides | One general rule decided by the team and applied to every item alike |
+
+Milestone 4 agent outputs were used only to make sure every item on which the agent had disagreed
+with the gold received a reasoned class; they were never evidence for a change.
+
+| Set | Items | Aligned | Gold error | Agent error | Rule gap |
+| --- | --- | --- | --- | --- | --- |
+| Development (`e2e_dev`, `e2e_dev_extra`, `e2e_dev_m5`) | 90 | 85 | 1 | 3 | 2 |
+| Continuity test | 60 | 52 | 0 | 7 | 1 |
+| New test | 40 | 33 | 2 | 4 | 2 |
+| Blind test | 40 | 35 | 1 | 3 | 2 |
+
+One development item and one new test item are counted both as gold error and agent error. The
+classes concern the expected action and slot; corrections to other gold fields of an aligned item
+(the tables a search lists) and items settled through a rule gap appear in the table of changes
+below.
+Files: [`alignment_audit.csv`](../../data/eval/validation/alignment_audit.csv),
+[`alignment_test_ext.csv`](../../data/eval/validation/alignment_test_ext.csv).
+
+**Rule gaps.** Seven cases were decided once, as general rules, by three members of the team on 26
+November, and added to the rule sheet: E6a (periods relative to today),
+D6c (State abbreviations and misspellings with one plausible match), D6d (regions fixed by an
+official list or by the question), E9b (a measure published only for sub-groups is a
+clarification, not a decline), E2a (when two tables hold a measure, the table built for it) V7 (a commodity is ranked once, at its highest-valued variety) and, while validating the blind
+items, E9c (a table with a single group still gives a clarification naming that group)
+([`rule_gaps_draft.csv`](../../data/eval/validation/rule_gaps_draft.csv)). None was decided from
+agent output.
+
+**Changes.** Every proposed change was decided row by row by the same three members
+([`data/eval/validation/`](../../data/eval/validation/)) and is recorded on its item
+(`gold_changes`, `gold_version` 2), applied by
+[`scripts/apply_validation.py`](../../scripts/apply_validation.py):
+
+| Item | Set | Change | Rule |
+| --- | --- | --- | --- |
+| e2e-075 | Development | Tie at the minimum: both States expected | V5 |
+| e2e-113 | Development | `decline` to `clarify` (slot category): literacy is published for women and men only | E9b |
+| e2e-108 | Development | Search lists both tables that hold infant mortality | E2 |
+| e2e-070 | Continuity test | Each crop ranked once (Copra was counted twice) | V7 |
+| e2e-095 | Continuity test | Search no longer lists a table without the indicator | E2 |
+| e2e-031 | Continuity test | Slot named `place` (which Aurangabad), as the item already asked | S2 |
+| e2e-227 | New test | A follow-up that changes only the crop expects the new crop only | F1 |
+| e2e-413 | Blind test | Domain `other` for literacy (education) | Guide 1.1 M1, M6 |
+| e2e-428, e2e-432 | Blind test | The table's only group named as the single clarification option | E9c |
+
+The four items disputed in Milestone 4 were settled by rule: e2e-008 (E10), e2e-013 (E9) and
+e2e-044 (S1) keep their gold, and e2e-031 is changed as above. Ten items changed in all; the
+other 220 kept their gold. All sets are marked validated; their hashes are recorded in
+[`configs/evaluation.yaml`](../../configs/evaluation.yaml), and the test runner refuses a test
+file whose hash or validation differs.
 
 ### 4.4 Evaluation protocol
 
-*Pending (T3):* three runs per configuration; frozen commit; the 60 continuity items and the
-40 blind items reported separately and together.
+| Configuration | Code | Items | Runs |
+| --- | --- | --- | --- |
+| v2 (Milestone 4) | Commit `a2c8c7d`, as submitted in Milestone 4 | 80 new and blind items; the 60 continuity items reuse the three Milestone 4 runs, re-scored on the validated gold | 1 (3 on continuity) |
+| v2 (Milestone 5) | Commit `c8ac5c7` (agent code frozen at `86a36a7`; later commits change only the v3 prompt pin and the v4 Kev settings) | 140 | 1 |
+| v3 | Same commit; intent prompt `intent_gepa.v1` | 140 | 1 |
+| v4 | Same commit; Kev `ep3_s2` served locally, cascade to Jev | 140 | 1 |
+
+All runs use one worker, so latency is comparable with Milestone 4, and run one at a time. Each
+version has one run: v4 is re-run when a better decision model is selected, and v5 and v6 follow
+in Milestone 6. Differences are paired tests on the same items (bootstrap interval of the
+difference, 10,000 resamples, seed 0; exact McNemar test) and are read against the run-to-run
+range of the three Milestone 4 runs of v2 (0.683-0.694 on the continuity items).
+
+A first attempt ran four configurations at once and was rate-limited by Vertex AI (HTTP 429): 40
+to 70% of questions failed before the agent acted. Those runs were stopped and discarded (kept
+under `outputs/predictions/ratelimited_2026-11-26/`, not scored), and every configuration was
+re-run serially. The serial runs still contain a few Vertex AI timeouts (five in the v2 run on the
+100 items); they are scored as failures and listed in Section 10.
+
+The 60 continuity items and the 40 new items are reported separately and together. Each run is
+scored with scorer v2 (the Milestone 4 rules, for comparability) and scorer v3 (the Milestone 5
+checks). The Milestone 4 code does not record the plan fields scorer v3 reads, so v2 (Milestone 4)
+is compared under scorer v2 only.
 
 ### 4.5 Baselines
 
@@ -189,13 +357,24 @@ v2 at the Milestone 4 commit for the agent; zero-shot Kev and Jev for the decisi
 ### 4.6 Success criteria
 
 Objectives O1-O8 of the project plan and the gate fixed in [`configs/inference.yaml`](../../configs/inference.yaml)
-(within 3 points of Jev, ECE at most 0.10 after calibration). *Pending: table of targets.*
+(within 3 points of Jev, ECE at most 0.10 after calibration).
+
+| Objective | Target | Milestone 5 (v4 unless stated) | Met |
+| --- | --- | --- | --- |
+| O1 execution accuracy | Fixed after v0 | 0.627 (100 items) | Reported |
+| O3 ECE of the decision model | At most 0.10 | 0.024 on `dev_human`; 0.117 on `stress_v1` | In distribution only |
+| O4 abstention precision | At least 0.85 | 0.742 | No |
+| O5 first event / p95 latency | At most 1.5 s / 20 s | 29 ms / 22.7 s | First event only |
+| O6 cost per answered question | Below v0 | USD 0.024 | Reported against Milestone 4 |
+| O7 improvement across versions | Measurable | +0.30 (v2 M4 to M5, blind items); v3, v4 not significant | Partly |
+| Gate: Kev within 3 points of Jev, ECE at most 0.10 | - | 0.975 against 0.970, ECE 0.024 | Yes |
+
+O2 (claim support) and O8 (chart appropriateness) belong to v5 and Milestone 6.
 
 ---
 
 ## 5. Performance metrics
 
-*Owner: T3.*
 
 ### 5.1 Agent metrics (Part A)
 
@@ -220,115 +399,363 @@ budget and the escalation rate.
 
 ## 6. Experimental results
 
-*Owners: T3 (Part A and Part B).*
 
 ### 6.1 Part A: complete agent
 
-*Pending:* table per configuration (scorers v2 and v3), per-check rates, comparison with the
-targets; Milestone 4 runs re-scored on validated gold.
+All figures are Measured on the validated gold (Section 4.3). Scores files:
+[`outputs/reports/m5_test/`](../../outputs/reports/m5_test/); predictions:
+`outputs/predictions/m5_test_*.jsonl`. Success is the share of items whose outcome passes every
+applicable check; scorer v2 applies the Milestone 4 rules, scorer v3 adds the interpretation,
+completeness, unit, period, evidence and clarification-slot checks.
+
+**Frozen test set, 100 items (continuity 60 and new 40), one run per version.**
+
+| Version | Success, scorer v2 | Success, scorer v3 | 95% interval (v3) | Execution accuracy | Abstention precision | Abstention recall | Wrong-answer rate |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| v2 (Milestone 5) | 0.68 | 0.65 | 0.56-0.74 | 0.537 | 0.657 | 0.958 | 0.208 |
+| v3 (GEPA intent prompt) | 0.71 | 0.66 | 0.56-0.75 | 0.567 | 0.667 | 0.917 | 0.259 |
+| v4 (Kev `ep3_s2` on the domain) | 0.75 | 0.70 | 0.61-0.79 | 0.627 | 0.742 | 0.958 | 0.236 |
+
+**Scorer v3 checks (pass rate over the items each check applies to).**
+
+| Check | v2 | v3 | v4 |
+| --- | --- | --- | --- |
+| Action | 0.760 | 0.810 | 0.830 |
+| Interpretation | 0.746 | 0.791 | 0.821 |
+| Values | 0.627 | 0.687 | 0.731 |
+| Completeness | 0.682 | 0.758 | 0.773 |
+| Unit | 0.733 | 0.817 | 0.817 |
+| Period | 0.697 | 0.773 | 0.742 |
+| Evidence | 0.746 | 0.791 | 0.836 |
+| Clarification slot | 0.750 | 0.667 | 0.875 |
+
+**By test part (success).**
+
+| Part | Items | v2 (Milestone 4) | v2 (Milestone 5) | v3 | v4 |
+| --- | --- | --- | --- | --- | --- |
+| Continuity, scorer v2 | 60 | 0.694 (3 runs) | 0.717 | 0.750 | 0.783 |
+| Continuity, scorer v3 | 60 | - | 0.617 | 0.633 | 0.633 |
+| New, scorer v2 | 40 | 0.475 | 0.625 | 0.650 | 0.700 |
+| New, scorer v3 | 40 | - | 0.700 | 0.700 | 0.800 |
+| Blind, scorer v2 | 40 | 0.300 | 0.600 | 0.625 | 0.600 |
+| Blind, scorer v3 | 40 | - | 0.650 | 0.700 | 0.700 |
+| All 140, scorer v3 | 140 | - | 0.650 | 0.671 | 0.700 |
+
+The Milestone 4 code records no plan fields, so it is scored under scorer v2 only. Its score on
+the continuity items is the mean of the three Milestone 4 runs re-scored on the validated gold
+(the as-run Milestone 4 figure was 0.689).
+
+**Scorer correction.** After the first v2 run, 11 of the 13 interpretation failures on items the agent
+answered were found to be scorer errors: a national-only question has no place filter in the
+plan while the gold lists "India", and a range planned as its two end points was not matched to the
+yearly gold periods. Two general rules were added to scorer v3 (commit `58188b7`) before v3 and v4
+were scored, and every version, the development check and the Milestone 4 baseline are
+scored with the corrected scorer; the change raised v2 from 0.58 to 0.65 on the test set and from
+0.789 to 0.856 on the development check (0.867 with rule E9c below). A third rule (E9c, commit `09b48f6`) lets a one-option
+clarification pass only where the gold names a single group.
 
 ### 6.2 Part B: decision models
 
-*Pending:* domain on `dev_human` and `stress_v1`; tool on `dev_human` v1.1; reliability
-diagrams; ROC and PR curves; Kev confidence inside the agent.
+**Domain decision on `dev_human` (198 human-labelled items; Measured).** Each system's
+temperature is fitted on the calibration split (322 items) and applied unchanged; accuracy
+intervals are bootstrap 95% intervals.
+
+| System | Accuracy | 95% interval | Macro-F1 | ECE raw | ECE calibrated | NLL | Brier | Temperature |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Kev-0.8B zero-shot | 0.783 | 0.727-0.838 | 0.625 | 0.068 | 0.081 | 0.754 | 0.350 | 1.036 |
+| Kev `ep3` (seed 0, Milestone 4) | 0.980 | 0.960-0.995 | 0.973 | 0.017 | 0.040 | 0.070 | 0.034 | 3.763 |
+| Kev `ep3_s1` | 0.965 | 0.939-0.985 | 0.955 | 0.028 | 0.027 | 0.073 | 0.037 | 3.616 |
+| **Kev `ep3_s2` (v4)** | **0.975** | 0.949-0.995 | 0.969 | 0.023 | 0.024 | 0.080 | 0.041 | 3.652 |
+| Kev joint, seed 1 (phase 2) | 0.960 | 0.934-0.985 | 0.949 | 0.045 | 0.040 | 0.175 | 0.081 | 4.159 |
+| Jev (zero-shot, hosted) | 0.970 | 0.944-0.990 | 0.962 | 0.033 | 0.034 | 0.102 | 0.047 | 1.015 |
+| Laya `laya_s0` (defaults) | 0.949 | 0.919-0.980 | 0.930 | 0.045 | 0.021 | 0.225 | 0.096 | 1.215 |
+
+Fine-tuning raises Kev from 0.783 to 0.965-0.980 across three seeds (spread 1.5 points). The
+selected seed `ep3_s2` passes the gate fixed in advance: accuracy 0.975 against Jev's 0.970,
+within the 3-point margin, and calibrated ECE 0.024, below 0.10
+([`gate_domain_ep3_s2.json`](../../outputs/reports/gate_domain_ep3_s2.json)). Its cascade at a 5%
+error budget escalates calibrated confidence below 0.408 to Jev; on `dev_human` this sends 1 of 198
+decisions (0.5%) to Jev, with no change in accuracy
+([`cascade_domain_ep3_s2.json`](../../outputs/reports/cascade_domain_ep3_s2.json)). Laya with its
+library defaults is 2.6 points below Kev `ep3_s2`; its calibrated ECE is as low as Kev's.
+
+Confusion matrices, macro one-vs-rest ROC and precision-recall curves for zero-shot Kev,
+`ep3_s2`, Jev and Laya are in [`docs/milestones/figures/m5/`](figures/m5/), built by
+[`scripts/m5_decision_figures.py`](../../scripts/m5_decision_figures.py) (macro AUROC 0.902,
+0.9995, 0.9991 and 0.9947; macro average precision 0.697, 0.996, 0.992 and 0.950; table in
+[`auc_domain_dev_human.json`](figures/m5/auc_domain_dev_human.json)).
+
+**Tool selection.** No `dev_human` tool score is reported in this milestone: the tool labels are
+being re-adjudicated under labelling guide 1.1, and the tool predictions on `dev_human` stay
+unopened until that is complete. Tool selection stays on Jev in v4. On the synthetic development
+split the joint model's tool accuracy is 0.870 (ECE 0.041 after temperature 4.93).
+
+**Domain decision on `stress_v1` (80 hard and unfamiliar messages; Measured).** Labels are the set
+author's intended labels, written and sealed (SHA-256 recorded in the set's README) before any model was run;
+they are a single author's labels, not adjudicated by a second labeller. Same temperatures as above.
+
+| System | Accuracy | 95% interval | ECE | Hindi | Hinglish | Unfamiliar measure | Two measures (`multiple`) | Outside the five domains | Paraphrase | Typos | No measure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Kev `ep3_s2` | 0.838 | 0.750-0.913 | 0.117 | 4/5 | 3/7 | 7/12 | 10/12 | 11/12 | 16/16 | 8/8 | 8/8 |
+| Jev | 0.925 | 0.863-0.975 | 0.063 | 5/5 | 7/7 | 11/12 | 10/12 | 9/12 | 16/16 | 8/8 | 8/8 |
+| Cascade (threshold 0.408) | 0.850 | - | - | 2 of 80 escalated to Jev | | | | | | | |
+
+On hard cases the fine-tuned model falls behind Jev (0.84 against 0.93) and its calibration
+degrades (ECE 0.117, above the 0.10 target), mainly on Hinglish and on measures the catalogue does
+not hold. Its wrong decisions carry lower confidence (mean 0.69 against 0.95 for correct ones), but
+the escalation threshold, fitted on the in-distribution calibration split, sends only 2 of 80 to
+Jev. The threshold is not refitted on `stress_v1`, which would make it training data; a
+calibration split with code-mixed and out-of-catalogue messages is planned for Milestone 6. Files:
+[`score_domain_stress_v1.json`](../../outputs/reports/score_domain_stress_v1.json), predictions
+`outputs/predictions/domain_{ep3_s2,jev}_stress_v1.jsonl`. Laya was not run on `stress_v1`.
 
 ---
 
 ## 7. Baseline comparison
 
-*Owner: T3.*
 
-*Pending:* paired differences v2 (M4) to v2 (M5), v2 (M5) to v3, v3 to v4, with bootstrap
-intervals and McNemar tests; decision models against zero-shot Kev, Jev and Laya.
+Paired on the same items: difference in success, bootstrap 95% interval (10,000 resamples, seed
+0) and exact McNemar test on the discordant items.
+
+| Comparison | Items | Scorer | Baseline | New | Difference | 95% interval | Only baseline / only new | p |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| v2 M4 to v2 M5, blind | 40 | v2 | 0.300 | 0.600 | **+0.300** | 0.175 to 0.450 | 0 / 12 | **0.0005** |
+| v2 M4 to v2 M5, new | 40 | v2 | 0.475 | 0.625 | +0.150 | 0.000 to 0.300 | 2 / 8 | 0.11 |
+| v2 M4 to v2 M5, continuity | 60 | v2 | 0.694 | 0.717 | +0.022 | -0.078 to 0.122 | 5 / 6 | 1.0 |
+| v2 to v3 | 100 | v3 | 0.65 | 0.66 | +0.01 | -0.06 to 0.08 | 6 / 7 | 1.0 |
+| v3 to v4 | 100 | v3 | 0.66 | 0.70 | +0.04 | -0.03 to 0.11 | 5 / 9 | 0.42 |
+| v2 to v4 | 100 | v3 | 0.65 | 0.70 | +0.05 | -0.02 to 0.12 | 4 / 9 | 0.27 |
+| v2 to v3, blind | 40 | v3 | 0.65 | 0.70 | +0.05 | 0.00 to 0.13 | 0 / 2 | 0.50 |
+| v3 to v4, blind | 40 | v3 | 0.70 | 0.70 | 0.00 | -0.10 to 0.10 | 2 / 2 | 1.0 |
+| v2 to v4, blind | 40 | v3 | 0.65 | 0.70 | +0.05 | -0.08 to 0.18 | 2 / 4 | 0.69 |
+
+The Milestone 5 fixes are the one step with a significant effect, and it appears where they were
+aimed: on the blind items, written independently, which test place, period and clarification handling, v2
+rises from 0.30 to 0.60 with no item lost. On the continuity items, which the Milestone 4 agent
+already answered at 0.69, the change is small. The optimised prompt (v3) and Kev on the domain
+(v4) each move success in the right direction on the 100 items, by 1 and 4 points; one run per
+version cannot separate these from run-to-run variation (the three Milestone 4 runs of v2, as run, spanned
+0.683-0.694 on the continuity items), so they are reported as not significant.
+
+Decision models against their baselines are in Section 6.2: fine-tuned Kev `ep3_s2` 0.975 against
+zero-shot Kev 0.783, Jev 0.970 and Laya 0.949 on `dev_human`.
 
 ---
 
 ## 8. Hyperparameter analysis
 
-*Owner: T3.*
 
-*Pending:* Kev runs of Milestone 4 (learning rate, epochs, seeds, from-base rank) and the phase
-2 seeds; temperature; cascade threshold; GEPA budget.
+**Kev, domain decision (Measured; `dev_synthetic` NLL after temperature, the selection metric).**
+
+| Run | Change from B0 (lr 2e-5, 2 epochs, LoRA rank 16, warm start) | NLL | Accuracy |
+| --- | --- | --- | --- |
+| B0, seeds 0 / 1 / 2 | - | 0.035 / 0.037 / 0.053 (mean 0.042, range 0.017) | 0.992 |
+| `lr1e-05` | learning rate 1e-5 | 0.076 | 0.986 |
+| `lr4e-05` | learning rate 4e-5 | 0.025 | 0.994 |
+| `ep1` | 1 epoch | 0.140 | 0.966 |
+| `ep3` | 3 epochs | 0.024 | 0.994 |
+| `base_r16` | no warm start (from the base model) | 0.034 | 0.989 |
+| `ep3_s1`, `ep3_s2` (Milestone 5) | 3 epochs, seeds 1 and 2 | 0.024, 0.019 | 0.997 |
+
+Three epochs is the only setting below the B0 mean by more than the B0 seed range
+([`kev_selection.json`](../../outputs/reports/kev_selection.json)); among its three seeds,
+seed 2 has the lowest NLL. The temperature is fitted per run (3.47-3.92 for B0 and `ep3` seeds), the
+cascade threshold at a 5% error budget on the calibration split (0.408 for `ep3_s2`). Phase 2: two
+seeds of the joint model, selected by the mean NLL over both decisions. GEPA: one budget (300
+metric calls, minibatch 4); the best of 9 candidates was found at the fifth candidate.
 
 ---
 
 ## 9. Ablation study
 
-*Owner: T2 (from the tables of Section 6).*
 
-*Pending:* the version ladder read as an ablation (without guidance cards, without verified
-examples, without the Milestone 5 fixes, without the optimised prompt, without Kev); retrieval
-without place and indicator slots; Kev without temperature; v4 without the cascade.
+The version ladder is read as an ablation: each step adds one component to the previous one, on
+the same items (Section 7).
+
+| Step | Component added | Effect on success | Significant |
+| --- | --- | --- | --- |
+| v2 (Milestone 4) to v2 (Milestone 5) | Place reference data and resolution, clarification and abstention rules, "now" periods, suppressed values | +0.30 on the blind items, +0.15 on the new items, +0.02 on the continuity items | Yes on the blind items (p = 0.0005) |
+| v2 to v3 | Intent prompt optimised by GEPA on development items | +0.01 (100 items); action check 0.76 to 0.81, unit 0.73 to 0.82, period 0.70 to 0.77 | No |
+| v3 to v4 | Kev `ep3_s2` on the domain decision, cascade to Jev | +0.04 (100 items); values 0.69 to 0.73, evidence 0.79 to 0.84, clarification slot 0.67 to 0.88 | No |
+
+Offline ablations of the decision layer (Measured, `dev_human`, Section 6.2): Kev without
+fine-tuning (0.783) against fine-tuned (0.975); Kev without temperature has ECE 0.023 against 0.024
+with it, so for `ep3_s2` the temperature changes the confidence scale used by the cascade
+threshold more than the calibration error; v4 without the cascade (Kev only) and with it give the
+same accuracy on `dev_human` (0.975), the cascade escalating 1 decision in 198. The Milestone 4
+ablations of guidance cards and verified examples (v0 to v2) are not repeated.
 
 ---
 
 ## 10. Error analysis
 
-*Owners: T2 (Part A), T3 (Part B).*
 
-*Pending:* failure classes with representative cases, false positives and false negatives,
-agent errors separated from gold corrections; Kev confusion matrices and misclassified items.
+**Part A: the agent (v2, Milestone 5, 100 test items; 24 items with the wrong action).** Gold
+corrections are excluded: every item below keeps a gold that the rules support (Section 4.3).
+
+| Class | Items | What happens | Cause | Addressed in Milestone 5 |
+| --- | --- | --- | --- | --- |
+| State asked of the IMD sub-division table | e2e-020 (Delhi), e2e-201 (Maharashtra), e2e-203 (Chandigarh), e2e-205 (Meghalaya) | Declined as "not in the catalogue", or a question about the sub-division | The intent step declines before place resolution runs; the State-to-sub-division map (fix A1) is reached only on some phrasings | Partly: resolver fixed and tested; the earlier decline remains |
+| Place forms outside the reference data | e2e-035 ("UP"), e2e-220 ("TN, AP"), e2e-223 ("five southern States"), e2e-097 ("UP district" offered Upper Siang), e2e-208 ("Pune market yard") | A clarifying question, sometimes with wrong options | No State abbreviations or region lists (rules D6c, D6d decided on 26 November); prefix matching | No |
+| Same-named district with its State named | e2e-210 (Bilaspur, Chhattisgarh) | Declined | The decline precedes the district resolver (fix A3) | Partly |
+| Clarification against decline | e2e-008, e2e-013, e2e-229 declined; e2e-230 answered | A missing group or a calendar-year question on a survey-year table is declined instead of asked (E9, E10); one is answered on the survey year without asking | Intent prompt reads "not in the table" as "not in the catalogue" | Partly (fix C2) |
+| Verification abstains | e2e-037, e2e-099 (bales), e2e-056 | "The figures do not match the query result" | Number check on units (bales of 170 kg) and on a derived inflation figure | No (fixes D2, D3 not in the freeze) |
+| Call budget | e2e-027 | The 8-call limit is reached | Repeated retries for the same reason | No (fix D6) |
+| Infrastructure | e2e-055, 065, 070, 071, 236 | Vertex AI timeouts or one HTTP 429 | Not an agent decision | - |
+
+False positives (an answer released where the gold expects another action): 1 item (e2e-230).
+False negatives (declined, asked or abstained where the gold expects an answer): 12 items, the
+dominant error, plus 3 declines where a clarification was expected; abstention precision is 0.66
+for v2 and 0.74 for v4. In v4 the same classes remain; against v3, v4 recovers 9 items and loses 5
+(Section 7), consistent with the domain decision ranking retrieval, though one run cannot
+attribute single items to it.
+
+**Part B: the domain decision.** `ep3_s2` misclassifies 5 of 198 `dev_human` items. The phase 2
+joint model (seed 1) misclassifies 8, of which 5 are follow-up messages (24% of the items), and
+reads several `multiple` messages as a single domain
+([`domain_errors_joint_vs_ep3_dev_human.md`](../../outputs/reports/domain_errors_joint_vs_ep3_dev_human.md)).
+Confusion matrices are in [`figures/m5/confusion_domain_dev_human.png`](figures/m5/confusion_domain_dev_human.png).
 
 ---
 
 ## 11. Model robustness
 
-*Owners: T2 (agent), T3 (decision models).*
 
-*Pending:* paraphrase, Hindi and Hinglish, typos, follow-ups and edge cases for the agent;
-`stress_v1` for the domain decision; the held-out-table result if run.
+The test sets carry the robustness cases as items rather than as a separate sweep: Hindi and
+Hinglish questions (for example e2e-098, e2e-201, e2e-216, e2e-227, e2e-230), deliberate typos
+(e2e-020, e2e-205, e2e-428), abbreviations, follow-ups (15 items with earlier turns) and edge cases
+(suppressed values, ties, units in bales). Their failures are in the classes of Section 10.
+A paraphrase sweep (`scripts/robustness_sweep.py`) was not run in this milestone; it is moved to
+Milestone 6. For the domain decision, `stress_v1` (Section 6.2) is the robustness test: Kev `ep3_s2`
+holds on paraphrases and typos (24/24) and loses accuracy on Hinglish (3/7) and unfamiliar measures
+(7/12).
 
 ---
 
 ## 12. Computational performance
 
-*Owners: T2 (agent), T3 (decision models).*
 
-*Pending:* agent latency (first event, p50, p95), calls, tokens and cost per answer; Kev and
-Laya training time, inference latency, memory and model size.
+**Agent (100 test items, one worker, local machine to Vertex AI; Measured from the run logs).**
+
+| Version | Time to first event p50 / p95 | Total latency p50 / p95 | Model calls per answered question | Tokens in / out (100 items) | Cost, 100 items | Cost per answered question |
+| --- | --- | --- | --- | --- | --- | --- |
+| v2 | 29 / 34 ms | 5.9 / 39.8 s | 5.96 | 3.98 M / 55 k | USD 1.30 | USD 0.027 |
+| v3 | 30 / 34 ms | 12.9 / 23.0 s | 5.54 | 4.14 M / 58 k | USD 1.38 | USD 0.025 |
+| v4 | 29 / 34 ms | 11.8 / 22.7 s | 5.36 | 4.17 M / 57 k | USD 1.34 | USD 0.024 |
+
+Costs are estimates from token counts at list prices (cached tokens are not reported by the
+endpoint, so these are upper bounds). The v2 p95 includes the Vertex AI timeouts of that run; the
+higher median of v3 and v4 coincides with slower Vertex responses during those runs and is not
+attributed to the versions. Objective O5 (first event at most 1.5 s, p95 at most 20 s) holds for
+the first event and is missed by 3 s for the p95 latency.
+
+**Decision models.** Kev `ep3_s2`: 53.9 minutes of training on one T4, peak 6.8 GB; inference on
+the Mac (MPS, fp32) about 0.6 s per decision; adapter of rank 16 on a 0.8 B base. Laya `laya_s0`:
+15.8 minutes of training on a T4; 0.15 s per decision on the Mac. Jev: hosted, about 0.3 s per
+decision from India.
 
 ---
 
 ## 13. Limitations
 
-*Owners: all; edited by T3.*
 
-*Pending:* dataset, agent, evaluation and model limitations; ethical considerations.
+- **Test size and runs.** 140 test items, one run each for v3 and v4: differences of 4-5 points
+  are within run-to-run variation. Only the step from Milestone 4 to Milestone 5 is significant.
+- **Authorship of the new items.** The 40 new items were written by a member who also took part in
+  the fix work (kept apart until the freeze); in the new and blind parts about ten items use alias
+  spellings that are in the reference files, which may flatter place resolution.
+- **Scorer.** Scorer v3 was corrected once after the first test run (Section 6.1); its
+  interpretation check still fails a State total built from district rows (e2e-098) against a plan
+  that names the State.
+- **Infrastructure.** Concurrent runs were rate-limited by Vertex AI and discarded; the serial
+  runs still contain five timeouts, scored as failures.
+- **Agent.** The remaining errors of Section 10 (declines before place resolution, missing State
+  abbreviations and regions, unit checks for bales, call budget).
+- **Decision models.** Tool selection is not evaluated on human labels in this milestone; the
+  domain decision is evaluated on 198 items from one labelling round; Laya is evaluated with its
+  defaults only.
+- **Data.** 14 tables; many end before 2023 (crop production 2015-16, rainfall 2017), so "latest"
+  answers can be old; the Mandi table is a one-day snapshot.
+- **Ethics.** Answers are restricted to published government tables and state their source and
+  assumptions; the agent declines rather than estimate a missing figure.
 
 ## 14. Possible improvements
 
-*Owner: T3.* *Pending.*
+
+- Decline less: resolve places before the coverage decision, so a State on the sub-division table
+  or a district named with its State reaches the resolver (Section 10).
+- Add State abbreviations and official region lists to the reference data (rules D6c, D6d).
+- Unit-aware number check (bales, lakh) and a retry budget that stops repeating the same failure.
+- Two to three runs per version on the 140 items, to separate 4-5 point effects from noise.
+- v5: calibrated answer verification (Jev) and the confidence badge; v4 re-run if the Kev-Laya
+  parity study selects another model (Milestone 6).
 
 ## 15. Discussion
 
-*Owner: T3.* *Pending.*
+
+The Milestone 4 review asked for a measurable end-to-end gain, sound ground truth, a larger and
+stricter test, and Kev evaluated inside the agent. The ground truth is now validated against
+written rules, with every change and its rule recorded, and the rules, not the agent, decided each
+disputed item. On the blind items, written independently, the Milestone 5 fixes double the success of v2
+(0.30 to 0.60, p = 0.0005); this is the clearest result of the milestone. Prompt optimisation and
+the fine-tuned domain model each add a few points that one run per version cannot confirm. Inside
+the agent, Kev `ep3_s2` replaces Jev on the domain decision at equal accuracy on human labels
+(0.975 against 0.970), with calibrated confidence (ECE 0.024) and a cascade that sends 0.5% of
+decisions back to Jev; the v4 test run shows no loss from the replacement. The dominant remaining
+error is a false decline before place resolution, which the evaluation now separates cleanly from
+gold errors.
 
 ## 16. Conclusion
 
-*Owner: T3.* *Pending.*
+
+Milestone 5 delivers validated ground truth (190 items plus 40 blind items, ten gold corrections,
+seven new rules), a stricter scorer, a test set of 140 items, and three agent versions evaluated on it.
+The Milestone 5 agent fixes produce a significant gain on blind items; GEPA prompt optimisation and
+the fine-tuned Kev domain model are integrated and show small, non-significant gains. Kev
+`ep3_s2` passes its gate against Jev. Milestone 6 adds calibrated verification (v5), drift-driven
+retraining (v6), the evidence and provenance report, and the deployment.
 
 ---
 
 ## Appendices
 
-- A. Complete metric tables. *Pending.*
-- B. Confusion matrices, ROC and PR curves, reliability diagrams. *Pending.*
-- C. Learning and loss curves; hyperparameter search results. *Pending.*
-- D. Sample predictions and failure cases. *Pending.*
+- A. Complete metric tables: [`outputs/reports/m5_test/`](../../outputs/reports/m5_test/) (agent), `outputs/reports/score_domain_*.json` (decision models).
+- B. Confusion matrices, ROC and PR curves: [`figures/m5/`](figures/m5/); reliability diagrams: `outputs/figures/reliability_*.png`.
+- C. Training records per run: `outputs/reports/kev_runs/<run>/training_metrics.json` and `train.log`; selection: [`kev_selection.json`](../../outputs/reports/kev_selection.json).
+- D. Predictions per item: `outputs/predictions/m5_test_*.jsonl`; failure cases: Section 10.
 - E. Model and agent configuration ([`configs/`](../../configs/)).
-- F. Artifacts, evaluation scripts and reproduction commands. *Pending.*
+- F. Artifacts, evaluation scripts and reproduction commands (below).
+
+### Appendix F. Reproduction
+
+Environment: `set -a; source .env; set +a; export PYTHONPATH=src:. GOOGLE_CLOUD_PROJECT=<project>`.
+Live runs spend cloud credit and need `--yes`.
+
+| Step | Command | Output |
+| --- | --- | --- |
+| Validate gold (apply decided rows) | `python scripts/apply_validation.py --findings data/eval/validation/<set>_draft.csv --set <sets> --validated-by "<name>" --write` | `data/eval/*.jsonl` (`gold_changes`) |
+| Structured gold fields | `python scripts/fill_gold_fields.py --set <set> --write` | the set |
+| Check a set | `python scripts/check_e2e_set.py --set <set> --out <report>` | report |
+| GEPA (v3) | `python scripts/optimise_prompts.py --yes` | `configs/prompts/intent_gepa.v1.md`, `outputs/reports/gepa_v3.json` |
+| Serve Kev (v4) | `scripts/serve_kev.sh models/checkpoints/ep3_s2` | port 8009 (set `KEV_BASE_URL` for another port) |
+| Test run | `python -m analyst.evaluation.e2e_eval run --live --yes --workers 1 --version <v2/v3/v4> --set data/eval/e2e_test.v1.jsonl data/eval/e2e_test_ext.v1.jsonl --out outputs/predictions/m5_test_<v>_r1.jsonl` (and `--set data/eval/e2e_test_t1.v1.jsonl` for the T1 part) | predictions |
+| Milestone 4 baseline | the same at commit `a2c8c7d`, on `outputs/e2e_test_new80_m4fields.jsonl` (the 80 new items with the fields that commit knows) | `m5_test_v2m4_new80_r1.jsonl` |
+| Score | `python -m analyst.evaluation.e2e_eval score --scorer <v2/v3> --predictions <runs> --gold <sets> --out <report>` | `outputs/reports/m5_test/score_*.json` |
+| Paired comparison | `python -m analyst.evaluation.e2e_eval compare --scorer <v2/v3> --a <runs> --b <runs> --gold <sets> [--only <set>] --out <report>` | `outputs/reports/m5_test/compare_*.json` |
+| Gate and cascade (domain) | `python -m analyst.evaluation.decision_eval {gate,cascade} --decision domain --kev-calibration ... --kev-dev ... --jev-dev ... --out ...` | `gate_domain_ep3_s2.json`, `cascade_domain_ep3_s2.json` |
+| `stress_v1` | `python scripts/score_stress_v1.py build`; `domain_eval run --split stress_v1`; `python scripts/score_stress_v1.py score` | `score_domain_stress_v1.json` |
+| Figures | `python scripts/m5_decision_figures.py` | `docs/milestones/figures/m5/` |
 
 ## Contribution log
 
-Milestone 5 work per member; the weekly record is in [`WORKLOG.md`](../../WORKLOG.md), and the
-commits are on `docs/milestone-5`.
+Track ownership in Milestone 5; the weekly record is in [`WORKLOG.md`](../../WORKLOG.md).
 
-| Member | Track | Milestone 5 contribution | Report sections |
-| --- | --- | --- | --- |
-| Shaoni Samanta (21f1003157) | T1 Data and Tools | *To be completed* | 2, 4.1-4.3, 13 |
-| Shivanshu Gupta (22f3002985) | T2 Agent | *To be completed* | 9, 10, 11, 12, 13 |
-| Sathya Prakash (21f1006001) | T3 Model | *To be completed* | 1-8, 10-16 |
-| Ashmit Ghose (24f1001827) | T4 Ops and Evaluation | *To be completed* | *To be completed* |
+| Member | Track | Sections |
+| --- | --- | --- |
+| Shaoni Samanta (21f1003157) | T1 Data and Tools | 2, 4.1-4.3, 13 |
+| Shivanshu Gupta (22f3002985) | T2 Agent | 9-12 |
+| Sathya Prakash (21f1006001) | T3 Model | 1, 3, 6-8, 14-16 |
+| Ashmit Ghose (24f1001827) | T4 Ops and Evaluation | 4.4-4.6, 5 |
 
 ## Sign-off
 

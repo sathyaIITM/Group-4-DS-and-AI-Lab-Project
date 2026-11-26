@@ -1,0 +1,754 @@
+{
+  "repeats": 1,
+  "runs": [
+    {
+      "path": "outputs/predictions/m5_test_v3_r1.jsonl",
+      "n": 100,
+      "success_rate": 0.66,
+      "success_ci95": [
+        0.56,
+        0.75
+      ],
+      "execution_accuracy": 0.5671641791044776,
+      "abstention_precision": 0.6666666666666666,
+      "abstention_recall": 0.9166666666666666,
+      "wrong_answer_rate": 0.25925925925925924,
+      "outcome_counts": {
+        "answered": 54,
+        "declined": 19,
+        "clarifying": 13,
+        "described": 5,
+        "failed": 4,
+        "searched": 4,
+        "abstained": 1
+      },
+      "failure_rate": 0.04,
+      "failure_causes": {
+        "budget_exhausted": 2,
+        "result_check_failed": 2
+      },
+      "latency_ms": {
+        "p50": 12868.0,
+        "p95": 23020.4,
+        "max": 27031.0
+      },
+      "first_event_ms": {
+        "p50": 30.0,
+        "p95": 34.05,
+        "max": 121.0
+      },
+      "calls_per_answered": 5.537037037037037,
+      "tokens_in": 4144461,
+      "tokens_out": 58073,
+      "cost_usd_est": 1.37616302,
+      "cost_per_answered_usd_est": 0.02548450037037037,
+      "sql_repairs": 6,
+      "sql_attempts": 238,
+      "narration_retries": 2,
+      "widened_searches": 1,
+      "sql_repairs_per_run": 0.06,
+      "narration_retries_per_run": 0.02,
+      "widened_searches_per_run": 0.01,
+      "review_cases": [
+        {
+          "id": "e2e-002",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": true,
+            "completeness": true,
+            "unit": true,
+            "period": false,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-006",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-008",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-013",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-015",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-020",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": true,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-027",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-034",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": false,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-035",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-041",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": true,
+            "period": true,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-044",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": false,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-048",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": false,
+            "values": true,
+            "completeness": true,
+            "unit": null,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-055",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": null,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-059",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": false,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-065",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": true,
+            "completeness": true,
+            "unit": true,
+            "period": false,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-070",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-076",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": false,
+            "values": false,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-080",
+          "expected": "decline",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-092",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-097",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": false,
+            "values": true,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-098",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": false,
+            "values": true,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-099",
+          "expected": "answer",
+          "outcome": "abstained",
+          "values_match": true,
+          "narration_match": false,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": true,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-201",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-203",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-204",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-205",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": true,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-210",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-218",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": false,
+            "values": false,
+            "completeness": true,
+            "unit": true,
+            "period": true,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-220",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-224",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": true,
+            "values": true,
+            "completeness": true,
+            "unit": true,
+            "period": false,
+            "evidence": true,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-228",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": false,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-229",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": true,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": false,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-230",
+          "expected": "clarify",
+          "outcome": "answered",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true,
+          "v3": {
+            "action": false,
+            "interpretation": null,
+            "values": null,
+            "completeness": null,
+            "unit": null,
+            "period": null,
+            "evidence": null,
+            "clarify_slot": null,
+            "content": null
+          }
+        },
+        {
+          "id": "e2e-236",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false,
+          "v3": {
+            "action": false,
+            "interpretation": false,
+            "values": false,
+            "completeness": false,
+            "unit": false,
+            "period": false,
+            "evidence": false,
+            "clarify_slot": null,
+            "content": null
+          }
+        }
+      ],
+      "checks_v3": {
+        "action": {
+          "n": 100,
+          "pass_rate": 0.81
+        },
+        "interpretation": {
+          "n": 67,
+          "pass_rate": 0.7910447761194029
+        },
+        "values": {
+          "n": 67,
+          "pass_rate": 0.6865671641791045
+        },
+        "completeness": {
+          "n": 66,
+          "pass_rate": 0.7575757575757576
+        },
+        "unit": {
+          "n": 60,
+          "pass_rate": 0.8166666666666667
+        },
+        "period": {
+          "n": 66,
+          "pass_rate": 0.7727272727272727
+        },
+        "evidence": {
+          "n": 67,
+          "pass_rate": 0.7910447761194029
+        },
+        "clarify_slot": {
+          "n": 9,
+          "pass_rate": 0.6666666666666666
+        },
+        "content": {
+          "n": 9,
+          "pass_rate": 1.0
+        }
+      }
+    }
+  ],
+  "success_rate_mean": 0.66,
+  "success_rate_min": 0.66,
+  "success_rate_max": 0.66,
+  "success_rate_range": 0.0,
+  "items_compared": 100,
+  "items_changed_correctness": [],
+  "run_to_run_instability": 0.0,
+  "scorer_rules": "v3",
+  "gold": [
+    "data/eval/e2e_test.v1.jsonl",
+    "data/eval/e2e_test_ext.v1.jsonl"
+  ],
+  "experiment": null,
+  "scored_at": "2026-11-26T13:04:27.826605+00:00"
+}

@@ -40,10 +40,10 @@
         }
       }
     },
-    "Kev ep3": {
-      "temperature": 3.7634,
-      "macro_auroc": 0.9997,
-      "macro_average_precision": 0.9976,
+    "Kev ep3_s2": {
+      "temperature": 3.6522,
+      "macro_auroc": 0.9995,
+      "macro_average_precision": 0.9958,
       "per_label": {
         "labour": {
           "auroc": 0.9997,
@@ -62,20 +62,20 @@
           "average_precision": 1.0
         },
         "health": {
-          "auroc": 0.9998,
-          "average_precision": 0.9988
+          "auroc": 0.9994,
+          "average_precision": 0.9962
         },
         "other": {
-          "auroc": 0.9993,
-          "average_precision": 0.9946
+          "auroc": 0.9988,
+          "average_precision": 0.9909
         },
         "multiple": {
           "auroc": 0.9996,
           "average_precision": 0.9936
         },
         "unspecified": {
-          "auroc": 0.9996,
-          "average_precision": 0.9952
+          "auroc": 0.9988,
+          "average_precision": 0.9874
         }
       }
     },

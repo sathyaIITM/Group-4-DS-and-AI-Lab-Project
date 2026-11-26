@@ -1,0 +1,49 @@
+{
+  "items": 60,
+  "scorer_rules": "v2",
+  "a_success_mean": 0.6944444444444444,
+  "b_success_mean": 0.7166666666666667,
+  "difference_b_minus_a": 0.022222222222222237,
+  "difference_ci95": [
+    -0.07777777777777777,
+    0.12222222222222223
+  ],
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 0
+  },
+  "mcnemar": {
+    "only_a_succeeds": 5,
+    "only_b_succeeds": 6,
+    "p_value_exact": 1.0
+  },
+  "items_better_in_b": [
+    "e2e-004",
+    "e2e-015",
+    "e2e-016",
+    "e2e-021",
+    "e2e-029",
+    "e2e-039",
+    "e2e-040",
+    "e2e-092"
+  ],
+  "items_worse_in_b": [
+    "e2e-027",
+    "e2e-037",
+    "e2e-056",
+    "e2e-065",
+    "e2e-071"
+  ],
+  "a": [
+    "outputs/predictions/final_test_v2_r1.jsonl",
+    "outputs/predictions/final_test_v2_r2.jsonl",
+    "outputs/predictions/final_test_v2_r3.jsonl"
+  ],
+  "b": [
+    "outputs/reports/m5_test/split_m5_test_v2_r1_old.jsonl"
+  ],
+  "gold": [
+    "data/eval/e2e_test.v1.jsonl"
+  ],
+  "compared_at": "2026-11-26T13:05:11.381939+00:00"
+}

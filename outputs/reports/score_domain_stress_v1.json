@@ -1,0 +1,52 @@
+{
+  "note": "stress_v1 (80 items); labels: T3 intended (single author, sealed before any run)",
+  "systems": {
+    "Kev ep3_s2": {
+      "n": 80,
+      "accuracy": 0.8375,
+      "ci95": [
+        0.75,
+        0.9125
+      ],
+      "ece": 0.1169,
+      "mean_confidence": 0.9083,
+      "per_category": {
+        "hindi": "4/5",
+        "hinglish": "3/7",
+        "multiple": "10/12",
+        "other": "11/12",
+        "paraphrase": "16/16",
+        "typo": "8/8",
+        "unfamiliar": "7/12",
+        "unspecified": "8/8"
+      }
+    },
+    "Jev": {
+      "n": 80,
+      "accuracy": 0.925,
+      "ci95": [
+        0.8625,
+        0.975
+      ],
+      "ece": 0.0629,
+      "mean_confidence": 0.9295,
+      "per_category": {
+        "hindi": "5/5",
+        "hinglish": "7/7",
+        "multiple": "10/12",
+        "other": "9/12",
+        "paraphrase": "16/16",
+        "typo": "8/8",
+        "unfamiliar": "11/12",
+        "unspecified": "8/8"
+      }
+    },
+    "cascade": {
+      "threshold": 0.40796539941722326,
+      "escalated": 2,
+      "accuracy": 0.85,
+      "kev_confidence_correct": 0.9504,
+      "kev_confidence_wrong": 0.6917
+    }
+  }
+}

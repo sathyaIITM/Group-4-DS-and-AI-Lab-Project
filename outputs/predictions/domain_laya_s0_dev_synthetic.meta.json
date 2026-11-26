@@ -1,0 +1,13 @@
+{
+  "run_id": "laya_s0",
+  "checkpoint": "models/checkpoints/laya_s0",
+  "weights_sha256": {
+    "model.safetensors": "9da73cb9608eb75a31b7b8b834e7df35d4114851e1256bd3a2faf4bc0f581cff"
+  },
+  "server": "laya-serve (laya[serve]==0.4.23), LAYA_EXTRA_MODELS laya_s0, model=laya_s0",
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "bbb76881d4f39d09bb860834ae061852f93d5cc10f3c11666c247dcb66601513",
+  "device": "mps",
+  "created_utc": "2026-11-24T11:06:53+00:00"
+}

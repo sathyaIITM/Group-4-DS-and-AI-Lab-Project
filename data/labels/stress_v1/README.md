@@ -17,9 +17,13 @@ temperature fit or the choice of the cascade threshold.
 The mix (written to the plan in the T3 checklist, R8): measures from two domains on equal terms,
 messages that name no measure, topics outside the five domains and non-data messages,
 paraphrases of covered measures, Hindi and Hinglish, typos and abbreviations, and measures named
-by their source or not in the catalogue. T3's intended labels are sealed outside the repository
-(SHA-256 `2e5bd9cb272fde59e3e2f2f70d7b6d2a2e16cbca7910ab4b75f7b31352e11c8a`) and are used only as
-a diagnostic, as for `dev_human`.
+by their source or not in the catalogue. T3's intended labels were sealed outside the repository before any model was run
+(SHA-256 `2e5bd9cb272fde59e3e2f2f70d7b6d2a2e16cbca7910ab4b75f7b31352e11c8a`) and were released on
+26 November 2026 as `intended_labels_T3.csv` after the runs (the committed copy has LF line
+endings, SHA-256 `62d0f9f939f811a643b29adb30c65274d76bca55613eafdb8d0b04d4f2d6f99f`; the sealed original had CRLF line endings, content otherwise
+identical). With no second labeller
+this week, they are the labels the Milestone 5 report scores against, as single-author labels
+(`scripts/score_stress_v1.py`).
 
 ## Labelling protocol
 

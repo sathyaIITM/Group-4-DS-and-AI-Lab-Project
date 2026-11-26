@@ -2,7 +2,7 @@
 
     python scripts/m5_decision_figures.py
 
-Reads the committed dev_human predictions of four systems (zero-shot Kev, fine-tuned Kev `ep3`,
+Reads the committed dev_human predictions of four systems (zero-shot Kev, fine-tuned Kev `ep3_s2`,
 Jev, fine-tuned Laya `laya_s0`) and applies each system's temperature fitted on the calibration
 split (from its `outputs/reports/score_domain_*.json`). Writes to docs/milestones/figures/m5/:
 
@@ -50,7 +50,8 @@ LABELS = (
 SYSTEMS = (
     ("Kev zero-shot", "domain_zeroshot_v2_dev_human.jsonl", "score_domain_zeroshot_v2.json",
      "#2a78d6", "-"),
-    ("Kev ep3", "domain_ep3_dev_human.jsonl", "score_domain_ep3_dev_human.json", "#eb6834", "--"),
+    ("Kev ep3_s2", "domain_ep3_s2_dev_human.jsonl", "score_domain_ep3_s2_dev_human.json", "#eb6834",
+     "--"),
     ("Jev", "domain_jev_dev_human.jsonl", "score_domain_jev_v2.json", "#1baf7a", "-."),
     ("Laya laya_s0", "domain_laya_s0_dev_human.jsonl", "score_domain_laya_s0_dev_human.json",
      "#eda100", ":"),

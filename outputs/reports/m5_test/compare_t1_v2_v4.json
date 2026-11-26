@@ -1,0 +1,40 @@
+{
+  "items": 40,
+  "scorer_rules": "v3",
+  "a_success_mean": 0.65,
+  "b_success_mean": 0.7,
+  "difference_b_minus_a": 0.05,
+  "difference_ci95": [
+    -0.075,
+    0.175
+  ],
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 0
+  },
+  "mcnemar": {
+    "only_a_succeeds": 2,
+    "only_b_succeeds": 4,
+    "p_value_exact": 0.6875
+  },
+  "items_better_in_b": [
+    "e2e-404",
+    "e2e-422",
+    "e2e-432",
+    "e2e-440"
+  ],
+  "items_worse_in_b": [
+    "e2e-405",
+    "e2e-413"
+  ],
+  "a": [
+    "outputs/predictions/m5_test_t1_v2_r1.jsonl"
+  ],
+  "b": [
+    "outputs/predictions/m5_test_t1_v4_r1.jsonl"
+  ],
+  "gold": [
+    "data/eval/e2e_test_t1.v1.jsonl"
+  ],
+  "compared_at": "2026-11-26T13:05:37.706888+00:00"
+}
