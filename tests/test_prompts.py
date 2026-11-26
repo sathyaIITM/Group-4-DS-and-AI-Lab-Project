@@ -10,6 +10,7 @@ from analyst.inference.prompts import PROMPT_DIR, PromptError, PromptRegistry, l
 EXPECTED = {
     "intent", "sql", "sql_repair", "narrate", "clarify", "route", "decline", "describe",
     "reflect",  # GEPA reflection for the v3 prompt optimisation (Milestone 5)
+    "intent_gepa",  # intent prompt chosen by GEPA, pinned for v3 and v4 (configs/model.yaml)
 }  # fmt: skip
 
 
@@ -28,7 +29,8 @@ def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert registry.get("narrate").version == 2  # unit once; a long series in one claim
     assert registry.get("clarify").version == 3  # names the missing detail
     for prompt in registry:
-        assert prompt.purpose == prompt.id
+        # an optimised variant keeps its base purpose under its own id (intent_gepa: intent)
+        assert prompt.id == prompt.purpose or prompt.id.startswith(f"{prompt.purpose}_")
         assert prompt.system.strip()
         assert prompt.user.strip()
 

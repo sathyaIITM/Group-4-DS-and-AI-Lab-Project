@@ -117,4 +117,6 @@ embedding:
 # prompt for a prompt id; other ids, and every version not listed, use the highest version in
 # configs/prompts/. v3 pins the intent prompt chosen by GEPA (scripts/optimise_prompts.py) once
 # it is reviewed; v4 adds Kev on top of v3, so it carries the same pins.
-prompt_pins: {}
+prompt_pins:
+  v3: {intent: intent_gepa.v1}   # GEPA run of 26 Nov 2026, outputs/reports/gepa_v3.json (val 0.812 -> 0.899)
+  v4: {intent: intent_gepa.v1}
