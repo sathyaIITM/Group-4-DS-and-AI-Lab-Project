@@ -1,0 +1,149 @@
+{
+  "note": "Temperatures fitted by NLL on each system's calibration-split predictions; systems without them are raw. Laya: predictions from the local machine.",
+  "systems": {
+    "Kev zero-shot": {
+      "temperature": null,
+      "accuracy": 0.3687,
+      "macro_auroc": 0.766,
+      "macro_average_precision": 0.5024,
+      "per_label": {
+        "run_sql": {
+          "auroc": 0.6294,
+          "average_precision": 0.4414
+        },
+        "search_catalog": {
+          "auroc": 0.7378,
+          "average_precision": 0.3763
+        },
+        "describe_table": {
+          "auroc": 0.7774,
+          "average_precision": 0.6512
+        },
+        "ask_clarification": {
+          "auroc": 0.6704,
+          "average_precision": 0.2495
+        },
+        "decline_not_covered": {
+          "auroc": 0.6632,
+          "average_precision": 0.2431
+        },
+        "explain_result": {
+          "auroc": 0.9159,
+          "average_precision": 0.7325
+        },
+        "make_chart": {
+          "auroc": 0.9678,
+          "average_precision": 0.8228
+        }
+      }
+    },
+    "Kev joint lr4e-05_s1": {
+      "temperature": 4.5511,
+      "accuracy": 0.798,
+      "macro_auroc": 0.953,
+      "macro_average_precision": 0.8728,
+      "per_label": {
+        "run_sql": {
+          "auroc": 0.9066,
+          "average_precision": 0.8203
+        },
+        "search_catalog": {
+          "auroc": 0.9935,
+          "average_precision": 0.9496
+        },
+        "describe_table": {
+          "auroc": 0.9143,
+          "average_precision": 0.7901
+        },
+        "ask_clarification": {
+          "auroc": 0.9479,
+          "average_precision": 0.8609
+        },
+        "decline_not_covered": {
+          "auroc": 0.9194,
+          "average_precision": 0.7238
+        },
+        "explain_result": {
+          "auroc": 0.989,
+          "average_precision": 0.9652
+        },
+        "make_chart": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        }
+      }
+    },
+    "Laya joint lr5e-05_s1": {
+      "temperature": 6.5238,
+      "accuracy": 0.6414,
+      "macro_auroc": 0.8738,
+      "macro_average_precision": 0.6553,
+      "per_label": {
+        "run_sql": {
+          "auroc": 0.8275,
+          "average_precision": 0.6548
+        },
+        "search_catalog": {
+          "auroc": 0.9091,
+          "average_precision": 0.6554
+        },
+        "describe_table": {
+          "auroc": 0.9456,
+          "average_precision": 0.748
+        },
+        "ask_clarification": {
+          "auroc": 0.8154,
+          "average_precision": 0.6254
+        },
+        "decline_not_covered": {
+          "auroc": 0.8325,
+          "average_precision": 0.5483
+        },
+        "explain_result": {
+          "auroc": 0.7919,
+          "average_precision": 0.4074
+        },
+        "make_chart": {
+          "auroc": 0.9944,
+          "average_precision": 0.9477
+        }
+      }
+    },
+    "Jev": {
+      "temperature": null,
+      "accuracy": 0.7626,
+      "macro_auroc": 0.9563,
+      "macro_average_precision": 0.8838,
+      "per_label": {
+        "run_sql": {
+          "auroc": 0.9015,
+          "average_precision": 0.8708
+        },
+        "search_catalog": {
+          "auroc": 0.9574,
+          "average_precision": 0.894
+        },
+        "describe_table": {
+          "auroc": 0.9894,
+          "average_precision": 0.9488
+        },
+        "ask_clarification": {
+          "auroc": 0.9413,
+          "average_precision": 0.8112
+        },
+        "decline_not_covered": {
+          "auroc": 0.905,
+          "average_precision": 0.6688
+        },
+        "explain_result": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "make_chart": {
+          "auroc": 0.9993,
+          "average_precision": 0.9928
+        }
+      }
+    }
+  }
+}

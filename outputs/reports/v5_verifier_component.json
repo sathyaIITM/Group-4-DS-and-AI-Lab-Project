@@ -1,15 +1,15 @@
 {
   "released_answers": 75,
-  "correct": 62,
-  "wrong": 13,
+  "correct": 60,
+  "wrong": 15,
   "auroc_correct_vs_wrong": 0.547,
   "threshold": 0.5,
-  "wrong_flagged": 5,
-  "correct_flagged": 20,
-  "precision_released_before": 0.827,
-  "precision_released_after": 0.84,
+  "wrong_flagged": 6,
+  "correct_flagged": 19,
+  "precision_released_before": 0.8,
+  "precision_released_after": 0.82,
   "answers_kept": 50,
   "mean_score_correct": 0.583,
-  "mean_score_wrong": 0.524,
+  "mean_score_wrong": 0.531,
   "latency_s_p50": 0.31
 }

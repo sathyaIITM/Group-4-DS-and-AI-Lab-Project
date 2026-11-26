@@ -10,14 +10,14 @@
 {"id": "e2e-024", "correct": true, "claims_supported": 0.57, "intent_aligned": 0.78, "latency_s": 0.286}
 {"id": "e2e-027", "correct": true, "claims_supported": 0.78, "intent_aligned": 0.9, "latency_s": 0.374}
 {"id": "e2e-029", "correct": true, "claims_supported": 0.88, "intent_aligned": 0.85, "latency_s": 0.295}
-{"id": "e2e-034", "correct": true, "claims_supported": 0.74, "intent_aligned": 0.89, "latency_s": 0.281}
+{"id": "e2e-034", "correct": false, "claims_supported": 0.74, "intent_aligned": 0.89, "latency_s": 0.281}
 {"id": "e2e-039", "correct": true, "claims_supported": 0.93, "intent_aligned": 0.89, "latency_s": 0.278}
 {"id": "e2e-040", "correct": true, "claims_supported": 0.49, "intent_aligned": 0.83, "latency_s": 0.37}
 {"id": "e2e-046", "correct": true, "claims_supported": 0.65, "intent_aligned": 0.91, "latency_s": 0.398}
 {"id": "e2e-048", "correct": false, "claims_supported": 0.55, "intent_aligned": 0.92, "latency_s": 0.286}
 {"id": "e2e-050", "correct": true, "claims_supported": 0.8, "intent_aligned": 0.77, "latency_s": 0.349}
 {"id": "e2e-054", "correct": true, "claims_supported": 0.87, "intent_aligned": 0.97, "latency_s": 0.37}
-{"id": "e2e-059", "correct": true, "claims_supported": 0.51, "intent_aligned": 0.97, "latency_s": 0.341}
+{"id": "e2e-059", "correct": false, "claims_supported": 0.51, "intent_aligned": 0.97, "latency_s": 0.341}
 {"id": "e2e-061", "correct": true, "claims_supported": 0.52, "intent_aligned": 0.45, "latency_s": 0.282}
 {"id": "e2e-064", "correct": true, "claims_supported": 0.62, "intent_aligned": 0.95, "latency_s": 0.282}
 {"id": "e2e-065", "correct": false, "claims_supported": 0.74, "intent_aligned": 0.94, "latency_s": 0.289}

@@ -105,5 +105,180 @@
       "v3_jev": 0.904,
       "v4_kev": 0.879
     }
+  },
+  "action_confusion": {
+    "v2_run1": {
+      "answer": {
+        "answered": 68,
+        "declined": 7,
+        "failed": 8,
+        "clarifying": 9,
+        "abstained": 3
+      },
+      "clarify": {
+        "declined": 6,
+        "clarifying": 13,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "declined": 16
+      },
+      "search": {
+        "searched": 4
+      }
+    },
+    "v3_run1": {
+      "answer": {
+        "answered": 74,
+        "clarifying": 6,
+        "declined": 9,
+        "failed": 4,
+        "abstained": 2
+      },
+      "clarify": {
+        "declined": 5,
+        "clarifying": 14,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "answered": 1,
+        "declined": 15
+      },
+      "search": {
+        "searched": 4
+      }
+    },
+    "v4_run1": {
+      "answer": {
+        "answered": 74,
+        "clarifying": 9,
+        "failed": 5,
+        "abstained": 3,
+        "declined": 4
+      },
+      "clarify": {
+        "declined": 5,
+        "clarifying": 14,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "declined": 16
+      },
+      "search": {
+        "searched": 4
+      }
+    }
+  },
+  "robustness_items": {
+    "typos": {
+      "e2e-020": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-205": [
+        [
+          "clarifying",
+          false
+        ],
+        [
+          "clarifying",
+          false
+        ]
+      ],
+      "e2e-428": [
+        [
+          "declined",
+          false
+        ],
+        [
+          "declined",
+          false
+        ]
+      ]
+    },
+    "hindi_hinglish": {
+      "e2e-098": [
+        [
+          "answered",
+          false
+        ],
+        [
+          "answered",
+          false
+        ]
+      ],
+      "e2e-201": [
+        [
+          "declined",
+          false
+        ],
+        [
+          "declined",
+          false
+        ]
+      ],
+      "e2e-216": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-227": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-230": [
+        [
+          "answered",
+          false
+        ],
+        [
+          "answered",
+          false
+        ]
+      ]
+    },
+    "suppressed_value": {
+      "e2e-092": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "abstained",
+          false
+        ]
+      ]
+    },
+    "follow_ups": {
+      "items": 15,
+      "success": 0.733,
+      "all_items": 0.682
+    }
   }
 }

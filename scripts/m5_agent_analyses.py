@@ -23,8 +23,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from analyst.evaluation import scorer_v3  # noqa: E402
+from analyst.evaluation import e2e_eval, scorer_v3  # noqa: E402
 from analyst.evaluation.e2e_eval import apply_gold, v3_checks  # noqa: E402
+
+e2e_eval.SCORER_RULES = "v3"  # the values check of scorer v3, as `e2e_eval score --scorer v3`
 
 PRED = ROOT / "outputs" / "predictions"
 EVAL = ROOT / "data" / "eval"
@@ -172,12 +174,62 @@ def v3_against_v4() -> dict[str, Any]:
     }
 
 
+def action_confusion() -> dict[str, Any]:
+    """Expected action (validated gold) against the agent's outcome, run 1 of each version."""
+    result: dict[str, Any] = {}
+    for v in ("v2", "v3", "v4"):
+        table: dict[str, dict[str, int]] = {}
+        for run in _cases(_run_files(v, 1, ("main", "t1")), (OLD, NEW, T1)):
+            for c in run:
+                row = table.setdefault(c["expected_action"], {})
+                row[c["outcome"]] = row.get(c["outcome"], 0) + 1
+        result[f"{v}_run1"] = table
+    return result
+
+
+ROBUSTNESS_ITEMS = {
+    "typos": ("e2e-020", "e2e-205", "e2e-428"),
+    "hindi_hinglish": ("e2e-098", "e2e-201", "e2e-216", "e2e-227", "e2e-230"),
+    "suppressed_value": ("e2e-092",),
+}
+
+
+def robustness_items() -> dict[str, Any]:
+    """v4, two runs: outcome and scorer v3 success of the robustness items; follow-up items."""
+    gold = {i["id"]: i for f in (OLD, NEW, T1) for i in _read(f)}
+    runs = []
+    for r in (1, 2):
+        cases = _cases(_run_files("v4", r, ("main", "t1")), (OLD, NEW, T1))
+        runs.append({c["id"]: c for run in cases for c in run})
+    result: dict[str, Any] = {
+        group: {
+            i: [[run[i]["outcome"], scorer_v3.success(v3_checks(run[i]))] for run in runs]
+            for i in ids
+        }
+        for group, ids in ROBUSTNESS_ITEMS.items()
+    }
+    follow = [i for i in gold if gold[i].get("prior_turns")]
+
+    def share(ids: list[str]) -> float:
+        hits = sum(scorer_v3.success(v3_checks(run[i])) for run in runs for i in ids)
+        return round(hits / (len(runs) * len(ids)), 3)
+
+    result["follow_ups"] = {
+        "items": len(follow),
+        "success": share(follow),
+        "all_items": share(list(gold)),
+    }
+    return result
+
+
 def main() -> None:
     """Compute the three analyses and write the report."""
     result = {
         "clarification": clarification(),
         "domain_inside_agent": domain_inside_agent(),
         "v3_against_v4": v3_against_v4(),
+        "action_confusion": action_confusion(),
+        "robustness_items": robustness_items(),
     }
     OUT.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))

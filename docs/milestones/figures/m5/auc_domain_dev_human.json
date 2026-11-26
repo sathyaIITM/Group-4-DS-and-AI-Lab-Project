@@ -1,8 +1,9 @@
 {
-  "note": "Temperatures fitted on calibration.v2 (Laya: on top of its own internal temperature).",
+  "note": "Temperatures fitted by NLL on each system's calibration-split predictions; systems without them are raw. Laya: predictions from the local machine.",
   "systems": {
     "Kev zero-shot": {
       "temperature": 1.0356,
+      "accuracy": 0.7828,
       "macro_auroc": 0.9021,
       "macro_average_precision": 0.6973,
       "per_label": {
@@ -40,8 +41,9 @@
         }
       }
     },
-    "Kev ep3_s2": {
+    "Kev ep3_s2 (v4)": {
       "temperature": 3.6522,
+      "accuracy": 0.9747,
       "macro_auroc": 0.9995,
       "macro_average_precision": 0.9958,
       "per_label": {
@@ -79,8 +81,129 @@
         }
       }
     },
+    "Kev joint lr4e-05_s1": {
+      "temperature": 4.1593,
+      "accuracy": 0.9596,
+      "macro_auroc": 0.9937,
+      "macro_average_precision": 0.9803,
+      "per_label": {
+        "labour": {
+          "auroc": 0.9967,
+          "average_precision": 0.973
+        },
+        "agriculture": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "rainfall": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "prices_economy": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "health": {
+          "auroc": 0.9996,
+          "average_precision": 0.9976
+        },
+        "other": {
+          "auroc": 0.9971,
+          "average_precision": 0.9782
+        },
+        "multiple": {
+          "auroc": 0.9577,
+          "average_precision": 0.9093
+        },
+        "unspecified": {
+          "auroc": 0.9988,
+          "average_precision": 0.9846
+        }
+      }
+    },
+    "Laya domain ep6_s1": {
+      "temperature": 4.7845,
+      "accuracy": 0.9545,
+      "macro_auroc": 0.9773,
+      "macro_average_precision": 0.9238,
+      "per_label": {
+        "labour": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "agriculture": {
+          "auroc": 0.9792,
+          "average_precision": 0.9651
+        },
+        "rainfall": {
+          "auroc": 0.9971,
+          "average_precision": 0.9643
+        },
+        "prices_economy": {
+          "auroc": 0.9633,
+          "average_precision": 0.9134
+        },
+        "health": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "other": {
+          "auroc": 0.9712,
+          "average_precision": 0.8716
+        },
+        "multiple": {
+          "auroc": 0.9104,
+          "average_precision": 0.7472
+        },
+        "unspecified": {
+          "auroc": 0.9971,
+          "average_precision": 0.9289
+        }
+      }
+    },
+    "Laya joint lr5e-05_s1": {
+      "temperature": 3.9564,
+      "accuracy": 0.9646,
+      "macro_auroc": 0.9895,
+      "macro_average_precision": 0.9627,
+      "per_label": {
+        "labour": {
+          "auroc": 0.9968,
+          "average_precision": 0.9737
+        },
+        "agriculture": {
+          "auroc": 0.9768,
+          "average_precision": 0.9209
+        },
+        "rainfall": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "prices_economy": {
+          "auroc": 0.9844,
+          "average_precision": 0.973
+        },
+        "health": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "other": {
+          "auroc": 1.0,
+          "average_precision": 1.0
+        },
+        "multiple": {
+          "auroc": 0.9978,
+          "average_precision": 0.9755
+        },
+        "unspecified": {
+          "auroc": 0.9602,
+          "average_precision": 0.8583
+        }
+      }
+    },
     "Jev": {
       "temperature": 1.0151,
+      "accuracy": 0.9697,
       "macro_auroc": 0.9991,
       "macro_average_precision": 0.9918,
       "per_label": {
@@ -115,45 +238,6 @@
         "unspecified": {
           "auroc": 1.0,
           "average_precision": 1.0
-        }
-      }
-    },
-    "Laya laya_s0": {
-      "temperature": 1.2154,
-      "macro_auroc": 0.9947,
-      "macro_average_precision": 0.9495,
-      "per_label": {
-        "labour": {
-          "auroc": 1.0,
-          "average_precision": 1.0
-        },
-        "agriculture": {
-          "auroc": 0.9977,
-          "average_precision": 0.9843
-        },
-        "rainfall": {
-          "auroc": 0.9996,
-          "average_precision": 0.9973
-        },
-        "prices_economy": {
-          "auroc": 0.9973,
-          "average_precision": 0.9879
-        },
-        "health": {
-          "auroc": 1.0,
-          "average_precision": 1.0
-        },
-        "other": {
-          "auroc": 0.9983,
-          "average_precision": 0.9899
-        },
-        "multiple": {
-          "auroc": 0.9695,
-          "average_precision": 0.6879
-        },
-        "unspecified": {
-          "auroc": 0.995,
-          "average_precision": 0.949
         }
       }
     }

@@ -617,11 +617,25 @@ decisions (0.5%) to Jev, with no change in accuracy
 ([`cascade_domain_ep3_s2.json`](../../outputs/reports/cascade_domain_ep3_s2.json)). Laya with its
 library defaults is 2.6 points below Kev `ep3_s2`; its calibrated ECE is as low as Kev's.
 
-Confusion matrices, macro one-vs-rest ROC and precision-recall curves for zero-shot Kev,
-`ep3_s2`, Jev and Laya are in [`docs/milestones/figures/m5/`](figures/m5/), built by
-[`scripts/m5_decision_figures.py`](../../scripts/m5_decision_figures.py) (macro AUROC 0.902,
-0.9995, 0.9991 and 0.9947; macro average precision 0.697, 0.996, 0.992 and 0.950; table in
-[`auc_domain_dev_human.json`](figures/m5/auc_domain_dev_human.json)).
+Confusion matrices, macro one-vs-rest ROC and precision-recall curves for every domain candidate
+are in [`confusion_domain_dev_human.png`](figures/m5/confusion_domain_dev_human.png),
+[`roc_domain_dev_human.png`](figures/m5/roc_domain_dev_human.png) and
+[`pr_domain_dev_human.png`](figures/m5/pr_domain_dev_human.png), built by
+[`scripts/m5_decision_figures.py`](../../scripts/m5_decision_figures.py); table in
+[`auc_domain_dev_human.json`](figures/m5/auc_domain_dev_human.json).
+
+| System (domain, `dev_human`) | Accuracy | Macro AUROC | Macro average precision |
+| --- | --- | --- | --- |
+| Kev-0.8B zero-shot | 0.783 | 0.902 | 0.697 |
+| Kev `ep3_s2` (v4) | 0.975 | 0.9995 | 0.996 |
+| Kev joint `joint_lr4e-05_s1` | 0.960 | 0.994 | 0.980 |
+| Laya domain `laya_dom_ep6_s1` | 0.955 | 0.977 | 0.924 |
+| Laya joint `laya_joint_lr5e-05_s1` | 0.965 | 0.990 | 0.963 |
+| Jev | 0.970 | 0.999 | 0.992 |
+
+Kev `ep3_s2` and Jev rank the correct domain highest almost always (AUROC above 0.999); both Laya
+checkpoints separate the domains less well (0.977 and 0.990); their weakest labels are `multiple`
+(Laya domain, AUROC 0.910) and `unspecified` (Laya joint, 0.960).
 
 **Tool selection on `dev_human` (Measured).** The 50 tool items on which the two labellers
 disagreed were re-adjudicated under labelling guide 1.1, item by item, before any tool
@@ -664,6 +678,21 @@ Files: [`gate_tool_joint_lr4e-05_s1.json`](../../outputs/reports/gate_tool_joint
 [`cascade_tool_joint_lr4e-05_s1.json`](../../outputs/reports/cascade_tool_joint_lr4e-05_s1.json),
 [`parity_final.json`](../../outputs/reports/parity_final.json) (`tool_mcnemar`).
 
+| System (tool, `dev_human`) | Accuracy | Macro AUROC | Macro average precision |
+| --- | --- | --- | --- |
+| Kev-0.8B zero-shot (raw) | 0.369 | 0.766 | 0.502 |
+| Kev joint `joint_lr4e-05_s1` | 0.798 | 0.953 | 0.873 |
+| Laya joint `laya_joint_lr5e-05_s1` | 0.641 | 0.874 | 0.655 |
+| Jev (raw) | 0.763 | 0.956 | 0.884 |
+
+Kev joint and Jev rank the tools about equally well (AUROC 0.953 and 0.956), while Kev's top choice
+is right more often (0.798 against 0.763). Laya confuses `explain_result` with `make_chart` and
+`run_sql` with `decline_not_covered`
+([`confusion_tool_dev_human.png`](figures/m5/confusion_tool_dev_human.png),
+[`roc_tool_dev_human.png`](figures/m5/roc_tool_dev_human.png),
+[`pr_tool_dev_human.png`](figures/m5/pr_tool_dev_human.png),
+[`auc_tool_dev_human.json`](figures/m5/auc_tool_dev_human.json)).
+
 Tool selection stays on Jev (Section 6.2, choice of models). Source:
 [`parity_final.json`](../../outputs/reports/parity_final.json).
 
@@ -698,10 +727,10 @@ label is whether the answer passes every scorer v3 check.
 
 | Released answers | Correct / wrong | AUROC (verifier score, correct vs wrong) | Flagged at 0.5: wrong / correct | Precision of released answers, before / after |
 | --- | --- | --- | --- | --- |
-| 75 | 62 / 13 | 0.547 | 5 of 13 / 20 of 62 | 0.827 / 0.840 |
+| 75 | 60 / 15 | 0.547 | 6 of 15 / 19 of 60 | 0.800 / 0.820 |
 
 Zero-shot, Jev barely separates correct from wrong answers (AUROC 0.55): withholding the answers
-it doubts would remove a third of the released answers to catch 5 of the 13 wrong ones. A useful
+it doubts would remove a third of the released answers to catch 6 of the 15 wrong ones. A useful
 verifier needs what the plan specified for v5: calibration and a threshold fitted on human-labelled
 verification examples (150-200), and a check that compares each stated value with the result in
 code before asking the model about the reading. The test items were seen before this check was
@@ -894,6 +923,22 @@ corrections are excluded: every item below keeps a gold that the rules support (
 | Call budget | e2e-027 | The 8-call limit is reached | Repeated retries for the same reason | No (fix D6) |
 | Infrastructure | e2e-055, 065, 070, 071, 236 | Vertex AI timeouts or one HTTP 429 | Not an agent decision | - |
 
+**Action confusion matrix (v4, run 1, 140 items; rows: action the validated gold expects; columns:
+the agent's outcome; [`m5_agent_analyses.json`](../../outputs/reports/m5_agent_analyses.json),
+`action_confusion`).**
+
+| Expected \ outcome | Answered | Clarifying | Declined | Described | Searched | Abstained | Failed |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| answer (95) | **74** | 9 | 4 | 0 | 0 | 3 | 5 |
+| clarify (20) | 1 | **14** | 5 | 0 | 0 | 0 | 0 |
+| decline (16) | 0 | 0 | **16** | 0 | 0 | 0 | 0 |
+| describe (5) | 0 | 0 | 0 | **5** | 0 | 0 | 0 |
+| search (4) | 0 | 0 | 0 | 0 | **4** | 0 | 0 |
+
+Declines, descriptions and searches are always right. The errors sit in two cells: questions that
+should be answered but are asked about or declined (13), and clarifications that become declines
+(5). An answered item can still fail the content checks; the diagonal counts the action only.
+
 Representative examples (v2, Milestone 5):
 
 | Item | Question | Agent | Gold | Cause |
@@ -918,15 +963,18 @@ Confusion matrices are in [`figures/m5/confusion_domain_dev_human.png`](figures/
 
 ## 11. Model robustness
 
-The test sets carry the robustness cases as items rather than as a separate sweep: Hindi and
-Hinglish questions (for example e2e-098, e2e-201, e2e-216, e2e-227, e2e-230), deliberate typos
-(e2e-020, e2e-205, e2e-428), abbreviations, follow-ups (15 items with earlier turns) and edge cases
-(suppressed values, ties, units in bales). Their failures are in the classes of Section 10.
-A paraphrase sweep (`scripts/robustness_sweep.py`) was not run in this milestone; it is moved to
-Milestone 6. For the domain decision, `stress_v1` (Section 6.2) is the robustness test: Kev `ep3_s2`
-holds on paraphrases and typos (24/24) and loses accuracy on Hinglish (3/7) and unfamiliar measures
-(7/12).
+| Aspect | Evidence (Measured) | Result |
+| --- | --- | --- |
+| Unseen data | 40 blind test items written independently (Section 4.2); held-out table `srs_imr_state` for the decision models | Agent (scorer v3): v2 0.650, v3 0.738, v4 0.700 on the blind items, close to the 100-item scores. Kev keeps its domain accuracy without the table's records (14 and 14 of 15); Laya drops (13 to 10) |
+| Generalisation from development to test | Development check (90 items) against the test set (140 items), v2, scorer v3; Kev from synthetic to human to agent questions | Agent: 0.867 on development items, 0.650 on test items: the fixes were built on development items and generalise only in part. Kev domain: 0.997 (`dev_synthetic`), 0.975 (`dev_human`), 0.879 (test questions inside the agent), 0.838 (`stress_v1`) |
+| Noise tolerance | Typos and paraphrases in `stress_v1` (24 items) and in test items (e2e-020, e2e-205, e2e-428) | Domain decision unaffected (Kev and Jev 24 of 24). Agent (v4, two runs): e2e-020 succeeds in both runs; e2e-205 asks for the place and e2e-428 declines instead of asking for the group (classes of Section 10) |
+| Language variation | Hindi and Hinglish in `stress_v1` (12 items) and in test items (e2e-098, e2e-201, e2e-216, e2e-227, e2e-230) | Kev weakest here (Hinglish 3 of 7 against Jev 7 of 7). Agent (v4, two runs): 2 of the 5 test items succeed in both runs (e2e-216, e2e-227); e2e-201 is declined, e2e-230 answered instead of asking for the period, e2e-098 answered with a State plan the interpretation check does not match |
+| Edge cases | Suppressed values (e2e-092), units in bales (e2e-099), follow-ups (15 items) | Agent (v4, two runs): the suppressed value succeeds in one of two runs; follow-up items succeed at 0.733, against 0.682 over all items; cotton in bales fails the number check (Section 10) |
+| Adversarial cases | Not evaluated as attacks. By design, user text, retrieved text and history are passed to the model inside delimiters and treated as data, and SQL is read-only and checked before execution | Prompt-injection and abuse tests belong to the Milestone 6 guardrails |
 
+Agent figures for the robustness items: [`m5_agent_analyses.json`](../../outputs/reports/m5_agent_analyses.json)
+(`robustness_items`, `python scripts/m5_agent_analyses.py`). A paraphrase sweep (`scripts/robustness_sweep.py`) was not run in this milestone; it is moved to
+Milestone 6.
 ---
 
 ## 12. Computational performance
@@ -1088,7 +1136,14 @@ on a calibration split that includes code-mixed and follow-up messages.
 ## Appendices
 
 - A. Complete metric tables: [`outputs/reports/m5_test/`](../../outputs/reports/m5_test/) (agent), `outputs/reports/score_domain_*.json` (decision models).
-- B. Confusion matrices, ROC and PR curves: [`figures/m5/`](figures/m5/); reliability diagrams: `outputs/figures/reliability_*.png`.
+- B. Confusion matrices, ROC and PR curves for the domain and tool decisions: [`figures/m5/`](figures/m5/)
+  (`python scripts/m5_decision_figures.py`); agent action confusion matrix: Section 10; reliability
+  diagrams (raw and calibrated) for the served checkpoints:
+  [`reliability_domain_ep3_s2_dev_human.png`](../../outputs/figures/reliability_domain_ep3_s2_dev_human.png),
+  [`reliability_domain_joint_lr4e-05_s1_dev_human.png`](../../outputs/figures/reliability_domain_joint_lr4e-05_s1_dev_human.png),
+  [`reliability_domain_jev_dev_human.png`](../../outputs/figures/reliability_domain_jev_dev_human.png),
+  [`reliability_domain_zeroshot_v2_dev_human.png`](../../outputs/figures/reliability_domain_zeroshot_v2_dev_human.png),
+  [`reliability_tool_joint_lr4e-05_s1.png`](../../outputs/figures/reliability_tool_joint_lr4e-05_s1.png).
 - C. Learning curves: [`loss_curves_kev.png`](figures/m5/loss_curves_kev.png) (`python scripts/m5_loss_curves.py`). Training records per run: `outputs/reports/kev_runs/<run>/training_metrics.json` and `train.log`; selection: [`kev_selection.json`](../../outputs/reports/kev_selection.json).
 - D. Predictions per item: `outputs/predictions/m5_test_*.jsonl`; failure cases: Section 10.
 - E. Model and agent configuration ([`configs/`](../../configs/)).

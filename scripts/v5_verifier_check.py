@@ -28,8 +28,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from analyst.decisions.system_one import NoulQuestion, SystemOneClient  # noqa: E402
-from analyst.evaluation import scorer_v3  # noqa: E402
+from analyst.evaluation import e2e_eval, scorer_v3  # noqa: E402
 from analyst.evaluation.e2e_eval import apply_gold, v3_checks  # noqa: E402
+
+e2e_eval.SCORER_RULES = "v3"  # the values check of scorer v3, as `e2e_eval score --scorer v3`
 
 PRED = ROOT / "outputs" / "predictions"
 RUNS = (PRED / "m5_test_v4_r1.jsonl", PRED / "m5_test_t1_v4_r1.jsonl")
@@ -106,7 +108,9 @@ def run() -> None:
 def score() -> None:
     """Separation of correct and wrong answers by the verifier score."""
     rows = [json.loads(x) for x in OUT.read_text(encoding="utf-8").splitlines() if x]
-    correct = np.array([r["correct"] for r in rows])
+    # Labels are recomputed from the scorer here, so they always follow the current scorer v3.
+    labels = {c["id"]: bool(scorer_v3.success(v3_checks(c))) for c in _cases()}
+    correct = np.array([labels[r["id"]] for r in rows])
     p_ok = np.array([r["claims_supported"] * r["intent_aligned"] for r in rows])
     keep = p_ok >= THRESHOLD
     wrong = ~correct
