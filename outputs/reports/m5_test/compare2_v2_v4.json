@@ -1,0 +1,55 @@
+{
+  "items": 100,
+  "scorer_rules": "v3",
+  "a_success_mean": 0.65,
+  "b_success_mean": 0.675,
+  "difference_b_minus_a": 0.025,
+  "difference_ci95": [
+    -0.03,
+    0.085
+  ],
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 0
+  },
+  "mcnemar": {
+    "only_a_succeeds": 1,
+    "only_b_succeeds": 10,
+    "p_value_exact": 0.01171875
+  },
+  "items_better_in_b": [
+    "e2e-020",
+    "e2e-027",
+    "e2e-037",
+    "e2e-046",
+    "e2e-071",
+    "e2e-203",
+    "e2e-208",
+    "e2e-218",
+    "e2e-223",
+    "e2e-228"
+  ],
+  "items_worse_in_b": [
+    "e2e-002",
+    "e2e-004",
+    "e2e-015",
+    "e2e-031",
+    "e2e-040",
+    "e2e-064",
+    "e2e-080",
+    "e2e-092",
+    "e2e-211"
+  ],
+  "a": [
+    "outputs/predictions/m5_test_v2_r1.jsonl"
+  ],
+  "b": [
+    "outputs/predictions/m5_test_v4_r1.jsonl",
+    "outputs/predictions/m5_test_v4_r2.jsonl"
+  ],
+  "gold": [
+    "data/eval/e2e_test.v1.jsonl",
+    "data/eval/e2e_test_ext.v1.jsonl"
+  ],
+  "compared_at": "2026-11-26T16:02:53.654989+00:00"
+}

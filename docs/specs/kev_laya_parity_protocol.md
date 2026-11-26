@@ -1,6 +1,7 @@
 # Kev and Laya: matched fine-tuning protocol (Milestone 5)
 
-Version 1.0, 24 November 2026. Owner: T3. Status: fixed before any run under it was started.
+Version 1.1, 26 November 2026. Owner: T3. Status: Sections 1-8 fixed on 24 November before any run
+under them was started and unchanged since; Section 9 (outcome) added on 26 November after all runs.
 Supersedes, for Milestone 5, the comparator design of `laya_feasibility_plan.md` (single default
 Laya run) and extends `kev_training_protocol.md` (Kev sweep, Milestone 4). This is the last
 fine-tuning phase of the project: every run listed here is completed in Milestone 5, and no run is
@@ -117,6 +118,64 @@ seeds of each chosen setting; the final table on the canonical backend; what rem
 (the two starting checkpoints differ in what they were trained on; Kev's from-base run has no
 Laya counterpart). `laya_s0` (library defaults, 10% hold-out, no augmentation) is reported as the
 pre-parity reference row.
+
+## 9. Outcome (26 November 2026)
+
+**Runs.** Every run of Section 4 was completed: 27 new runs (9 Kev, 18 Laya; 10.7 and 8.6 T4-hours),
+plus 9 earlier Kev runs reused in the cells. No run was added after results were seen. Records:
+`outputs/reports/parity_runs.md`, `outputs/reports/parity_plans/`.
+
+**Selection (Section 5, `dev_synthetic` only).**
+
+| Model | Cell | Chosen setting (mean NLL over three seeds) | Served checkpoint |
+| --- | --- | --- | --- |
+| Kev-0.8B | Domain | `ep3` (0.0220) | `ep3_s2` |
+| Kev-0.8B | Joint | `lr4e-05` (0.188) | `joint_lr4e-05_s1` |
+| Laya | Domain | `ep6` (0.068) | `laya_dom_ep6_s1` |
+| Laya | Joint | `lr5e-05` (0.378) | `laya_joint_lr5e-05_s1` |
+
+**Domain decision (`dev_human`; Jev 0.970).** All four candidates pass the gate: Kev `ep3_s2` 0.975
+(ECE 0.024), Laya joint 0.965, Kev joint 0.960, Laya domain 0.955. No exact McNemar test against
+another candidate gives p < 0.05 (step 2).
+
+**Tool decision (`dev_human` v1.1; the 50 re-adjudicated items changed no label; Jev 0.763).** Kev
+joint `joint_lr4e-05_s1` 0.798 (ECE 0.067) passes the gate; Laya joint 0.641-0.657 fails it (ECE
+about 0.14). Kev alone against Jev: p = 0.44. With escalation to Jev below calibrated confidence
+0.689 (set on calibration at a 5% error budget), the Kev-to-Jev cascade reaches 0.833 and is
+significantly more accurate than Jev alone (22 against 8 discordant items, p = 0.016).
+
+**Decision and departure from step 3.** For both decisions step 2 selects no candidate, so step 3
+applied: one checkpoint serving both decisions, then lower p95 latency (Laya about 0.20 s against
+Kev about 0.72 s on the local machine), then memory. The team did not follow step 3. It kept Kev
+`ep3_s2` on the domain decision and Jev on tool selection, as in the configuration evaluated end to
+end (v4): the most accurate domain candidate on `dev_human`, continuity with the tested agent, and no
+second model endpoint for a difference that is not significant. Peak memory was sampled but not used,
+because the resident size on Apple silicon excludes memory held by the GPU and varied twofold between
+runs of one model.
+
+**Confirmation (the unbiased figures of Section 6).**
+
+| Check | Result |
+| --- | --- |
+| `stress_v1`, domain | Kev `ep3_s2` 0.838 (ECE 0.117), Laya domain 0.787, Laya joint 0.738, Jev 0.925 |
+| End to end, v4 with Kev `ep3_s2` on domain and Jev on tool | 0.700 on 140 test items (scorer v3) |
+| End to end, v4 with Kev `joint_lr4e-05_s1` on both decisions, each with its cascade to Jev | 0.707 on 140 items; against the above 5 better and 5 worse on 100 items (p = 1.0), 3 and 2 on the 40 blind items (p = 1.0); branch `feature/t3-m5-v4-joint`, commit `5a85612` |
+| Held-out table (`srs_imr_state`, 15 items; same setting and seed trained with the table) | Kev 14 and 14 on domain, 11 and 11 on tool; Laya 13 and 10 on domain, 9 and 8 on tool |
+
+The tool cascade's gain on `dev_human` does not appear end to end on this test set, and the agent
+with the joint model scores the same as v4. The served configuration therefore stays Kev `ep3_s2` on
+the domain decision and Jev on tool selection. On hard cases both fine-tuned models fall behind Jev
+and their calibration degrades (Kev ECE 0.117, Laya 0.17).
+
+**What remained unequal** (Section 8): the two starting checkpoints differ in what they were trained
+on; Kev's run from the base model has no Laya counterpart; Laya's selection used predictions made on
+the Kaggle GPU and its final figures come from the local machine (top answers agree on 98.0-99.7% of
+items for the domain and 91.0-96.9% for tool between the two backends); one plan (`kaggle_6`) was made
+from a working tree holding exactly the change committed next (`repo_dirty` in its run records).
+
+Sources: `outputs/reports/parity_final.json`, `outputs/reports/laya_parity/`,
+`outputs/reports/cascade_tool_joint_lr4e-05_s1.json`, `outputs/reports/m5_test/compare_v4_v4joint.json`,
+`outputs/reports/m5_test/compare_t1_v4_v4joint.json`; Milestone 5 report, Sections 3.3, 6.1 and 6.2.
 
 ## References
 
