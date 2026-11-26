@@ -137,6 +137,31 @@ def test_range_window_covers_gold_periods() -> None:
     assert scorer_v3._periods_match(case)
 
 
+def test_no_place_filter_matches_a_national_only_gold() -> None:
+    national = [{"name": "India", "level": "national"}]
+    case = _answer_case(plan_places=[], plan_all_places_level=None, expected_places=national)
+    assert scorer_v3._places_match(case)
+    state = [{"name": "Kerala", "level": "state"}]
+    assert not scorer_v3._places_match({**case, "expected_places": state})
+
+
+def test_range_planned_as_end_points_needs_every_value_in_the_result() -> None:
+    years = [{"start": f"{y}-06-01", "end": f"{y}-09-30"} for y in range(2011, 2017)]
+    ends = [years[0], years[-1]]
+    case = _answer_case(
+        plan_periods=ends,
+        expected_periods=years,
+        expected_values=[1167.0, 1153.3, 1115.6, 1255.7, 1034.5, 1031.5],
+        actual_numbers=[1167.0, 1153.3, 1115.6, 1255.7, 1034.5, 1031.5],
+    )
+    match = lambda a, b, tol: abs(a - b) <= tol * max(1.0, abs(b))  # noqa: E731
+    assert scorer_v3._periods_match(case, match)
+    assert not scorer_v3._periods_match({**case, "actual_numbers": [1167.0, 1031.5]}, match)
+    assert not scorer_v3._periods_match(case)  # no tolerance rule: strict windows only
+    outside = {**case, "expected_periods": [*years, {"start": "2017-06-01", "end": "2017-09-30"}]}
+    assert not scorer_v3._periods_match(outside, match)
+
+
 def test_period_names() -> None:
     assert "2019-20" in scorer_v3.period_names("2019-07-01", "2020-06-30")
     assert "march 2021" in scorer_v3.period_names("2021-03-01", "2021-03-31")

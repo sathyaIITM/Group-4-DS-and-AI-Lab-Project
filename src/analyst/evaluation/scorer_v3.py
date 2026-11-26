@@ -14,7 +14,7 @@ plan and evidence fields: `computable` is then False and the case cannot be scor
 | Check | Applies to | Passes when |
 | --- | --- | --- |
 | action | all | the outcome matches `expected_action` |
-| interpretation | answer | resolved places, periods and indicators match the gold |
+| interpretation | answer | resolved places, periods and indicators match the gold (see below) |
 | values | answer | scorer v2 values, narration and entity rule |
 | completeness | answer | every expected value is narrated (a long series: ends and a chart) |
 | unit | answer with a unit | the narration names the unit or a word for it |
@@ -22,6 +22,13 @@ plan and evidence fields: `computable` is then False and the case cannot be scor
 | evidence | answer | the evidence names a gold table, its source and the SQL |
 | clarify_slot | clarify | asks for `clarify_slot`, more than one option, `clarify_options` |
 | content | describe, search | the gold tables are named or retrieved (scorer v2 rule) |
+
+Interpretation, corrected on 26 November 2026 after the first Milestone 5 test run of v2 showed
+false failures (two general rules; every version, the dev sets and the Milestone 4 baseline are
+scored with the corrected rules, and the report states the change): a plan with no place filter
+matches a gold whose places are all national, since a national-only table needs no place (rule D);
+a plan that holds a range as its two end points matches when the span contains every gold period
+and the query result holds every expected value.
 """
 
 from __future__ import annotations
@@ -90,11 +97,11 @@ def check_action(case: dict[str, Any]) -> bool:
     return case.get("outcome") in OUTCOMES.get(str(case.get("expected_action")), set())
 
 
-def check_interpretation(case: dict[str, Any]) -> bool | None:
+def check_interpretation(case: dict[str, Any], tolerance_match: Any = None) -> bool | None:
     """Resolved places, periods and indicators match the gold fields."""
     if case.get("expected_action") != "answer" or case.get("gold_lineage") is None:
         return None
-    return _places_match(case) and _periods_match(case) and _indicators_match(case)
+    return _places_match(case) and _periods_match(case, tolerance_match) and _indicators_match(case)
 
 
 def _places_match(case: dict[str, Any]) -> bool:
@@ -106,17 +113,38 @@ def _places_match(case: dict[str, Any]) -> bool:
     if planned:
         return {_norm(p["name"]) for p in planned} == {_norm(p["name"]) for p in expected}
     level = case.get("plan_all_places_level")
-    return level is not None and all(p.get("level") == level for p in expected)
+    if level is None:
+        # No place filter on a national-only gold: the table holds India only, and rule D
+        # needs no place for it (corrected 26 November 2026; see the module docstring).
+        return all(p.get("level") == "national" for p in expected)
+    return all(p.get("level") == level for p in expected)
 
 
-def _periods_match(case: dict[str, Any]) -> bool:
-    """Every gold period lies inside a planned window; no window means the full range."""
+def _periods_match(case: dict[str, Any], tolerance_match: Any = None) -> bool:
+    """Every gold period lies inside a planned window; no window means the full range.
+
+    A plan may hold a range as its two end points ("from 2011 to 2016"). Such a plan matches
+    when its span contains every gold period and the query result holds every expected value,
+    so the whole range was read (corrected 26 November 2026).
+    """
     expected = case.get("expected_periods") or []
     windows = case.get("plan_periods") or []
     if not expected or not windows:
         return True
-    return all(
+    if all(
         any(w["start"] <= p["start"] and p["end"] <= w["end"] for w in windows) for p in expected
+    ):
+        return True
+    span_start, span_end = min(w["start"] for w in windows), max(w["end"] for w in windows)
+    if not all(span_start <= p["start"] and p["end"] <= span_end for p in expected):
+        return False
+    values = [float(v) for v in case.get("expected_values") or []]
+    numbers = case.get("actual_numbers") or []
+    tolerance = float(case.get("tolerance", 0.005))
+    return (
+        tolerance_match is not None
+        and bool(values)
+        and all(any(tolerance_match(n, v, tolerance) for n in numbers) for v in values)
     )
 
 
@@ -234,7 +262,7 @@ def checks(
     answer = case.get("expected_action") == "answer"
     return {
         "action": check_action(case),
-        "interpretation": check_interpretation(case),
+        "interpretation": check_interpretation(case, tolerance_match),
         "values": values_ok if answer else None,
         "completeness": check_completeness(case, tolerance_match),
         "unit": check_unit(case),
