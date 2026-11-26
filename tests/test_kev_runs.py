@@ -245,5 +245,6 @@ def test_parity_runs_follow_the_protocol() -> None:
     assert by_id["joint_lr4e-05_s1"].data == config["phase2"]["train"]
     held = by_id["heldout_joint_ep3_s0"]
     assert held.data == config["parity"]["held_out"]["train"] and held.epochs == 3
-    colab = ("ep3_s1", "ep3_s2", "lr4e-05_s1", "lr4e-05_s2")
-    assert all(by_id[r].platform == "colab" for r in colab)
+    seeds = ("ep3_s1", "ep3_s2", "lr4e-05_s1", "lr4e-05_s2")
+    assert all(by_id[r].platform == "kaggle" for r in seeds)
+    assert config["sessions"]["kaggle_6"] == [["lr4e-05_s1", "ep3_s1"], ["lr4e-05_s2", "ep3_s2"]]

@@ -156,12 +156,11 @@ sessions:
   kaggle_3: [[ep3], [b0_s2, ep1]]
   colab_1: [[base_r16]]
   kaggle_4: [[joint_ep3_s0], [joint_ep3_s1]]   # phase 2 (Milestone 5)
-  # Parity phase (docs/specs/kev_laya_parity_protocol.md): Colab one run per session (each < 1 h),
-  # Kaggle for the joint and held-out runs (measured: joint ep3 128 min; 2-epoch joint estimated 85).
-  colab_2: [[lr4e-05_s1]]
-  colab_3: [[lr4e-05_s2]]
-  colab_4: [[ep3_s1]]
-  colab_5: [[ep3_s2]]
+  # Parity phase (docs/specs/kev_laya_parity_protocol.md), all on Kaggle 2 x T4 (measured: domain
+  # 2 epochs 35 min, 3 epochs 54 min, joint ep3 128 min; 2-epoch joint estimated 85). The four
+  # domain seeds were first planned as Colab sessions colab_2..colab_5 and moved to kaggle_6
+  # (26 Nov) when a second Kaggle account became available; settings and seeds are unchanged.
+  kaggle_6: [[lr4e-05_s1, ep3_s1], [lr4e-05_s2, ep3_s2]]
   kaggle_5: [[joint_ep3_s2, heldout_joint_ep3_s0], [joint_lr4e-05_s0, joint_lr4e-05_s1, joint_lr4e-05_s2]]
 planned:
   b0_s0: kaggle
@@ -175,10 +174,10 @@ planned:
   joint_ep3_s0: kaggle
   joint_ep3_s1: kaggle
   # parity phase
-  lr4e-05_s1: colab
-  lr4e-05_s2: colab
-  ep3_s1: colab
-  ep3_s2: colab
+  lr4e-05_s1: kaggle
+  lr4e-05_s2: kaggle
+  ep3_s1: kaggle
+  ep3_s2: kaggle
   joint_ep3_s2: kaggle
   joint_lr4e-05_s0: kaggle
   joint_lr4e-05_s1: kaggle
