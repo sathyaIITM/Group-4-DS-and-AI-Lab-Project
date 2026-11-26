@@ -242,6 +242,14 @@
       "only_first": 44,
       "only_second": 13,
       "p": 0.0
+    },
+    "Cascade (Kev joint_lr4e-05_s1 to Jev) vs Jev": {
+      "only_first": 22,
+      "only_second": 8,
+      "p": 0.0161,
+      "cascade_accuracy": 0.833,
+      "kev_share": 0.667,
+      "threshold": 0.689
     }
   },
   "laya_kaggle_vs_local_agreement": {

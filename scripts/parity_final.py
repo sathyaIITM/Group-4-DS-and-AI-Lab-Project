@@ -12,6 +12,7 @@ on the items about `srs_imr_state`. Writes `outputs/reports/parity_final.json`.
 from __future__ import annotations
 
 import json
+import math
 import re
 from math import comb
 from pathlib import Path
@@ -185,6 +186,28 @@ def main() -> int:
         "Kev joint_lr4e-05_s1 vs Laya laya_joint_lr5e-05_s1": mcnemar(
             correct(served), correct(TOOL["Laya laya_joint_lr5e-05_s1"][1])
         ),
+    }
+    # Kev-to-Jev cascade on tool (threshold and temperature from decision_eval cascade, fitted on
+    # calibration): each item answered by Kev above the threshold, by Jev below it
+    casc = json.loads(
+        (ROOT / "outputs" / "reports" / "cascade_tool_joint_lr4e-05_s1.json").read_text()
+    )
+    jev_rows = {r["id"]: r for r in rows(TOOL["Jev (zero-shot)"][1])}
+    cascade_ok, jev_ok = {}, {}
+    for r in rows(served):
+        logits = [
+            math.log(max(v, 1e-12)) / casc["kev_temperature"] for v in r["probabilities"].values()
+        ]
+        top = max(logits)
+        conf = 1 / sum(math.exp(x - top) for x in logits)
+        pred = r["predicted"] if conf >= casc["threshold"] else jev_rows[r["id"]]["predicted"]
+        cascade_ok[r["id"]] = pred == r["label"]
+        jev_ok[r["id"]] = jev_rows[r["id"]]["predicted"] == r["label"]
+    tool_tests["Cascade (Kev joint_lr4e-05_s1 to Jev) vs Jev"] = {
+        **mcnemar(cascade_ok, jev_ok),
+        "cascade_accuracy": round(sum(cascade_ok.values()) / len(cascade_ok), 3),
+        "kev_share": round(casc["kev_share"], 3),
+        "threshold": round(casc["threshold"], 3),
     }
     agreement = {}
     for run, decisions in (
