@@ -533,7 +533,7 @@ Figures: [`agent_fixes.png`](figures/m5/agent_fixes.png) (v2 at the Milestone 4 
 commits, by test part) and [`agent_ladder.png`](figures/m5/agent_ladder.png) (v2, v3, v4 on 140
 items).
 
-**Clarification (review point 2; Measured).**
+**Clarification (review point 2; Measured; Milestone 5 versions: run 1; [`m5_agent_analyses.json`](../../outputs/reports/m5_agent_analyses.json), `python scripts/m5_agent_analyses.py`).**
 
 - Milestone 4 reported that the agent asked a clarifying question on 27.8% of the items whose gold
   expected one. Re-scored on the validated gold, the same three Milestone 4 runs ask on 61.1% of the
@@ -707,8 +707,8 @@ verification examples (150-200), and a check that compares each stated value wit
 code before asking the model about the reading. The test items were seen before this check was
 written, so it is reported as a first measurement for Milestone 6, not as the result of v5.
 
-**Kev confidence inside the agent (review point 6; Measured).** The domain decisions recorded in
-the first v4 test run (140 questions, each compared with the item's validated `domain` field):
+**Kev confidence inside the agent (review point 6; Measured; [`m5_agent_analyses.json`](../../outputs/reports/m5_agent_analyses.json), `python scripts/m5_agent_analyses.py`).** The domain decisions
+recorded in the first v4 test run (140 questions, each compared with the item's validated `domain` field):
 
 | Configuration | Domain accuracy | ECE | Mean confidence, correct / wrong | Escalated to Jev |
 | --- | --- | --- | --- | --- |
@@ -812,7 +812,7 @@ the same domain decision in both runs; only e2e-413 (literacy) received a differ
 model's intent, query and narration steps, not from the domain decision. The size of that variation
 matches: the two runs of v3 differ by 5.8 points. Kev's domain accuracy on these questions is 0.879
 against Jev's 0.904 over both runs, but because the domain only ranks retrieval, these errors
-rarely change the answer.
+rarely change the answer. Source: [`m5_agent_analyses.json`](../../outputs/reports/m5_agent_analyses.json), `python scripts/m5_agent_analyses.py` (`v3_against_v4`).
 
 Decision models against their baselines are in Section 6.2: fine-tuned Kev `ep3_s2` 0.975 against
 zero-shot Kev 0.783, Jev 0.970 and Laya 0.949 on `dev_human`.
@@ -1109,6 +1109,7 @@ Live runs spend cloud credit and need `--yes`.
 | Test run | `python -m analyst.evaluation.e2e_eval run --live --yes --workers 1 --version <v2/v3/v4> --set data/eval/e2e_test.v1.jsonl data/eval/e2e_test_ext.v1.jsonl --out outputs/predictions/m5_test_<v>_r1.jsonl` (and `--set data/eval/e2e_test_t1.v1.jsonl` for the T1 part) | predictions |
 | Milestone 4 baseline | the same at commit `a2c8c7d`, on `outputs/e2e_test_new80_m4fields.jsonl` (the 80 new items with the fields that commit knows) | `m5_test_v2m4_new80_r1.jsonl` |
 | Human rating | `python scripts/score_rating.py` | `outputs/reports/rating_m5.json` |
+| Clarification, domain decision inside the agent, v3 against v4 | `python scripts/m5_agent_analyses.py` | `outputs/reports/m5_agent_analyses.json` |
 | Score | `python -m analyst.evaluation.e2e_eval score --scorer <v2/v3> --predictions <runs> --gold <sets> --out <report>` | `outputs/reports/m5_test/score_*.json` |
 | Paired comparison | `python -m analyst.evaluation.e2e_eval compare --scorer <v2/v3> --a <runs> --b <runs> --gold <sets> [--only <set>] --out <report>` | `outputs/reports/m5_test/compare_*.json` |
 | Gate and cascade (domain) | `python -m analyst.evaluation.decision_eval {gate,cascade} --decision domain --kev-calibration ... --kev-dev ... --jev-dev ... --out ...` | `gate_domain_ep3_s2.json`, `cascade_domain_ep3_s2.json` |
