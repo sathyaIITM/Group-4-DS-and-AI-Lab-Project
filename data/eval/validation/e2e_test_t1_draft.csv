@@ -1,0 +1,5 @@
+id,field,gold,proposed,rule,note,confidence,decision,decided_by
+e2e-413,domain,"""health""","""other""","Guide 1.1 M1, M6","Literacy is education, outside the five domains; same decision as e2e-113 (26 Nov)",high,accept,Sathya Prakash (T3)
+e2e-428,clarify_options,null,"[""persons aged 15""]","E9c (rule gap RG-7, decided 26 Nov)",The table's only group is offered as the single option (E9c),high,accept,Sathya Prakash (T3)
+e2e-432,clarify_options,null,"[""urban""]","E9c (rule gap RG-7, decided 26 Nov)",The table's only group is offered as the single option (E9c),high,accept,Sathya Prakash (T3)
+_summary,,,,,"1 proposed change on 40 items; 1 rule gap (RG-7, e2e-428 and e2e-432)",,,

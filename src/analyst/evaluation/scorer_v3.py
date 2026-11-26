@@ -20,7 +20,7 @@ plan and evidence fields: `computable` is then False and the case cannot be scor
 | unit | answer with a unit | the narration names the unit or a word for it |
 | period | answer with periods | the narration names each period (a series: first, last) |
 | evidence | answer | the evidence names a gold table, its source and the SQL |
-| clarify_slot | clarify | asks for `clarify_slot`, more than one option, `clarify_options` |
+| clarify_slot | clarify | asks for `clarify_slot`, real options, `clarify_options` (E9c: one) |
 | content | describe, search | the gold tables are named or retrieved (scorer v2 rule) |
 
 Interpretation, corrected on 26 November 2026 after the first Milestone 5 test run of v2 showed
@@ -240,9 +240,11 @@ def check_clarify_slot(case: dict[str, Any]) -> bool | None:
     if gold not in (case.get("clarify_slots_asked") or []):
         return False
     options = [_norm(o) for o in case.get("clarify_options_asked") or []]
-    if len(options) == 1:
-        return False  # one option is an assumption, not a question (rule D10)
     wanted = [_norm(o) for o in case.get("clarify_options") or []]
+    if len(options) == 1 and len(wanted) != 1:
+        # One option is an assumption, not a question (rule D10), except where the gold names
+        # the table's only group (rule E9c, decided 26 November 2026).
+        return False
     return all(any(w in o or o in w for o in options) for w in wanted)
 
 

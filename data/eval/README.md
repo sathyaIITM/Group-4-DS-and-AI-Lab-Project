@@ -235,6 +235,7 @@ found six cases no rule above decided. Each was settled once, as a general rule,
 | E9b | When the measure exists only for sub-groups and the question names none, the action is `clarify`, slot `category`, with the published groups as options; groups are never summed or averaged. E5 applies only when no group-level figure exists | RG-4 |
 | E2a | When several tables hold the measure and the question names no source, the gold uses the table built for the measure (SRS vital statistics for infant mortality), and the answer states the source | RG-5 (option A) |
 | V7 | A ranking of commodities counts each commodity once, at its highest-valued variety, and the answer names the variety; a ranking of varieties is asked as such | RG-6 |
+| E9c | When the table has one group only (persons aged 15 and above; urban persons), an E9 item is still `clarify`, slot `category`, and names that group as the single option; the one-option test of D10 does not apply. Decided by Sathya Prakash (T3) when validating the T1 blind items | RG-7 |
 
 ### How to use this section when validating
 
@@ -269,6 +270,13 @@ items disputed in Milestone 4 were settled by rule: e2e-008 (E10), e2e-013 (E9) 
 (S1) keep their gold; e2e-031 as above. The hand-filled fields `domain`, `clarify_slot` and
 `clarify_options` were drafted from labelling guide 1.1 and decided the same way (e2e-089 set to
 `multiple`, M7).
+
+A third test part, `e2e_test_t1` (40 items, `e2e-401` to `e2e-440`), was written blind by Shaoni
+Samanta (T1) on 26 November, without access to the agent code or the other new items, and added
+the same day. It was validated by Sathya Prakash (T3), not its author, with the same three-way
+check (`data/eval/validation/alignment_test_t1.csv`): 35 items aligned, one gold change
+(e2e-413, domain `other` for literacy, M1/M6) and one rule gap (RG-7, rule E9c above, which sets
+the single option of e2e-428 and e2e-432).
 
 
 T1 reviews every item against the publisher's table or the source page, and in particular the

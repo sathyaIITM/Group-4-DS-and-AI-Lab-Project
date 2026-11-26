@@ -25,6 +25,10 @@ sets:
     path: data/eval/e2e_test_ext.v1.jsonl
     sha256: f9444f860c23fd23de113dc5c0610361e41c6720c46fdff7170aaa4d5a2a1803
     size: 40
+  test_t1:
+    path: data/eval/e2e_test_t1.v1.jsonl
+    sha256: fdd75a0bd32c0a9f3f610040f1457fb420df55a7ecc5b4c30cc182d5ceee5eee
+    size: 40
 # Split membership is frozen as made on 2026-11-17 (seed 0). On 2026-11-18 two labels changed
 # (e2e-079 in dev, e2e-092 in test: decline -> answer, value not published); the three files were
 # edited in place. They are not regenerated with `e2e_eval split`, because re-stratifying on the

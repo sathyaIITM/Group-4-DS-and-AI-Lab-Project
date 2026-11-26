@@ -162,6 +162,21 @@ def test_range_planned_as_end_points_needs_every_value_in_the_result() -> None:
     assert not scorer_v3._periods_match(outside, match)
 
 
+def test_one_option_question_passes_only_for_a_single_gold_group() -> None:
+    case = {
+        "expected_action": "clarify",
+        "outcome": "clarifying",
+        "clarify_slot": "category",
+        "clarify_slots_asked": ["category"],
+        "clarify_options_asked": ["Unemployment rate, usual status (ps+ss), persons aged 15+"],
+        "clarify_options": ["persons aged 15"],
+    }
+    assert scorer_v3.check_clarify_slot(case)  # E9c: the table's only group
+    assert not scorer_v3.check_clarify_slot({**case, "clarify_options": None})  # D10
+    two = ["Aurangabad (Bihar)", "Aurangabad (Maharashtra)"]
+    assert not scorer_v3.check_clarify_slot({**case, "clarify_options": two})
+
+
 def test_period_names() -> None:
     assert "2019-20" in scorer_v3.period_names("2019-07-01", "2020-06-30")
     assert "march 2021" in scorer_v3.period_names("2021-03-01", "2021-03-31")
