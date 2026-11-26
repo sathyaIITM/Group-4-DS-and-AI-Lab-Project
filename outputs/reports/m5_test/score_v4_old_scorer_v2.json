@@ -1,0 +1,172 @@
+{
+  "repeats": 1,
+  "runs": [
+    {
+      "path": "outputs/reports/m5_test/split_m5_test_v4_r1_old.jsonl",
+      "n": 60,
+      "success_rate": 0.7833333333333333,
+      "success_ci95": [
+        0.6833333333333333,
+        0.8833333333333333
+      ],
+      "execution_accuracy": 0.675,
+      "abstention_precision": 0.7647058823529411,
+      "abstention_recall": 1.0,
+      "wrong_answer_rate": 0.09090909090909091,
+      "outcome_counts": {
+        "answered": 33,
+        "declined": 10,
+        "clarifying": 5,
+        "described": 4,
+        "failed": 3,
+        "abstained": 2,
+        "searched": 3
+      },
+      "failure_rate": 0.05,
+      "failure_causes": {
+        "result_check_failed": 3
+      },
+      "latency_ms": {
+        "p50": 12203.5,
+        "p95": 23855.9,
+        "max": 31412.0
+      },
+      "first_event_ms": {
+        "p50": 29.0,
+        "p95": 34.0,
+        "max": 130.0
+      },
+      "calls_per_answered": 5.393939393939394,
+      "tokens_in": 2469158,
+      "tokens_out": 34707,
+      "cost_usd_est": 0.80327723,
+      "cost_per_answered_usd_est": 0.02434173424242424,
+      "sql_repairs": 6,
+      "sql_attempts": 142,
+      "narration_retries": 2,
+      "widened_searches": 1,
+      "sql_repairs_per_run": 0.1,
+      "narration_retries_per_run": 0.03333333333333333,
+      "widened_searches_per_run": 0.016666666666666666,
+      "review_cases": [
+        {
+          "id": "e2e-006",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-008",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-013",
+          "expected": "clarify",
+          "outcome": "declined",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-015",
+          "expected": "answer",
+          "outcome": "clarifying",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-035",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-037",
+          "expected": "answer",
+          "outcome": "abstained",
+          "values_match": true,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-041",
+          "expected": "answer",
+          "outcome": "declined",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-044",
+          "expected": "clarify",
+          "outcome": "clarifying",
+          "values_match": true,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-055",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-056",
+          "expected": "answer",
+          "outcome": "failed",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-070",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": false,
+          "entity_match": false
+        },
+        {
+          "id": "e2e-076",
+          "expected": "answer",
+          "outcome": "answered",
+          "values_match": false,
+          "narration_match": true,
+          "entity_match": true
+        },
+        {
+          "id": "e2e-099",
+          "expected": "answer",
+          "outcome": "abstained",
+          "values_match": true,
+          "narration_match": false,
+          "entity_match": true
+        }
+      ]
+    }
+  ],
+  "success_rate_mean": 0.7833333333333333,
+  "success_rate_min": 0.7833333333333333,
+  "success_rate_max": 0.7833333333333333,
+  "success_rate_range": 0.0,
+  "items_compared": 60,
+  "items_changed_correctness": [],
+  "run_to_run_instability": 0.0,
+  "scorer_rules": "v2",
+  "gold": [
+    "data/eval/e2e_test.v1.jsonl"
+  ],
+  "experiment": null,
+  "scored_at": "2026-11-26T13:04:45.479401+00:00"
+}

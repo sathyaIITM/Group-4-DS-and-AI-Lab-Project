@@ -1,6 +1,8 @@
 # Labelling guide for the Kev decisions: tool selection and domain
 
-Version 1.0 (2026-11-17). Status: **frozen for Milestone 4.** The decisions of Section 7 and
+Version 1.1-draft (2026-11-25): version 1.0 plus the clarifications K1-K15 of Section 2.5 and
+the coverage table of Appendix A; no rule and no question text changed. Version 1.0
+(2026-11-17), below, was **frozen for Milestone 4.** The decisions of Section 7 and
 the rules of Section 2.4 are confirmed. The planned two-person agreement check on 50 borderline
 items was not run separately: the `dev_human` set takes its place, since each of its 200 items
 is labelled by hand by two members against this version and Cohen's kappa is reported per
@@ -101,6 +103,38 @@ is absent, a clarifying question cannot lead to an answer.
 | C11 | A chart edit that requires an analysis R16 rules out (overlay unemployment on a rainfall chart) | R16 `decline_not_covered` before any chart action. |
 | C12 | A coding or creative request in Hindi, Hinglish or English that names statistics ("write Python to compute unemployment percentages", "a funny caption on rain and jobs") | R1; the requested action decides, not the topic words. |
 
+### 2.5 Clarifications in version 1.1 (draft, 2026-11-25)
+
+The 198 labelled items of `dev_human` v1 agree on the tool at Cohen's kappa 0.70, below the target
+of 0.80. The 50 tool disagreements fall into the groups below. Each clarification restates how
+the rules of Sections 2.1-2.4 and 4 already decide the case, adds a positive example, a near miss
+and a tie-break, and changes no rule. The final labels of the adjudicated disagreements are the
+examples. The routing training data (generated under rules R1-R17) needs no regeneration; a
+conflict found later is recorded in Section 8 and left for the next data version.
+
+| Id | Disagreement (items) | Clarification | Positive | Near miss and its label | Tie-break |
+| --- | --- | --- | --- | --- | --- |
+| K1 | `run_sql` vs `decline_not_covered` (17) | Coverage is read from the catalogue lines shown, never from memory: the measure must be one of the table's indicators (R7), the period inside its range (R8) and the place at a level it holds (R9). Appendix A lists the range and levels of every published table | "Unemployment rate in Kerala in 2023-24" -> R8 `decline_not_covered` (the table ends 2021-22) | "Maharashtra per capita GSDP 2020-21" -> R6 `run_sql` (inside 2019-20 to 2023-24) | Check measure, then period, then level, against Appendix A; the first that fails decides (R7, R8, R9) |
+| K2 | "latest", "current", "now" against R8 (part of K1) | A request for the latest or current value of a published statistic is D1 (latest period the table holds), stated in the answer. R8 covers forecasts and real-time conditions only | "CPI general index, urban, for the latest month" -> R6 `run_sql` with D1 | "Will it rain today?" -> R8 `decline_not_covered` | A published statistic: D1. Weather, events or prices of today or later: R8 |
+| K3 | Two figures in one message (part of K1) | Independent figures from different tables are answered (C4); a joint analysis (compare, overlay, correlate) across tables whose periods do not overlap is declined (R16) | "Wheat MSP for 2022-23 and the CPI cereals index for March 2023" -> R6 `run_sql` | "Compare the wheat MSP with mandi wheat prices in 2020" -> R16 `decline_not_covered` (the Mandi table is one day in 2026) | Is a single combined answer requested? Yes: check R16. No: C4 |
+| K4 | `ask_clarification` vs `decline_not_covered` (7) | A message that asks for a figure, a comparison or a ranking but names no measure is a data request: R10 `ask_clarification`, domain `unspecified` (M8). R1 applies only when no figure is requested at all | "numbers for Bihar pls", "Which state is the best?" -> R10 | "Thanks, that helps" -> R1 `decline_not_covered` | Does the message ask for any number, comparison or ranking? Yes: never R1 |
+| K5 | `ask_clarification` vs `run_sql` (9) | Before R10, check in order: a named group or definition the table lacks (R12), an explicit year boundary the table cannot rebuild (R14), an undated event (C7). Then apply the defaults of Section 4; R10 only if a required detail is still missing. D2 (All India) applies only to tables with a national row (Appendix A); IMD sub-division, Mandi and district tables have none | "unemployment rate in 2019" -> R6 `run_sql` (D2, D7) | "Rainfall figures for the 1999 monsoon?" -> R10 (no place; no national row); "Female unemployment in UP in 2018-19" -> R12 | Named group or definition absent: R12. Explicit FY or Jan-Dec on PLFS: R14. Event without date: C7. Else a default, else R10 |
+| K6 | `search_catalog` vs `decline_not_covered` (4) | The form of the message decides: asking whether data exists, or asking about a table (its years, columns, source), is never R7. Within the five domains or a shown table: R2, R15 or R3; a table outside the five domains that is not shown: R15 decline | "Kya aapke paas literacy ka data hai?" -> R2 `search_catalog` | "Literacy rate of Bihar in 2011?" -> R7 `decline_not_covered` | A question about data or tables: R2, R3 or R15. A request for the figure: R7 |
+| K7 | `ask_clarification` vs `search_catalog`, no result present (4) | With no earlier result, a question about "this" or "that" figure's source or method is R17's fallback: `search_catalog`, domain `unspecified`. A request for a new figure that refers to "that" ("Can you repeat that for Jharkhand?") is a data request with no measure: R10 | "what's the source for that figure?" (no result) -> `search_catalog` | "And the national figure?" (no result) -> R10 `ask_clarification` | No result and the message asks about provenance or method: search. Asks for a figure: R10 |
+| K8 | Chart requests with a result present (4) | An annotation computable from the rows of the result is R4. A new series or measure is R13; if the periods do not overlap, R16 (C11). A criterion the user has not defined ("best", "important") is R10 | "chart these two together" (both series in the result) -> R4 `make_chart` | "Overlay unemployment on this chart" (rainfall result) -> R16; "Highlight the best one" -> R10 | Rows already in the result and a defined criterion: R4 |
+| K9 | A place name that is not a level of the table (1) | A city on a district table: the district(s) that carry its name. One district: R6 with the mapping stated (D6). Several ("Bangalore": Bangalore Urban, Bangalore Rural): R10, offering them | "Normal rainfall for Bangalore?" -> R10 | "Normal rainfall for Pune district?" -> R6 | Count the matching districts in the table: one R6, several R10, none R9 |
+| K10 | Metadata plus a figure, provenance with a shown table (3) | C1 applies: the highest-precedence intent decides (R3 before R6). A question whether a shown table covers a place or year is R3. With a result present, a question about the sources of its numbers is R17 | "What's the unit in the IMR table, and what was Punjab's IMR in 2016?" -> R3 `describe_table` | "Which sources are these two numbers from?" (result present) -> R17 `explain_result` | Result present and the question is about the result: R17. Else a named shown table: R3 |
+| K11 | Follow-up "the same for X" with a result (1) | A follow-up that needs another place, period or measure is R13 `run_sql`, even when the earlier result was a chart | "Now do the same for Tamil Nadu" -> R13 `run_sql` | "Make it a bar chart" -> R4 | New rows needed: R13 |
+
+Proposals carried from the Milestone 4 data review (D3, 2026-11-17), stated here as clarifications:
+
+| Id | Case | Label |
+| --- | --- | --- |
+| K12 | A district rainfall figure for a given year (the district table holds 1951-2000 normals only) | R9 `decline_not_covered`; a question about the normal rainfall of a district is R6 |
+| K13 | A bare "Inflation" with `cpi_all_india` shown | R6 `run_sql` with defaults: latest month, combined (Rural+Urban) general index, year-on-year change computed from the index, stated. A request for an index value alone is R6 on the index |
+| K14 | Labour force participation with no area or status named (the table holds urban areas, current weekly status) | R6 `run_sql`; the answer states the table's population and status (as D3, D4). A named group the table lacks (rural, youth) is R12 |
+| K15 | Out-of-pocket spending | Childbirth in a public facility (NFHS indicator) is covered: R6, domain `health`. Hospitalisation or general health spending is not: R7, domain `health` |
+
 ## 3. Domain rules
 
 | Rule | Condition | Label |
@@ -191,7 +225,9 @@ to `decline_not_covered` ("Search for datasets about wages.") stay `search_catal
 ## 6. Labelling procedure
 
 1. Read the catalogue lines and context first, then the message.
-2. Walk the precedence in Section 2.2; record the first rule that applies.
+2. Walk the precedence in Section 2.2; record the first rule that applies. For R7, R8 and R9,
+   check the measure, the period and the place level against Appendix A, not from memory (K1).
+   Before R10, check R12, R14, C7 and the defaults of Section 4 (K5).
 3. Record the domain rule from Section 3.
 4. If no rule decides the item, or two rules apply with no tie-break, label it `undecided` with
    a one-line note. Undecided items become guide questions, not guesses.
@@ -220,6 +256,7 @@ made by T3 (acting for T1 on model-tuning data).
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 1.1-draft | 2026-11-25 | Section 2.5: clarifications K1-K11 from the 50 tool disagreements of `dev_human` v1 (kappa 0.70), each with the adjudicated label as its example, and K12-K15 from the four Milestone 4 proposals; Section 6 coverage and pre-R10 checks; Appendix A coverage table of the 14 published tables. No rule or question text changed, so `GUIDE_VERSION` in `kev_questions.py` and the routing data are unchanged. Used to re-adjudicate the 50 tool disagreements (`dev_human` v1.1) |
 | 1.0-draft | 2026-10-23 | First draft from the six tool definitions in `src/analyst/decisions/routing.py`, the curation plan (Sections 4.1-4.3) and the 16 flagged week-1 items. |
 | 1.0 | 2026-11-17 | Frozen for Milestone 4: Section 2.4 (C1-C12) confirmed; Section 7 complete. The separate 50-item agreement check is replaced by the two-labeller `dev_human` set and its kappa per decision. `GUIDE_VERSION` set to `1.0`. |
 | 1.0-draft.6 | 2026-11-12 | Decisions of 2026-11-05 applied: seventh tool option `explain_result` (R17, precedence after R15, example row, M4 extended); Mandi and other market prices are `prices_economy`, MSP and crop production are `agriculture`; `other` with a shown table follows the ordinary rules (R15, H9); the state's catalogue is the top-4 candidates. `GUIDE_VERSION` in `kev_questions.py` set to `1.0-draft.6`. Domain option text unchanged, so the v1 domain splits remain valid. |
@@ -227,3 +264,26 @@ made by T3 (acting for T1 on model-tuning data).
 | 1.0-draft.4 | 2026-10-23 | H2 decided: `unspecified` domain (M8). All open questions settled; the guide awaits the 50-item agreement check before the v1.0 freeze. |
 | 1.0-draft.3 | 2026-10-23 | H3, H5, H6 and H11b decided; `multiple` domain (M7) added; R9, R11 and R12 revised; R14-R16 added; precedence updated; H2 tool decided, domain label pending. |
 | 1.0-draft.2 | 2026-10-23 | H1, H4, H7, H8, H9, H10 and H11 decided; D6 extended, D7 and D8 added; R1 and R8 examples for non-data and real-time weather messages; H11b opened; week-1 table updated. |
+
+## Appendix A. Coverage of the published tables (catalogue of 2026-11-17)
+
+From `data/processed/catalogue.json`. "National row" means the table holds an All India row
+besides its States (D2); a table that is itself national (CPI, MSP, NCRB annual) answers All
+India questions directly.
+
+| Table | Measure | Domain | Levels | National row | Coverage | Period type |
+| --- | --- | --- | --- | --- | --- | --- |
+| `cpi_all_india` | Consumer Price Index (base 2012 = 100), rural, urban and combined | prices_economy | national | table is national | Jan 2013 to Dec 2023 (April 2019 missing) | month |
+| `crop_production_district` | Crop area and production by district, season and crop year | agriculture | district | no | 1997-98 to 2015-16 | crop year |
+| `gsdp_per_capita_state` | Per capita GSDP (rupees), current prices, 28 States | prices_economy | state | no | 2019-20 to 2023-24 | fiscal year |
+| `imd_district_rainfall_normals` | Normal rainfall (mm) by district, average of 1951-2000 | rainfall | district | no | normals only (no yearly values) | 1951-2000 average |
+| `imd_subdivision_monthly_rainfall` | Rainfall (mm) by month, season and year, 36 sub-divisions | rainfall | sub-division | no | 1901 to 2017 | calendar year, month, season |
+| `mandi_daily_prices` | Mandi minimum, maximum and modal prices (INR per quintal) | prices_economy | market | no | one day: 29 Oct 2026 | date |
+| `msp_crops` | Minimum support prices (INR per quintal), 24 crops | agriculture | national | table is national | 2013-14 to 2024-25 | crop year |
+| `ncrb_annual_crime_statistics` | National crime incidence and rates | other | national | table is national | 2022 to 2024 | calendar year |
+| `ncrb_violent_crimes_state` | Violent crimes (incidence) by State/UT | other | national, state | yes | 2021 to 2023 | calendar year |
+| `nfhs5_district_indicators` | NFHS-5 district indicators | health | district | no | 2019-21 (one round) | survey round |
+| `nfhs5_state_factsheet` | NFHS-5 State/UT indicators, total, urban and rural | health | national, state | yes | 2019-21 (one round) | survey round |
+| `plfs_lfpr_urban_state` | Labour force participation rate (%), current weekly status, urban areas | labour | national, state | yes | 2023-24 (July-June) | survey round |
+| `plfs_state_ur_usual_status` | Unemployment rate (%), usual status (ps+ss), persons 15+ | labour | national, state | yes | 2017-18 to 2021-22 (July-June) | survey year |
+| `srs_imr_state` | Infant mortality rate (per 1,000 live births), SRS | health | national, state | yes | 2015 to 2019 | calendar year |

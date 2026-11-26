@@ -1,0 +1,111 @@
+{
+  "run_id": "heldout_joint_ep3_s0",
+  "platform": "kaggle",
+  "session": "kaggle_5",
+  "gpu": "Tesla T4, 15360 MiB, 580.178.04",
+  "gpu_index": 0,
+  "parallel_queues": 2,
+  "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+  "uv_lock_sha256": "a9922dbb89acdef78299fd2b4a8c3f7f0fa1b2bc08b55595b6926fa785a9c466",
+  "python": "3.13.16",
+  "torch": "2.8.0+cu128",
+  "cuda": "12.8",
+  "transformers": "5.17.0",
+  "peft": "0.21.0",
+  "cuda_devices": 2,
+  "device_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "os": "Linux-6.18.55+-x86_64-with-glibc2.39",
+  "data_repo_path": "data/splits/kev/phase2_split/train_heldout_srs_imr_state.v2.jsonl",
+  "data_sha256": "ba57c49b538eab573bbc96a45407584301f7d33455e86972dcf14acd56a7ef71",
+  "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+  "plan_meta": {
+    "created_utc": "2026-11-24T14:00:58+00:00",
+    "train_yaml_sha256": "8b4c50e8aaf99fdedb01a887a4e656a95859fc592ab83b870cf95099c34eb534",
+    "repo_commit": "3833177784620d444d4f247472bce80334cb1e9d",
+    "repo_dirty": false,
+    "kev_commit": "2074cc44256200bb37540103fa4572901faa10f3",
+    "init_from": "jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f",
+    "data_sha256": {
+      "calibration": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+      "dev_synthetic": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17"
+    },
+    "sessions": {
+      "kaggle_1": [
+        [
+          "b0_s0"
+        ],
+        [
+          "lr1e-05"
+        ]
+      ],
+      "kaggle_2": [
+        [
+          "lr4e-05"
+        ],
+        [
+          "b0_s1"
+        ]
+      ],
+      "kaggle_3": [
+        [
+          "ep3"
+        ],
+        [
+          "b0_s2",
+          "ep1"
+        ]
+      ],
+      "colab_1": [
+        [
+          "base_r16"
+        ]
+      ],
+      "kaggle_4": [
+        [
+          "joint_ep3_s0"
+        ],
+        [
+          "joint_ep3_s1"
+        ]
+      ],
+      "colab_2": [
+        [
+          "lr4e-05_s1"
+        ]
+      ],
+      "colab_3": [
+        [
+          "lr4e-05_s2"
+        ]
+      ],
+      "colab_4": [
+        [
+          "ep3_s1"
+        ]
+      ],
+      "colab_5": [
+        [
+          "ep3_s2"
+        ]
+      ],
+      "kaggle_5": [
+        [
+          "joint_ep3_s2",
+          "heldout_joint_ep3_s0"
+        ],
+        [
+          "joint_lr4e-05_s0",
+          "joint_lr4e-05_s1",
+          "joint_lr4e-05_s2"
+        ]
+      ]
+    }
+  },
+  "command": "/tmp/kev_work/kev/.venv/bin/python -m kev.train --data /kaggle/input/datasets/<kaggle-user>/group4-kev-m5/kev_phase2_train_heldout_srs_imr_state.v2.jsonl --base Qwen/Qwen3.5-0.8B-Base --base_revision dc7cdfe2ee4154fa7e30f5b51ca41bfa40174e68 --init_from jaredpalmer/kev-0.8b@bf75a6a8848ea6960ff2ed108d9ed44c2941174f --lr 2e-05 --epochs 3 --batch 1 --accum 8 --lora 16 --lora_targets all --dtype fp32 --weights_dtype fp32 --max_state 384 --p_none 0 --p_none_distract 0.12 --p_distract 0.15 --seed 0 --device cuda --out /tmp/kev_work/kev/runs/heldout_joint_ep3_s0",
+  "started_utc": "2026-11-24T20:51:16+00:00",
+  "ended_utc": "2026-11-24T22:43:17+00:00",
+  "exit_code": 0
+}

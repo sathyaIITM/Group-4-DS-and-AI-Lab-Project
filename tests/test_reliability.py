@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -234,6 +235,10 @@ def test_a_value_copied_from_another_column_is_not_a_filter(
     assert unknown == {}
 
 
+@pytest.mark.skipif(
+    not list((Path(__file__).resolve().parents[1] / "data" / "processed").glob("obs_*.parquet")),
+    reason="named tables are recognised from the published tables (data/processed, git-ignored)",
+)
 def test_scorer_v2_finds_a_place_and_category_entity_and_named_tables(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

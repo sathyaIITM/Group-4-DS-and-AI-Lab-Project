@@ -1,0 +1,66 @@
+{
+  "domain": {
+    "settings": {
+      "b0": {
+        "seed_nll": [
+          0.03507,
+          0.03705,
+          0.05253
+        ],
+        "mean_nll": 0.04155,
+        "range": 0.01746,
+        "mean_macro_f1": 0.9857
+      },
+      "ep3": {
+        "seed_nll": [
+          0.02371,
+          0.02374,
+          0.01866
+        ],
+        "mean_nll": 0.02203,
+        "range": 0.00507,
+        "mean_macro_f1": 0.9939
+      },
+      "lr4e-05": {
+        "seed_nll": [
+          0.02517,
+          0.02092,
+          0.02444
+        ],
+        "mean_nll": 0.02351,
+        "range": 0.00425,
+        "mean_macro_f1": 0.9909
+      }
+    },
+    "chosen": "ep3",
+    "served_seed_index": 2
+  },
+  "joint": {
+    "settings": {
+      "ep3": {
+        "seed_nll": [
+          0.21199,
+          0.20129,
+          0.19926
+        ],
+        "mean_nll": 0.20418,
+        "range": 0.01272,
+        "mean_macro_f1": 0.9492
+      },
+      "lr4e-05": {
+        "seed_nll": [
+          0.17464,
+          0.17428,
+          0.2158
+        ],
+        "mean_nll": 0.18824,
+        "range": 0.04152,
+        "mean_macro_f1": 0.9571
+      }
+    },
+    "chosen": "lr4e-05",
+    "served_seed_index": 1
+  },
+  "model": "kev",
+  "stage": "finals"
+}

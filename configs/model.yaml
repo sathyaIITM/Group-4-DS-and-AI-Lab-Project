@@ -29,6 +29,7 @@ hosted_llm:
     route: 300
     decline: 800              # 2026-11-19: thinking used about 290 tokens even at minimal
     describe: 1200            # 2026-11-19: a 300 cap cut the reply after the thinking
+    reflect: 6000             # GEPA reflection (v3 prompt optimisation): a full new instruction
   # Reasoning ("thinking") per call purpose, sent as reasoning_effort (maps to thinking_level
   # on Gemini 3). Starting values, to be tuned on e2e_dev. Thinking tokens are billed as output.
   thinking:
@@ -41,6 +42,7 @@ hosted_llm:
       clarify: minimal
       decline: minimal
       describe: minimal
+      reflect: low              # GEPA reflection, on the large tier
     on_regenerate:              # a query regenerated after a failed result check
       sql: low                  # medium until 19 Nov: about 10 s against a 12 s timeout
     # Tokens added to the purpose's output cap for each level (option (a), 2026-11-17). On a
@@ -82,9 +84,21 @@ hosted_llm:
 kev:
   model: jaredpalmer/kev-0.8b
   revision: bf75a6a8848ea6960ff2ed108d9ed44c2941174f
-  checkpoint: null             # fine-tuned run id from models/registry.json, once the gate is run
-  temperature: null            # fitted on the calibration split; null serves raw probabilities
+  # Milestone 5 (26 Nov 2026): ep3_s2, seed 2 of the ep3 recipe selected in Milestone 4. Chosen
+  # by the fixed rule of configs/train.yaml (lowest dev_synthetic NLL after temperature: 0.0187,
+  # against 0.0237 for seeds 0 and 1) and gated on dev_human (outputs/reports/gate_domain_ep3_s2.json:
+  # 0.975 against Jev 0.970, ECE 0.024). Served with scripts/serve_kev.sh
+  # models/checkpoints/ep3_s2. Phase 1: the adapter is trained on the domain decision only.
+  checkpoint: ep3_s2
+  # One temperature per decision, fitted on the calibration split by NLL; null serves raw
+  # probabilities. Domain: outputs/reports/cascade_domain_ep3_s2.json (kev_temperature). Tool:
+  # set only if the phase 2 joint checkpoint passes the tool gate (configs/inference.yaml).
+  temperature:
+    domain: 3.652152156668675
+    tool: null
   serve:
+    model: kev-latest          # model name the Kev server answers to
+    default_base_url: http://127.0.0.1:8009
     base_url_env: KEV_BASE_URL
     api_key_env: KEV_API_KEY
     dtype: fp32
@@ -100,3 +114,11 @@ embedding:
   model: BAAI/bge-small-en-v1.5
   revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
   dim: 384
+
+# Prompt pins per agent version (Milestone 5). A version listed here uses the given versioned
+# prompt for a prompt id; other ids, and every version not listed, use the highest version in
+# configs/prompts/. v3 pins the intent prompt chosen by GEPA (scripts/optimise_prompts.py) once
+# it is reviewed; v4 adds Kev on top of v3, so it carries the same pins.
+prompt_pins:
+  v3: {intent: intent_gepa.v1}   # GEPA run of 26 Nov 2026, outputs/reports/gepa_v3.json (val 0.812 -> 0.899)
+  v4: {intent: intent_gepa.v1}

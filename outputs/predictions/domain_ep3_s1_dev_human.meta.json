@@ -1,0 +1,14 @@
+{
+  "run_id": "ep3_s1",
+  "checkpoint": "models/checkpoints/ep3_s1",
+  "weights_sha256": {
+    "adapter_model.safetensors": "34471afe12f5d9ffeb257df9b218502465c573a20211486e3d0d9144d5373988",
+    "head.pt": "f956b667872706021b019b8f63929ba8adaf4fc8df8ce085014d10e5e7f8011f",
+    "adapter_config.json": "bf2b12502ed0f214802ed21cc45e7820e1a551c9f387be806eec657bc6297fbf"
+  },
+  "data": "data/splits/kev_domain/dev_human.v1.jsonl",
+  "data_sha256": "2479f6026cdb1dd08de07199ceec0be4e32c39490415c672ecdd2caa56472f9a",
+  "predictions_sha256": "3476b20a76077855951af9ab1679a682ec41b5451a5b1656b6d0279df3ca01a3",
+  "device": "mps",
+  "created_utc": "2026-11-26T10:05:27+00:00"
+}

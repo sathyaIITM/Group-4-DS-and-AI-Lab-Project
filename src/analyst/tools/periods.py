@@ -56,6 +56,37 @@ def to_agri_year(year: int) -> PeriodWindow:
     return _window("agri_year", year, 7, str(year))
 
 
+# Words that ask for the latest published period (rule sheet D1b; guide D1): never a decline or
+# a period question. "today" on a statistical table means the latest period; today's weather
+# itself (real-time conditions) is declined by the rainfall exception in the tool nodes.
+_NOW_PHRASES = (
+    "right now", "now", "currently", "current", "latest", "the latest", "most recent",
+    "the most recent", "these days", "at present", "presently", "nowadays", "today",
+    "as of now", "at the moment",
+)  # fmt: skip
+_NOW_MENTION = re.compile(r"^(?:" + "|".join(re.escape(p) for p in _NOW_PHRASES) + r")[?.!]?$")
+_NOW_IN_TEXT = re.compile(
+    r"\b(?:right now|currently|these days|at present|presently|nowadays|latest|most recent|"
+    r"as of now|at the moment|today|now)\b"
+)
+
+
+def is_now_mention(mention: str) -> bool:
+    """True for a period mention that only asks for the latest period ("right now", "latest")."""
+    return bool(_NOW_MENTION.match(mention.strip().casefold()))
+
+
+def asks_for_now(text: str) -> bool:
+    """True when a message asks for the current or latest value ("... right now?")."""
+    return now_phrase(text) is not None
+
+
+def now_phrase(text: str) -> str | None:
+    """The words of a message that ask for the latest value ("right now"), if any."""
+    found = _NOW_IN_TEXT.search(text.casefold())
+    return found.group(0) if found else None
+
+
 def latest_complete_period(dataset_id: str, period_type: str, db: Any) -> PeriodWindow:
     """Read the period with the greatest end date from a published observation table."""
     if not re.fullmatch(r"[a-z][a-z0-9_]*", dataset_id):

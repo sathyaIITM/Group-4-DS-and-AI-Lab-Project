@@ -1,0 +1,14 @@
+{
+  "method": "character 5-gram Jaccard after normalisation (kev_checks.normalise)",
+  "threshold": 0.8,
+  "items": 80,
+  "reference_messages": {
+    "data/splits/kev/train.v2.jsonl": 1876,
+    "data/splits/kev/calibration.v2.jsonl": 322,
+    "data/splits/kev/dev_synthetic.v2.jsonl": 355,
+    "data/eval/e2e_v1.jsonl": 100,
+    "data/eval/e2e_dev_extra.v1.jsonl": 20,
+    "data/labels/dev_human_v1/items.jsonl": 200
+  },
+  "flagged": []
+}

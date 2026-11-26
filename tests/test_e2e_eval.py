@@ -141,3 +141,30 @@ def test_score_repeats_reports_correctness_instability(tmp_path) -> None:
     report = score_repeats([first, second])
     assert report["items_changed_correctness"] == ["e2e-001"]
     assert report["run_to_run_instability"] == 1.0
+
+
+def test_decision_record_restores_raw_probabilities() -> None:
+    from analyst.contracts.decisions import DecisionRecord
+    from analyst.decisions.router import scale
+    from analyst.evaluation.e2e_eval import _decision_record
+
+    raw = {"labour": 0.9, "health": 0.06, "other": 0.04}
+    record = DecisionRecord(
+        decision="domain",
+        backend="kev",
+        model_revision="ep3",
+        label="labour",
+        probabilities=scale(raw, 3.0),
+        calibrated=True,
+        temperature=3.0,
+        escalated=False,
+        fallback=False,
+        latency_ms=500,
+        cost_usd=None,
+    )
+    row = _decision_record(record)
+    assert row["backend"] == "kev" and row["temperature"] == 3.0
+    for label, value in raw.items():
+        assert abs(row["raw_probabilities"][label] - value) < 1e-9
+    jev = record.model_copy(update={"backend": "jev", "calibrated": False, "temperature": None})
+    assert _decision_record(jev)["raw_probabilities"] == jev.probabilities

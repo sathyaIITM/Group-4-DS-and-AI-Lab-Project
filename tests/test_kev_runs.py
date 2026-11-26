@@ -14,7 +14,8 @@ def test_plan_follows_the_flag_constraints() -> None:
     runs = kev_runs.plan(config, include_all=True)
     ids = [r.run_id for r in runs]
     assert ids[0] == "b0_s0"
-    assert len(ids) == 13
+    assert len(ids) == 24  # 13 of the Milestone 4 sweep, 3 phase 2 runs, 8 parity runs
+    assert {"ep3_s1", "lr4e-05_s2", "joint_lr4e-05_s0", "heldout_joint_ep3_s0"} <= set(ids)
     assert {"lr1e-05", "lr4e-05", "ep1", "ep3", "n250", "n500", "n1000", "b0_s1", "b0_s2"} <= set(
         ids
     )
@@ -82,7 +83,7 @@ def test_planned_runs_carry_platform_and_device() -> None:
     config = kev_runs.load_config()
     runs = kev_runs.plan(config)
     assert [r.run_id for r in runs] == list(config["planned"])
-    assert len(runs) == 8
+    assert len(runs) == 19  # 8 of Milestone 4, 2 of phase 2 and 9 of the parity phase
     by_id = {r.run_id: r for r in runs}
     assert all(r.device == "cuda" for r in runs)  # every Kev run on a CUDA T4
     assert by_id["base_r16"].init_from is None and by_id["base_r16"].platform == "colab"
@@ -113,10 +114,13 @@ def test_smoke_run_is_one_epoch_on_the_smoke_file() -> None:
 
 def test_check_data_reports_mismatch(tmp_path: Path) -> None:
     config = kev_runs.load_config()
-    for key in ("train", "calibration", "dev_synthetic", "smoke"):
-        path = tmp_path / config["data"][key]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("x\n")
+    for section in (config["data"], config["phase2"], config["parity"]["held_out"]):
+        for key in ("train", "calibration", "dev_synthetic", "smoke"):
+            if key not in section:
+                continue
+            path = tmp_path / section[key]
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("x\n")
     status = kev_runs.check_data(config, root=tmp_path)
     assert set(status.values()) == {"HASH MISMATCH"}
     assert set(kev_runs.check_data(config, root=tmp_path / "empty").values()) == {"missing"}
@@ -187,3 +191,60 @@ def test_kaggle_user_name_is_redacted(tmp_path: Path) -> None:
         assert "someone123" not in (archived / name).read_text()
     log_digest = hashlib.sha256((archived / "train.log").read_bytes()).hexdigest()
     assert entry.log_sha256 == log_digest  # the committed log matches the registry hash
+
+
+def test_phase2_joint_runs_use_the_ep3_recipe_on_the_joint_file() -> None:
+    config = kev_runs.load_config()
+    by_id = {r.run_id: r for r in kev_runs.plan(config)}
+    ep3 = by_id["ep3"]
+    for seed in config["phase2"]["seeds"]:
+        joint = by_id[f"joint_ep3_s{seed}"]
+        assert joint.data == config["phase2"]["train"]
+        assert joint.seed == seed and joint.factor == "joint"
+        same = ("lr", "epochs", "batch", "accum", "lora", "init_from", "p_none", "p_distract")
+        assert all(getattr(joint, k) == getattr(ep3, k) for k in same)
+    assert config["sessions"]["kaggle_4"] == [["joint_ep3_s0"], ["joint_ep3_s1"]]
+    smoke = kev_runs.smoke_run(config, "local", joint=True)
+    assert smoke.run_id == "smoke_local_joint" and smoke.data == config["phase2"]["smoke"]
+    hashes = kev_runs.recorded_hashes(config)
+    assert hashes[config["phase2"]["train"]] == config["phase2"]["train_sha256"]
+    status = kev_runs.check_data(config)
+    assert all(status[f"phase2.{k}"] == "ok" for k in ("train", "calibration", "smoke"))
+
+
+def test_phase2_split_keeps_state_and_labels() -> None:
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "split", root / "scripts" / "build_phase2_split.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    record = {
+        "state": {"user_message": "x"},
+        "questions": {"tool": {"label": "run_sql"}, "domain": {"label": "labour"}},
+        "_meta": {"family": "f"},
+    }
+    tool, domain = module.split_record(record, 7)
+    assert tool["state"] == domain["state"] == record["state"]
+    assert list(tool["questions"]) == ["tool"] and list(domain["questions"]) == ["domain"]
+    assert tool["_meta"] == {"family": "f", "question": "tool", "source_index": 7}
+
+
+def test_parity_runs_follow_the_protocol() -> None:
+    """Parity protocol: seeds of the two top settings, the joint cell, one held-out run."""
+    config = kev_runs.load_config()
+    by_id = {r.run_id: r for r in kev_runs.plan(config)}
+    ep3, lr4 = by_id["ep3_s1"], by_id["lr4e-05_s2"]
+    assert (ep3.epochs, ep3.lr, ep3.seed) == (3, 2.0e-5, 1)
+    assert (lr4.epochs, lr4.lr, lr4.seed) == (2, 4.0e-5, 2)
+    assert config["phase2"]["seeds"] == [0, 1]  # the phase 2 rule is not changed
+    assert by_id["joint_ep3_s2"].factor == "parity_joint"
+    assert by_id["joint_lr4e-05_s1"].data == config["phase2"]["train"]
+    held = by_id["heldout_joint_ep3_s0"]
+    assert held.data == config["parity"]["held_out"]["train"] and held.epochs == 3
+    seeds = ("ep3_s1", "ep3_s2", "lr4e-05_s1", "lr4e-05_s2")
+    assert all(by_id[r].platform == "kaggle" for r in seeds)
+    assert config["sessions"]["kaggle_6"] == [["lr4e-05_s1", "ep3_s1"], ["lr4e-05_s2", "ep3_s2"]]

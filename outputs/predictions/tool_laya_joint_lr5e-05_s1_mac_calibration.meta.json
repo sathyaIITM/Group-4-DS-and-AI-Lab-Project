@@ -1,0 +1,15 @@
+{
+  "run_id": "laya_joint_lr5e-05_s1_mac",
+  "decision": "tool",
+  "checkpoint": "models/checkpoints/laya_joint_lr5e-05_s1",
+  "weights_sha256": {
+    "model.safetensors": "df7ca7d73a58a04c359d206531a7f8ca69a012c466ebc8a84c55c04a5025c8ee"
+  },
+  "server": "laya-serve (laya[serve]==0.4.23), LAYA_EXTRA_MODELS laya_joint_lr5e-05_s1, model=laya_joint_lr5e-05_s1",
+  "data": "data/splits/kev/calibration.v2.jsonl",
+  "data_sha256": "f1a8fafc64fa829e3fde12375a262366658cec7b9d0faa43af3ce58c4c4b5c2f",
+  "predictions_sha256": "7eab86f7550c2969deac8c444b46b734807c7eae0cc30328f981d65f0799ff5f",
+  "device": "mps",
+  "n_predictions": 322,
+  "created_utc": "2026-11-26T13:29:26+00:00"
+}

@@ -1,0 +1,156 @@
+Error in sitecustomize; set PYTHONVERBOSE for traceback:
+ModuleNotFoundError: No module named 'wrapt'
+
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/320 [00:01<07:37,  1.43s/it]
+Loading weights: 100%|██████████| 320/320 [00:01<00:00, 220.88it/s]
+
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 1080.45it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+delta: warm start from /root/.cache/huggingface/hub/models--jaredpalmer--kev-0.8b/snapshots/bf75a6a8848ea6960ff2ed108d9ed44c2941174f: 372 lora tensors and the pointer head loaded
+device=cuda world=1 trainable params=11.3M
+3752 training requests (holdout=[]), questions by type {'choice': 3752}
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+ep0 step 10/1407 loss 1.207 kl 0.000 anchor 0.000 0.600s/rec
+ep0 step 20/1407 loss 1.448 kl 0.000 anchor 0.000 0.613s/rec
+ep0 step 30/1407 loss 1.193 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 40/1407 loss 1.288 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 50/1407 loss 1.026 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 60/1407 loss 0.921 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 70/1407 loss 0.826 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 80/1407 loss 1.210 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 90/1407 loss 0.726 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 100/1407 loss 0.870 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 110/1407 loss 0.860 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 120/1407 loss 0.798 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 130/1407 loss 0.676 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 140/1407 loss 0.948 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 150/1407 loss 0.770 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 160/1407 loss 0.684 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 170/1407 loss 0.741 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 180/1407 loss 0.574 kl 0.000 anchor 0.000 0.611s/rec
+ep0 step 190/1407 loss 0.748 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 200/1407 loss 0.589 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 210/1407 loss 0.678 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 220/1407 loss 0.511 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 230/1407 loss 0.487 kl 0.000 anchor 0.000 0.610s/rec
+ep0 step 240/1407 loss 0.427 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 250/1407 loss 0.425 kl 0.000 anchor 0.000 0.609s/rec
+ep0 step 260/1407 loss 0.361 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 270/1407 loss 0.650 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 280/1407 loss 0.653 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 290/1407 loss 0.498 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 300/1407 loss 0.435 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 310/1407 loss 0.598 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 320/1407 loss 0.395 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 330/1407 loss 0.364 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 340/1407 loss 0.401 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 350/1407 loss 0.313 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 360/1407 loss 0.363 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 370/1407 loss 0.321 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 380/1407 loss 0.424 kl 0.000 anchor 0.000 0.608s/rec
+ep0 step 390/1407 loss 0.356 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 400/1407 loss 0.440 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 410/1407 loss 0.529 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 420/1407 loss 0.347 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 430/1407 loss 0.522 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 440/1407 loss 0.256 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 450/1407 loss 0.298 kl 0.000 anchor 0.000 0.607s/rec
+ep0 step 460/1407 loss 0.469 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 470/1407 loss 0.380 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 480/1407 loss 0.250 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 490/1407 loss 0.130 kl 0.000 anchor 0.000 0.606s/rec
+ep1 step 500/1407 loss 0.199 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 510/1407 loss 0.212 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 520/1407 loss 0.464 kl 0.000 anchor 0.000 0.606s/rec
+ep1 step 530/1407 loss 0.268 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 540/1407 loss 0.242 kl 0.000 anchor 0.000 0.606s/rec
+ep1 step 550/1407 loss 0.279 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 560/1407 loss 0.541 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 570/1407 loss 0.476 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 580/1407 loss 0.236 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 590/1407 loss 0.590 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 600/1407 loss 0.311 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 610/1407 loss 0.399 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 620/1407 loss 0.360 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 630/1407 loss 0.452 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 640/1407 loss 0.162 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 650/1407 loss 0.278 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 660/1407 loss 0.248 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 670/1407 loss 0.181 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 680/1407 loss 0.123 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 690/1407 loss 0.175 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 700/1407 loss 0.097 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 710/1407 loss 0.607 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 720/1407 loss 0.361 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 730/1407 loss 0.209 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 740/1407 loss 0.290 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 750/1407 loss 0.079 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 760/1407 loss 0.160 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 770/1407 loss 0.167 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 780/1407 loss 0.093 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 790/1407 loss 0.082 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 800/1407 loss 0.031 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 810/1407 loss 0.324 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 820/1407 loss 0.118 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 830/1407 loss 0.244 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 840/1407 loss 0.475 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 850/1407 loss 0.165 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 860/1407 loss 0.057 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 870/1407 loss 0.394 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 880/1407 loss 0.098 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 890/1407 loss 0.218 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 900/1407 loss 0.453 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 910/1407 loss 0.386 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 920/1407 loss 0.577 kl 0.000 anchor 0.000 0.607s/rec
+ep1 step 930/1407 loss 0.330 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 940/1407 loss 0.139 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 950/1407 loss 0.048 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 960/1407 loss 0.085 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 970/1407 loss 0.345 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 980/1407 loss 0.118 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 990/1407 loss 0.002 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1000/1407 loss 0.061 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1010/1407 loss 0.117 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1020/1407 loss 0.000 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1030/1407 loss 0.044 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1040/1407 loss 0.014 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1050/1407 loss 0.117 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1060/1407 loss 0.122 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1070/1407 loss 0.036 kl 0.000 anchor 0.000 0.607s/rec
+ep2 step 1080/1407 loss 0.285 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1090/1407 loss 0.001 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1100/1407 loss 0.115 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1110/1407 loss 0.165 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1120/1407 loss 0.105 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1130/1407 loss 0.093 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1140/1407 loss 0.141 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1150/1407 loss 0.012 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1160/1407 loss 0.343 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1170/1407 loss 0.152 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1180/1407 loss 0.235 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1190/1407 loss 0.285 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1200/1407 loss 0.028 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1210/1407 loss 0.140 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1220/1407 loss 0.022 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1230/1407 loss 0.228 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1240/1407 loss 0.071 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1250/1407 loss 0.179 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1260/1407 loss 0.000 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1270/1407 loss 0.055 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1280/1407 loss 0.112 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1290/1407 loss 0.141 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1300/1407 loss 0.082 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1310/1407 loss 0.161 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1320/1407 loss 0.194 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1330/1407 loss 0.085 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1340/1407 loss 0.080 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1350/1407 loss 0.011 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1360/1407 loss 0.005 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1370/1407 loss 0.062 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1380/1407 loss 0.019 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1390/1407 loss 0.019 kl 0.000 anchor 0.000 0.608s/rec
+ep2 step 1400/1407 loss 0.169 kl 0.000 anchor 0.000 0.608s/rec
+saved /tmp/kev_work/kev/runs/joint_ep3_s2

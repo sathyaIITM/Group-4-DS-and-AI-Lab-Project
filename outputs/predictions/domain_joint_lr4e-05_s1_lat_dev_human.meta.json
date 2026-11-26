@@ -1,0 +1,16 @@
+{
+  "run_id": "joint_lr4e-05_s1_lat",
+  "decision": "domain",
+  "checkpoint": "models/checkpoints/joint_lr4e-05_s1",
+  "weights_sha256": {
+    "adapter_model.safetensors": "1631cf81d445a89391b642955dcb6d07a1f7d9810d71461d1df869fc542296ec",
+    "head.pt": "5f7a1e2746557a67bce879b26da77fe02416b3515f1d1a60132f7901fd80a2e1"
+  },
+  "server": "kev.serve (scripts/serve_kev.sh), mps",
+  "data": "data/splits/kev_domain/dev_human.v1.jsonl",
+  "data_sha256": "2479f6026cdb1dd08de07199ceec0be4e32c39490415c672ecdd2caa56472f9a",
+  "predictions_sha256": "51590f29c11b9b44599ab0dc1ff98c02a26a2d7ff11636901764b1789a6b0dd7",
+  "device": "mps",
+  "n_predictions": 198,
+  "created_utc": "2026-11-26T13:13:45+00:00"
+}

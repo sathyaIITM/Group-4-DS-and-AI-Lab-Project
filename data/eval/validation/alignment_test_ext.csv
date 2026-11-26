@@ -1,0 +1,41 @@
+id,set,gold_action,gold_slot,rule_action,rule_slot,rule,impl_action,code_ref,m4_action_mode,class,confidence,note
+e2e-201,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-202,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-203,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-204,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-205,test_ext,answer,,answer (D6 spelling) or clarify place (S3),,RG-2,clarify place: 'Meghalya' matches no name or alias,places.py:152 (no fuzzy match),,rule_gap,medium,Misspelt State with no alias row; D6 and S3 conflict
+e2e-206,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-207,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-208,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-209,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-210,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-211,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-212,test_ext,clarify,place,clarify,place,as in the item note,clarify,tool_nodes.py:379/488; places.py:188,,aligned,high,
+e2e-213,test_ext,clarify,place,clarify,place,as in the item note,clarify,tool_nodes.py:379/488; places.py:188,,aligned,high,
+e2e-214,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-215,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-216,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-217,test_ext,decline,,decline,,E6; RG-1,"LLM-dependent: v10 declines relative periods after the last period; if 'last year' reaches code, periods.py:189 maps it to the latest period (2023)",periods.py:189; intent.v10 rule 2,,both,medium,"RG-1: no rule fixes the reference date of 'last year'. Agent gap: code treats 'last year' as 'latest', a nearest-period substitution (design decision 18)"
+e2e-218,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-219,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-220,test_ext,answer,,answer,,"D6 (abbreviations TN, AP)",clarify place: no alias rows for TN or AP,configs/reference/place_aliases.csv,,agent_gap,high,Same as continuity e2e-035 ('UP'); RG-2
+e2e-221,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-222,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-223,test_ext,answer,,"answer with a stated reading, or clarify place",,RG-3 (region names),clarify place or unresolved: 'southern states' is not a place name,intent.v10 field place_mentions (no expansion),,rule_gap,medium,No rule defines region groupings; the gold reads five States without UTs
+e2e-224,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-225,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-226,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-227,test_ext,answer,,"answer, bajra only",,"F1 (as e2e-024, e2e-052)",answer bajra (inherits the season),tool_nodes.py:615 inherit_from_prior,,gold_error,high,'aur bajra ka?' changes only the crop; F3 (both values) needs a request to compare. Proposed gold: Bajra 2150.0
+e2e-228,test_ext,clarify,category,clarify,category,as in the item note,clarify,tool_nodes.py:379/488; places.py:188,,aligned,high,
+e2e-229,test_ext,clarify,category,clarify,category,as in the item note,clarify,tool_nodes.py:379/488; places.py:188,,aligned,high,
+e2e-230,test_ext,clarify,period,"clarify period, options 2019-20 and 2020-21",period,E10,LLM-dependent: if the mention reaches code as 'FY 2020-21 (April to March)' it is unresolved and the latest periods are offered; if written '2020-21' it resolves as survey year 2020-21 and answers,periods.py:291 fiscal form; tool_nodes.py:343,,agent_gap,medium,E10 options not built
+e2e-231,test_ext,clarify,indicator,clarify,indicator,as in the item note,clarify,tool_nodes.py:379/488; places.py:188,,aligned,high,
+e2e-232,test_ext,decline,,decline,,as in the item note,decline,intent.v10 rule 1,,aligned,high,
+e2e-233,test_ext,decline,,decline,,as in the item note,decline,intent.v10 rule 1,,aligned,high,
+e2e-234,test_ext,decline,,decline,,as in the item note,decline,intent.v10 rule 1,,aligned,high,
+e2e-235,test_ext,decline,,decline,,as in the item note,decline,intent.v10 rule 1,,aligned,high,
+e2e-236,test_ext,answer,,answer (bales),,V6,abstains on the number check (as e2e-099),units.py (T2 fix D3 not done),,agent_gap,high,
+e2e-237,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-238,test_ext,answer,,answer,,as in the item note,answer,tool_nodes.py:712 plan_for,,aligned,high,
+e2e-239,test_ext,describe,,describe,,as in the item note,describe,control_nodes.py:238,,aligned,high,
+e2e-240,test_ext,search,,search,,as in the item note,search,control_nodes.py:314,,aligned,high,

@@ -85,7 +85,7 @@ def test_v4_uses_jev_for_tool_and_kev_for_domain_with_temperature() -> None:
         "What columns?",
         r.RouterContext(),
         [LINE],
-        _config(kev_temperature=2.0),
+        _config(kev_temperatures={"domain": 2.0}),
         r.Backends(kev=kev, jev=jev),
         Counters(),
     )
@@ -99,8 +99,8 @@ def test_v4_uses_jev_for_tool_and_kev_for_domain_with_temperature() -> None:
 
 
 def test_failed_backend_hands_over_to_the_next() -> None:
-    jev = FakeBackend({}, fail=True)
-    kev = FakeBackend(
+    kev = FakeBackend({}, fail=True)
+    jev = FakeBackend(
         {
             "tool": _probs(TOOL_OPTIONS, "run_sql", 0.6),
             "domain": _probs(DOMAIN_OPTIONS, "labour", 0.9),
@@ -109,8 +109,8 @@ def test_failed_backend_hands_over_to_the_next() -> None:
     d = r.route(
         "x", r.RouterContext(), [LINE], _config(), r.Backends(kev=kev, jev=jev), Counters()
     ).decision
-    assert d.tool.backend == "kev" and d.tool.fallback
-    assert not d.domain.fallback
+    assert d.domain.backend == "jev" and d.domain.fallback  # Kev down: Jev answers the domain
+    assert d.tool.backend == "jev" and not d.tool.fallback
 
 
 def test_chain_falls_through_to_the_llm() -> None:
@@ -160,5 +160,76 @@ def test_escalation_inside_the_band_only() -> None:
     escalated = r.escalate(result.decision, result.state, config, jev)
     assert escalated.domain.escalated and escalated.final_domain == "health"
     assert not escalated.tool.escalated  # tool came from Jev already
-    unchanged = r.escalate(result.decision, result.state, _config(), jev)  # null band
+    no_band = _config(bands={"domain": r.Band(), "tool": r.Band()})
+    unchanged = r.escalate(result.decision, result.state, no_band, jev)  # null band
     assert unchanged == result.decision
+
+
+def test_v4_configuration_from_files() -> None:
+    config = r.RouterConfig.from_files("v4")
+    assert config.chains["domain"] == ["kev", "jev", "llm"]
+    assert config.chains["tool"] == ["jev", "llm"]  # the ep3_s2 adapter knows only the domain
+    assert config.kev_revision == "ep3_s2"
+    assert config.temperature_for("domain") == pytest.approx(3.6522, abs=1e-4)
+    assert config.temperature_for("tool") is None  # set only after the phase 2 tool gate
+    band = config.bands["domain"]
+    assert band.contains(0.30) and not band.contains(0.41) and not band.contains(0.9)
+    assert config.bands["tool"].low is None
+
+
+def test_v4_escalates_a_low_confidence_domain_to_jev() -> None:
+    config = r.RouterConfig.from_files("v4")
+    flat = {k: 1 / len(DOMAIN_OPTIONS) for k in DOMAIN_OPTIONS}  # max well below the threshold
+    flat["labour"] += 0.01
+    kev = FakeBackend({"domain": flat})
+    jev = FakeBackend(
+        {
+            "tool": _probs(TOOL_OPTIONS, "run_sql", 0.8),
+            "domain": _probs(DOMAIN_OPTIONS, "health", 0.9),
+        }
+    )
+    result = r.route(
+        "x", r.RouterContext(), [LINE], config, r.Backends(kev=kev, jev=jev), Counters()
+    )
+    assert result.decision.domain.backend == "kev"
+    updated = r.escalate(result.decision, result.state, config, jev)
+    assert updated.domain.backend == "jev" and updated.domain.escalated
+    assert updated.final_domain == "health"
+
+
+def test_kev_client_reads_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    from analyst.agents.model_nodes import kev_client
+
+    monkeypatch.setenv("KEV_BASE_URL", "http://127.0.0.1:9999")
+    monkeypatch.delenv("KEV_API_KEY", raising=False)
+    client = kev_client()
+    assert str(client._client.base_url).startswith("http://127.0.0.1:9999")
+    assert client._model == "kev-latest"
+    monkeypatch.delenv("KEV_BASE_URL")
+    assert str(kev_client()._client.base_url).startswith("http://127.0.0.1:8009")
+
+
+def test_kev_temperature_per_decision() -> None:
+    tool_raw = _probs(TOOL_OPTIONS, "run_sql", 0.9)
+    domain_raw = _probs(DOMAIN_OPTIONS, "labour", 0.9)
+    kev = FakeBackend({"tool": tool_raw, "domain": domain_raw})
+    config = _config(
+        kev_temperature=None,
+        kev_temperatures={"tool": 1.5, "domain": 3.0},
+        chains={"tool": ["kev", "jev", "llm"], "domain": ["kev", "jev", "llm"]},
+    )
+    d = r.route("x", r.RouterContext(), [LINE], config, r.Backends(kev=kev), Counters()).decision
+    assert d.tool.temperature == 1.5 and d.domain.temperature == 3.0
+    assert d.tool.probabilities == pytest.approx(r.scale(tool_raw, 1.5))
+    assert d.domain.probabilities == pytest.approx(r.scale(domain_raw, 3.0))
+
+
+def test_kev_temperature_forms_in_model_yaml() -> None:
+    assert r._kev_temperatures(2.5) == {"kev_temperature": 2.5}
+    assert r._kev_temperatures(None) == {"kev_temperature": None}
+    both = r._kev_temperatures({"domain": 3.0, "tool": None})
+    assert both == {"kev_temperatures": {"domain": 3.0, "tool": None}}
+    single = r.RouterConfig(version="v4", chains={}, kev_temperature=2.0)
+    assert single.temperature_for("tool") == single.temperature_for("domain") == 2.0
+    with pytest.raises(ValueError, match="unknown decisions"):
+        r._kev_temperatures({"coverage": 1.0})

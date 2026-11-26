@@ -24,6 +24,7 @@ from analyst.agents.runlog import RunLogger
 from analyst.agents.state import AnalystState, RunConfig
 from analyst.contracts import Cause, Clarification, InterpretationPlan, MissingPart, ScreenResult
 from analyst.data.catalogue import Catalogue, load_catalogue
+from analyst.inference.clarify import fixed_question, slot_detail
 from analyst.tools.catalogue_views import describe_table, search_listing
 from analyst.tools.charts import select_chart
 from analyst.tools.evidence import (
@@ -222,6 +223,25 @@ def retrieve_context_and_examples(state: AnalystState) -> dict[str, Any]:
     }
 
 
+# A question about a table (rule sheet E3): its coverage, units, columns, definitions or method.
+_DESCRIBE = re.compile(
+    r"\b(?:cover|covers|covered|coverage|units?|columns?|defin\w*|stand for|stands for|"
+    r"methods?|methodology|spelt|spelled|spelling)\b|\bwhat does \S+ mean\b|\bmeans? in\b"
+)
+# A question about which data exists (rule E2) stays a search.
+_SEARCH = re.compile(
+    r"\b(?:is there|are there|any data|which data|what data|which datasets?|which sources?|"
+    r"what sources?|where can|do you have|available)\b"
+)
+
+
+def asks_about_a_table(question: str) -> bool:
+    """True for "What does the PLFS table cover?" or "In what unit are mandi prices
+    reported?"; false for "Is there data on rainfall?" (a search, rule E2)."""
+    text = question.casefold()
+    return bool(_DESCRIBE.search(text)) and not _SEARCH.search(text)
+
+
 def resolve_routing_decision(state: AnalystState) -> dict[str, Any]:
     """The two shortcuts of the graph specification; every other label keeps its branch.
 
@@ -255,6 +275,10 @@ def resolve_routing_decision(state: AnalystState) -> dict[str, Any]:
         branch = "clarify" if early else "query"
     elif tool == "explain_result" and not state.prior_result_ref:
         tool, branch = "search_catalog", "search"
+    elif tool == "search_catalog" and asks_about_a_table(state.question):
+        # Rule sheet E3 before E2: a question about a table's coverage, units or definitions
+        # is described from the catalogue, not answered with a list of tables (T2 fix C4).
+        tool, branch = "describe_table", "describe"
     decision = routing.model_copy(update={"final_tool": tool, "branch": branch})
     return {
         "routing": decision,
@@ -424,11 +448,22 @@ def respond_out_of_scope(state: AnalystState) -> dict[str, Any]:
     }
 
 
+def clarification_detail(state: AnalystState) -> str:
+    """The plain word for the first unresolved slot of the plan ("commodity", "market")."""
+    if state.plan is None or not state.plan.unresolved:
+        return "detail"
+    slot = state.plan.unresolved[0]
+    table = published_catalogue().get(state.plan.dataset_id)
+    return slot_detail(slot.slot, slot.mention, table)
+
+
 def ask_clarification(state: AnalystState) -> dict[str, Any]:
     """One clarification question; options come from the plan's unresolved slots (code)."""
     slot = state.plan.unresolved[0] if state.plan and state.plan.unresolved else None
     options = list(slot.options) if slot else []
-    question = f"Which {slot.slot} is meant by '{slot.mention}'?" if slot else None
+    question = (
+        fixed_question(clarification_detail(state), slot.slot, slot.mention) if slot else None
+    )
     pending = Clarification(
         original_question=state.question,
         question=question or "",

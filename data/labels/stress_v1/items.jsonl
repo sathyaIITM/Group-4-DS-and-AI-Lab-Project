@@ -1,0 +1,80 @@
+{"id": "st-001", "message": "Did states with more rain also have lower unemployment, 2018-19?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-002", "message": "Show Punjab's wheat output next to the wheat MSP for the same years", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-003", "message": "Infant deaths and per capita income for Bihar, side by side please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-004", "message": "I need two numbers for a story: Odisha's jobless rate and its July rainfall in 2017", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-005", "message": "Is there a link between crop yields and onion prices in Maharashtra?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-006", "message": "Compare child stunting with per capita GSDP across the southern states", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-007", "message": "Violent crime and unemployment in Jharkhand, 2021 - both please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-008", "message": "Monsoon deficit vs paddy production in West Bengal, which years?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-009", "message": "food inflation and the cereal MSP hike in 2022, put them together", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-010", "message": "Female literacy and anaemia among women in Rajasthan districts", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-011", "message": "Kerala: IMR and the unemployment rate, latest for each", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-012", "message": "Plot rainfall against cotton production for Vidarbha", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-013", "message": "give me the 2020 numbers for Goa", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-014", "message": "Which district tops the list?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-015", "message": "trend since 2015 for Haryana", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-016", "message": "Same thing but for the north-east states", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-017", "message": "is it better or worse than last year", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-018", "message": "Rank the bottom five", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-019", "message": "Uttarakhand vs Himachal, please", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-020", "message": "What was the figure in the census year?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-021", "message": "Number of kidnapping cases in Delhi, 2022", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-022", "message": "Voter turnout in the last Lok Sabha election in Kerala", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-023", "message": "How many students dropped out of secondary school in Assam?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-024", "message": "Groundwater depth in Rajasthan's blocks, pre-monsoon", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-025", "message": "Two-wheeler registrations in Karnataka last year", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-026", "message": "Murders per lakh people, all of India, 2023", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-027", "message": "good morning! hope you are well", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-028", "message": "Write a tweet about rising prices for my newsroom", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-029", "message": "translate 'unemployment rate' into Tamil", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-030", "message": "Who will win the cricket match tomorrow?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-031", "message": "Reservoir storage levels in Maharashtra dams this week", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-032", "message": "Cybercrime complaints filed in Telangana", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-033", "message": "Share of the workforce that can't find a job, Tamil Nadu, 2019-20", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-034", "message": "How many in every hundred job-seekers in Punjab were idle in 2021-22?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-035", "message": "Proportion of city dwellers who are working or looking for work in Gujarat", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-036", "message": "How wet was the Konkan coast in July 2005?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-037", "message": "Precipitation in Marathwada over the kharif season of 2014", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-038", "message": "What does a normal year bring in mm for Wayanad district?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-039", "message": "Tonnes of maize harvested in Davanagere, 2010", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-040", "message": "Government floor price for moong this marketing season", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-041", "message": "Hectares sown under sugarcane in Muzaffarnagar", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-042", "message": "What are tomatoes fetching at Kolar market?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-043", "message": "Cost-of-living index for urban India, March 2021", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-044", "message": "Average earnings per head in Karnataka's economy, 2021-22", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-045", "message": "Babies who don't survive their first year, per thousand, in MP", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-046", "message": "How many kids under five are too short for their age in Nandurbar?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-047", "message": "Share of births that happened in a hospital, Uttar Pradesh", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-048", "message": "Women who are anaemic in Jharkhand's villages", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-049", "message": "बिहार में बेरोज़गारी दर 2020-21 में कितनी थी?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-050", "message": "केरल में 2015 के मानसून में कितनी बारिश हुई?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-051", "message": "गेहूं का न्यूनतम समर्थन मूल्य 2023-24 में क्या है?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-052", "message": "उत्तर प्रदेश में शिशु मृत्यु दर बताइए", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-053", "message": "दिल्ली में प्याज़ का भाव आज क्या है?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-054", "message": "Rajasthan mein baarish kitni hui thi 2010 ke monsoon mein?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-055", "message": "UP ka per capita income kitna hai 2022-23 mein?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-056", "message": "Maharashtra mein chawal ki paidawar kitni thi 2012 mein", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-057", "message": "Gujarat mein naukri na milne wale log kitne percent hain?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-058", "message": "bacchon mein kuposhan Assam ke districts mein", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-059", "message": "Delhi mein hatyaon ki sankhya 2022", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-060", "message": "Mehngai dar kya chal rahi hai aajkal?", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-061", "message": "unemplyment rte in westbengal 2018-19", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-062", "message": "rainfal in jharkand aug 2016", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-063", "message": "MSP of tur dal fy24", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-064", "message": "CPI-U Jan 2022 gen idx", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-065", "message": "IMR TN 2019 pls", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-066", "message": "pc gsdp ka 2021-22 kerala", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-067", "message": "LFPR urbn MH 23-24", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-068", "message": "NFHS5 stunting dist Barmer", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-069", "message": "Agmarknet arrivals of potato in Agra today", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-070", "message": "PMFBY crop insurance claims paid in Odisha", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-071", "message": "HMIS institutional deliveries in Bihar, 2022", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-072", "message": "WPI for manufactured products, October 2023", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-073", "message": "Heatwave days recorded by IMD in Telangana in 2019", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-074", "message": "CMIE monthly unemployment for Haryana", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-075", "message": "Labour Bureau's rural wage index for agricultural labourers", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-076", "message": "ASI factory output in Tamil Nadu", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-077", "message": "SRS birth rate for Kerala", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-078", "message": "PM-KISAN beneficiaries in Andhra Pradesh", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-079", "message": "Soil moisture anomaly over Vidarbha last week", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}
+{"id": "st-080", "message": "Hospital beds per lakh population in Kerala", "context": {"has_result": false, "prior_turn": null, "previous_tool": null}}

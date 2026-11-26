@@ -7,7 +7,11 @@ import pytest
 
 from analyst.inference.prompts import PROMPT_DIR, PromptError, PromptRegistry, load_prompt
 
-EXPECTED = {"intent", "sql", "sql_repair", "narrate", "clarify", "route", "decline", "describe"}
+EXPECTED = {
+    "intent", "sql", "sql_repair", "narrate", "clarify", "route", "decline", "describe",
+    "reflect",  # GEPA reflection for the v3 prompt optimisation (Milestone 5)
+    "intent_gepa",  # intent prompt chosen by GEPA, pinned for v3 and v4 (configs/model.yaml)
+}  # fmt: skip
 
 
 @pytest.fixture(scope="module")
@@ -19,13 +23,14 @@ def test_every_v1_prompt_loads(registry: PromptRegistry) -> None:
     assert {p.id for p in registry} == EXPECTED
     for prompt_id in EXPECTED:
         assert registry.get(f"{prompt_id}.v1").version == 1  # pinned v1 stays loadable
-    assert registry.get("intent").version == 9  # no period clarification when a rule applies
+    assert registry.get("intent").version == 10  # latest period for "now"; slot order S1
     assert registry.get("route").version == 2  # decided cases C7 and search
     assert registry.get("sql").version == 3  # place filters by level, implausible values
     assert registry.get("narrate").version == 2  # unit once; a long series in one claim
-    assert registry.get("clarify").version == 2  # options shown once, by the template
+    assert registry.get("clarify").version == 3  # names the missing detail
     for prompt in registry:
-        assert prompt.purpose == prompt.id
+        # an optimised variant keeps its base purpose under its own id (intent_gepa: intent)
+        assert prompt.id == prompt.purpose or prompt.id.startswith(f"{prompt.purpose}_")
         assert prompt.system.strip()
         assert prompt.user.strip()
 

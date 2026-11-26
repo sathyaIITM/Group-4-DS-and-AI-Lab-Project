@@ -183,3 +183,31 @@ class PromptRegistry:
 
     def __iter__(self) -> Any:
         return iter(sorted(self._prompts.values(), key=lambda p: p.prompt_id))
+
+
+class PinnedPromptRegistry(PromptRegistry):
+    """A registry in which a version pins some prompt ids to fixed versioned prompts.
+
+    `configs/model.yaml` `prompt_pins` maps an agent version to {prompt id: versioned id}, for
+    example v3 -> {intent: intent_gepa.v1}. Unpinned ids resolve to their highest version, so
+    a new optimised prompt changes only the versions that pin it.
+    """
+
+    def __init__(self, pins: dict[str, str], directory: Path = PROMPT_DIR) -> None:
+        """Load the prompts and check that every pinned prompt exists."""
+        super().__init__(directory)
+        self.pins = dict(pins)
+        for target in self.pins.values():
+            super().get(target)  # fails early on a missing pinned prompt
+
+    def get(self, prompt_id: str) -> Prompt:
+        """Return the pinned prompt for a pinned id, otherwise as `PromptRegistry.get`."""
+        return super().get(self.pins.get(prompt_id, prompt_id))
+
+
+def prompt_pins(version: str, path: Path = ROOT / "configs" / "model.yaml") -> dict[str, str]:
+    """The prompt pins of an agent version from `configs/model.yaml` (empty when none)."""
+    import yaml
+
+    config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return dict((config.get("prompt_pins") or {}).get(version) or {})

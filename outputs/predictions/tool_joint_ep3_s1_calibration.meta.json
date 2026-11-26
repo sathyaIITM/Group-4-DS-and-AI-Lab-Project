@@ -1,0 +1,18 @@
+{
+  "run_id": "joint_ep3_s1",
+  "decision": "tool",
+  "checkpoint": "models/checkpoints/joint_ep3_s1",
+  "weights_sha256": {
+    "adapter_model.safetensors": "d8d0e0a10d3dfcb1fec3d6ec99b7ad6052a39799dccec7a2e09b57569173dfd5",
+    "head.pt": "c0b6ddb0ad47c822e58ee3b3b77f0a486f4a4b694459f92d3d016d2e3d0de282",
+    "adapter_config.json": "883b34cc4649663b203790c0f6958c476bf1f43f0414009aabd75383e7b4aac8"
+  },
+  "data": "data/splits/kev/calibration.v2.jsonl",
+  "data_sha256": "f1a8fafc64fa829e3fde12375a262366658cec7b9d0faa43af3ce58c4c4b5c2f",
+  "predictions_sha256": "8e70d420d4b536ac88adaa9425a6801b18645e51cb234c1103405d4007ad7081",
+  "n_predictions": 322,
+  "device": "mps",
+  "predictions_written_utc": "2026-11-24T13:47:21+00:00",
+  "created_utc": "2026-11-24T15:48:32+00:00",
+  "note": "Written after the run (decision_eval run was called directly, not via scripts/score_kev_run.sh); same fields as that script plus decision, n_predictions and predictions_written_utc."
+}

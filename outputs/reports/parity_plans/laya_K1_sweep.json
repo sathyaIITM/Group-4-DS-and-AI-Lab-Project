@@ -1,0 +1,222 @@
+{
+  "meta": {
+    "stage": "sweep",
+    "created_utc": "2026-11-24T14:00:58+00:00",
+    "repo_commit": "3833177784620d444d4f247472bce80334cb1e9d",
+    "repo_dirty": false,
+    "config_sha256": "521863f540cbe673b265268fec5739295b3581f5bcb823909284fbd6ed3fe18e",
+    "top2": null,
+    "selection": null,
+    "selection_sha256": null
+  },
+  "laya_version": "0.4.23",
+  "base": {
+    "repo": "convaiinnovations/laya",
+    "revision": "fd4f9dbcf4fde222fd43174bdd4c3b08b789e4e1"
+  },
+  "evaluation": {
+    "domain": [
+      {
+        "split": "calibration",
+        "file": "data/splits/kev_domain/calibration.v2.jsonl",
+        "decisions": [
+          "domain"
+        ]
+      },
+      {
+        "split": "dev_synthetic",
+        "file": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+        "decisions": [
+          "domain"
+        ]
+      },
+      {
+        "split": "dev_human",
+        "file": "data/splits/kev_domain/dev_human.v1.jsonl",
+        "decisions": [
+          "domain"
+        ]
+      }
+    ]
+  },
+  "runs": [
+    {
+      "run_id": "laya_dom_def_s0",
+      "cell": "domain",
+      "setting": "def",
+      "seed": 0,
+      "params": {
+        "encoder_lr": 2.5e-05,
+        "head_lr": 0.0001,
+        "epochs": 4,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s0_e4.jsonl.gz",
+      "data_file": "laya_parity__domain__s0_e4.jsonl.gz",
+      "data_sha256": "ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157",
+      "item_passes": 7504,
+      "est_minutes": 17.3,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_def_s1",
+      "cell": "domain",
+      "setting": "def",
+      "seed": 1,
+      "params": {
+        "encoder_lr": 2.5e-05,
+        "head_lr": 0.0001,
+        "epochs": 4,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s1_e4.jsonl.gz",
+      "data_file": "laya_parity__domain__s1_e4.jsonl.gz",
+      "data_sha256": "9f6bbd8733d01e1c2274ca26b3283e7f406f3afe8f52fd276c917c1298a1a93a",
+      "item_passes": 7504,
+      "est_minutes": 17.3,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_def_s2",
+      "cell": "domain",
+      "setting": "def",
+      "seed": 2,
+      "params": {
+        "encoder_lr": 2.5e-05,
+        "head_lr": 0.0001,
+        "epochs": 4,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s2_e4.jsonl.gz",
+      "data_file": "laya_parity__domain__s2_e4.jsonl.gz",
+      "data_sha256": "9cf598cf5572730f050a90fa4ac234ab7cd233dd008dc4ca00fc2aa7faec0bed",
+      "item_passes": 7504,
+      "est_minutes": 17.3,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_lr1.25e-05_s0",
+      "cell": "domain",
+      "setting": "lr1.25e-05",
+      "seed": 0,
+      "params": {
+        "encoder_lr": 1.25e-05,
+        "head_lr": 0.0001,
+        "epochs": 4,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s0_e4.jsonl.gz",
+      "data_file": "laya_parity__domain__s0_e4.jsonl.gz",
+      "data_sha256": "ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157",
+      "item_passes": 7504,
+      "est_minutes": 17.3,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_lr5e-05_s0",
+      "cell": "domain",
+      "setting": "lr5e-05",
+      "seed": 0,
+      "params": {
+        "encoder_lr": 5e-05,
+        "head_lr": 0.0001,
+        "epochs": 4,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s0_e4.jsonl.gz",
+      "data_file": "laya_parity__domain__s0_e4.jsonl.gz",
+      "data_sha256": "ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157",
+      "item_passes": 7504,
+      "est_minutes": 17.3,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_ep2_s0",
+      "cell": "domain",
+      "setting": "ep2",
+      "seed": 0,
+      "params": {
+        "encoder_lr": 2.5e-05,
+        "head_lr": 0.0001,
+        "epochs": 2,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s0_e2.jsonl.gz",
+      "data_file": "laya_parity__domain__s0_e2.jsonl.gz",
+      "data_sha256": "20a399442b6e6ece0a99942bb562403b8d98cd7588c66d8438bc79642fa58a86",
+      "item_passes": 3752,
+      "est_minutes": 8.6,
+      "evaluation": "domain"
+    },
+    {
+      "run_id": "laya_dom_ep6_s0",
+      "cell": "domain",
+      "setting": "ep6",
+      "seed": 0,
+      "params": {
+        "encoder_lr": 2.5e-05,
+        "head_lr": 0.0001,
+        "epochs": 6,
+        "micro_batch": 8,
+        "grad_accum": 8,
+        "loss": "rlcd",
+        "calib_frac": 0.0,
+        "head_max_len": 320
+      },
+      "data": "data/splits/laya_parity/domain/s0_e6.jsonl.gz",
+      "data_file": "laya_parity__domain__s0_e6.jsonl.gz",
+      "data_sha256": "75d2a0c55bdfec9f2a5217ab1f8124abb6e5a25fac53ad0ad6887c744119594f",
+      "item_passes": 11256,
+      "est_minutes": 25.9,
+      "evaluation": "domain"
+    }
+  ],
+  "queues": [
+    [
+      "laya_dom_ep6_s0",
+      "laya_dom_def_s2",
+      "laya_dom_lr5e-05_s0"
+    ],
+    [
+      "laya_dom_def_s0",
+      "laya_dom_def_s1",
+      "laya_dom_lr1.25e-05_s0",
+      "laya_dom_ep2_s0"
+    ]
+  ],
+  "files": {
+    "laya_parity__domain__s0_e4.jsonl.gz": "ec9f7c7162d0fedf0f71c1ba6a3d29450283dd67b197eb09dd96dda35ba2b157",
+    "laya_parity__domain__s1_e4.jsonl.gz": "9f6bbd8733d01e1c2274ca26b3283e7f406f3afe8f52fd276c917c1298a1a93a",
+    "laya_parity__domain__s2_e4.jsonl.gz": "9cf598cf5572730f050a90fa4ac234ab7cd233dd008dc4ca00fc2aa7faec0bed",
+    "laya_parity__domain__s0_e2.jsonl.gz": "20a399442b6e6ece0a99942bb562403b8d98cd7588c66d8438bc79642fa58a86",
+    "laya_parity__domain__s0_e6.jsonl.gz": "75d2a0c55bdfec9f2a5217ab1f8124abb6e5a25fac53ad0ad6887c744119594f",
+    "laya_parity_runner.py": "87587e7c982c0806d3d7a48e407caeb0bef01dae8219aac3de1d348f23d13da2",
+    "kev_domain__calibration.v2.jsonl": "8d363f6e8c3e34e699041d2f2cce3c85c01ced239574a02e37a016790c3bdcba",
+    "kev_domain__dev_synthetic.v2.jsonl": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+    "kev_domain__dev_human.v1.jsonl": "2479f6026cdb1dd08de07199ceec0be4e32c39490415c672ecdd2caa56472f9a"
+  }
+}

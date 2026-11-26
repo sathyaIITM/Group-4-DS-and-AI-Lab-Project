@@ -1,0 +1,41 @@
+id,set,gold_action,gold_slot,rule_action,rule_slot,rule,impl_action,code_ref,m4_action_mode,class,confidence,note
+e2e-401,test_t1,answer,,answer,,D6b,answer,resolve.py _subdivisions_of (A1); LLM-dependent place extraction,,aligned,high,Karnataka spans three sub-divisions: one row each
+e2e-402,test_t1,answer,,answer,,D6,answer,"resolve.py _subdivisions_of, _shared_states (A1)",,aligned,high,"Delhi maps to the composite Haryana Delhi & Chandigarh, stated"
+e2e-403,test_t1,answer,,answer,,D6,answer,places.py alias_candidates (A2); subdivision_aliases.csv,,aligned,high,Odisha stored as Orissa; alias row written by the same author (T1)
+e2e-404,test_t1,answer,,answer,,D6b,answer,resolve.py _subdivisions_of (A1),,aligned,high,Maharashtra spans four sub-divisions
+e2e-405,test_t1,answer,,answer,,D6,answer,resolve.py _subdivisions_of (A1),,aligned,high,"Goa inside Konkan & Goa, stated"
+e2e-406,test_t1,answer,,answer,,D6; D1b (snapshot day),answer,places.py alias_candidates (A2); place_aliases.csv,,aligned,high,Azadpur -> APMC Azadpur; alias row by the same author
+e2e-407,test_t1,answer,,answer,,D6; D1b,answer,places.py alias_candidates (A2); place_aliases.csv,,aligned,high,Ooty -> Udhagamandalam(Uzhavar Sandhai ); alias row by the same author
+e2e-408,test_t1,answer,,answer,,D6; D1b,answer,places.py alias_candidates (A2); place_aliases.csv,,aligned,high,Vellore regulated market -> Vellore RM; alias row by the same author
+e2e-409,test_t1,answer,,answer,,D6 (former name); D1b,answer,places.py alias_candidates (A2); place_aliases.csv,,aligned,medium,Palghat is the former name of Palakkad; APMC Palghar (Maharashtra) is a near spelling the agent must not take
+e2e-410,test_t1,clarify,place,clarify,place,S2,clarify,places.py resolve_place options 'Name (State)' (A3),,aligned,high,Aurangabad in Bihar and Maharashtra (nfhs5_district_indicators)
+e2e-411,test_t1,clarify,place,clarify,place,S2,clarify,places.py resolve_place (A3),,aligned,high,BILASPUR in Chhattisgarh and Himachal Pradesh (imd_district_rainfall_normals)
+e2e-412,test_t1,answer,,answer,,S2 (State named),answer,"places.py split_qualifier, same_state (A3)",,aligned,high,HAMIRPUR in HP and UP; State named
+e2e-413,test_t1,answer,,answer,,S2 (State named),answer,places.py split_qualifier (A3),,aligned,high,Pratapgarh in Rajasthan and UP; State named. Domain: see draft row (M6)
+e2e-414,test_t1,answer,,answer,,D1b,answer,periods.py now-words (B1),,aligned,high,Latest NCRB year 2024: 418.9; crime is domain other
+e2e-415,test_t1,answer,,answer,,D1b,answer,periods.py now-words (B1),,aligned,high,Latest MSP year 2024-25: 2425
+e2e-416,test_t1,answer,,answer,,D1b; E2a,answer,periods.py (B1); E2a table choice LLM-dependent,,aligned,medium,SRS 2019: 41 (E2a: table built for the measure)
+e2e-417,test_t1,answer,,answer,,D1b,answer,periods.py (B1),,aligned,high,Only 2023-24 published: 39.8
+e2e-418,test_t1,answer,,answer,,D9; V1,answer,resolve.py TOTAL_VALUES (Rural+Urban),,aligned,high,"12 monthly values, combined sector"
+e2e-419,test_t1,answer,,answer,,V1,answer,resolve_plan; LLM-dependent series vs end points,,aligned,medium,Five yearly values; agent may return end points only (seen on dev)
+e2e-420,test_t1,answer,,answer,,D1c,answer,"resolve_plan (no period, series)",,aligned,high,Full range 2019-20 to 2023-24
+e2e-421,test_t1,answer,,answer,,V1,answer,resolve_plan,,aligned,high,"Four States, 2023"
+e2e-422,test_t1,answer,,answer,,V1,answer,resolve_plan,,aligned,high,Six MSP years
+e2e-423,test_t1,answer,,answer,,V2,answer,resolve_plan; SQL prompt NOT is_total_row,,aligned,high,"Five lowest normals, re-executed"
+e2e-424,test_t1,answer,,answer,,F1; D6c,clarify (place),memory.py plan inheritance; place_aliases.csv has no State abbreviations,,agent_gap,high,TN is a D6c abbreviation; the reference data hold no State abbreviations
+e2e-425,test_t1,answer,,answer,,F2 (series),answer,"memory.py, context.py",,aligned,medium,Follow-up widens to all published years (2022-2024)
+e2e-426,test_t1,answer,,answer,,F3 (comparison),answer,"memory.py, context.py",,aligned,medium,Both States expected
+e2e-427,test_t1,answer,,answer,,F1,answer,memory.py plan inheritance,,aligned,high,New place only: Kerala 1.8
+e2e-428,test_t1,clarify,category,clarify,category,E9,clarify,intent_gepa.v1 group rule; tool_nodes.py review_intent,,rule_gap,medium,E9 single table group (persons 15+) vs D10 and scorer: one-option clarification counts as a failure; see RG-7
+e2e-429,test_t1,clarify,period,clarify,period,E10,clarify (wrong options),E10 options partly implemented (agent offers latest periods),,agent_gap,high,Options should be the two overlapping survey years 2018-19 and 2019-20
+e2e-430,test_t1,clarify,period,clarify,period,E11,clarify,intent prompt: named event -> clarify period,,aligned,high,Demonetisation without dates
+e2e-431,test_t1,clarify,category,clarify,category,S1; E12,clarify,tool_nodes.py commodity before market (C1),,aligned,high,Hosur alias in place_aliases.csv; commodity missing
+e2e-432,test_t1,clarify,category,clarify,category,E9,clarify,intent_gepa.v1 group rule (rural on urban-only),,rule_gap,medium,Same E9 single-option question as e2e-428; see RG-7
+e2e-433,test_t1,clarify,indicator,clarify,indicator,E12; S1 (indicator first),clarify,"clarify path, slot indicator",,aligned,high,No measure named
+e2e-434,test_t1,decline,,decline,,E5,decline,coverage/decline path; LLM-dependent,,aligned,medium,Count of infant deaths; only the rate is published
+e2e-435,test_t1,decline,,decline,,E5,decline,coverage/decline path,,aligned,high,No wage table
+e2e-436,test_t1,decline,,decline,,E5,decline,coverage/decline path,,aligned,high,No fuel price table
+e2e-437,test_t1,decline,,decline,,E6,decline,decline path (forecast),,aligned,high,Forecast
+e2e-438,test_t1,answer,,answer,,V6,abstain (number check),number check fails on bales (D3 not in the freeze),,agent_gap,high,Cotton in bales; known number-check gap
+e2e-439,test_t1,answer,,answer,,D9,answer,resolve.py TOTAL_VALUES,,aligned,high,Total population sex ratio 1121
+e2e-440,test_t1,answer,,answer,,V3,answer,derivations (difference),,aligned,high,11.4 -> 9.6: -1.8 points

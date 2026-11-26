@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from analyst.evaluation import scorer_v3
 from analyst.evaluation.metrics import (
     accuracy_ci,
     execution_accuracy,
@@ -214,7 +215,89 @@ def _case_result(state: Any, item: dict[str, Any]) -> dict[str, Any]:
         "tokens_out": sum(record.tokens_out for record in state.llm_records),
         "cost_usd_est": sum(record.cost_usd_est or 0.0 for record in state.llm_records),
         "run_id": state.run_id,
+        # Every routing decision in order (route, then escalation): backend, label, calibrated
+        # and raw probabilities, escalation, fallback, latency. Used to check Kev's confidence
+        # inside the agent (v4) against the gold domain.
+        "decisions": [_decision_record(record) for record in state.decision_log],
+        **_interpretation_record(state),
+        **gold_fields(item),
     }
+
+
+GOLD_FIELDS = (
+    "domain",
+    "clarify_slot",
+    "clarify_options",
+    "expected_places",
+    "expected_periods",
+    "indicator_ids",
+    "unit",
+    "n_values",
+    "gold_lineage",
+    "gold_version",
+)
+
+
+def gold_fields(item: dict[str, Any]) -> dict[str, Any]:
+    """The structured gold fields of an item (Milestone 5), copied into its case record."""
+    return {name: item.get(name) for name in GOLD_FIELDS}
+
+
+def _interpretation_record(state: Any) -> dict[str, Any]:
+    """What scorer v3 reads from the final state: plan, clarification, evidence and chart."""
+    plan = state.plan
+    asked: list[str] = []
+    options: list[str] = []
+    if plan is not None:
+        for slot in plan.unresolved:
+            asked.append(slot.slot)
+            options += slot.options
+    intent = state.intent
+    if intent is not None and intent.action == "clarify" and intent.missing_slot:
+        asked.append(intent.missing_slot)
+    if state.pending_clarification is not None and state.pending_clarification.options:
+        options = list(state.pending_clarification.options)
+    evidence = state.evidence
+    return {
+        "plan_places": [{"name": p.name, "level": p.level} for p in plan.places] if plan else [],
+        "plan_all_places_level": plan.all_places_level if plan else None,
+        "plan_periods": [
+            {"start": w.start.isoformat(), "end": w.end.isoformat(), "label": w.label}
+            for w in plan.periods
+        ]
+        if plan
+        else [],
+        "plan_indicators": [i.indicator_id for i in plan.indicators] if plan else [],
+        "clarify_slots_asked": list(dict.fromkeys(asked)),
+        "clarify_options_asked": options,
+        "evidence": {
+            "dataset_ids": sorted({s.dataset_id for s in evidence.sources}),
+            "has_source": any(s.title and s.publisher for s in evidence.sources),
+            "sql": evidence.sql,
+        }
+        if evidence is not None
+        else {},
+        "chart_attached": state.chart is not None,
+    }
+
+
+def _decision_record(record: Any) -> dict[str, Any]:
+    """Dump a routing decision with the backend's raw probabilities restored.
+
+    The router stores calibrated probabilities, p_cal proportional to p_raw ** (1 / T); the raw
+    ones are p_raw proportional to p_cal ** T, exact up to the router's clipping at 1e-12.
+    """
+    row: dict[str, Any] = record.model_dump(mode="json")
+    temperature = record.temperature
+    if record.calibrated and temperature:
+        powered = {
+            k: max(float(v), 1e-12) ** float(temperature) for k, v in record.probabilities.items()
+        }
+        total = sum(powered.values())
+        row["raw_probabilities"] = {k: v / total for k, v in powered.items()}
+    else:
+        row["raw_probabilities"] = dict(record.probabilities)
+    return row
 
 
 def _first_event_ms(state: Any) -> int | None:
@@ -350,6 +433,7 @@ def _run_case(
             "experiment": experiment,
             "version": version,
             "member": member,
+            **gold_fields(item),
             "outcome": "failed",
             "cause": "runner_exception",
             "error": f"{type(error).__name__}: {error}",
@@ -468,9 +552,13 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "expected": expected,
                     "outcome": outcome,
                     **checks,
+                    **({"v3": v3_checks(case)} if SCORER_RULES == "v3" else {}),
                     **({"slot_check": "manual"} if manual_slot else {}),
                 }
             )
+    v3_rates = (
+        scorer_v3.check_rates([v3_checks(case) for case in cases]) if SCORER_RULES == "v3" else None
+    )
     latencies = [
         float(case["duration_ms"]) for case in cases if case.get("duration_ms") is not None
     ]
@@ -524,17 +612,118 @@ def score_cases(cases: list[dict[str, Any]]) -> dict[str, Any]:
         if cases
         else None,
         "review_cases": review,
+        **({"checks_v3": v3_rates} if v3_rates is not None else {}),
     }
 
 
-def score_repeats(paths: list[Path]) -> dict[str, Any]:
+def read_predictions(path: Path) -> list[dict[str, Any]]:
+    """Read one predictions file (one case record per line)."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return [json.loads(line) for line in lines if line.strip()]
+
+
+def apply_gold(cases: list[dict[str, Any]], items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Replace the gold copied into each case with the gold of the given set (same ids).
+
+    Used to re-score earlier predictions on validated gold (Milestone 5). The agent's side of the
+    record is untouched; the gold rows are recomputed from the gold SQL.
+    """
+    by_id = {str(item["id"]): item for item in items}
+    missing = sorted({str(c["id"]) for c in cases} - set(by_id))
+    if missing:
+        raise ValueError(f"cases without an item in the gold set: {missing[:5]}")
+    updated = []
+    for case in cases:
+        item = by_id[str(case["id"])]
+        updated.append(
+            {
+                **case,
+                "expected_action": item["expected_action"],
+                "dataset_ids": item.get("dataset_ids", []),
+                "expected_values": item["expected_values"],
+                "expected_entities": item["expected_entities"],
+                "tolerance": item["tolerance"],
+                "notes": item.get("notes", ""),
+                "gold_sql": item.get("gold_sql"),
+                "gold_rows": _gold_rows(item),
+                **gold_fields(item),
+            }
+        )
+    return updated
+
+
+def _load_runs(paths: list[Path], gold: list[dict[str, Any]] | None) -> list[list[dict[str, Any]]]:
+    """Read repeated run files, with the gold replaced when a gold set is given."""
+    runs = [read_predictions(path) for path in paths]
+    return [apply_gold(cases, gold) for cases in runs] if gold is not None else runs
+
+
+def compare_runs(
+    a_paths: list[Path],
+    b_paths: list[Path],
+    gold: list[dict[str, Any]] | None = None,
+    resamples: int = 10_000,
+    seed: int = 0,
+    only_ids: set[str] | None = None,
+) -> dict[str, Any]:
+    """Paired comparison of two configurations on the same items (B minus A).
+
+    `only_ids` restricts both sides to those items (for example the new test items, when one
+    configuration was run on them only).
+
+    Per item, the success rate over its repeated runs; the mean difference has a bootstrap 95%
+    interval over items. An exact McNemar test compares majority success (at least half of the
+    runs) per item.
+    """
+    import numpy as np
+    from scipy.stats import binomtest
+
+    def per_item(paths: list[Path]) -> dict[str, float]:
+        runs = _load_runs(paths, gold)
+        scores: dict[str, list[bool]] = {}
+        for cases in runs:
+            for case in cases:
+                if only_ids is not None and str(case["id"]) not in only_ids:
+                    continue
+                scores.setdefault(str(case["id"]), []).append(_case_success(case))
+        return {k: sum(v) / len(v) for k, v in scores.items()}
+
+    a, b = per_item(a_paths), per_item(b_paths)
+    if set(a) != set(b):
+        raise ValueError("the two configurations were run on different items")
+    ids = sorted(a)
+    diff = np.array([b[i] - a[i] for i in ids])
+    rng = np.random.default_rng(seed)
+    means = diff[rng.integers(0, len(ids), size=(resamples, len(ids)))].mean(axis=1)
+    a_major = [a[i] >= 0.5 for i in ids]
+    b_major = [b[i] >= 0.5 for i in ids]
+    only_b = sum(bb and not aa for aa, bb in zip(a_major, b_major, strict=True))
+    only_a = sum(aa and not bb for aa, bb in zip(a_major, b_major, strict=True))
+    discordant = only_a + only_b
+    p_value = binomtest(only_b, discordant, 0.5).pvalue if discordant else 1.0
+    return {
+        "items": len(ids),
+        "scorer_rules": SCORER_RULES,
+        "a_success_mean": float(np.mean([a[i] for i in ids])),
+        "b_success_mean": float(np.mean([b[i] for i in ids])),
+        "difference_b_minus_a": float(diff.mean()),
+        "difference_ci95": [float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))],
+        "bootstrap": {"resamples": resamples, "seed": seed},
+        "mcnemar": {
+            "only_a_succeeds": only_a,
+            "only_b_succeeds": only_b,
+            "p_value_exact": float(p_value),
+        },
+        "items_better_in_b": [i for i in ids if b[i] > a[i]],
+        "items_worse_in_b": [i for i in ids if b[i] < a[i]],
+    }
+
+
+def score_repeats(paths: list[Path], gold: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Score repeated run files and measure run-to-run changes in per-question correctness."""
     if not paths:
         raise ValueError("at least one predictions file is required")
-    runs = [
-        [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-        for path in paths
-    ]
+    runs = _load_runs(paths, gold)
     reports = [score_cases(cases) for cases in runs]
     indexed = [{str(case["id"]): _case_success(case) for case in cases} for cases in runs]
     common = set(indexed[0])
@@ -559,8 +748,33 @@ def score_repeats(paths: list[Path]) -> dict[str, Any]:
     }
 
 
+def _v2_answer_ok(case: dict[str, Any]) -> bool:
+    """Scorer v2 rule for an answer: values, narration, entities and the number check."""
+    checks = _case_checks(case)
+    return (
+        case.get("outcome") in {"answered", "charted"}
+        and checks["values_match"]
+        and checks["narration_match"]
+        and checks["entity_match"]
+        and case.get("number_check_passed") is True
+    )
+
+
+def v3_checks(case: dict[str, Any]) -> dict[str, bool | None]:
+    """Scorer v3 checks of one case (analyst.evaluation.scorer_v3)."""
+    values_ok = _v2_answer_ok(case) if case.get("expected_action") == "answer" else False
+    return scorer_v3.checks(case, values_ok, _within_tolerance, _tables_named)
+
+
 def _case_success(case: dict[str, Any]) -> bool:
     """Apply the primary answer/clarify/decline/describe/search scoring rules to one case."""
+    if SCORER_RULES == "v3":
+        if not scorer_v3.computable(case):
+            raise ValueError(
+                f"{case.get('id')}: the record has no plan or evidence fields (written before "
+                "Milestone 5); score it with --scorer v2"
+            )
+        return scorer_v3.success(v3_checks(case))
     expected, outcome = case.get("expected_action"), case.get("outcome")
     if expected == "answer":
         checks = _case_checks(case)
@@ -597,7 +811,9 @@ def _case_success(case: dict[str, Any]) -> bool:
 # describe case must retrieve the gold tables. v2 (default, 19 Nov, after the M4 test ladder): an
 # expected entity may also be a category value of a result row or a place plus a category value
 # ("Bihar Rural" from geo_name "Bihar" and area "Rural"), and tables named in a search or describe
-# reply count as retrieved. v1 is kept so the as-run M4 figures can be reproduced.
+# reply count as retrieved. v1 is kept so the as-run M4 figures can be reproduced. v3 (Milestone
+# 5): the checks of analyst.evaluation.scorer_v3 (interpretation, completeness, unit, period,
+# evidence, clarification slot) on records written from Milestone 5 on.
 SCORER_RULES = "v2"
 NON_ENTITY_COLUMNS = {"period_label", "indicator_id", "unit", "quality_flag"}
 
@@ -754,8 +970,21 @@ def main() -> int:
     score_parser.add_argument("--predictions", type=Path, nargs="+", required=True)
     score_parser.add_argument("--out", type=Path, required=True)
     score_parser.add_argument(
-        "--scorer", choices=["v1", "v2"], default="v2", help="scorer rules (v1: as-run M4)"
+        "--scorer",
+        choices=["v1", "v2", "v3"],
+        default="v2",
+        help="scorer rules (v1: as-run M4; v3: Milestone 5 records)",
     )
+    score_parser.add_argument(
+        "--gold", type=Path, nargs="+", help="score against the gold of these sets (same ids)"
+    )
+    compare_parser = sub.add_parser("compare")
+    compare_parser.add_argument("--a", type=Path, nargs="+", required=True, help="baseline runs")
+    compare_parser.add_argument("--b", type=Path, nargs="+", required=True, help="new runs")
+    compare_parser.add_argument("--scorer", choices=["v1", "v2", "v3"], default="v3")
+    compare_parser.add_argument("--gold", type=Path, nargs="+")
+    compare_parser.add_argument("--only", type=Path, help="compare only the items of this set")
+    compare_parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "split":
         report = write_split(args.set, dev_size=args.dev_size, seed=args.seed)
@@ -787,8 +1016,22 @@ def main() -> int:
         return 0
     global SCORER_RULES
     SCORER_RULES = args.scorer
-    report = score_repeats(args.predictions)
+    gold = [item for path in args.gold for item in load_set(path)] if args.gold else None
+    if args.command == "compare":
+        only = {str(i["id"]) for i in load_set(args.only)} if args.only else None
+        comparison = compare_runs(args.a, args.b, gold, only_ids=only)
+        comparison.update(
+            a=[str(p) for p in args.a],
+            b=[str(p) for p in args.b],
+            gold=[str(p) for p in args.gold] if args.gold else None,
+            compared_at=datetime.now(UTC).isoformat(),
+        )
+        _write_json(args.out, comparison)
+        print(json.dumps(comparison, indent=2))
+        return 0
+    report = score_repeats(args.predictions, gold)
     report["scorer_rules"] = args.scorer
+    report["gold"] = [str(p) for p in args.gold] if args.gold else None
     report["experiment"] = report["runs"][0].get("experiment") if report["runs"] else None
     report["scored_at"] = datetime.now(UTC).isoformat()
     _write_json(args.out, report)

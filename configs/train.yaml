@@ -40,7 +40,48 @@ data:
   # Routing data v2 itself (tool and domain): data/splits/kev/*.v2.jsonl, hashes in MANIFEST.
   subsets_dir: data/splits/kev_domain/subsets   # train-size runs; written by `kev_runs subsets`
 
+# Phase 2 (Milestone 5, decided 2026-11-24): one Kev model for tool selection and domain, trained
+# on routing data v2 (both questions, as one record per question), from the same pinned warm start. The
+# recipe is the Milestone 4 selection (`ep3`: B0 with 3 epochs), fixed before any phase 2 score;
+# two seeds show the spread. Selection, fixed in advance: one temperature per decision fitted on
+# `calibration`; the seed with the lower mean `dev_synthetic` NLL over the two decisions after
+# temperature. Adoption: the gate of configs/inference.yaml on the tool labels of dev_human v1.1
+# (labelling guide 1.1) and on the domain labels of dev_human.
+phase2:
+  # One single-question record per decision (scripts/build_phase2_split.py): both questions on
+  # one record made the 32-record smoke run grow to about 18 GB on the local machine (24 Nov).
+  train: data/splits/kev/phase2_split/train.v2.jsonl   # 3,752 records from the 1,876 of v2
+  train_sha256: 1a3c0ba9024dabdea26aca3221725dfdd6d4fee8499add3c6c20b9b394b97747
+  joint_source: data/splits/kev/train.v2.jsonl
+  joint_source_sha256: 4829691c1b21b5243185fb308e882e7e490e199bf1a67d649e6eeaf6f29ca427
+  calibration: data/splits/kev/calibration.v2.jsonl
+  calibration_sha256: f1a8fafc64fa829e3fde12375a262366658cec7b9d0faa43af3ce58c4c4b5c2f
+  dev_synthetic: data/splits/kev/dev_synthetic.v2.jsonl
+  dev_synthetic_sha256: 3a249faf05ac85c099a45a4c6a0d522cbd17df7918186a80f3edfc7f7db9fac3
+  smoke: data/splits/kev/phase2_split/overfit32.v2.jsonl   # 64 = 32 joint records split
+  smoke_sha256: 3b223d51db5bc1854dc4a437294b61eb54aae903f0b414090314e25b0b6772b8
+  recipe: {epochs: 3}
+  seeds: [0, 1]
+
 # Base configuration B0 (docs/Kev_Training_Plan.md Section 6, corrected for the flags above).
+# Parity phase (Milestone 5; docs/specs/kev_laya_parity_protocol.md, fixed 24 Nov 2026 before any
+# run under it). The two best sweep settings by dev_synthetic NLL (ep3, lr4e-05) get seeds 1 and 2
+# in the domain cell and seeds 0-2 in the joint cell; one held-out-table run (first-ranked setting).
+parity:
+  recipes:
+    ep3: {epochs: 3}
+    lr4e-05: {lr: 4.0e-5}
+  domain_seeds: {ep3: [1, 2], lr4e-05: [1, 2]}
+  # Joint cell: three seeds per setting. joint_ep3_s0 and _s1 are the phase 2 runs (phase2 above,
+  # fixed before any score and unchanged); the parity phase adds the runs below under its own rule.
+  joint_seeds: {ep3: [2], lr4e-05: [0, 1, 2]}
+  held_out:
+    table: srs_imr_state
+    recipe: ep3
+    seed: 0
+    train: data/splits/kev/phase2_split/train_heldout_srs_imr_state.v2.jsonl   # scripts/build_parity_data.py
+    train_sha256: ba57c49b538eab573bbc96a45407584301f7d33455e86972dcf14acd56a7ef71
+
 b0:
   lr: 2.0e-5
   epochs: 2
@@ -114,6 +155,13 @@ sessions:
   kaggle_2: [[lr4e-05], [b0_s1]]
   kaggle_3: [[ep3], [b0_s2, ep1]]
   colab_1: [[base_r16]]
+  kaggle_4: [[joint_ep3_s0], [joint_ep3_s1]]   # phase 2 (Milestone 5)
+  # Parity phase (docs/specs/kev_laya_parity_protocol.md), all on Kaggle 2 x T4 (measured: domain
+  # 2 epochs 35 min, 3 epochs 54 min, joint ep3 128 min; 2-epoch joint estimated 85). The four
+  # domain seeds were first planned as Colab sessions colab_2..colab_5 and moved to kaggle_6
+  # (26 Nov) when a second Kaggle account became available; settings and seeds are unchanged.
+  kaggle_6: [[lr4e-05_s1, ep3_s1], [lr4e-05_s2, ep3_s2]]
+  kaggle_5: [[joint_ep3_s2, heldout_joint_ep3_s0], [joint_lr4e-05_s0, joint_lr4e-05_s1, joint_lr4e-05_s2]]
 planned:
   b0_s0: kaggle
   lr1e-05: kaggle
@@ -123,6 +171,18 @@ planned:
   b0_s2: kaggle
   ep1: kaggle
   base_r16: colab
+  joint_ep3_s0: kaggle
+  joint_ep3_s1: kaggle
+  # parity phase
+  lr4e-05_s1: kaggle
+  lr4e-05_s2: kaggle
+  ep3_s1: kaggle
+  ep3_s2: kaggle
+  joint_ep3_s2: kaggle
+  joint_lr4e-05_s0: kaggle
+  joint_lr4e-05_s1: kaggle
+  joint_lr4e-05_s2: kaggle
+  heldout_joint_ep3_s0: kaggle
 # Priority if sessions fail: b0_s0, then lr1e-05 and lr4e-05, then the seeds, ep3 and ep1,
 # base_r16.
 

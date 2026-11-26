@@ -1,0 +1,6 @@
+id,field,gold,proposed,rule,note,confidence,decision,decided_by
+e2e-227,expected_values,"[2150.0, 1850.0]",[2150.0],F1,"'aur bajra ka?' changes the crop only, as e2e-024 and e2e-052 change the place only",high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-227,expected_entities,"[""Bajra"", ""Maize""]","[""Bajra""]",F1,as above,high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-227,n_values,2,1,F1,as above,high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-227,gold_sql,"""SELECT commodity_name AS entity, period_label, value FROM obs_msp_crops WHERE indicator_id = 'msp' AND commodity_name IN ('Maize', 'Bajra') AND period_start = DATE '2020-07-01' ORDER BY commodity_name""","""SELECT commodity_name AS entity, period_label, value FROM obs_msp_crops WHERE indicator_id = 'msp' AND commodity_name = 'Bajra' AND period_start = DATE '2020-07-01'""",F1,as above,high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+_summary,,,,,4 rows on 1 items,,,

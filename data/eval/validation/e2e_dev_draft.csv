@@ -1,0 +1,6 @@
+id,field,gold,proposed,rule,note,confidence,decision,decided_by
+e2e-075,expected_values,[3.0],"[3.0, 3.0]",V5,"Mizoram and Nagaland both 3.0 in 2019 (executed); a tie expects a list, not a single State",high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-075,expected_entities,"[""Mizoram""]","[""Mizoram"", ""Nagaland""]",V5,as above,high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-075,gold_sql,"""SELECT geo_name AS entity, value FROM obs_srs_imr_state WHERE indicator_id = 'imr_srs' AND NOT is_total_row AND period_start = DATE '2019-01-01' AND value IS NOT NULL ORDER BY value ASC LIMIT 1""","""SELECT geo_name AS entity, value FROM obs_srs_imr_state WHERE indicator_id = 'imr_srs' AND NOT is_total_row AND period_start = DATE '2019-01-01' AND value = (SELECT MIN(value) FROM obs_srs_imr_state WHERE indicator_id = 'imr_srs' AND NOT is_total_row AND period_start = DATE '2019-01-01') ORDER BY geo_name""",V5,"returns every State at the minimum; executed: [('Mizoram', 3.0), ('Nagaland', 3.0)]",high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+e2e-075,notes,"""""","""Tie at the minimum (Mizoram and Nagaland, 3.0): the answer lists both (V5).""",V5,note only,high,accept,Sathya Prakash (T3); Shaoni Samanta (T1); Shivanshu Gupta (T2)
+_summary,,,,,4 rows on 1 items,,,

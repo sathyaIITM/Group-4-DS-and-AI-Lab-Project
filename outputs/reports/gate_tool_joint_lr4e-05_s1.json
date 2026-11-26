@@ -1,0 +1,25 @@
+{
+  "n": 198,
+  "kev_temperature": 4.551106615111194,
+  "kev_accuracy": 0.797979797979798,
+  "jev_accuracy": 0.7626262626262627,
+  "kev_minus_jev": {
+    "difference": 0.03535353535353536,
+    "ci95": [
+      -0.03547979797979798,
+      0.10606060606060608
+    ]
+  },
+  "kev_ece_calibrated": 0.06707101523085524,
+  "margin": 0.03,
+  "ece_max": 0.1,
+  "passes_point_estimate": true,
+  "passes_non_inferiority": false,
+  "decides": "point_estimate",
+  "passes": true,
+  "inputs_sha256": {
+    "kev_calibration": "ee23512963da72a9f85b4001ad1a0f9180df7d662904d2b4906352cd33d50e7f",
+    "kev_dev": "0b8d64ef661b77a97db81c5f6c2e7cb53cb75ade882b44d627e530c539d07cf6",
+    "jev_dev": "addc71f516aec1a28353a555106752ad7fdba89e0b9aa3af0149b7f7e97c8160"
+  }
+}

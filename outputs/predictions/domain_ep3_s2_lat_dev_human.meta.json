@@ -1,0 +1,16 @@
+{
+  "run_id": "ep3_s2_lat",
+  "decision": "domain",
+  "checkpoint": "models/checkpoints/ep3_s2",
+  "weights_sha256": {
+    "adapter_model.safetensors": "5fc26b8a12a6d2f86c54c017c718c75c7867abc25cf55d1b10c65222fc0f686c",
+    "head.pt": "6681859ad42bfca46a301bf56bceb9657006123e5d7fbebd4171be42ff7fa239"
+  },
+  "server": "kev.serve (scripts/serve_kev.sh), mps",
+  "data": "data/splits/kev_domain/dev_human.v1.jsonl",
+  "data_sha256": "2479f6026cdb1dd08de07199ceec0be4e32c39490415c672ecdd2caa56472f9a",
+  "predictions_sha256": "70a88f9b5562c8cbd5e34ddcdde00d5b9d86780d596799b1b11887d76ef76b9e",
+  "device": "mps",
+  "n_predictions": 198,
+  "created_utc": "2026-11-26T13:05:48+00:00"
+}

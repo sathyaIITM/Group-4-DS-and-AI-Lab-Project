@@ -1,0 +1,127 @@
+{
+  "decision": "domain",
+  "split": "data/splits/kev_domain/dev_human.v1.jsonl",
+  "n": 198,
+  "followup_items": 47,
+  "note": "Raw argmax predictions (temperature scaling does not change the argmax). Follow-up = the state context already holds a result table. Selected phase-2 seed: joint_ep3_s1 (fixed rule: lower mean dev_synthetic NLL over tool and domain after per-decision temperature).",
+  "runs": {
+    "ep3": {
+      "errors": 4,
+      "accuracy": 0.9798,
+      "followup_errors": 1,
+      "confusions": {
+        "other->unspecified": 1,
+        "labour->other": 1,
+        "multiple->health": 1,
+        "multiple->labour": 1
+      },
+      "error_ids": [
+        "dh-110",
+        "dh-135",
+        "dh-153",
+        "dh-193"
+      ],
+      "errors_ep3_got_right": []
+    },
+    "joint_ep3_s0": {
+      "errors": 13,
+      "accuracy": 0.9343,
+      "followup_errors": 6,
+      "confusions": {
+        "prices_economy->other": 3,
+        "multiple->labour": 2,
+        "multiple->prices_economy": 1,
+        "other->health": 1,
+        "rainfall->agriculture": 1,
+        "multiple->agriculture": 1,
+        "labour->other": 1,
+        "health->other": 1,
+        "multiple->health": 1,
+        "unspecified->other": 1
+      },
+      "error_ids": [
+        "dh-006",
+        "dh-020",
+        "dh-042",
+        "dh-068",
+        "dh-082",
+        "dh-117",
+        "dh-123",
+        "dh-135",
+        "dh-141",
+        "dh-152",
+        "dh-153",
+        "dh-174",
+        "dh-193"
+      ],
+      "errors_ep3_got_right": [
+        "dh-006",
+        "dh-020",
+        "dh-042",
+        "dh-068",
+        "dh-082",
+        "dh-117",
+        "dh-123",
+        "dh-141",
+        "dh-152",
+        "dh-174"
+      ]
+    },
+    "joint_ep3_s1": {
+      "errors": 8,
+      "accuracy": 0.9596,
+      "followup_errors": 5,
+      "confusions": {
+        "multiple->labour": 2,
+        "other->unspecified": 2,
+        "labour->other": 1,
+        "health->other": 1,
+        "multiple->health": 1,
+        "prices_economy->other": 1
+      },
+      "error_ids": [
+        "dh-042",
+        "dh-100",
+        "dh-110",
+        "dh-135",
+        "dh-141",
+        "dh-153",
+        "dh-188",
+        "dh-193"
+      ],
+      "errors_ep3_got_right": [
+        "dh-042",
+        "dh-100",
+        "dh-141",
+        "dh-188"
+      ]
+    },
+    "jev": {
+      "errors": 6,
+      "accuracy": 0.9697,
+      "followup_errors": 3,
+      "confusions": {
+        "multiple->labour": 2,
+        "health->other": 1,
+        "rainfall->other": 1,
+        "other->health": 1,
+        "multiple->agriculture": 1
+      },
+      "error_ids": [
+        "dh-009",
+        "dh-042",
+        "dh-059",
+        "dh-065",
+        "dh-123",
+        "dh-193"
+      ],
+      "errors_ep3_got_right": [
+        "dh-009",
+        "dh-042",
+        "dh-059",
+        "dh-065",
+        "dh-123"
+      ]
+    }
+  }
+}

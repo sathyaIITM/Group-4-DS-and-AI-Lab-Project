@@ -1,0 +1,284 @@
+{
+  "clarification": {
+    "m4_v2_continuity_3_runs": {
+      "cases": 18,
+      "asked": 0.611
+    },
+    "m5_v2_run1": {
+      "continuity": {
+        "cases": 6,
+        "asked": 0.667,
+        "asked_right_slot": 0.5
+      },
+      "test_100": {
+        "cases": 12,
+        "asked": 0.667,
+        "asked_right_slot": 0.5
+      },
+      "blind": {
+        "cases": 8,
+        "asked": 0.625,
+        "asked_right_slot": 0.625
+      }
+    },
+    "m5_v3_run1": {
+      "continuity": {
+        "cases": 6,
+        "asked": 0.667,
+        "asked_right_slot": 0.5
+      },
+      "test_100": {
+        "cases": 12,
+        "asked": 0.75,
+        "asked_right_slot": 0.5
+      },
+      "blind": {
+        "cases": 8,
+        "asked": 0.625,
+        "asked_right_slot": 0.625
+      }
+    },
+    "m5_v4_run1": {
+      "continuity": {
+        "cases": 6,
+        "asked": 0.667,
+        "asked_right_slot": 0.5
+      },
+      "test_100": {
+        "cases": 12,
+        "asked": 0.667,
+        "asked_right_slot": 0.583
+      },
+      "blind": {
+        "cases": 8,
+        "asked": 0.75,
+        "asked_right_slot": 0.75
+      }
+    }
+  },
+  "domain_inside_agent": {
+    "v4_kev_ep3_s2": {
+      "decisions": 140,
+      "accuracy": 0.879,
+      "ece": 0.08,
+      "mean_confidence_correct": 0.972,
+      "mean_confidence_wrong": 0.808,
+      "escalated_to_jev": 2
+    },
+    "v4_kev_joint": {
+      "decisions": 140,
+      "accuracy": 0.893,
+      "ece": 0.078,
+      "mean_confidence_correct": 0.969,
+      "mean_confidence_wrong": 0.844,
+      "escalated_to_jev": 1,
+      "tool_escalated_to_jev": 78
+    },
+    "v2_jev": {
+      "decisions": 140,
+      "accuracy": 0.907,
+      "ece": 0.062,
+      "mean_confidence_correct": 0.951,
+      "mean_confidence_wrong": 0.837,
+      "escalated_to_jev": 0
+    }
+  },
+  "v3_against_v4": {
+    "items": 140,
+    "worse_in_v4": 13,
+    "better_in_v4": 8,
+    "worse_with_same_domain_decision_in_both_runs": 12,
+    "worse_with_different_domain_decision": {
+      "e2e-413": {
+        "v3_jev": [
+          "other",
+          "other"
+        ],
+        "v4_kev": [
+          "health",
+          "health"
+        ],
+        "gold": "other"
+      }
+    },
+    "domain_accuracy_both_runs": {
+      "v3_jev": 0.904,
+      "v4_kev": 0.879
+    }
+  },
+  "action_confusion": {
+    "v2_run1": {
+      "answer": {
+        "answered": 68,
+        "declined": 7,
+        "failed": 8,
+        "clarifying": 9,
+        "abstained": 3
+      },
+      "clarify": {
+        "declined": 6,
+        "clarifying": 13,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "declined": 16
+      },
+      "search": {
+        "searched": 4
+      }
+    },
+    "v3_run1": {
+      "answer": {
+        "answered": 74,
+        "clarifying": 6,
+        "declined": 9,
+        "failed": 4,
+        "abstained": 2
+      },
+      "clarify": {
+        "declined": 5,
+        "clarifying": 14,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "answered": 1,
+        "declined": 15
+      },
+      "search": {
+        "searched": 4
+      }
+    },
+    "v4_run1": {
+      "answer": {
+        "answered": 74,
+        "clarifying": 9,
+        "failed": 5,
+        "abstained": 3,
+        "declined": 4
+      },
+      "clarify": {
+        "declined": 5,
+        "clarifying": 14,
+        "answered": 1
+      },
+      "describe": {
+        "described": 5
+      },
+      "decline": {
+        "declined": 16
+      },
+      "search": {
+        "searched": 4
+      }
+    }
+  },
+  "robustness_items": {
+    "typos": {
+      "e2e-020": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-205": [
+        [
+          "clarifying",
+          false
+        ],
+        [
+          "clarifying",
+          false
+        ]
+      ],
+      "e2e-428": [
+        [
+          "declined",
+          false
+        ],
+        [
+          "declined",
+          false
+        ]
+      ]
+    },
+    "hindi_hinglish": {
+      "e2e-098": [
+        [
+          "answered",
+          false
+        ],
+        [
+          "answered",
+          false
+        ]
+      ],
+      "e2e-201": [
+        [
+          "declined",
+          false
+        ],
+        [
+          "declined",
+          false
+        ]
+      ],
+      "e2e-216": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-227": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "answered",
+          true
+        ]
+      ],
+      "e2e-230": [
+        [
+          "answered",
+          false
+        ],
+        [
+          "answered",
+          false
+        ]
+      ]
+    },
+    "suppressed_value": {
+      "e2e-092": [
+        [
+          "answered",
+          true
+        ],
+        [
+          "abstained",
+          false
+        ]
+      ]
+    },
+    "follow_ups": {
+      "items": 15,
+      "success": 0.733,
+      "all_items": 0.682
+    }
+  }
+}

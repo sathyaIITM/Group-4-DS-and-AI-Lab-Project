@@ -1,0 +1,14 @@
+{
+  "run_id": "ep3_s2",
+  "checkpoint": "models/checkpoints/ep3_s2",
+  "weights_sha256": {
+    "adapter_model.safetensors": "5fc26b8a12a6d2f86c54c017c718c75c7867abc25cf55d1b10c65222fc0f686c",
+    "head.pt": "6681859ad42bfca46a301bf56bceb9657006123e5d7fbebd4171be42ff7fa239",
+    "adapter_config.json": "f358277f824057eb42266f1fcd879394ada5d4749a45d7a9af8c926b2a3ab8d0"
+  },
+  "data": "data/splits/kev_domain/dev_synthetic.v2.jsonl",
+  "data_sha256": "2fa6eaf2e18df3c9c3a9fc95836487e194154500c5953340f5fc0d6496c48a17",
+  "predictions_sha256": "1070decda984224f90500a0497840d82a4e51e81b3239c5bb00e4c6093b6a3b9",
+  "device": "mps",
+  "created_utc": "2026-11-26T10:14:05+00:00"
+}
