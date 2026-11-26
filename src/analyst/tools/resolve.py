@@ -12,6 +12,7 @@ from analyst.contracts.plan import InterpretationPlan, UnresolvedSlot
 from analyst.tools.codelists import codelist
 from analyst.tools.periods import (
     _year_type,
+    is_now_mention,
     latest_complete_period,
     resolve_period,
     season_codes,
@@ -171,7 +172,11 @@ def resolve_plan(
                 "WHERE period_type = 'season' ORDER BY period_start LIMIT 24"
             ).fetchall()
         )
-    for mention in intent.period_mentions:
+    # D1b: "now", "currently", "latest" ask for the latest published period, not a period to
+    # match; they are taken out and the latest period is applied below.
+    mentions = [m for m in intent.period_mentions if not is_now_mention(m)]
+    now_words = [m for m in intent.period_mentions if is_now_mention(m)]
+    for mention in mentions:
         resolution = resolve_period(mention, dataset_id, catalogue, round_labels, seasons or None)
         if resolution.status != "resolved" or resolution.window is None:
             unresolved.append(
@@ -182,7 +187,7 @@ def resolve_plan(
             if resolution.assumption is not None:
                 assumptions.append(resolution.assumption)
     single = intent.operation in {"lookup", "ranking", "comparison", "share", "aggregate"}
-    if not intent.period_mentions and single and not intent.derivations:
+    if not mentions and ((single and not intent.derivations) or now_words):
         # D1: no period named -> the latest period the table publishes, stated in the answer.
         types = [str(t) for t in dataset.get("period_types", [])]
         kind = _year_type(set(types), dataset.get("period_start_month")) or (
@@ -195,9 +200,13 @@ def resolve_plan(
                 latest = None
             if latest is not None:
                 periods.append(latest)
-                assumptions.append(
-                    Assumption(code="D1", text=f"No period named: the latest, {latest.label}.")
+                text = (
+                    f"'{now_words[0]}' is read as the latest period the table publishes, "
+                    f"{latest.label}."
+                    if now_words
+                    else f"No period named: the latest, {latest.label}."
                 )
+                assumptions.append(Assumption(code="D1", text=text))
     categories = _known_values(dataset_id, dict(intent.categories))
     for column in dataset.get("categories") or {}:
         total = total_value(dataset_id, column) if column not in categories else None

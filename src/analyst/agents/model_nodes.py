@@ -457,7 +457,12 @@ def make_model_nodes(deps: ModelNodeDependencies) -> dict[str, NodeFn]:
         counters = state.counters.model_copy()
         try:
             text, record = clarify.write_clarification(
-                state.question, slot.slot if slot else "indicator", options, llm, counters
+                state.question,
+                slot.slot if slot else "indicator",
+                options,
+                llm,
+                counters,
+                detail=control_nodes.clarification_detail(state) if slot else None,
             )
         except (LlmError, ValueError) as error:  # keep the fixed-text question
             update["counters"] = counters
